@@ -414,29 +414,20 @@ const sql = `
 });
 
 //fee structure
-app.get('/fee-structure/:reg_no', (req, res) => {
-  const { reg_no } = req.params;
-
-  const sql = `
-    SELECT tuition, hostel, bus, university, semester, library, fines 
-    FROM student_fee_structure 
-    WHERE reg_no = ?
-    ORDER BY updated_at DESC LIMIT 1
-  `;
-
-  connection.query(sql, [reg_no], (err, results) => {
+app.get("/fee-structure/:reg_no", (req, res) => {
+  const reg_no = req.params.reg_no;
+  connection.query("SELECT * FROM student_fee_structure WHERE reg_no = ?", [reg_no], (err, results) => {
     if (err) {
-      console.error("Fee fetch error:", err);
+      console.error("DB Error:", err);
       return res.status(500).json({ success: false, message: "Database error" });
     }
-
     if (results.length === 0) {
-      return res.status(404).json({ success: false, message: "No fee data found" });
+      return res.status(500).json({ success: false, message: "No fee structure found." });
     }
-
     res.json({ success: true, data: results[0] });
   });
 });
+
 
 app.get('/noc-eligibility/:userId', (req, res) => {
   const { userId } = req.params;
