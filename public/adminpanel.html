@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Dashboard</title>
+  <link rel="icon" href="crrengglogo.png" type="image/png" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #f4f6fa;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .sidebar {
+      width: 250px;
+      background: linear-gradient(145deg, #ffb97d, #f7c99b);
+      padding: 30px 20px;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      animation: slideIn 0.5s ease;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(-100px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    .sidebar h2 {
+      font-size: 22px;
+      color: #222;
+      margin-bottom: 40px;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .sidebar ul {
+      list-style: none;
+    }
+
+    .sidebar li {
+      margin: 15px 0;
+      cursor: pointer;
+      padding: 12px 20px;
+      border-radius: 10px;
+      transition: all 0.3s ease;
+      font-size: 16px;
+      color: #111;
+    }
+
+    .sidebar li:hover {
+      background-color: #fff;
+      transform: translateX(5px);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      font-weight: bold;
+    }
+
+    .main {
+      flex: 1;
+      padding: 40px;
+      overflow-y: auto;
+      background-color: #ffffff;
+      animation: fadeIn 0.6s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+      padding: 30px;
+      margin-bottom: 40px;
+      transition: transform 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+    }
+
+    .card h3 {
+      margin-bottom: 20px;
+      font-size: 20px;
+      color: #333;
+    }
+
+   input[type="file"] {
+  display: none;
+}
+
+.file-label {
+  display: inline-block;
+  padding: 10px 20px;
+  background: linear-gradient(to right, #ff9966, #ff5e62);
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.file-label:hover {
+  background: linear-gradient(to right, #ff5e62, #ff9966);
+}
+
+    input[type="text"] {
+      padding: 12px;
+      width: 100%;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      margin-bottom: 15px;
+      font-size: 15px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      margin-top: 10px;
+    }
+
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid #eee;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f0f0f0;
+      font-weight: 600;
+    }
+
+    button {
+      padding: 10px 20px;
+      border: none;
+      background: linear-gradient(to right, #36d1dc, #5b86e5);
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      font-size: 14px;
+    }
+
+    button:hover {
+      background: linear-gradient(to right, #5b86e5, #36d1dc);
+    }
+
+    .danger {
+      background: #dc3545 !important;
+    }
+
+    .danger:hover {
+      background: #bd2130 !important;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        width: 100%;
+        flex-direction: row;
+        overflow-x: auto;
+      }
+
+      .sidebar ul {
+        display: flex;
+        flex-direction: row;
+        gap: 20px;
+      }
+
+      .main {
+        padding: 20px;
+      }
+    }
+    .logout-btn {
+  margin-top: auto;
+  padding: 10px 20px;
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.3s ease;
+}
+
+.logout-btn:hover {
+  background: #c82333;
+}
+
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <h2>Admin Panel</h2>
+    <ul>
+      <li onclick="scrollToSection('upload')">📤 Upload SBI References</li>
+      <li onclick="scrollToSection('matches')">📊 DU Match Status</li>
+      <li onclick="scrollToSection('noc')">📜 NOC Status</li>
+    </ul>
+    <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+
+  </div>
+
+  <div class="main">
+
+    <div class="card" id="upload">
+      <h3>Upload SBI DU Reference Numbers</h3>
+<input type="file" id="sbiFile" accept=".txt,.csv" />
+<label for="sbiFile" class="file-label">📎 Choose File</label>
+<span id="fileName" style="margin-left: 10px; font-weight: 500; color: #444;"></span>
+
+      <button onclick="uploadSBI()">Upload</button>
+    </div>
+
+    <div class="card" id="matches">
+      <h3>DU Match Status</h3>
+      <button onclick="loadMatches()">Refresh Table</button>
+      <table id="matchTable">
+        <thead>
+          <tr>
+            <th>User ID</th>
+            <th>Fee Type</th>
+            <th>DU Number</th>
+            <th>Status</th>
+            <th>Matched On</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="card" id="noc">
+      <h3>NOC Generation Status</h3>
+      <button onclick="loadNOC()">Show Eligible Students</button>
+      <table id="nocTable">
+        <thead>
+          <tr>
+            <th>User ID</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <script>
+    document.getElementById("sbiFile").addEventListener("change", function () {
+  const file = this.files[0];
+  const fileNameSpan = document.getElementById("fileName");
+  if (file) {
+    fileNameSpan.textContent = file.name;
+  } else {
+    fileNameSpan.textContent = "";
+  }
+});
+
+    function scrollToSection(id) {
+      document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function uploadSBI() {
+      const fileInput = document.getElementById("sbiFile");
+      const file = fileInput.files[0];
+      if (!file) return alert("Please select a file.");
+
+      const formData = new FormData();
+      formData.append("sbiFile", file);
+
+      fetch("http://localhost:3000/admin/upload-sbi", {
+        method: "POST",
+        body: formData
+      })
+      .then(res => res.json())
+      .then(data => alert(data.message || "Uploaded successfully!"))
+      .catch(err => {
+        console.error(err);
+        alert("Upload failed.");
+      });
+    }
+
+    function loadMatches() {
+      fetch("http://localhost:3000/admin/matches")
+      .then(res => res.json())
+      .then(data => {
+        const table = document.querySelector("#matchTable tbody");
+        table.innerHTML = "";
+        data.forEach(row => {
+          table.innerHTML += `
+            <tr>
+              <td>${row.userId}</td>
+              <td>${row.fee_type}</td>
+              <td>${row.sbi_ref_no}</td>
+              <td>${row.matched ? '✅' : '❌'}</td>
+              <td>${row.matched_on || '-'}</td>
+            </tr>
+          `;
+        });
+      });
+    }
+
+    function loadNOC() {
+      fetch("http://localhost:3000/admin/noc-status")
+      .then(res => res.json())
+      .then(data => {
+        const table = document.querySelector("#nocTable tbody");
+        table.innerHTML = "";
+        data.forEach(user => {
+          table.innerHTML += `
+            <tr>
+              <td>${user.userId}</td>
+              <td>${user.eligible ? '✅ Approved' : '❌ Pending'}</td>
+            </tr>
+          `;
+        });
+      });
+    }
+    function logout() {
+    localStorage.removeItem("userId");
+    if ("caches" in window) {
+      caches.keys().then((names) => names.forEach((name) => caches.delete(name)));
+    }
+    window.location.replace("index.html");
+  }
+  </script>
+</body>
+</html>

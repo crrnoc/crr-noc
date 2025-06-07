@@ -1,1 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sir Crr Engg NOC Login Portal</title>
+    <link rel="icon" href="crrengglogo.png" type="image/png" />
+  <style>
+    :root {
+      --main-color: #8c0002;
+      --glow-color: #3cb6ff; /* changed red to blue */
+      --bg-overlay: rgba(0, 0, 0, 0.6);
+      --text-light: #fefefe;
+    }
 
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: url('https://i.ytimg.com/vi/zKGq-sYdaw8/maxresdefault.jpg') no-repeat center center/cover;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .login-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: var(--bg-overlay);
+      padding: 20px;
+    }
+
+    .login-box {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 0 25px rgba(0, 191, 255, 0.2); /* changed from red to blue */
+      backdrop-filter: blur(15px);
+      border-radius: 20px;
+      padding: 40px 35px;
+      width: 100%;
+      max-width: 400px;
+      animation: fadeSlide 1.2s ease;
+      transition: transform 0.4s ease;
+    }
+
+    .login-box:hover {
+      transform: scale(1.02);
+      box-shadow: 0 0 40px var(--glow-color); /* blue glow on hover */
+    }
+
+    @keyframes fadeSlide {
+      0% {
+        transform: translateY(40px);
+        opacity: 0;
+      }
+      100% {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .login-box h2 {
+      color: var(--text-light);
+      font-size: 24px;
+      text-shadow: 0 0 8px var(--main-color);
+      margin-bottom: 30px;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .login-box input {
+      width: 100%;
+      padding: 14px;
+      margin-bottom: 20px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: white;
+      font-size: 15px;
+      transition: 0.3s ease;
+    }
+    .login-box select {
+      width: 100%;
+      padding: 14px;
+      margin-bottom: 20px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: white;
+      font-size: 15px;
+      transition: 0.3s ease;
+      cursor: pointer;
+    }
+    .login-box select option {
+      font-weight: 600;
+      color: #111;
+      background-color: #fff;
+      cursor: pointer;
+    }
+
+    .login-box input::placeholder,
+    .login-box select {
+      color: #ccc;
+    }
+
+    .login-box input:focus,
+    .login-box select:focus {
+      outline: none;
+      border-color: var(--glow-color);
+      box-shadow: 0 0 10px var(--glow-color);
+    }
+
+    .login-box button {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #3cb6ff, #ff3d3d);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.4s ease;
+      box-shadow: 0 0 15px rgba(255, 77, 77, 0.6);
+    }
+
+    .login-box button::before {
+      content: "";
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle at center, rgba(255, 255, 255, 0.25) 0%, transparent 70%);
+      transform: scale(0);
+      transition: transform 0.4s ease;
+    }
+
+    .login-box button:hover {
+      background: linear-gradient(135deg, #3cb6ff, #ff6a6a);
+      box-shadow: 0 0 25px #3cb6ff, 0 0 40px rgba(255, 77, 77, 0.4);
+    }
+
+    .login-box button:hover::before {
+      transform: scale(1);
+      animation: shine 0.8s ease forwards;
+    }
+
+    @keyframes shine {
+      0% {
+        transform: scale(0);
+        opacity: 0.7;
+      }
+      100% {
+        transform: scale(2);
+        opacity: 0;
+      }
+    }
+
+    footer {
+      text-align: center;
+      padding: 12px;
+      background-color: var(--main-color);
+      color: white;
+      font-size: 13.5px;
+    }
+
+    @media (max-width: 480px) {
+      .login-box {
+        padding: 30px 20px;
+      }
+
+      .login-box h2 {
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-box">
+      <h2>Login to NOC Portal</h2>
+      <form id="loginForm">
+        <input type="text" id="userId" placeholder="Enter Your ID" required />
+        <input type="password" id="password" placeholder="Enter Password" required />
+        <select id="role" required>
+          <option value="" disabled selected>Select Role</option>
+          <option value="student">Student</option>
+          <option value="staff">Staff</option>
+          <option value="admin">Admin</option>
+        </select>
+        <button type="submit">Login</button>
+      </form>
+    </div>
+  </div>
+
+  <footer>
+    © 2025 Sir C.R. Reddy College of Engineering. All rights reserved.
+  </footer>
+
+  <script>
+    document.getElementById("loginForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const userId = document.getElementById("userId").value;
+      const password = document.getElementById("password").value;
+      const role = document.getElementById("role").value;
+
+      fetch("http://localhost:3000/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, password, role })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          localStorage.setItem("userId", data.userId);
+          localStorage.setItem("role", role);
+
+          if (role === "admin") {
+            window.location.href = "adminpanel.html";
+          } else if (role === "student") {
+            window.location.href = "studentdetails.html";
+          } else if (role === "staff") {
+            window.location.href = "knowaboutstd1.html";
+          }
+        } else {
+          alert(data.message);
+        }
+      })
+      .catch(error => {
+        alert("Error connecting to server.");
+        console.error(error);
+      });
+    });
+  </script>
+</body>
+</html>

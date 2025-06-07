@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Edit Profile</title>
+  <link rel="icon" href="crrengglogo.png" type="image/png" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: #1d1d1d;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .container {
+      display: flex;
+      height: 100vh;
+    }
+
+    .sidebar {
+      width: 270px;
+      background-color: rgb(247, 201, 155);
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .sidebar h2 {
+      margin: 40px 20px 20px 20px;
+      color: black;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .menu {
+      list-style: none;
+      padding: 0;
+    }
+
+    .menu li {
+      list-style: none;
+      margin-bottom: 15px;
+    }
+
+    .menu li a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 16px;
+      color: black;
+      padding: 12px 20px;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
+
+    .menu li a:hover,
+    .menu li.active a {
+      background-color: #d4d4d4;
+      font-weight: bold;
+      transform: translateX(5px);
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .menu li a span {
+      font-size: 18px;
+      transition: transform 0.3s ease;
+    }
+
+    .menu li a:hover span {
+      transform: scale(1.2);
+    }
+
+    .logout {
+      background-color: #f09000;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 16px;
+      width: 50%;
+      margin: 20px auto 0;
+      transition: background 0.3s ease;
+    }
+
+    .logout:hover {
+      background-color: #d07900;
+    }
+
+    .content {
+      flex-grow: 1;
+      background-color: white;
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-y: auto;
+    }
+
+.edit-profile-form {
+  width: 100%;
+  max-width: 600px;
+  background: linear-gradient(135deg, rgba(0, 164, 228, 0.85), rgba(0, 120, 180, 0.85));
+  color: #fff;
+  padding: 35px;
+  border-radius: 20px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 12px 20px rgba(0, 0, 0, 0.3), 0 6px 8px rgba(0, 0, 0, 0.22);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.edit-profile-form:hover {
+  transform: scale(1.01);
+  box-shadow: 0 16px 28px rgba(0, 0, 0, 0.35);
+}
+
+
+    .form-row {
+      margin-bottom: 15px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .form-row.half {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .form-row label {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .form-row input {
+      padding: 10px;
+      font-size: 14px;
+      border: none;
+      border-radius: 5px;
+      width: 100%;
+    }
+
+    input:disabled {
+      background-color: #f0f0f0;
+      cursor: not-allowed;
+    }
+
+    .form-actions {
+      display: none;
+      justify-content: space-between;
+      margin-top: 20px;
+    }
+
+    .save-btn {
+      background-color: #28a745;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .cancel-btn {
+      background-color: #dc3545;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .update-btn {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      align-self: flex-start;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        width: 100%;
+        padding: 15px;
+      }
+
+      .content {
+        padding: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <h2><strong>ID:</strong> <span id="userId">Loading...</span></h2>
+      <ul class="menu">
+        <li><a href="studentdetails.html"><span>📄</span> Student details</a></li>
+        <li class="active"><a href="#"><span>✏️</span> Edit profile</a></li>
+        <li><a href="feedetails.html"><span>🎓</span> Fee details</a></li>
+        <li><a href="updaterefno.html"><span>🔄</span> Update fee payment</a></li>
+        <li><a href="generatenoc.html"><span>➕</span> Generate NOC</a></li>
+        <li><a href="settings.html"><span>⚙️</span> Settings</a></li>
+        <li><a href="notifications.html"><span>🔔</span> Notifications</a></li>
+        <li><a href="privacypolicy.html"><span>📜</span> Privacy policy</a></li>
+      </ul>
+      <button class="logout" onclick="logout()">Logout</button>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content">
+      <form class="edit-profile-form">
+        <div class="form-row"><label>Name</label><input type="text" id="name" disabled></div>
+        <div class="form-row"><label>DOB</label><input type="date" id="dob" disabled></div>
+        <div class="form-row half">
+          <div><label>Year</label><input type="text" id="year" disabled></div>
+          <div><label>Course</label><input type="text" id="course" disabled></div>
+        </div>
+        <div class="form-row"><label>Semester</label><input type="text" id="semester" disabled></div>
+        <div class="form-row"><label>Aadhar No</label><input type="text" id="aadhar" disabled></div>
+        <div class="form-row"><label>Mobile No</label><input type="text" id="mobile" disabled></div>
+        <div class="form-row"><label>Email</label><input type="email" id="email" disabled></div>
+
+        <div class="form-actions">
+          <button type="submit" class="save-btn">Save</button>
+          <button type="button" class="cancel-btn">Cancel</button>
+        </div>
+
+        <button type="button" class="update-btn">Update Profile</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    window.onpageshow = function(event) {
+      if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+        window.location.reload();
+      }
+    };
+
+    const userId = localStorage.getItem("userId");
+    if (!userId) {
+      alert("Please login first.");
+      window.location.href = "index.html";
+    } else {
+      document.getElementById("userId").textContent = userId;
+    }
+
+    const form = document.querySelector(".edit-profile-form");
+    const inputs = form.querySelectorAll("input");
+    const formActions = document.querySelector(".form-actions");
+    const updateBtn = document.querySelector(".update-btn");
+
+    function setInputsDisabled(state) {
+      inputs.forEach(input => {
+        input.disabled = input.id === "course" ? true : state;
+      });
+    }
+
+    function formatDateToInput(dateStr) {
+      if (!dateStr) return "";
+      const date = new Date(dateStr);
+      if (isNaN(date)) return "";
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+
+    function loadUserData() {
+      fetch(`http://localhost:3000/student/${userId}`)
+        .then(res => res.json())
+        .then(data => {
+          form.name.value = data.name || "";
+          form.dob.value = formatDateToInput(data.dob);
+          form.year.value = data.year || "";
+          form.course.value = data.course || "";
+          form.semester.value = data.semester || "";
+          form.aadhar.value = data.aadhar_no || "";
+          form.mobile.value = data.mobile_no || "";
+          form.email.value = data.email || "";
+
+          setInputsDisabled(true);
+          formActions.style.display = "none";
+          updateBtn.style.display = "inline-block";
+        })
+        .catch(err => {
+          console.error("Error fetching user data:", err);
+          alert("Failed to load profile data");
+        });
+    }
+
+    window.onload = loadUserData;
+
+    updateBtn.addEventListener("click", () => {
+      setInputsDisabled(false);
+      formActions.style.display = "flex";
+      updateBtn.style.display = "none";
+    });
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const updatedData = {
+        userId,
+        name: form.name.value,
+        dob: form.dob.value,
+        year: form.year.value,
+        course: form.course.value,
+        semester: form.semester.value,
+        aadhar: form.aadhar.value,
+        mobile: form.mobile.value,
+        email: form.email.value
+      };
+
+      fetch("http://localhost:3000/editprofile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedData)
+      })
+        .then(res => res.json())
+        .then(data => {
+          alert(data.message || "Profile updated successfully!");
+          loadUserData();
+        })
+        .catch(err => {
+          console.error("Error updating profile:", err);
+          alert("Failed to update profile");
+        });
+    });
+
+    document.querySelector(".cancel-btn").addEventListener("click", () => {
+      loadUserData();
+    });
+function logout() {
+    localStorage.removeItem("userId");
+    if ("caches" in window) {
+      caches.keys().then((names) => names.forEach((name) => caches.delete(name)));
+    }
+    window.location.replace("index.html");
+  }
+  </script>
+</body>
+</html>

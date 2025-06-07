@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Student Details</title>
+  <link rel="icon" href="crrengglogo.png" type="image/png" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: #2e2e2e;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .container {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      width: 270px;
+      background-color: rgb(247, 201, 155);
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .sidebar h2 {
+      margin: 40px 20px 20px 20px;
+      color: black;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .menu {
+      list-style: none;
+      padding: 0;
+    }
+
+    .menu li {
+      list-style: none;
+      margin-bottom: 15px;
+    }
+
+    .menu li a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 16px;
+      color: black;
+      padding: 12px 20px;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
+
+    .menu li a:hover,
+    .menu li.active a {
+      background-color: #d4d4d4;
+      font-weight: bold;
+      transform: translateX(5px);
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .menu li a span {
+      font-size: 18px;
+      transition: transform 0.3s ease;
+    }
+
+    .menu li a:hover span {
+      transform: scale(1.2);
+    }
+
+    .logout {
+      background-color: #f09000;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 16px;
+      width: 50%;
+      margin: 20px auto 0;
+      transition: background 0.3s ease;
+    }
+
+    .logout:hover {
+      background-color: #d07900;
+    }
+
+    .details-section {
+      flex-grow: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #ffffff;
+      padding: 20px;
+    }
+
+    .details-card {
+  background: linear-gradient(135deg, rgba(30, 157, 216, 0.85), rgba(23, 124, 171, 0.85));
+  color: #fff;
+  width: 80%;
+  max-width: 800px;
+  padding: 35px;
+  border-radius: 25px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 12px 20px rgba(0, 0, 0, 0.3), 0 6px 8px rgba(0, 0, 0, 0.22);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.details-card:hover {
+  transform: scale(1.01);
+  box-shadow: 0 15px 25px rgba(0, 0, 0, 0.4);
+}
+
+.details-card p {
+  margin: 12px 0;
+  font-size: 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  padding-bottom: 6px;
+}
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <h2>ID: <span id="userId">Loading...</span></h2>
+      <ul class="menu">
+        <li class="active"><a href="#"><span>📄</span> Student details</a></li>
+        <li><a href="editprofile.html"><span>✏️</span> Edit profile</a></li>
+        <li><a href="feedetails.html"><span>🎓</span> Fee details</a></li>
+        <li><a href="updaterefno.html"><span>🔄</span> Update fee payment</a></li>
+        <li><a href="generatenoc.html"><span>➕</span> Generate NOC</a></li>
+        <li><a href="settings.html"><span>⚙️</span> Settings</a></li>
+        <li><a href="notifications.html"><span>🔔</span> Notifications</a></li>
+        <li><a href="privacypolicy.html"><span>📜</span> Privacy policy</a></li>
+      </ul>
+      <button class="logout" onclick="logout()">Logout</button>
+    </div>
+
+    <!-- Details Section -->
+    <div class="details-section">
+      <div class="details-card">
+        <p><strong>Name</strong>: </p>
+        <p><strong>DOB</strong>: ${data.dob ? data.dob.split('T')[0] : 'N/A'}</p>
+        <p><strong>Reg. no</strong>: </p>
+        <p><strong>Unique id</strong>: </p>
+        <p><strong>Year</strong>: </p>
+        <p><strong>Course</strong>: </p>
+        <p><strong>Semester</strong>: </p>
+        <p><strong>Aadhar no</strong>: </p>
+        <p><strong>Mobile no</strong>: </p>
+        <p><strong>Email Id</strong>: </p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Handle browser back/forward navigation to prevent cache issues
+    window.onpageshow = function(event) {
+      if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+        window.location.reload();
+      }
+    };
+
+    // On page load
+    document.addEventListener("DOMContentLoaded", () => {
+      const studentId = localStorage.getItem('userId');
+
+      if (!studentId) {
+        alert("Please login first.");
+        window.location.href = "index.html";
+        return;
+      }
+
+      document.getElementById("userId").textContent = studentId;
+
+      fetch(`http://localhost:3000/student/${studentId}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data) {
+            document.querySelector('.details-card').innerHTML = `
+              <p><strong>Name</strong>: ${data.name}</p>
+              <p><strong>DOB</strong>: ${data.dob ? new Date(data.dob).toLocaleDateString('CA-en') : 'N/A'}</p>
+              <p><strong>Reg. no</strong>: ${data.reg_no}</p>
+              <p><strong>Unique id</strong>: ${data.unique_id}</p>
+              <p><strong>Year</strong>: ${data.year}</p>
+              <p><strong>Course</strong>: ${data.course}</p>
+              <p><strong>Semester</strong>: ${data.semester}</p>
+              <p><strong>Aadhar no</strong>: ${data.aadhar_no}</p>
+              <p><strong>Mobile no</strong>: ${data.mobile_no}</p>
+              <p><strong>Email Id</strong>: ${data.email}</p>
+            `;
+          } else {
+            document.querySelector('.details-card').innerHTML = '<p>No data found!</p>';
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching data:', error);
+          document.querySelector('.details-card').innerHTML = '<p>Something went wrong. Please try again later.</p>';
+        });
+    });
+
+function logout() {
+    localStorage.removeItem("userId");
+    if ("caches" in window) {
+      caches.keys().then((names) => names.forEach((name) => caches.delete(name)));
+    }
+    window.location.replace("index.html");
+  }
+  </script>
+</body>
+</html>
