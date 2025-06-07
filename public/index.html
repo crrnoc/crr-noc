@@ -213,11 +213,16 @@
       const password = document.getElementById("password").value;
       const role = document.getElementById("role").value;
 
-      fetch("https://crr-noc.onrender.com", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, password, role })
-      })
+const baseUrl = window.location.hostname.includes("localhost")
+  ? "http://localhost:3000"
+  : "https://crr-noc.onrender.com";
+
+fetch(`${baseUrl}/login`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ userId, password, role })
+})
+
       .then(res => res.json())
       .then(data => {
         if (data.success) {
