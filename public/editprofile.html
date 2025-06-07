@@ -289,7 +289,10 @@
     }
 
     function loadUserData() {
-      fetch(`https://crr-noc.onrender.com/student/${userId}`)
+      const baseUrl = "https://crr-noc.onrender.com"; // your backend URL
+
+fetch(`${baseUrl}/student/${userId}`)
+
         .then(res => res.json())
         .then(data => {
           form.name.value = data.name || "";
