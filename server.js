@@ -47,12 +47,31 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/uploads", express.static(path.join(__dirname, "uploads"))); // for previews
 
 // ✅ MySQL connection
+require('dotenv').config(); // 🟢 Load .env at the top
+
+// Ensure uploads folder exists (handles Render crash)
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// ✅ Use MySQL connection from .env
 const connection = mysql.createConnection({
-  host: 'localhost',
-  user: 'root',
-  password: 'uday123',
-  database: 'noc'
+  host: process.env.MYSQLHOST,
+  user: process.env.MYSQLUSER,
+  password: process.env.MYSQLPASSWORD,
+  database: process.env.MYSQLDATABASE,
+  port: process.env.MYSQLPORT
 });
+
+connection.connect((err) => {
+  if (err) {
+    console.error('❌ Database connection failed:', err.stack);
+  } else {
+    console.log('✅ Connected to MySQL database');
+  }
+});
+
 
 // ✅ Admin routes
 app.use("/admin", adminRoutes);
