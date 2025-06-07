@@ -189,7 +189,7 @@
 
       document.getElementById("userId").textContent = studentId;
 
-      fetch(`http://localhost:3000/student/${studentId}`)
+      fetch(`https://crr-noc.onrender.com/student/${studentId}`)
         .then(response => response.json())
         .then(data => {
           if (data) {
