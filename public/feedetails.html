@@ -241,7 +241,9 @@ tfoot tr {
     let fineAmount = 0;
     let paidMap = {};
 
-    fetch(`http://localhost:3000/student/${userId}`)
+const baseUrl = "https://crr-noc.onrender.com"; // or your actual backend Render URL
+fetch(`${baseUrl}/student/${userId}`)
+
       .then((res) => res.json())
       .then((data) => fetch(`http://localhost:3000/fee-structure/${data.reg_no}`))
       .then((res) => res.json())
@@ -255,7 +257,7 @@ tfoot tr {
         paidRes.forEach((row) => {
           paidMap[row.fee_type] = parseFloat(row.paid);
         });
-        return fetch(`http://localhost:3000/total-fine/${userId}`);
+        return fetch(`https://crr-noc.onrender.com/total-fine/${userId}`);
       })
       .then((res) => res.json())
       .then((fineRes) => {
