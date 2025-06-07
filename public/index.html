@@ -213,7 +213,7 @@
       const password = document.getElementById("password").value;
       const role = document.getElementById("role").value;
 
-      fetch("http://localhost:3000/login", {
+      fetch("https://crr-noc.onrender.com/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, password, role })
