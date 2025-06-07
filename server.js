@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const mysql = require('mysql2');
 const session = require('express-session');
@@ -14,6 +15,8 @@ const app = express();
 const PORT = 3000;
 const nodemailer = require('nodemailer');
 const QRCode = require('qrcode');
+require('dotenv').config();
+
 
 
 
@@ -47,7 +50,7 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/uploads", express.static(path.join(__dirname, "uploads"))); // for previews
 
 // ✅ MySQL connection
-require('dotenv').config(); // 🟢 Load .env at the top
+// 🟢 Load .env at the top
 
 // Ensure uploads folder exists (handles Render crash)
 const uploadDir = path.join(__dirname, 'uploads');
@@ -63,6 +66,7 @@ const connection = mysql.createConnection({
   database: process.env.MYSQLDATABASE,
   port: process.env.MYSQLPORT
 });
+
 
 connection.connect((err) => {
   if (err) {
