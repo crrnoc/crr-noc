@@ -233,111 +233,113 @@ tfoot tr {
     </div>
   </div>
 
-  <script>
-    const userId = localStorage.getItem("userId");
-    document.getElementById("userId").textContent = userId || "Unknown";
+ <script>
+  const userId = localStorage.getItem("userId");
+  document.getElementById("userId").textContent = userId || "Unknown";
 
-    let feeData = {};
-    let fineAmount = 0;
-    let paidMap = {};
+  const baseUrl = window.location.hostname.includes("localhost")
+    ? "http://localhost:3000"
+    : "https://crr-noc.onrender.com"; // Replace with your actual Render URL if different
 
-const baseUrl = "https://crr-noc.onrender.com"; // or your actual backend Render URL
-fetch(`${baseUrl}/student/${userId}`)
+  let feeData = {};
+  let fineAmount = 0;
+  let paidMap = {};
 
-      .then((res) => res.json())
-      .then((data) => fetch(`http://localhost:3000/fee-structure/${data.reg_no}`))
-      .then((res) => res.json())
-      .then((feeRes) => {
-        if (!feeRes.success) throw new Error("No fee structure found.");
-        feeData = feeRes.data;
-        return fetch(`http://localhost:3000/paid-amounts/${userId}`);
-      })
-      .then((res) => res.json())
-      .then((paidRes) => {
-        paidRes.forEach((row) => {
-          paidMap[row.fee_type] = parseFloat(row.paid);
-        });
-        return fetch(`https://crr-noc.onrender.com/total-fine/${userId}`);
-      })
-      .then((res) => res.json())
-      .then((fineRes) => {
-        fineAmount = fineRes.totalFine || 0;
+  fetch(`${baseUrl}/student/${userId}`)
+    .then((res) => res.json())
+    .then((data) => fetch(`${baseUrl}/fee-structure/${data.reg_no}`))
+    .then((res) => res.json())
+    .then((feeRes) => {
+      if (!feeRes.success) throw new Error("No fee structure found.");
+      feeData = feeRes.data;
+      return fetch(`${baseUrl}/paid-amounts/${userId}`);
+    })
+    .then((res) => res.json())
+    .then((paidRes) => {
+      paidRes.forEach((row) => {
+        paidMap[row.fee_type] = parseFloat(row.paid);
+      });
+      return fetch(`${baseUrl}/total-fine/${userId}`);
+    })
+    .then((res) => res.json())
+    .then((fineRes) => {
+      fineAmount = fineRes.totalFine || 0;
 
-        const items = [
-          { label: "Tuition Fee", key: "tuition" },
-          { label: "Hostel Fee", key: "hostel" },
-          { label: "Bus Fee", key: "bus" },
-          { label: "University Fee", key: "university" },
-          { label: "Semester Fee", key: "semester" },
-          { label: "Library Dues", key: "library" },
-          { label: "Fines", key: "fines" },
-        ];
+      const items = [
+        { label: "Tuition Fee", key: "tuition" },
+        { label: "Hostel Fee", key: "hostel" },
+        { label: "Bus Fee", key: "bus" },
+        { label: "University Fee", key: "university" },
+        { label: "Semester Fee", key: "semester" },
+        { label: "Library Dues", key: "library" },
+        { label: "Fines", key: "fines" },
+      ];
 
-        const container = document.querySelector(".fee-details");
-        container.innerHTML = `
-          <h2><span style="font-size: 1.3em;">💳</span> Fee Breakdown</h2>
+      const container = document.querySelector(".fee-details");
+      container.innerHTML = `
+        <h2><span style="font-size: 1.3em;">💳</span> Fee Breakdown</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Fee Type</th>
+              <th>Paid (₹)</th>
+              <th>Remaining (₹)</th>
+              <th>Total (₹)</th>
+            </tr>
+          </thead>
+          <tbody id="feeRows"></tbody>
+          <tfoot>
+            <tr>
+              <td>Total</td>
+              <td id="paidTotal">₹0.00</td>
+              <td id="remainingTotal">₹0.00</td>
+              <td id="actualTotal">₹0.00</td>
+            </tr>
+          </tfoot>
+        </table>
+      `;
 
-          <table>
-            <thead>
-              <tr>
-                <th>Fee Type</th>
-                <th>Paid (₹)</th>
-                <th>Remaining (₹)</th>
-                <th>Total (₹)</th>
-              </tr>
-            </thead>
-            <tbody id="feeRows"></tbody>
-            <tfoot>
-              <tr>
-                <td>Total</td>
-                <td id="paidTotal">₹0.00</td>
-                <td id="remainingTotal">₹0.00</td>
-                <td id="actualTotal">₹0.00</td>
-              </tr>
-            </tfoot>
-          </table>
+      const tbody = document.getElementById("feeRows");
+      let totalRemaining = 0, totalActual = 0, totalPaid = 0;
+
+      items.forEach((item) => {
+        const actualRaw = item.key === "fines" ? fineAmount : feeData[item.key];
+        const actual = !isNaN(parseFloat(actualRaw)) ? parseFloat(actualRaw) : 0;
+        const paidRaw = paidMap[item.key];
+        const paid = !isNaN(parseFloat(paidRaw)) ? parseFloat(paidRaw) : 0;
+        const remaining = Math.max(0, actual - paid);
+
+        totalActual += actual;
+        totalPaid += paid;
+        totalRemaining += remaining;
+
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${item.label}</td>
+          <td style="text-align: right;">₹${paid.toFixed(2)}</td>
+          <td style="text-align: right;">₹${remaining.toFixed(2)}</td>
+          <td style="text-align: right;">₹${actual.toFixed(2)}</td>
         `;
-
-        const tbody = document.getElementById("feeRows");
-        let totalRemaining = 0, totalActual = 0, totalPaid = 0;
-
-        items.forEach((item) => {
-          const actualRaw = item.key === "fines" ? fineAmount : feeData[item.key];
-          const actual = !isNaN(parseFloat(actualRaw)) ? parseFloat(actualRaw) : 0;
-          const paidRaw = paidMap[item.key];
-          const paid = !isNaN(parseFloat(paidRaw)) ? parseFloat(paidRaw) : 0;
-          const remaining = Math.max(0, actual - paid);
-
-          totalActual += actual;
-          totalPaid += paid;
-          totalRemaining += remaining;
-
-          const row = document.createElement("tr");
-          row.innerHTML = `
-            <td>${item.label}</td>
-            <td style="text-align: right;">₹${paid.toFixed(2)}</td>
-            <td style="text-align: right;">₹${remaining.toFixed(2)}</td>
-            <td style="text-align: right;">₹${actual.toFixed(2)}</td>
-          `;
-          tbody.appendChild(row);
-        });
-
-        document.getElementById("paidTotal").textContent = `₹${totalPaid.toFixed(2)}`;
-        document.getElementById("remainingTotal").textContent = `₹${totalRemaining.toFixed(2)}`;
-        document.getElementById("actualTotal").textContent = `₹${totalActual.toFixed(2)}`;
-      })
-      .catch((err) => {
-        console.error("❌ Error:", err);
-        alert("Failed to load dynamic fee details.");
+        tbody.appendChild(row);
       });
 
-    function logout() {
-      localStorage.removeItem("userId");
-      if ("caches" in window) {
-        caches.keys().then((names) => names.forEach((name) => caches.delete(name)));
-      }
-      window.location.replace("index.html");
+      document.getElementById("paidTotal").textContent = `₹${totalPaid.toFixed(2)}`;
+      document.getElementById("remainingTotal").textContent = `₹${totalRemaining.toFixed(2)}`;
+      document.getElementById("actualTotal").textContent = `₹${totalActual.toFixed(2)}`;
+    })
+    .catch((err) => {
+      console.error("❌ Error:", err);
+      alert("Failed to load dynamic fee details.");
+    });
+
+  function logout() {
+    localStorage.removeItem("userId");
+    if ("caches" in window) {
+      caches.keys().then((names) => names.forEach((name) => caches.delete(name)));
     }
-  </script>
+    window.location.replace("index.html");
+  }
+</script>
+
 </body>
 </html>
