@@ -654,45 +654,54 @@ app.post('/update-fee-structure', (req, res) => {
     university, semester, library
   } = req.body;
 
-  const updatedFees = { tuition, hostel, bus, university, semester, library };
+  if (!reg_no) {
+    return res.status(400).json({ success: false, message: "Registration number missing." });
+  }
 
-  // Step 1: Fetch existing remaining_fee
-  connection.query('SELECT * FROM remaining_fee WHERE reg_no = ?', [reg_no], (err1, remainRows) => {
-    if (err1) return res.status(500).json({ success: false, message: 'Error fetching remaining fee' });
+  const updatedFees = {
+    tuition: parseFloat(tuition) || 0,
+    hostel: parseFloat(hostel) || 0,
+    bus: parseFloat(bus) || 0,
+    university: parseFloat(university) || 0,
+    semester: parseFloat(semester) || 0,
+    library: parseFloat(library) || 0
+  };
 
-    const oldRemaining = remainRows.length ? remainRows[0] : {
-      tuition: 0, hostel: 0, bus: 0, university: 0, semester: 0, library: 0
-    };
+  console.log("🟡 Update request for:", reg_no);
+  console.log("🟡 Fees to add:", updatedFees);
 
-    // Step 2: Calculate new remaining = newFee + oldRemaining
-    const finalStructure = {};
-    for (const key in updatedFees) {
-      finalStructure[key] = parseFloat(updatedFees[key] || 0) + parseFloat(oldRemaining[key] || 0);
+  // 🟢 Step 1: Ensure a row exists in remaining_fee
+  const insertDefault = `
+    INSERT IGNORE INTO remaining_fee 
+    (reg_no, tuition, hostel, bus, university, semester, library) 
+    VALUES (?, 0, 0, 0, 0, 0, 0)
+  `;
+  connection.query(insertDefault, [reg_no], (err0) => {
+    if (err0) {
+      console.error("❌ Insert default row failed:", err0);
+      return res.status(500).json({ success: false, message: "Failed to insert default row." });
     }
 
-    // Step 3: Update student_fee_structure
-    const sqlUpdate = `
-      INSERT INTO student_fee_structure
-        (reg_no, tuition, hostel, bus, university, semester, library)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-      ON DUPLICATE KEY UPDATE
-        tuition = VALUES(tuition),
-        hostel = VALUES(hostel),
-        bus = VALUES(bus),
-        university = VALUES(university),
-        semester = VALUES(semester),
-        library = VALUES(library)
-    `;
+    // 🟢 Step 2: Fetch existing remaining_fee
+    connection.query('SELECT * FROM remaining_fee WHERE reg_no = ?', [reg_no], (err1, remainRows) => {
+      if (err1) {
+        console.error("❌ Error fetching remaining_fee:", err1);
+        return res.status(500).json({ success: false, message: 'Error fetching remaining fee' });
+      }
 
-    connection.query(sqlUpdate, [
-      reg_no, finalStructure.tuition, finalStructure.hostel, finalStructure.bus,
-      finalStructure.university, finalStructure.semester, finalStructure.library
-    ], (err2) => {
-      if (err2) return res.status(500).json({ success: false, message: 'Fee structure update failed' });
+      const oldRemaining = remainRows[0];
 
-      // ✅ Step 4: Just update newRemaining (don't subtract verified fee again)
-      const sqlRemain = `
-        INSERT INTO remaining_fee 
+      // 🟢 Step 3: Add old remaining + new structure
+      const finalStructure = {};
+      for (const key in updatedFees) {
+        finalStructure[key] = updatedFees[key] + parseFloat(oldRemaining[key] || 0);
+      }
+
+      console.log("✅ Final new structure:", finalStructure);
+
+      // 🟢 Step 4: Update student_fee_structure
+      const sqlUpdate = `
+        INSERT INTO student_fee_structure
           (reg_no, tuition, hostel, bus, university, semester, library)
         VALUES (?, ?, ?, ?, ?, ?, ?)
         ON DUPLICATE KEY UPDATE
@@ -704,18 +713,56 @@ app.post('/update-fee-structure', (req, res) => {
           library = VALUES(library)
       `;
 
-      connection.query(sqlRemain, [
+      connection.query(sqlUpdate, [
         reg_no,
-        finalStructure.tuition, finalStructure.hostel, finalStructure.bus,
-        finalStructure.university, finalStructure.semester, finalStructure.library
-      ], (err4) => {
-        if (err4) return res.status(500).json({ success: false, message: 'Remaining fee update failed' });
+        finalStructure.tuition,
+        finalStructure.hostel,
+        finalStructure.bus,
+        finalStructure.university,
+        finalStructure.semester,
+        finalStructure.library
+      ], (err2) => {
+        if (err2) {
+          console.error("❌ Failed to update student_fee_structure:", err2);
+          return res.status(500).json({ success: false, message: 'Fee structure update failed' });
+        }
 
-        res.json({ success: true, message: '✅ Fee updated and remaining fee saved.' });
+        // 🟢 Step 5: Update remaining_fee with same values
+        const sqlRemain = `
+          INSERT INTO remaining_fee 
+            (reg_no, tuition, hostel, bus, university, semester, library)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+          ON DUPLICATE KEY UPDATE
+            tuition = VALUES(tuition),
+            hostel = VALUES(hostel),
+            bus = VALUES(bus),
+            university = VALUES(university),
+            semester = VALUES(semester),
+            library = VALUES(library)
+        `;
+
+        connection.query(sqlRemain, [
+          reg_no,
+          finalStructure.tuition,
+          finalStructure.hostel,
+          finalStructure.bus,
+          finalStructure.university,
+          finalStructure.semester,
+          finalStructure.library
+        ], (err3) => {
+          if (err3) {
+            console.error("❌ Failed to update remaining_fee:", err3);
+            return res.status(500).json({ success: false, message: 'Remaining fee update failed' });
+          }
+
+          console.log("✅ Fee update success for", reg_no);
+          res.json({ success: true, message: '✅ Fee updated and remaining fee saved.' });
+        });
       });
     });
   });
 });
+
 //noc code
 // ... all previous code remains unchanged
 
