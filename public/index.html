@@ -25,15 +25,8 @@
       height: 100vh;
       overflow: hidden;
     }
-    .warning {
-      color: #01ddff;
-      padding: 10px;
-      text-align: center;
-      font-weight: bold;
-      border-radius: 5px;
-      margin-bottom: 15px;
-      display: block;
-    }  .login-container {
+
+    .login-container {
       display: flex;
       justify-content: center;
       align-items: center;
@@ -192,10 +185,6 @@
 </head>
 <body>
   <div class="login-container">
-    <!-- 📢 Mobile Warning Message -->
-    <div id="mobile-warning" class="warning">
-      📢 For the best experience, please switch to Desktop Site.
-    </div>
     <div class="login-box">
       <h2>Login to NOC Portal</h2>
       <form id="loginForm">
@@ -219,6 +208,7 @@
   <script>
     document.getElementById("loginForm").addEventListener("submit", function (e) {
       e.preventDefault();
+
       const userId = document.getElementById("userId").value;
       const password = document.getElementById("password").value;
       const role = document.getElementById("role").value;
