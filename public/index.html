@@ -25,7 +25,16 @@
       height: 100vh;
       overflow: hidden;
     }
-
+    .warning {
+  background-color: #ffefc1;
+  color: #333;
+  padding: 10px;
+  text-align: center;
+  font-weight: bold;
+  border: 1px solid #e0c97f;
+  border-radius: 5px;
+  margin-bottom: 15px;
+}
     .login-container {
       display: flex;
       justify-content: center;
@@ -184,6 +193,10 @@
   </style>
 </head>
 <body>
+  <div id="mobile-warning" style="display: none;" class="warning">
+  📢 For the best experience, please switch to Desktop Site.
+</div>
+
   <div class="login-container">
     <div class="login-box">
       <h2>Login to NOC Portal</h2>
@@ -208,6 +221,12 @@
   <script>
     document.getElementById("loginForm").addEventListener("submit", function (e) {
       e.preventDefault();
+        // Detect mobile screen width (or use user agent for better accuracy)
+  const isMobile = window.innerWidth <= 768;
+
+  if (isMobile) {
+    document.getElementById("mobile-warning").style.display = "block";
+  }
 
       const userId = document.getElementById("userId").value;
       const password = document.getElementById("password").value;
