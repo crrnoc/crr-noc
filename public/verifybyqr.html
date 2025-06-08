@@ -3,48 +3,145 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>NOC Verification</title>
+  <title>NOC Verification Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f9fafb;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #1e3c72, #2a5298);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      padding: 20px;
+    }
+
     .card {
       background: white;
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      padding: 40px 30px;
+      border-radius: 20px;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
       text-align: center;
+      max-width: 400px;
+      width: 100%;
+      animation: slideIn 1s ease;
+      position: relative;
     }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: -10px;
+      left: -10px;
+      right: -10px;
+      bottom: -10px;
+      background: linear-gradient(45deg, #00dbde, #fc00ff);
+      z-index: -1;
+      filter: blur(30px);
+      opacity: 0.5;
+      border-radius: 25px;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateY(-40px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
     h1 {
+      font-size: 28px;
+      font-weight: 800;
+      color: #2a2a2a;
+      margin-bottom: 15px;
+    }
+
+    #student-id {
+      font-size: 16px;
       margin-bottom: 20px;
+      color: #555;
     }
+
     .status {
-      font-size: 20px;
-      font-weight: bold;
-      padding: 10px 20px;
-      border-radius: 5px;
+      font-size: 18px;
+      font-weight: 600;
+      padding: 12px 25px;
+      border-radius: 30px;
       display: inline-block;
+      transition: all 0.3s ease;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
     }
+
     .eligible {
-      color: #065f46;
-      background-color: #d1fae5;
+      color: #0f5132;
+      background: #d1e7dd;
+      border: 2px solid #0f5132;
     }
+
     .not-eligible {
-      color: #991b1b;
-      background-color: #fee2e2;
+      color: #842029;
+      background: #f8d7da;
+      border: 2px solid #842029;
+    }
+
+    .footer {
+      margin-top: 30px;
+      font-size: 14px;
+      color: #999;
+      font-weight: 600;
+      animation: fadeIn 1.5s ease 0.3s both;
+    }
+
+    .footer span {
+      color: #fff;
+      background: linear-gradient(to right, #00c6ff, #0072ff);
+      padding: 6px 12px;
+      border-radius: 20px;
+      display: inline-block;
+      margin-top: 8px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 480px) {
+      .card {
+        padding: 30px 20px;
+      }
+
+      h1 {
+        font-size: 24px;
+      }
+
+      .status {
+        font-size: 16px;
+        padding: 10px 20px;
+      }
     }
   </style>
 </head>
 <body>
   <div class="card">
-    <h1>NOC Verification</h1>
-    <p id="student-id"></p>
+    <h1>🔍 NOC Verification</h1>
+    <p id="student-id">Checking ID...</p>
     <div id="result" class="status">Checking...</div>
+    <div class="footer">
+      This portal developed by <br>
+      <span>Cyber Team 2023-2027 Batch</span>
+    </div>
   </div>
 
   <script>
@@ -56,9 +153,9 @@
     if (!userId) {
       resultEl.textContent = "❌ Invalid QR code.";
       resultEl.className = "status not-eligible";
+      studentIdEl.textContent = "No User ID Found";
     } else {
       studentIdEl.textContent = `User ID: ${userId}`;
-
       fetch(`https://crr-noc.onrender.com/noc-eligibility/${userId}`)
         .then(res => res.json())
         .then(data => {
