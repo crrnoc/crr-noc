@@ -224,22 +224,23 @@
     </div>
   </div>
 
-  <script>
+<script>
+  const userId = localStorage.getItem("userId");
+  document.getElementById("userId").textContent = userId;
+
+  document.querySelector(".download").addEventListener("click", () => {
     const userId = localStorage.getItem("userId");
-    document.getElementById("userId").textContent = userId;
+    window.open(`https://crr-noc.onrender.com/generate-noc/${userId}`, '_blank');
+  });
 
-    document.querySelector(".download").addEventListener("click", () => {
-      const userId = localStorage.getItem("userId");
-      window.open(`http://localhost:3000/generate-noc/${userId}`, '_blank');
-    });
-
-function logout() {
+  function logout() {
     localStorage.removeItem("userId");
     if ("caches" in window) {
       caches.keys().then((names) => names.forEach((name) => caches.delete(name)));
     }
     window.location.replace("index.html");
   }
-  </script>
+</script>
+
 </body>
 </html>
