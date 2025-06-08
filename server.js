@@ -17,11 +17,7 @@ const nodemailer = require('nodemailer');
 const QRCode = require('qrcode');
 require('dotenv').config();
 
-
-
-
 const logoBase64 = fs.readFileSync('./public/crrengglogo.png', { encoding: 'base64' }); // rename your image to logo.png in public
-
 // Configure the email transporter (use your App Password here)
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -30,8 +26,6 @@ const transporter = nodemailer.createTransport({
     pass: 'hrct bhyw ekqb njep' // Replace with actual app password
   }
 });
-
-
 // ✅ Middlewares (used only once)
 app.use(cors());
 app.use(express.json());
@@ -347,11 +341,6 @@ app.get('/paid-amounts/:userId', (req, res) => {
     res.json(results);
   });
 });
-
-
-
-
-
 //reference number submission
 app.post("/submit-du", (req, res) => {
   const { userId, payments } = req.body;
@@ -381,7 +370,6 @@ app.post("/submit-du", (req, res) => {
       );
     }));
   }
-
   Promise.all(checkMatches).then(matchResults => {
     const matchMap = Object.fromEntries(matchResults);
 
@@ -399,9 +387,6 @@ const sql = `
     matched = VALUES(matched),
     matched_on = IF(matched = 0 AND VALUES(matched) = 1, NOW(), matched_on)
 `;
-
-
-
     connection.query(sql, [finalValues], (err2) => {
       if (err2) {
         console.error("Insert error:", err2);
@@ -412,7 +397,6 @@ const sql = `
     });
   });
 });
-
 //fee structure
 app.get("/fee-structure/:reg_no", (req, res) => {
   const reg_no = req.params.reg_no;
@@ -427,8 +411,6 @@ app.get("/fee-structure/:reg_no", (req, res) => {
     res.json({ success: true, data: results[0] });
   });
 });
-
-
 app.get('/noc-eligibility/:userId', (req, res) => {
   const { userId } = req.params;
 
@@ -491,9 +473,6 @@ app.get('/noc-eligibility/:userId', (req, res) => {
     });
   });
 });
-
-
-
 app.post('/admin/upload-sbi', upload.single('sbiFile'), (req, res) => {
   const filePath = path.join(__dirname, req.file.path);
 
@@ -531,8 +510,6 @@ app.post('/admin/upload-sbi', upload.single('sbiFile'), (req, res) => {
     });
   });
 });
-
-
 app.get('/admin/matches', (req, res) => {
   connection.query('SELECT * FROM student_fee_payments', (err, results) => {
     if (err) {
@@ -542,8 +519,6 @@ app.get('/admin/matches', (req, res) => {
     res.json(results);
   });
 });
-
-
 app.get('/admin/noc-status', (req, res) => {
   connection.query('SELECT userId, reg_no FROM students', (err, students) => {
     if (err) return res.status(500).json([]);
@@ -560,7 +535,6 @@ app.get('/admin/noc-status', (req, res) => {
             if (err2 || feeRows.length === 0) return resolve({ userId, eligible: false });
 
             const fees = feeRows[0];
-
             // 2️⃣ Get verified paid fees
             connection.query(
               `SELECT fee_type, SUM(amount_paid) AS totalPaid 
@@ -573,7 +547,6 @@ app.get('/admin/noc-status', (req, res) => {
 
                 const paidMap = {};
                 paidRows.forEach(r => paidMap[r.fee_type] = parseFloat(r.totalPaid));
-
                 // 3️⃣ Get fines
                 connection.query(
                   'SELECT SUM(amount) AS fine FROM fines WHERE userId = ?',
@@ -590,13 +563,11 @@ app.get('/admin/noc-status', (req, res) => {
                       library: parseFloat(fees.library) || 0,
                       fines: parseFloat(fine)
                     };
-
                     // ✅ Check remaining
                     for (let key in expected) {
                       const remaining = expected[key] - (paidMap[key] || 0);
                       if (remaining > 0) return resolve({ userId, eligible: false });
                     }
-
                     resolve({ userId, eligible: true });
                   }
                 );
@@ -606,11 +577,9 @@ app.get('/admin/noc-status', (req, res) => {
         );
       });
     });
-
     Promise.all(checks).then(data => res.json(data));
   });
 });
-
 //logic for noc verification in staff page
 app.get('/staff/verify-noc/:reg_no', (req, res) => {
   const { reg_no } = req.params;
@@ -631,9 +600,7 @@ app.get('/staff/verify-noc/:reg_no', (req, res) => {
         if (err2 || feeRows.length === 0) {
           return res.status(400).json({ success: false, message: 'Fee structure not found' });
         }
-
         const feeStructure = feeRows[0];
-
         // Step 3: Get matched paid amounts
         connection.query(
           `SELECT fee_type, SUM(amount_paid) AS paid 
@@ -643,10 +610,8 @@ app.get('/staff/verify-noc/:reg_no', (req, res) => {
           [userId],
           (err3, paidRows) => {
             if (err3) return res.status(500).json({ success: false });
-
             const paidMap = {};
             paidRows.forEach(row => paidMap[row.fee_type] = parseFloat(row.paid));
-
             // Step 4: Fetch total fines
             connection.query(
               'SELECT SUM(amount) AS fine FROM fines WHERE userId = ?',
@@ -665,7 +630,6 @@ app.get('/staff/verify-noc/:reg_no', (req, res) => {
                   library: parseFloat(feeStructure.library) || 0,
                   fines: fineAmount
                 };
-
                 // Step 5: Compare expected vs paid
                 for (const key in expected) {
                   const remaining = expected[key] - (paidMap[key] || 0);
@@ -673,7 +637,6 @@ app.get('/staff/verify-noc/:reg_no', (req, res) => {
                     return res.json({ success: true, eligible: false, userId, reg_no });
                   }
                 }
-
                 return res.json({ success: true, eligible: true, userId, reg_no });
               }
             );
@@ -683,7 +646,6 @@ app.get('/staff/verify-noc/:reg_no', (req, res) => {
     );
   });
 });
-
 //logic for the fee upadate by staff
 // ✅ Staff updates fee structure for a student by reg_no
 app.post('/update-fee-structure', (req, res) => {
@@ -756,7 +718,6 @@ app.post('/update-fee-structure', (req, res) => {
     });
   });
 });
-
 //noc code
 // ... all previous code remains unchanged
 
@@ -955,7 +916,6 @@ app.post('/api/submit-feedback', (req, res) => {
   subject: "🎓 Thank You for Your Feedback",
   html: `
     <div style="font-family: Arial; padding: 20px;">
-      <img src="data:image/png;base64,${logoBase64}" width="90" style="margin-bottom: 10px;" />
       <h2 style="color:#003366; margin-top: 0;">Sir C R Reddy College of Engineering</h2>
       <p>Hi <strong>${name}</strong>,</p>
       <p>Thank you for reaching out. We have received your feedback and will review it shortly.</p>
@@ -965,7 +925,6 @@ app.post('/api/submit-feedback', (req, res) => {
     </div>
   `
 };
-
   // Email to Admin
   const adminMailOptions = {
   from: '"CRR NOC Bot" <crrenoccertificate@gmail.com>',
@@ -973,7 +932,6 @@ app.post('/api/submit-feedback', (req, res) => {
   subject: `📬 Feedback Received from ${name}`,
   html: `
     <div style="font-family: Arial; padding: 20px;">
-      <img src="data:image/png;base64,${logoBase64}" width="90" style="margin-bottom: 10px;" />
       <h2 style="color:#003366;">Sir C R Reddy College of Engineering</h2>
       <h3 style="color: #222;">New Feedback Received</h3>
       <p><strong>Name:</strong> ${name}</p>
@@ -983,21 +941,17 @@ app.post('/api/submit-feedback', (req, res) => {
     </div>
   `
 };
-
-
   // Send both emails
   transporter.sendMail(userMailOptions, (err1) => {
     if (err1) {
       console.error("User email error:", err1);
       return res.status(500).json({ success: false, message: "Failed to notify user." });
     }
-
     transporter.sendMail(adminMailOptions, (err2) => {
       if (err2) {
         console.error("Admin email error:", err2);
         return res.status(500).json({ success: false, message: "Failed to notify admin." });
       }
-
       res.status(200).json({ success: true, message: "Feedback submitted successfully!" });
     });
   });
