@@ -898,7 +898,7 @@ app.get('/generate-noc/:userId', (req, res) => {
           doc.font('Times-Bold').text("COLLEGE STAMP", { align: 'center' });
 
           // Generate QR code
-          const qrLink = `https://yourdomain.com/verify-noc/${userId}`; // ✅ Replace with your actual domain
+         const qrLink = `https://crr-noc.onrender.com/verifybyqr.html?userId=${userId}`;   // ✅ Replace with your actual domain
 
           QRCode.toDataURL(qrLink, (err, qrUrl) => {
             if (err) {
