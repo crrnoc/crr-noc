@@ -325,59 +325,34 @@ router.get('/remaining-fee/:reg_no', async (req, res) => {
 app.get('/paid-amounts/:userId', (req, res) => {
   const { userId } = req.params;
 
-  // Step 1: Get reg_no
-  connection.query('SELECT reg_no FROM students WHERE userId = ?', [userId], (err, studentRows) => {
-    if (err || studentRows.length === 0) {
-      return res.status(500).json({ error: 'Student not found' });
+  // Step 1: Convert userId to reg_no
+  connection.query('SELECT reg_no FROM students WHERE userId = ?', [userId], (err1, rows) => {
+    if (err1 || rows.length === 0) {
+      console.error("Student not found or DB error:", err1);
+      return res.status(404).json({ error: 'Student not found' });
     }
 
-    const reg_no = studentRows[0].reg_no;
+    const regNo = rows[0].reg_no;
 
-    // Step 2: Get latest fee structure
-    connection.query(`
-      SELECT * FROM student_fee_structure 
-      WHERE reg_no = ? 
-      ORDER BY updated_at DESC 
-      LIMIT 1
-    `, [reg_no], (err2, feeRows) => {
-      if (err2 || feeRows.length === 0) {
-        return res.status(400).json({ error: 'Fee structure not found' });
+    // Step 2: Get paid amounts using reg_no
+    const sql = `
+      SELECT fee_type, SUM(amount_paid) AS paid 
+      FROM student_fee_payments 
+      WHERE reg_no = ? AND matched = 1 
+      GROUP BY fee_type
+    `;
+
+    connection.query(sql, [regNo], (err2, results) => {
+      if (err2) {
+        console.error("Paid amounts fetch error:", err2);
+        return res.status(500).json([]);
       }
 
-      const feeStructure = feeRows[0];
-
-      // Step 3: Get total paid amounts
-      connection.query(`
-        SELECT fee_type, SUM(amount_paid) AS paid 
-        FROM student_fee_payments 
-        WHERE userId = ? AND matched = 1 
-        GROUP BY fee_type
-      `, [userId], (err3, paidRows) => {
-        if (err3) {
-          return res.status(500).json({ error: 'Payment data error' });
-        }
-
-        const paidMap = {};
-        paidRows.forEach(row => {
-          paidMap[row.fee_type] = parseFloat(row.paid);
-        });
-
-        // Step 4: Compare and send remaining
-        const remaining = {
-          tuition: (parseFloat(feeStructure.tuition) || 0) - (paidMap["tuition"] || 0),
-          hostel: (parseFloat(feeStructure.hostel) || 0) - (paidMap["hostel"] || 0),
-          bus: (parseFloat(feeStructure.bus) || 0) - (paidMap["bus"] || 0),
-          university: (parseFloat(feeStructure.university) || 0) - (paidMap["university"] || 0),
-          semester: (parseFloat(feeStructure.semester) || 0) - (paidMap["semester"] || 0),
-          library: (parseFloat(feeStructure.library) || 0) - (paidMap["library"] || 0),
-          fines: (parseFloat(feeStructure.fines) || 0) - (paidMap["fines"] || 0),
-        };
-
-        res.json(remaining);
-      });
+      res.json(results);
     });
   });
 });
+
 
 //reference number submission
 app.post("/submit-du", (req, res) => {
