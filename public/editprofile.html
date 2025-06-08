@@ -252,122 +252,119 @@
     </div>
   </div>
 
-  <script>
-    window.onpageshow = function(event) {
-      if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
-        window.location.reload();
-      }
+<script>
+  const baseUrl = window.location.hostname.includes("localhost")
+    ? "http://localhost:3000"
+    : "https://crr-noc.onrender.com";
+
+  window.onpageshow = function (event) {
+    if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+      window.location.reload();
+    }
+  };
+
+  const userId = localStorage.getItem("userId");
+  if (!userId) {
+    alert("Please login first.");
+    window.location.href = "index.html";
+  } else {
+    document.getElementById("userId").textContent = userId;
+  }
+
+  const form = document.querySelector(".edit-profile-form");
+  const inputs = form.querySelectorAll("input");
+  const formActions = document.querySelector(".form-actions");
+  const updateBtn = document.querySelector(".update-btn");
+
+  function setInputsDisabled(state) {
+    inputs.forEach(input => {
+      input.disabled = input.id === "course" ? true : state;
+    });
+  }
+
+  function formatDateToInput(dateStr) {
+    if (!dateStr) return "";
+    const date = new Date(dateStr);
+    if (isNaN(date)) return "";
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  function loadUserData() {
+    fetch(`${baseUrl}/student/${userId}`)
+      .then(res => res.json())
+      .then(data => {
+        form.name.value = data.name || "";
+        form.dob.value = formatDateToInput(data.dob);
+        form.year.value = data.year || "";
+        form.course.value = data.course || "";
+        form.semester.value = data.semester || "";
+        form.aadhar.value = data.aadhar_no || "";
+        form.mobile.value = data.mobile_no || "";
+        form.email.value = data.email || "";
+
+        setInputsDisabled(true);
+        formActions.style.display = "none";
+        updateBtn.style.display = "inline-block";
+      })
+      .catch(err => {
+        console.error("Error fetching user data:", err);
+        alert("Failed to load profile data");
+      });
+  }
+
+  window.onload = loadUserData;
+
+  updateBtn.addEventListener("click", () => {
+    setInputsDisabled(false);
+    formActions.style.display = "flex";
+    updateBtn.style.display = "none";
+  });
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const updatedData = {
+      userId,
+      name: form.name.value,
+      dob: form.dob.value,
+      year: form.year.value,
+      course: form.course.value,
+      semester: form.semester.value,
+      aadhar: form.aadhar.value,
+      mobile: form.mobile.value,
+      email: form.email.value
     };
 
-    const userId = localStorage.getItem("userId");
-    if (!userId) {
-      alert("Please login first.");
-      window.location.href = "index.html";
-    } else {
-      document.getElementById("userId").textContent = userId;
-    }
-
-    const form = document.querySelector(".edit-profile-form");
-    const inputs = form.querySelectorAll("input");
-    const formActions = document.querySelector(".form-actions");
-    const updateBtn = document.querySelector(".update-btn");
-
-    function setInputsDisabled(state) {
-      inputs.forEach(input => {
-        input.disabled = input.id === "course" ? true : state;
+    fetch(`${baseUrl}/editprofile`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updatedData),
+    })
+      .then(res => res.json())
+      .then(data => {
+        alert(data.message || "Profile updated successfully!");
+        loadUserData();
+      })
+      .catch(err => {
+        console.error("Error updating profile:", err);
+        alert("Failed to update profile");
       });
-    }
+  });
 
-    function formatDateToInput(dateStr) {
-      if (!dateStr) return "";
-      const date = new Date(dateStr);
-      if (isNaN(date)) return "";
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const day = String(date.getDate()).padStart(2, "0");
-      return `${year}-${month}-${day}`;
-    }
+  document.querySelector(".cancel-btn").addEventListener("click", () => {
+    loadUserData();
+  });
 
-    function loadUserData() {
-      const baseUrl = "https://crr-noc.onrender.com"; // your backend URL
-
-fetch(`${baseUrl}/student/${userId}`)
-
-        .then(res => res.json())
-        .then(data => {
-          form.name.value = data.name || "";
-          form.dob.value = formatDateToInput(data.dob);
-          form.year.value = data.year || "";
-          form.course.value = data.course || "";
-          form.semester.value = data.semester || "";
-          form.aadhar.value = data.aadhar_no || "";
-          form.mobile.value = data.mobile_no || "";
-          form.email.value = data.email || "";
-
-          setInputsDisabled(true);
-          formActions.style.display = "none";
-          updateBtn.style.display = "inline-block";
-        })
-        .catch(err => {
-          console.error("Error fetching user data:", err);
-          alert("Failed to load profile data");
-        });
-    }
-
-    window.onload = loadUserData;
-
-    updateBtn.addEventListener("click", () => {
-      setInputsDisabled(false);
-      formActions.style.display = "flex";
-      updateBtn.style.display = "none";
-    });
-
-    form.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const updatedData = {
-        userId,
-        name: form.name.value,
-        dob: form.dob.value,
-        year: form.year.value,
-        course: form.course.value,
-        semester: form.semester.value,
-        aadhar: form.aadhar.value,
-        mobile: form.mobile.value,
-        email: form.email.value
-      };
-
-    const baseUrl = window.location.hostname.includes("localhost")
-  ? "http://localhost:3000"
-  : "https://crr-noc.onrender.com";
-
-fetch(`${baseUrl}/editprofile`, {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify(data),
-
-})
-
-        .then(res => res.json())
-        .then(data => {
-          alert(data.message || "Profile updated successfully!");
-          loadUserData();
-        })
-        .catch(err => {
-          console.error("Error updating profile:", err);
-          alert("Failed to update profile");
-        });
-    });
-
-    document.querySelector(".cancel-btn").addEventListener("click", () => {
-      loadUserData();
-    });
-function logout() {
+  function logout() {
     localStorage.removeItem("userId");
     if ("caches" in window) {
       caches.keys().then((names) => names.forEach((name) => caches.delete(name)));
     }
     window.location.replace("index.html");
   }
-  </script>
+</script>
+
 </body>
 </html>
