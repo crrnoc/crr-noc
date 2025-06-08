@@ -4,11 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Sir Crr Engg NOC Login Portal</title>
-    <link rel="icon" href="crrengglogo.png" type="image/png" />
+  <link rel="icon" href="crrengglogo.png" type="image/png" />
   <style>
     :root {
       --main-color: #8c0002;
-      --glow-color: #3cb6ff; /* changed red to blue */
+      --glow-color: #3cb6ff;
       --bg-overlay: rgba(0, 0, 0, 0.6);
       --text-light: #fefefe;
     }
@@ -22,35 +22,37 @@
 
     body {
       background: url('https://i.ytimg.com/vi/zKGq-sYdaw8/maxresdefault.jpg') no-repeat center center/cover;
-      height: 100vh;
-      overflow: hidden;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
-.login-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  background: var(--bg-overlay);
-}
 
-.mobile-strip {
-  color: #01ddff;
-  padding: 8px 20px;
-  font-size: 13px;
-  text-align: center;
-  border-radius: 12px 12px 0 0;
-  width: 400px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  margin-bottom: 15px;
-  font-weight: 500;
-}
+    .login-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-overlay);
+      padding-top: 20px;
+    }
 
+    .mobile-strip {
+      color: #01ddff;
+      padding: 8px 20px;
+      font-size: 13px;
+      text-align: center;
+      border-radius: 12px 12px 0 0;
+      width: 400px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      margin-bottom: 15px;
+      font-weight: 500;
+    }
 
     .login-box {
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid rgba(255, 255, 255, 0.15);
-      box-shadow: 0 0 25px rgba(0, 191, 255, 0.2); /* changed from red to blue */
+      box-shadow: 0 0 25px rgba(0, 191, 255, 0.2);
       backdrop-filter: blur(15px);
       border-radius: 20px;
       padding: 40px 35px;
@@ -62,7 +64,7 @@
 
     .login-box:hover {
       transform: scale(1.02);
-      box-shadow: 0 0 40px var(--glow-color); /* blue glow on hover */
+      box-shadow: 0 0 40px var(--glow-color);
     }
 
     @keyframes fadeSlide {
@@ -85,17 +87,7 @@
       text-align: center;
     }
 
-    .login-box input {
-      width: 100%;
-      padding: 14px;
-      margin-bottom: 20px;
-      border-radius: 12px;
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      color: white;
-      font-size: 15px;
-      transition: 0.3s ease;
-    }
+    .login-box input,
     .login-box select {
       width: 100%;
       padding: 14px;
@@ -106,13 +98,12 @@
       color: white;
       font-size: 15px;
       transition: 0.3s ease;
-      cursor: pointer;
     }
+
     .login-box select option {
       font-weight: 600;
       color: #111;
       background-color: #fff;
-      cursor: pointer;
     }
 
     .login-box input::placeholder,
@@ -176,13 +167,16 @@
       }
     }
 
-    footer {
-      text-align: center;
-      padding: 12px;
-      background-color: var(--main-color);
-      color: white;
-      font-size: 13.5px;
-    }
+.footer {
+  text-align: center;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.4); /* Soft transparent overlay */
+  color: #fff;
+  font-size: 13.5px;
+  backdrop-filter: blur(5px);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
 
     @media (max-width: 480px) {
       .login-box {
@@ -197,7 +191,7 @@
 </head>
 <body>
   <div class="login-container">
- <div class="mobile-strip">📢 For the best experience, please switch to Desktop Site.</div>
+    <div class="mobile-strip">📢 For the best experience, please switch to Desktop Site.</div>
     <div class="login-box">
       <h2>Login to NOC Portal</h2>
       <form id="loginForm">
@@ -214,7 +208,7 @@
     </div>
   </div>
 
-  <footer>
+  <footer class="footer">
     © 2025 Sir C.R. Reddy College of Engineering. All rights reserved.
   </footer>
 
