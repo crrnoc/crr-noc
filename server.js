@@ -608,13 +608,11 @@ app.get("/fee-status/:userId", (req, res) => {
 
       const feeStructure = feeRows[0];
 
-      // ✅ Fix: use userId and correct column 'amount_paid'
       connection.query(`
-        SELECT fee_type, SUM(amount_paid) AS paid 
+        SELECT fee_type, SUM(amount) AS paid 
         FROM student_fee_payments
-        WHERE userId = ? AND matched = 1
-        GROUP BY fee_type
-      `, [userId], (err3, paidRows) => {
+        WHERE userId = ? GROUP BY fee_type
+      `, [reg_no], (err3, paidRows) => {
         if (err3) return res.status(500).json({ success: false });
 
         const paidMap = {};
