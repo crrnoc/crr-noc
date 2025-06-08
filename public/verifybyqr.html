@@ -147,32 +147,55 @@
 <script>
   const urlParams = new URLSearchParams(window.location.search);
   const userId = urlParams.get("userId");
-  const studentIdEl = document.getElementById("student-id");
-  const resultEl = document.getElementById("result");
 
-  if (!userId) {
-    resultEl.textContent = "❌ Invalid QR code.";
-    resultEl.className = "status not-eligible";
-  } else {
-    studentIdEl.textContent = `User ID: ${userId}`;
+  const studentIdPara = document.getElementById("student-id");
+  const resultDiv = document.getElementById("result");
 
-    fetch(`https://crr-noc.onrender.com/noc-eligibility/${userId}`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.success && data.eligible) {
-          resultEl.textContent = "✅ Eligible for NOC";
-          resultEl.className = "status eligible";
+  if (userId) {
+    studentIdPara.textContent = `User ID: ${userId}`;
+
+    fetch(`https://crr-noc.onrender.com/paid-amounts/${userId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.error) {
+          showError("❌ Error: " + data.error);
+          return;
+        }
+
+        let hasDue = false;
+        for (let key in data) {
+          if (parseFloat(data[key]) > 0) {
+            hasDue = true;
+            break;
+          }
+        }
+
+        if (hasDue) {
+          showError("❌ Not Eligible for NOC. Dues remaining.");
         } else {
-          resultEl.textContent = "❌ Not Eligible for NOC";
-          resultEl.className = "status not-eligible";
+          showSuccess("✅ Eligible for NOC");
         }
       })
-      .catch(err => {
-        resultEl.textContent = "❌ Error checking eligibility.";
-        resultEl.className = "status not-eligible";
+      .catch((err) => {
+        console.error(err);
+        showError("❌ Error checking fees.");
       });
+  } else {
+    studentIdPara.textContent = "❌ Invalid or missing user ID.";
+    showError("❌ Cannot verify without User ID.");
+  }
+
+  function showError(message) {
+    resultDiv.className = "status error";
+    resultDiv.textContent = message;
+  }
+
+  function showSuccess(message) {
+    resultDiv.className = "status success";
+    resultDiv.textContent = message;
   }
 </script>
+
 
 
 </body>
