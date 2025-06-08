@@ -205,7 +205,7 @@
       throw new Error("User ID not found in localStorage");
     }
 
-    fetch(`http://localhost:3000/notifications/${userId}`)
+    fetch(`https://crr-noc.onrender.com/notifications/${userId}`)
       .then(res => res.json())
       .then(data => {
         const list = document.getElementById("notificationList");
