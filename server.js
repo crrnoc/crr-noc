@@ -651,17 +651,17 @@ app.get('/staff/verify-noc/:reg_no', (req, res) => {
 app.post('/update-fee-structure', (req, res) => {
   const {
     reg_no, tuition, hostel, bus,
-    university, semester, library, fines
+    university, semester, library
   } = req.body;
 
-  const updatedFees = { tuition, hostel, bus, university, semester, library, fines };
+  const updatedFees = { tuition, hostel, bus, university, semester, library };
 
   // Step 1: Fetch existing remaining_fee
   connection.query('SELECT * FROM remaining_fee WHERE reg_no = ?', [reg_no], (err1, remainRows) => {
     if (err1) return res.status(500).json({ success: false, message: 'Error fetching remaining fee' });
 
     const oldRemaining = remainRows.length ? remainRows[0] : {
-      tuition: 0, hostel: 0, bus: 0, university: 0, semester: 0, library: 0, fines: 0
+      tuition: 0, hostel: 0, bus: 0, university: 0, semester: 0, library: 0
     };
 
     // Step 2: Calculate new remaining = newFee + oldRemaining
@@ -673,43 +673,41 @@ app.post('/update-fee-structure', (req, res) => {
     // Step 3: Update student_fee_structure
     const sqlUpdate = `
       INSERT INTO student_fee_structure
-        (reg_no, tuition, hostel, bus, university, semester, library, fines)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        (reg_no, tuition, hostel, bus, university, semester, library)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
       ON DUPLICATE KEY UPDATE
         tuition = VALUES(tuition),
         hostel = VALUES(hostel),
         bus = VALUES(bus),
         university = VALUES(university),
         semester = VALUES(semester),
-        library = VALUES(library),
-        fines = VALUES(fines)
+        library = VALUES(library)
     `;
 
     connection.query(sqlUpdate, [
       reg_no, finalStructure.tuition, finalStructure.hostel, finalStructure.bus,
-      finalStructure.university, finalStructure.semester, finalStructure.library, finalStructure.fines
+      finalStructure.university, finalStructure.semester, finalStructure.library
     ], (err2) => {
       if (err2) return res.status(500).json({ success: false, message: 'Fee structure update failed' });
 
       // ✅ Step 4: Just update newRemaining (don't subtract verified fee again)
       const sqlRemain = `
         INSERT INTO remaining_fee 
-          (reg_no, tuition, hostel, bus, university, semester, library, fines)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          (reg_no, tuition, hostel, bus, university, semester, library)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
         ON DUPLICATE KEY UPDATE
           tuition = VALUES(tuition),
           hostel = VALUES(hostel),
           bus = VALUES(bus),
           university = VALUES(university),
           semester = VALUES(semester),
-          library = VALUES(library),
-          fines = VALUES(fines)
+          library = VALUES(library)
       `;
 
       connection.query(sqlRemain, [
         reg_no,
         finalStructure.tuition, finalStructure.hostel, finalStructure.bus,
-        finalStructure.university, finalStructure.semester, finalStructure.library, finalStructure.fines
+        finalStructure.university, finalStructure.semester, finalStructure.library
       ], (err4) => {
         if (err4) return res.status(500).json({ success: false, message: 'Remaining fee update failed' });
 
