@@ -290,7 +290,7 @@
       const formData = new FormData();
       formData.append("sbiFile", file);
 
-      fetch("http://localhost:3000/admin/upload-sbi", {
+      fetch("https://crr-noc.onrender.com/admin/upload-sbi", {
         method: "POST",
         body: formData
       })
@@ -303,7 +303,7 @@
     }
 
     function loadMatches() {
-      fetch("http://localhost:3000/admin/matches")
+      fetch("https://crr-noc.onrender.com/admin/matches")
       .then(res => res.json())
       .then(data => {
         const table = document.querySelector("#matchTable tbody");
@@ -323,7 +323,7 @@
     }
 
     function loadNOC() {
-      fetch("http://localhost:3000/admin/noc-status")
+      fetch("https://crr-noc.onrender.com/admin/noc-status")
       .then(res => res.json())
       .then(data => {
         const table = document.querySelector("#nocTable tbody");
