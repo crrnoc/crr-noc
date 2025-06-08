@@ -156,31 +156,15 @@
   } else {
     studentIdEl.textContent = `User ID: ${userId}`;
 
-    fetch(`https://crr-noc.onrender.com/fee-status/${userId}`)
+    fetch(`https://crr-noc.onrender.com/noc-eligibility/${userId}`)
       .then(res => res.json())
       .then(data => {
-        if (!data.success) throw new Error("Fetch failed");
-
-        const remaining = data.remaining;
-        let totalRemaining = 0;
-        for (const key in remaining) {
-          totalRemaining += remaining[key];
-        }
-
-        if (totalRemaining <= 0) {
+        if (data.success && data.eligible) {
           resultEl.textContent = "✅ Eligible for NOC";
           resultEl.className = "status eligible";
         } else {
           resultEl.textContent = "❌ Not Eligible for NOC";
           resultEl.className = "status not-eligible";
-            // Show remaining fee breakdown
-  for (const key in remaining) {
-    if (remaining[key] > 0) {
-      const para = document.createElement("p");
-      para.textContent = `${key.toUpperCase()} Due: ₹${remaining[key].toFixed(2)}`;
-      para.style.color = "#b91c1c";
-      para.style.marginTop = "5px";
-      resultEl.appendChild(para);
         }
       })
       .catch(err => {
@@ -189,6 +173,7 @@
       });
   }
 </script>
+
 
 </body>
 </html>
