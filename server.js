@@ -655,6 +655,7 @@ app.post('/update-fee-structure', (req, res) => {
   } = req.body;
 
   if (!reg_no) {
+    console.error("❌ Missing reg_no in request body");
     return res.status(400).json({ success: false, message: "Registration number missing." });
   }
 
@@ -667,42 +668,45 @@ app.post('/update-fee-structure', (req, res) => {
     library: parseFloat(library) || 0
   };
 
-  console.log("🟡 Update request for:", reg_no);
-  console.log("🟡 Fees to add:", updatedFees);
+  console.log("➡️ Incoming Update Request for:", reg_no);
+  console.log("🧾 Fees to update:", updatedFees);
 
-  // 🟢 Step 1: Ensure a row exists in remaining_fee
+  // Step 1: Insert default row into remaining_fee
   const insertDefault = `
     INSERT IGNORE INTO remaining_fee 
-    (reg_no, tuition, hostel, bus, university, semester, library) 
+    (reg_no, tuition, hostel, bus, university, semester, \`library\`) 
     VALUES (?, 0, 0, 0, 0, 0, 0)
   `;
   connection.query(insertDefault, [reg_no], (err0) => {
     if (err0) {
-      console.error("❌ Insert default row failed:", err0);
-      return res.status(500).json({ success: false, message: "Failed to insert default row." });
+      console.error("❌ INSERT IGNORE error:", err0.message);
+      return res.status(500).json({ success: false, message: "Insert default row failed." });
     }
 
-    // 🟢 Step 2: Fetch existing remaining_fee
+    // Step 2: Fetch existing row
     connection.query('SELECT * FROM remaining_fee WHERE reg_no = ?', [reg_no], (err1, remainRows) => {
       if (err1) {
-        console.error("❌ Error fetching remaining_fee:", err1);
-        return res.status(500).json({ success: false, message: 'Error fetching remaining fee' });
+        console.error("❌ SELECT error:", err1.message);
+        return res.status(500).json({ success: false, message: 'Fetch from remaining_fee failed' });
       }
 
       const oldRemaining = remainRows[0];
+      if (!oldRemaining) {
+        console.error("❌ No row found after INSERT IGNORE (this should not happen)");
+        return res.status(500).json({ success: false, message: 'Row missing' });
+      }
 
-      // 🟢 Step 3: Add old remaining + new structure
       const finalStructure = {};
       for (const key in updatedFees) {
         finalStructure[key] = updatedFees[key] + parseFloat(oldRemaining[key] || 0);
       }
 
-      console.log("✅ Final new structure:", finalStructure);
+      console.log("✅ Final values to save:", finalStructure);
 
-      // 🟢 Step 4: Update student_fee_structure
+      // Step 3: Update student_fee_structure
       const sqlUpdate = `
         INSERT INTO student_fee_structure
-          (reg_no, tuition, hostel, bus, university, semester, library)
+        (reg_no, tuition, hostel, bus, university, semester, \`library\`)
         VALUES (?, ?, ?, ?, ?, ?, ?)
         ON DUPLICATE KEY UPDATE
           tuition = VALUES(tuition),
@@ -710,7 +714,7 @@ app.post('/update-fee-structure', (req, res) => {
           bus = VALUES(bus),
           university = VALUES(university),
           semester = VALUES(semester),
-          library = VALUES(library)
+          \`library\` = VALUES(\`library\`)
       `;
 
       connection.query(sqlUpdate, [
@@ -723,14 +727,14 @@ app.post('/update-fee-structure', (req, res) => {
         finalStructure.library
       ], (err2) => {
         if (err2) {
-          console.error("❌ Failed to update student_fee_structure:", err2);
+          console.error("❌ student_fee_structure update error:", err2.message);
           return res.status(500).json({ success: false, message: 'Fee structure update failed' });
         }
 
-        // 🟢 Step 5: Update remaining_fee with same values
+        // Step 4: Update remaining_fee
         const sqlRemain = `
           INSERT INTO remaining_fee 
-            (reg_no, tuition, hostel, bus, university, semester, library)
+          (reg_no, tuition, hostel, bus, university, semester, \`library\`)
           VALUES (?, ?, ?, ?, ?, ?, ?)
           ON DUPLICATE KEY UPDATE
             tuition = VALUES(tuition),
@@ -738,7 +742,7 @@ app.post('/update-fee-structure', (req, res) => {
             bus = VALUES(bus),
             university = VALUES(university),
             semester = VALUES(semester),
-            library = VALUES(library)
+            \`library\` = VALUES(\`library\`)
         `;
 
         connection.query(sqlRemain, [
@@ -751,11 +755,11 @@ app.post('/update-fee-structure', (req, res) => {
           finalStructure.library
         ], (err3) => {
           if (err3) {
-            console.error("❌ Failed to update remaining_fee:", err3);
+            console.error("❌ remaining_fee update error:", err3.message);
             return res.status(500).json({ success: false, message: 'Remaining fee update failed' });
           }
 
-          console.log("✅ Fee update success for", reg_no);
+          console.log("🎉 Fee updated successfully for", reg_no);
           res.json({ success: true, message: '✅ Fee updated and remaining fee saved.' });
         });
       });
