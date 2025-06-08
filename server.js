@@ -23,7 +23,7 @@ const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
     user: 'crrenoccertificate@gmail.com',
-    pass: 'hrct bhyw ekqb njep' // Replace with actual app password
+    pass: 'lvwv dbqt ukfc sviv' // Replace with actual app password
   }
 });
 // ✅ Middlewares (used only once)
