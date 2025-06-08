@@ -589,6 +589,63 @@ app.get('/admin/noc-status', (req, res) => {
     Promise.all(checks).then(data => res.json(data));
   });
 });
+
+//logic for the fee status for qr code
+app.get("/fee-status/:userId", (req, res) => {
+  const { userId } = req.params;
+
+  connection.query('SELECT reg_no FROM students WHERE userId = ?', [userId], (err, studentRows) => {
+    if (err || studentRows.length === 0) return res.status(500).json({ success: false });
+
+    const reg_no = studentRows[0].reg_no;
+
+    connection.query(`
+      SELECT * FROM student_fee_structure 
+      WHERE reg_no = ? ORDER BY updated_at DESC LIMIT 1
+    `, [reg_no], (err2, feeRows) => {
+      if (err2 || feeRows.length === 0) return res.status(400).json({ success: false });
+
+      const feeStructure = feeRows[0];
+
+      connection.query(`
+        SELECT fee_type, SUM(amount) AS paid 
+        FROM student_fee_payments
+        WHERE userId = ? GROUP BY fee_type
+      `, [reg_no], (err3, paidRows) => {
+        if (err3) return res.status(500).json({ success: false });
+
+        const paidMap = {};
+        paidRows.forEach(row => {
+          paidMap[row.fee_type.toLowerCase()] = parseFloat(row.paid);
+        });
+
+        const expected = {
+          tuition: parseFloat(feeStructure.tuition) || 0,
+          hostel: parseFloat(feeStructure.hostel) || 0,
+          bus: parseFloat(feeStructure.bus) || 0,
+          university: parseFloat(feeStructure.university) || 0,
+          semester: parseFloat(feeStructure.semester) || 0,
+          library: parseFloat(feeStructure.library) || 0,
+          fines: parseFloat(feeStructure.fines) || 0
+        };
+
+        const remaining = {};
+        for (const key in expected) {
+          remaining[key] = expected[key] - (paidMap[key] || 0);
+        }
+
+        return res.json({
+          success: true,
+          reg_no,
+          expected,
+          paid: paidMap,
+          remaining
+        });
+      });
+    });
+  });
+});
+
 //logic for noc verification in staff page
 app.get('/staff/verify-noc/:reg_no', (req, res) => {
   const { reg_no } = req.params;
