@@ -144,34 +144,51 @@
     </div>
   </div>
 
-  <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const userId = urlParams.get("userId");
-    const studentIdEl = document.getElementById("student-id");
-    const resultEl = document.getElementById("result");
+<script>
+  const urlParams = new URLSearchParams(window.location.search);
+  const userId = urlParams.get("userId");
+  const studentIdEl = document.getElementById("student-id");
+  const resultEl = document.getElementById("result");
 
-    if (!userId) {
-      resultEl.textContent = "❌ Invalid QR code.";
-      resultEl.className = "status not-eligible";
-      studentIdEl.textContent = "No User ID Found";
-    } else {
-      studentIdEl.textContent = `User ID: ${userId}`;
-      fetch(`https://crr-noc.onrender.com/noc-eligibility/${userId}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.success && data.eligible) {
-            resultEl.textContent = "✅ Eligible for NOC";
-            resultEl.className = "status eligible";
-          } else {
-            resultEl.textContent = "❌ Not Eligible for NOC";
-            resultEl.className = "status not-eligible";
-          }
-        })
-        .catch(err => {
-          resultEl.textContent = "❌ Error checking eligibility.";
+  if (!userId) {
+    resultEl.textContent = "❌ Invalid QR code.";
+    resultEl.className = "status not-eligible";
+  } else {
+    studentIdEl.textContent = `User ID: ${userId}`;
+
+    fetch(`https://crr-noc.onrender.com/fee-status/${userId}`)
+      .then(res => res.json())
+      .then(data => {
+        if (!data.success) throw new Error("Fetch failed");
+
+        const remaining = data.remaining;
+        let totalRemaining = 0;
+        for (const key in remaining) {
+          totalRemaining += remaining[key];
+        }
+
+        if (totalRemaining <= 0) {
+          resultEl.textContent = "✅ Eligible for NOC";
+          resultEl.className = "status eligible";
+        } else {
+          resultEl.textContent = "❌ Not Eligible for NOC";
           resultEl.className = "status not-eligible";
-        });
-    }
-  </script>
+            // Show remaining fee breakdown
+  for (const key in remaining) {
+    if (remaining[key] > 0) {
+      const para = document.createElement("p");
+      para.textContent = `${key.toUpperCase()} Due: ₹${remaining[key].toFixed(2)}`;
+      para.style.color = "#b91c1c";
+      para.style.marginTop = "5px";
+      resultEl.appendChild(para);
+        }
+      })
+      .catch(err => {
+        resultEl.textContent = "❌ Error checking eligibility.";
+        resultEl.className = "status not-eligible";
+      });
+  }
+</script>
+
 </body>
 </html>
