@@ -239,7 +239,7 @@
         return;
       }
 
-      fetch('http://localhost:3000/update-fee-structure', {
+      fetch('https://crr-noc.onrender.com/update-fee-structure', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
