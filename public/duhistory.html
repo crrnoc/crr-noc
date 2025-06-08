@@ -257,7 +257,7 @@
       const tbody = document.querySelector("#feeTable tbody");
       tbody.innerHTML = `<tr><td colspan="5">Loading...</td></tr>`;
 
-      fetch(`http://localhost:3000/my-fee-entries/${userId}`)
+      fetch(`https://crr-noc.onrender.com/my-fee-entries/${userId}`)
         .then(res => res.json())
         .then(data => {
           tbody.innerHTML = "";
@@ -294,7 +294,7 @@
     }
     function deleteEntry(id) {
       if (confirm("Are you sure you want to delete this fee entry?")) {
-        fetch(`http://localhost:3000/delete-fee-entry/${id}`, {
+        fetch(`https://crr-noc.onrender.com/delete-fee-entry/${id}`, {
           method: "DELETE"
         })
         .then(res => res.json())
