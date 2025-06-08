@@ -228,7 +228,7 @@
         return;
       }
 
-      fetch(`http://localhost:3000/student/${studentId}`)
+      fetch(`https://crr-noc.onrender.com/student/${studentId}`)
         .then(res => {
           if (!res.ok) {
             throw new Error("Student not found");
