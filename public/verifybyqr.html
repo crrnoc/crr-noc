@@ -154,31 +154,38 @@
   if (userId) {
     studentIdPara.textContent = `User ID: ${userId}`;
 
-    fetch(`https://crr-noc.onrender.com/paid-amounts/${userId}`)
+    fetch(`https://crr-noc.onrender.com/fee-status/${userId}`)
       .then((res) => res.json())
       .then((data) => {
-        if (data.error) {
-          showError("❌ Error: " + data.error);
+        if (!data.success) {
+          showError("❌ Error: Unable to fetch fee status.");
           return;
         }
 
-        let hasDue = false;
-        for (let key in data) {
-          if (parseFloat(data[key]) > 0) {
-            hasDue = true;
-            break;
-          }
-        }
+        const expected = data.expected || {};
+        const paid = data.paid || {};
 
-        if (hasDue) {
-          showError("❌ Not Eligible for NOC. Dues remaining.");
-        } else {
+        const keys = ["tuition", "hostel", "bus", "university", "semester", "library", "fines"];
+
+        let totalExpected = 0;
+        let totalPaid = 0;
+
+        keys.forEach((key) => {
+          totalExpected += parseFloat(expected[key]) || 0;
+          totalPaid += parseFloat(paid[key]) || 0;
+        });
+
+        console.log("Expected:", totalExpected, "Paid:", totalPaid);
+
+        if (totalPaid >= totalExpected && totalExpected > 0) {
           showSuccess("✅ Eligible for NOC");
+        } else {
+          showError("❌ Not Eligible for NOC. Dues remaining.");
         }
       })
       .catch((err) => {
         console.error(err);
-        showError("❌ Error checking fees.");
+        showError("❌ Error checking fee status.");
       });
   } else {
     studentIdPara.textContent = "❌ Invalid or missing user ID.";
@@ -186,15 +193,16 @@
   }
 
   function showError(message) {
-    resultDiv.className = "status error";
+    resultDiv.className = "status not-eligible";
     resultDiv.textContent = message;
   }
 
   function showSuccess(message) {
-    resultDiv.className = "status success";
+    resultDiv.className = "status eligible";
     resultDiv.textContent = message;
   }
 </script>
+
 
 
 
