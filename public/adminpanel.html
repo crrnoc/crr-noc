@@ -251,19 +251,58 @@
       </table>
     </div>
 
-    <div class="card" id="noc">
-      <h3>NOC Generation Status</h3>
-      <button onclick="loadNOC()">Show Eligible Students</button>
-      <table id="nocTable">
-        <thead>
-          <tr>
-            <th>User ID</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
+   <div class="card" id="noc">
+  <h3>NOC Generation Status</h3>
+
+  <!-- 🔽 Filter Dropdowns -->
+  <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+    <select id="filterBranch">
+      <option value="">-- Branch --</option>
+      <option value="CIVIL">CIVIL</option>
+      <option value="MECH">MECH</option>
+      <option value="EEE">EEE</option>
+      <option value="ECE">ECE</option>
+      <option value="CSE">CSE</option>
+      <option value="CSD">CSD</option>
+      <option value="CSM">CSM</option>
+      <option value="CSC">CSC</option>
+      <option value="IT">IT</option>
+    </select>
+
+    <select id="filterYear">
+      <option value="">-- Year --</option>
+      <option value="1">1st Year</option>
+      <option value="2">2nd Year</option>
+      <option value="3">3rd Year</option>
+      <option value="4">4th Year</option>
+    </select>
+
+    <select id="filterSection">
+      <option value="">-- Section --</option>
+      <option value="A">A</option>
+      <option value="B">B</option>
+      <option value="C">C</option>
+      <option value="D">D</option>
+      <option value="E">E</option>
+      <option value="F">F</option>
+    </select>
+
+    <button onclick="applyNOCFilter()">Filter</button>
+    <button onclick="loadNOC()">Reset</button>
+  </div>
+
+  <!-- 🧾 Results Table -->
+  <table id="nocTable">
+    <thead>
+      <tr>
+        <th>User ID</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
 
   </div>
 
@@ -338,6 +377,41 @@
         });
       });
     }
+    function applyNOCFilter() {
+  const branch = document.getElementById("filterBranch").value;
+  const year = document.getElementById("filterYear").value;
+  const section = document.getElementById("filterSection").value;
+
+  fetch("https://crr-noc.onrender.com/admin/noc-filter", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ branch, year, section })
+  })
+  .then(res => res.json())
+  .then(data => {
+    const table = document.querySelector("#nocTable tbody");
+    table.innerHTML = "";
+
+    if (!data.length) {
+      table.innerHTML = `<tr><td colspan="2">No matching records found.</td></tr>`;
+      return;
+    }
+
+    data.forEach(user => {
+      table.innerHTML += `
+        <tr>
+          <td>${user.userId}</td>
+          <td>${user.eligible ? '✅ Approved' : '❌ Pending'}</td>
+        </tr>
+      `;
+    });
+  })
+  .catch(err => {
+    alert("Failed to fetch filtered data.");
+    console.error(err);
+  });
+}
+
     function logout() {
     localStorage.removeItem("userId");
     if ("caches" in window) {
