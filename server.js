@@ -5,6 +5,7 @@ const session = require('express-session');
 const cors = require('cors');
 const bodyParser = require("body-parser");
 const path = require("path");
+const bcrypt = require('bcrypt');
 const PDFDocument = require('pdfkit');
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/' });
@@ -76,33 +77,43 @@ app.use("/admin", adminRoutes);
 
 // 🔐 Login route
 // 🔐 Login route
+
 app.post('/login', (req, res) => {
   const { userId, password, role } = req.body;
 
+  // Step 1: Get user by ID and role (not by password!)
   connection.query(
-    'SELECT * FROM users WHERE userId = ? AND password = ? AND role = ?',
-    [userId, password, role],
+    'SELECT * FROM users WHERE userId = ? AND role = ?',
+    [userId, role],
     (err, results) => {
-      if (err) return res.status(500).json({ success: false, message: 'Server error' });
-
-      if (results.length === 0) {
+      if (err || results.length === 0) {
         return res.status(401).json({ success: false, message: 'Invalid credentials or role mismatch' });
       }
 
-      req.session.userId = userId;
-      req.session.role = role;
+      const user = results[0];
 
-      let redirectTo = "";
-      if (role === "student") redirectTo = `/student/${userId}`;
-      else if (role === "staff") redirectTo = `/staff/${userId}`;
-      else if (role === "admin") redirectTo = `/admin/dashboard`;
+      // Step 2: Compare input password with hashed password
+      bcrypt.compare(password, user.password, (err2, isMatch) => {
+        if (err2 || !isMatch) {
+          return res.status(401).json({ success: false, message: 'Incorrect password' });
+        }
 
-      res.status(200).json({
-        success: true,
-        message: 'Login successful',
-        userId,
-        role,
-        redirectTo
+        // ✅ Password correct
+        req.session.userId = userId;
+        req.session.role = role;
+
+        let redirectTo = "";
+        if (role === "student") redirectTo = `/student/${userId}`;
+        else if (role === "staff") redirectTo = `/staff/${userId}`;
+        else if (role === "admin") redirectTo = `/admin/dashboard`;
+
+        res.status(200).json({
+          success: true,
+          message: 'Login successful',
+          userId,
+          role,
+          redirectTo
+        });
       });
     }
   );
@@ -152,15 +163,26 @@ app.post('/verify-otp', (req, res) => {
   }
 });
 
-// 3️⃣ Reset Password
-app.post('/reset-password', (req, res) => {
+// 3️⃣ Reset Password with hashing
+app.post('/reset-password', async (req, res) => {
   const { userId, newPassword } = req.body;
 
-  connection.query('UPDATE users SET password = ? WHERE userId = ?', [newPassword, userId], (err) => {
-    if (err) return res.json({ success: false });
-    otpMap.delete(userId);
-    res.json({ success: true });
-  });
+  try {
+    const hashedPassword = await bcrypt.hash(newPassword, 10); // 10 = salt rounds
+
+    connection.query(
+      'UPDATE users SET password = ? WHERE userId = ?',
+      [hashedPassword, userId],
+      (err) => {
+        if (err) return res.json({ success: false });
+        otpMap.delete(userId);
+        res.json({ success: true });
+      }
+    );
+  } catch (error) {
+    console.error("Hashing error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
 });
 
 // 👤 Get student details
