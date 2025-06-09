@@ -249,6 +249,27 @@
   <option value="CSC">CSC</option>
   <option value="IT">IT</option>
 </select>
+              <select id="filterYear">
+      <option value="">-- Year --</option>
+      <option value="1">1st Year</option>
+      <option value="2">2nd Year</option>
+      <option value="3">3rd Year</option>
+      <option value="4">4th Year</option>
+    </select>
+
+    <select id="filterSection">
+      <option value="">-- Section --</option>
+      <option value="A">A</option>
+      <option value="B">B</option>
+      <option value="C">C</option>
+      <option value="D">D</option>
+      <option value="E">E</option>
+      <option value="F">F</option>
+    </select>
+
+    <button onclick="applyDUFilter()()">Filter</button>
+    <button onclick="loadMatches())">Reset</button>
+  </div>
       <button onclick="loadMatches()">Refresh Table</button>
       <table id="matchTable">
         <thead>
