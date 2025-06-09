@@ -256,18 +256,19 @@
 
   <!-- 🔽 Filter Dropdowns -->
   <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
-    <select id="filterBranch">
-      <option value="">-- Branch --</option>
-      <option value="CIVIL">CIVIL</option>
-      <option value="MECH">MECH</option>
-      <option value="EEE">EEE</option>
-      <option value="ECE">ECE</option>
-      <option value="CSE">CSE</option>
-      <option value="CSD">CSD</option>
-      <option value="CSM">CSM</option>
-      <option value="CSC">CSC</option>
-      <option value="IT">IT</option>
-    </select>
+<select id="filterCourse">
+  <option value="">-- Course --</option>
+  <option value="CIVIL">CIVIL</option>
+  <option value="MECH">MECH</option>
+  <option value="EEE">EEE</option>
+  <option value="ECE">ECE</option>
+  <option value="CSE">CSE</option>
+  <option value="CSD">CSD</option>
+  <option value="CSM">CSM</option>
+  <option value="CSC">CSC</option>
+  <option value="IT">IT</option>
+</select>
+
 
     <select id="filterYear">
       <option value="">-- Year --</option>
@@ -377,15 +378,15 @@
         });
       });
     }
-    function applyNOCFilter() {
-  const branch = document.getElementById("filterBranch").value;
+function applyNOCFilter() {
+  const course = document.getElementById("filterCourse").value;
   const year = document.getElementById("filterYear").value;
   const section = document.getElementById("filterSection").value;
 
   fetch("https://crr-noc.onrender.com/admin/noc-filter", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ branch, year, section })
+    body: JSON.stringify({ course, year, section })
   })
   .then(res => res.json())
   .then(data => {
@@ -405,10 +406,40 @@
         </tr>
       `;
     });
+  });
+}
+
+    function applyDUFilter() {
+  const course = document.getElementById("filterCourse").value;
+  const year = document.getElementById("filterYear").value;
+  const section = document.getElementById("filterSection").value;
+
+  fetch("https://crr-noc.onrender.com/admin/match-filter", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ course, year, section })
   })
-  .catch(err => {
-    alert("Failed to fetch filtered data.");
-    console.error(err);
+  .then(res => res.json())
+  .then(data => {
+    const table = document.querySelector("#matchTable tbody");
+    table.innerHTML = "";
+
+    if (!data.length) {
+      table.innerHTML = `<tr><td colspan="5">No records found.</td></tr>`;
+      return;
+    }
+
+    data.forEach(row => {
+      table.innerHTML += `
+        <tr>
+          <td>${row.userId}</td>
+          <td>${row.fee_type}</td>
+          <td>${row.sbi_ref_no}</td>
+          <td>${row.matched ? '✅' : '❌'}</td>
+          <td>${row.matched_on || '-'}</td>
+        </tr>
+      `;
+    });
   });
 }
 
