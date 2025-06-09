@@ -1203,27 +1203,27 @@ app.delete("/delete-fee-entry/:id", (req, res) => {
 });
 //admin filter section
 app.post('/admin/noc-filter', (req, res) => {
-  const { branch, year, section } = req.body;
+  const { course, year, section } = req.body;
 
-  let baseQuery = `SELECT userId, reg_no FROM students WHERE 1=1`;
+  let query = `SELECT userId, reg_no FROM students WHERE 1=1`;
   const params = [];
 
-  if (branch) {
-    baseQuery += ` AND branch = ?`;
-    params.push(branch);
+  if (course) {
+    query += ` AND course = ?`;
+    params.push(course);
   }
 
   if (year) {
-    baseQuery += ` AND year = ?`;
+    query += ` AND year = ?`;
     params.push(year);
   }
 
   if (section) {
-    baseQuery += ` AND section = ?`;
+    query += ` AND section = ?`;
     params.push(section);
   }
 
-  connection.query(baseQuery, params, (err, students) => {
+  connection.query(query, params, (err, students) => {
     if (err) return res.status(500).json([]);
 
     const checks = students.map(student => {
@@ -1237,12 +1237,8 @@ app.post('/admin/noc-filter', (req, res) => {
             if (err2 || feeRows.length === 0) return resolve({ userId, eligible: false });
 
             const fees = feeRows[0];
-
             connection.query(
-              `SELECT fee_type, SUM(amount_paid) AS totalPaid 
-               FROM student_fee_payments 
-               WHERE userId = ? AND matched = 1 
-               GROUP BY fee_type`,
+              `SELECT fee_type, SUM(amount_paid) AS totalPaid FROM student_fee_payments WHERE userId = ? AND matched = 1 GROUP BY fee_type`,
               [userId],
               (err3, paidRows) => {
                 if (err3) return resolve({ userId, eligible: false });
@@ -1280,6 +1276,49 @@ app.post('/admin/noc-filter', (req, res) => {
         );
       });
     });
+
+    Promise.all(checks).then(data => res.json(data));
+  });
+});
+
+
+    app.post('/admin/match-filter', (req, res) => {
+  const { course, year, section } = req.body;
+
+  let query = `SELECT userId FROM students WHERE 1=1`;
+  const params = [];
+
+  if (course) {
+    query += ` AND course = ?`;
+    params.push(course);
+  }
+
+  if (year) {
+    query += ` AND year = ?`;
+    params.push(year);
+  }
+
+  if (section) {
+    query += ` AND section = ?`;
+    params.push(section);
+  }
+
+  connection.query(query, params, (err, students) => {
+    if (err) return res.status(500).json([]);
+
+    const userIds = students.map(s => s.userId);
+    if (!userIds.length) return res.json([]);
+
+    const inClause = userIds.map(() => '?').join(',');
+    const sql = `SELECT * FROM student_fee_payments WHERE userId IN (${inClause})`;
+
+    connection.query(sql, userIds, (err2, results) => {
+      if (err2) return res.status(500).json([]);
+      res.json(results);
+    });
+  });
+});
+
 
     Promise.all(checks).then(data => res.json(data));
   });
