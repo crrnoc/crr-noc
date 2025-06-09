@@ -238,6 +238,7 @@
           <div><label>Course</label><input type="text" id="course" disabled></div>
         </div>
         <div class="form-row"><label>Semester</label><input type="text" id="semester" disabled></div>
+                <div class="form-row"><label>unique_id</label><input type="text" id="Unique ID" disabled></div>
         <div class="form-row"><label>Aadhar No</label><input type="text" id="aadhar" disabled></div>
         <div class="form-row"><label>Mobile No</label><input type="text" id="mobile" disabled></div>
         <div class="form-row"><label>Email</label><input type="email" id="email" disabled></div>
@@ -301,6 +302,7 @@
         form.year.value = data.year || "";
         form.course.value = data.course || "";
         form.semester.value = data.semester || "";
+        form.unique_id.value = data.Unique_iD || "";
         form.aadhar.value = data.aadhar_no || "";
         form.mobile.value = data.mobile_no || "";
         form.email.value = data.email || "";
@@ -332,6 +334,7 @@
       year: form.year.value,
       course: form.course.value,
       semester: form.semester.value,
+      unique_id: form.unique_id.value,
       aadhar: form.aadhar.value,
       mobile: form.mobile.value,
       email: form.email.value
