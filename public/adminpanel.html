@@ -236,6 +236,19 @@
 
     <div class="card" id="matches">
       <h3>DU Match Status</h3>
+        <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+<select id="filterCourse">
+  <option value="">-- Course --</option>
+  <option value="CIVIL">CIVIL</option>
+  <option value="MECH">MECH</option>
+  <option value="EEE">EEE</option>
+  <option value="ECE">ECE</option>
+  <option value="CSE">CSE</option>
+  <option value="CSD">CSD</option>
+  <option value="CSM">CSM</option>
+  <option value="CSC">CSC</option>
+  <option value="IT">IT</option>
+</select>
       <button onclick="loadMatches()">Refresh Table</button>
       <table id="matchTable">
         <thead>
