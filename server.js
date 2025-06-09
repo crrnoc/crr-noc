@@ -1281,8 +1281,7 @@ app.post('/admin/noc-filter', (req, res) => {
   });
 });
 
-
-    app.post('/admin/match-filter', (req, res) => {
+app.post('/admin/match-filter', (req, res) => {
   const { course, year, section } = req.body;
 
   let query = `SELECT userId FROM students WHERE 1=1`;
@@ -1316,10 +1315,5 @@ app.post('/admin/noc-filter', (req, res) => {
       if (err2) return res.status(500).json([]);
       res.json(results);
     });
-  });
-});
-
-
-    Promise.all(checks).then(data => res.json(data));
   });
 });
