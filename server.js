@@ -202,13 +202,13 @@ app.get('/student/:userId', (req, res) => {
 
 // ✏️ Update student profile
 app.post('/editprofile', (req, res) => {
-  const { userId, name, dob, year, course, semester, aadhar, mobile, email } = req.body;
+  const { userId, name, dob, year, course, semester, unique_id, aadhar, mobile, email } = req.body;
 
   console.log("Received Update Data:", req.body); // 👀 Log incoming data
 
   const sql = `
     UPDATE students 
-    SET name=?, dob=?, year=?, course=?, semester=?, aadhar_no=?, mobile_no=?, email=? 
+   SET name=?, dob=?, year=?, course=?, semester=?, unique_id=?, aadhar_no=?, mobile_no=?, email=?
     WHERE userId=?
   `;
 
