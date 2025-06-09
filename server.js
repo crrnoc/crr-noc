@@ -1201,3 +1201,86 @@ app.delete("/delete-fee-entry/:id", (req, res) => {
     res.json({ success: true, message: "Fee entry deleted successfully." });
   });
 });
+//admin filter section
+app.post('/admin/noc-filter', (req, res) => {
+  const { branch, year, section } = req.body;
+
+  let baseQuery = `SELECT userId, reg_no FROM students WHERE 1=1`;
+  const params = [];
+
+  if (branch) {
+    baseQuery += ` AND branch = ?`;
+    params.push(branch);
+  }
+
+  if (year) {
+    baseQuery += ` AND year = ?`;
+    params.push(year);
+  }
+
+  if (section) {
+    baseQuery += ` AND section = ?`;
+    params.push(section);
+  }
+
+  connection.query(baseQuery, params, (err, students) => {
+    if (err) return res.status(500).json([]);
+
+    const checks = students.map(student => {
+      const { userId, reg_no } = student;
+
+      return new Promise(resolve => {
+        connection.query(
+          'SELECT * FROM student_fee_structure WHERE reg_no = ? ORDER BY updated_at DESC LIMIT 1',
+          [reg_no],
+          (err2, feeRows) => {
+            if (err2 || feeRows.length === 0) return resolve({ userId, eligible: false });
+
+            const fees = feeRows[0];
+
+            connection.query(
+              `SELECT fee_type, SUM(amount_paid) AS totalPaid 
+               FROM student_fee_payments 
+               WHERE userId = ? AND matched = 1 
+               GROUP BY fee_type`,
+              [userId],
+              (err3, paidRows) => {
+                if (err3) return resolve({ userId, eligible: false });
+
+                const paidMap = {};
+                paidRows.forEach(r => paidMap[r.fee_type] = parseFloat(r.totalPaid));
+
+                connection.query(
+                  'SELECT SUM(amount) AS fine FROM fines WHERE userId = ?',
+                  [userId],
+                  (err4, fineRes) => {
+                    const fine = err4 ? 0 : (fineRes[0]?.fine || 0);
+
+                    const expected = {
+                      tuition: parseFloat(fees.tuition) || 0,
+                      hostel: parseFloat(fees.hostel) || 0,
+                      bus: parseFloat(fees.bus) || 0,
+                      university: parseFloat(fees.university) || 0,
+                      semester: parseFloat(fees.semester) || 0,
+                      library: parseFloat(fees.library) || 0,
+                      fines: parseFloat(fine)
+                    };
+
+                    for (let key in expected) {
+                      const remaining = expected[key] - (paidMap[key] || 0);
+                      if (remaining > 0) return resolve({ userId, eligible: false });
+                    }
+
+                    resolve({ userId, eligible: true });
+                  }
+                );
+              }
+            );
+          }
+        );
+      });
+    });
+
+    Promise.all(checks).then(data => res.json(data));
+  });
+});
