@@ -107,6 +107,61 @@ app.post('/login', (req, res) => {
     }
   );
 });
+//email otp
+// Store OTPs temporarily in memory (for demo purpose only)
+const otpMap = new Map();
+
+// 1️⃣ Send OTP
+app.post('/send-otp', (req, res) => {
+  const { userId, email } = req.body;
+
+  connection.query('SELECT email FROM students WHERE userId = ?', [userId], (err, results) => {
+    if (err || results.length === 0 || results[0].email !== email) {
+      return res.json({ success: false, message: "User ID and email don't match." });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000);
+    otpMap.set(userId, otp.toString());
+
+    const mailOptions = {
+      from: '"CRR NOC Team" <crrenoccertificate@gmail.com>',
+      to: email,
+      subject: "Your OTP for Password Reset",
+      text: `Your OTP is ${otp}. It will expire in 10 minutes.`,
+    };
+
+    transporter.sendMail(mailOptions, (err) => {
+      if (err) return res.json({ success: false, message: "Failed to send email." });
+
+      // Optionally, set timeout to auto-delete OTP
+      setTimeout(() => otpMap.delete(userId), 10 * 60 * 1000);
+
+      res.json({ success: true });
+    });
+  });
+});
+
+// 2️⃣ Verify OTP
+app.post('/verify-otp', (req, res) => {
+  const { userId, otp } = req.body;
+  const storedOtp = otpMap.get(userId);
+  if (storedOtp && storedOtp === otp) {
+    res.json({ success: true });
+  } else {
+    res.json({ success: false });
+  }
+});
+
+// 3️⃣ Reset Password
+app.post('/reset-password', (req, res) => {
+  const { userId, newPassword } = req.body;
+
+  connection.query('UPDATE users SET password = ? WHERE userId = ?', [newPassword, userId], (err) => {
+    if (err) return res.json({ success: false });
+    otpMap.delete(userId);
+    res.json({ success: true });
+  });
+});
 
 // 👤 Get student details
 app.get('/student/:userId', (req, res) => {
