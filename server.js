@@ -1074,7 +1074,7 @@ app.get('/generate-noc/:userId', (req, res) => {
 
                   // QR Code
                   const qrLink = `https://crr-noc.onrender.com/verifybyqr.html?userId=${userId}`; 
-                  const qrBuffer = await QRCode.toBuffer(qrText);
+                  const qrBuffer = await QRCode.toBuffer(qrLink);
 
                   const qrSize = 50;
                   const qrX = 150;
