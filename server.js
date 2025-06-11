@@ -212,7 +212,7 @@ app.post('/editprofile', (req, res) => {
     WHERE userId=?
   `;
 
-  connection.query(sql, [name, dob, year, course, semester, aadhar, mobile, email, userId], (err, result) => {
+  connection.query(sql, [name, dob, year, course, semester, unique_id, aadhar, mobile, email, userId], (err, result) => {
     if (err) {
       console.error("❌ SQL Update Error:", err.message);
       return res.status(500).json({ message: "Failed to update profile", error: err.message });
