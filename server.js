@@ -804,16 +804,20 @@ app.get('/staff/verify-noc/:reg_no', (req, res) => {
 // ✅ Staff updates fee structure for a student by reg_no
 app.post('/update-fee-structure', (req, res) => {
   const {
-    reg_no, tuition, hostel, bus,
+    reg_no,
+    academic_year, // 👈 NEW: coming from frontend dropdown
+    tuition, hostel, bus,
     university, semester, library
   } = req.body;
 
-  if (!reg_no) {
-    console.error("❌ Missing reg_no in request body");
-    return res.status(400).json({ success: false, message: "Registration number missing." });
+  if (!reg_no || !academic_year) {
+    return res.status(400).json({
+      success: false,
+      message: "Registration number or academic year missing."
+    });
   }
 
-  const updatedFees = {
+  const fees = {
     tuition: parseFloat(tuition) || 0,
     hostel: parseFloat(hostel) || 0,
     bus: parseFloat(bus) || 0,
@@ -822,104 +826,43 @@ app.post('/update-fee-structure', (req, res) => {
     library: parseFloat(library) || 0
   };
 
-  console.log("➡️ Incoming Update Request for:", reg_no);
-  console.log("🧾 Fees to update:", updatedFees);
+  console.log("📥 Fee update for:", reg_no, "Year:", academic_year);
+  console.log("📄 Fee values:", fees);
 
-  // Step 1: Insert default row into remaining_fee
-  const insertDefault = `
-    INSERT IGNORE INTO remaining_fee 
-    (reg_no, tuition, hostel, bus, university, semester, \`library\`) 
-    VALUES (?, 0, 0, 0, 0, 0, 0)
+  const checkQuery = `
+    SELECT * FROM student_fee_structure 
+    WHERE reg_no = ? AND academic_year = ?
   `;
-  connection.query(insertDefault, [reg_no], (err0) => {
-    if (err0) {
-      console.error("❌ INSERT IGNORE error:", err0.message);
-      return res.status(500).json({ success: false, message: "Insert default row failed." });
+
+  connection.query(checkQuery, [reg_no, academic_year], (err, rows) => {
+    if (err) {
+      console.error("❌ SELECT error:", err.message);
+      return res.status(500).json({ success: false, message: "DB check failed" });
     }
 
-    // Step 2: Fetch existing row
-    connection.query('SELECT * FROM remaining_fee WHERE reg_no = ?', [reg_no], (err1, remainRows) => {
-      if (err1) {
-        console.error("❌ SELECT error:", err1.message);
-        return res.status(500).json({ success: false, message: 'Fetch from remaining_fee failed' });
+    const query = rows.length > 0
+      ? `UPDATE student_fee_structure SET 
+          tuition = ?, hostel = ?, bus = ?, university = ?, semester = ?, library = ?, updated_on = NOW()
+         WHERE reg_no = ? AND academic_year = ?`
+      : `INSERT INTO student_fee_structure 
+         (reg_no, academic_year, tuition, hostel, bus, university, semester, library, updated_on)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())`;
+
+    const values = rows.length > 0
+      ? [fees.tuition, fees.hostel, fees.bus, fees.university, fees.semester, fees.library, reg_no, academic_year]
+      : [reg_no, academic_year, fees.tuition, fees.hostel, fees.bus, fees.university, fees.semester, fees.library];
+
+    connection.query(query, values, (err2) => {
+      if (err2) {
+        console.error("❌ Fee update failed:", err2.message);
+        return res.status(500).json({ success: false, message: "Fee insert/update failed" });
       }
 
-      const oldRemaining = remainRows[0];
-      if (!oldRemaining) {
-        console.error("❌ No row found after INSERT IGNORE (this should not happen)");
-        return res.status(500).json({ success: false, message: 'Row missing' });
-      }
-
-      const finalStructure = {};
-      for (const key in updatedFees) {
-        finalStructure[key] = updatedFees[key] + parseFloat(oldRemaining[key] || 0);
-      }
-
-      console.log("✅ Final values to save:", finalStructure);
-
-      // Step 3: Update student_fee_structure
-      const sqlUpdate = `
-        INSERT INTO student_fee_structure
-        (reg_no, tuition, hostel, bus, university, semester, \`library\`)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-        ON DUPLICATE KEY UPDATE
-          tuition = VALUES(tuition),
-          hostel = VALUES(hostel),
-          bus = VALUES(bus),
-          university = VALUES(university),
-          semester = VALUES(semester),
-          \`library\` = VALUES(\`library\`)
-      `;
-
-      connection.query(sqlUpdate, [
-        reg_no,
-        finalStructure.tuition,
-        finalStructure.hostel,
-        finalStructure.bus,
-        finalStructure.university,
-        finalStructure.semester,
-        finalStructure.library
-      ], (err2) => {
-        if (err2) {
-          console.error("❌ student_fee_structure update error:", err2.message);
-          return res.status(500).json({ success: false, message: 'Fee structure update failed' });
-        }
-
-        // Step 4: Update remaining_fee
-        const sqlRemain = `
-          INSERT INTO remaining_fee 
-          (reg_no, tuition, hostel, bus, university, semester, \`library\`)
-          VALUES (?, ?, ?, ?, ?, ?, ?)
-          ON DUPLICATE KEY UPDATE
-            tuition = VALUES(tuition),
-            hostel = VALUES(hostel),
-            bus = VALUES(bus),
-            university = VALUES(university),
-            semester = VALUES(semester),
-            \`library\` = VALUES(\`library\`)
-        `;
-
-        connection.query(sqlRemain, [
-          reg_no,
-          finalStructure.tuition,
-          finalStructure.hostel,
-          finalStructure.bus,
-          finalStructure.university,
-          finalStructure.semester,
-          finalStructure.library
-        ], (err3) => {
-          if (err3) {
-            console.error("❌ remaining_fee update error:", err3.message);
-            return res.status(500).json({ success: false, message: 'Remaining fee update failed' });
-          }
-
-          console.log("🎉 Fee updated successfully for", reg_no);
-          res.json({ success: true, message: '✅ Fee updated and remaining fee saved.' });
-        });
-      });
+      res.json({ success: true, message: `✅ Fee updated for ${reg_no} (Year ${academic_year})` });
     });
   });
 });
+
 
 //noc code
 // ... all previous code remains unchanged
