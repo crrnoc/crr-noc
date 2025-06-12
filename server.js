@@ -826,41 +826,47 @@ app.post('/update-fee-structure', (req, res) => {
     library: parseFloat(library) || 0
   };
 
-  const checkQuery = `
-    SELECT * FROM student_fee_structure 
-    WHERE reg_no = ? AND academic_year = ?
+  console.log("📥 Fee update for:", reg_no, "Year:", academic_year);
+  console.log("📄 Fee values:", fees);
+
+  // ✅ One smart query: insert or update automatically
+  const query = `
+    INSERT INTO student_fee_structure 
+      (reg_no, academic_year, tuition, hostel, bus, university, semester, library, updated_on)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
+    ON DUPLICATE KEY UPDATE 
+      tuition = VALUES(tuition),
+      hostel = VALUES(hostel),
+      bus = VALUES(bus),
+      university = VALUES(university),
+      semester = VALUES(semester),
+      library = VALUES(library),
+      updated_on = NOW()
   `;
 
-  connection.query(checkQuery, [reg_no, academic_year], (err, rows) => {
-    if (err) {
-      return res.status(500).json({ success: false, message: "DB check failed" });
+  const values = [
+    reg_no,
+    academic_year,
+    fees.tuition,
+    fees.hostel,
+    fees.bus,
+    fees.university,
+    fees.semester,
+    fees.library
+  ];
+
+  connection.query(query, values, (err2) => {
+    if (err2) {
+      console.error("❌ MySQL Error:", err2.sqlMessage);
+      return res.status(500).json({ success: false, message: "Fee insert/update failed" });
     }
 
-    const query = rows.length > 0
-      ? `UPDATE student_fee_structure SET 
-          tuition = ?, hostel = ?, bus = ?, university = ?, semester = ?, library = ?, updated_on = NOW()
-         WHERE reg_no = ? AND academic_year = ?`
-      : `INSERT INTO student_fee_structure 
-         (reg_no, academic_year, tuition, hostel, bus, university, semester, library, updated_on)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())`;
-
-    const values = rows.length > 0
-      ? [fees.tuition, fees.hostel, fees.bus, fees.university, fees.semester, fees.library, reg_no, academic_year]
-      : [reg_no, academic_year, fees.tuition, fees.hostel, fees.bus, fees.university, fees.semester, fees.library];
-
-    connection.query(query, values, (err2) => {
-      if (err2) {
-        console.error("❌ Fee update failed:", err2.message);
-        return res.status(500).json({ success: false, message: "Fee insert/update failed" });
-      }
-
-      res.json({ success: true, message: `✅ Fee updated for ${reg_no} (Year ${academic_year})` });
+    res.json({
+      success: true,
+      message: `✅ Fee updated for ${reg_no} (Year ${academic_year})`
     });
   });
 });
-
-
-
 
 //noc code
 // ... all previous code remains unchanged
