@@ -804,9 +804,10 @@ app.get('/staff/verify-noc/:reg_no', (req, res) => {
 // ✅ Staff updates fee structure for a student by reg_no
 app.post('/update-fee-structure', (req, res) => {
   const {
-    reg_no, academic_year, tuition, hostel, bus,
+    reg_no, academic_year,
+    tuition, hostel, bus,
     university, semester, library
-  } = req.body; // ✅ fines removed here
+  } = req.body;
 
   if (!reg_no || !academic_year) {
     return res.status(400).json({ success: false, message: "Reg No and Year required" });
@@ -834,7 +835,7 @@ app.post('/update-fee-structure', (req, res) => {
 
     connection.query(sql, values, (err2) => {
       if (err2) {
-        console.error("❌ MySQL error:", err2.sqlMessage);
+        console.error("❌ Query failed:", err2.message);
         return res.status(500).json({ success: false, message: "Query failed" });
       }
 
@@ -842,6 +843,7 @@ app.post('/update-fee-structure', (req, res) => {
     });
   });
 });
+
 
 //noc code
 // ... all previous code remains unchanged
