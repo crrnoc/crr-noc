@@ -313,30 +313,36 @@ cron.schedule('0 2 */3 * *', () => {
 });
 //fine impose
 app.post('/impose-fine', (req, res) => {
-  const { userId, amount, reason, staffId } = req.body;
+  const { userId, amount, reason, staffId, academic_year } = req.body;
 
-  if (!userId || !reason || !amount || !staffId) {
+  if (!userId || !reason || !amount || !staffId || !academic_year) {
     return res.status(400).json({ success: false, message: "All fields required." });
   }
 
-  const query = 'INSERT INTO fines (userId, amount, reason) VALUES (?, ?, ?)';
-  connection.query(query, [userId, amount, reason], (err, result) => {
+  const query = `
+    INSERT INTO fines (userId, amount, reason, staffId, academic_year)
+    VALUES (?, ?, ?, ?, ?)
+  `;
+  const values = [userId, amount, reason, staffId, academic_year];
+
+  connection.query(query, values, (err, result) => {
     if (err) {
-      console.error("Error imposing fine:", err);
-      return res.status(500).json({ success: false, message: "Failed to impose fine" });
+      console.error("❌ Error inserting fine:", err);
+      return res.status(500).json({ success: false, message: "Failed to insert fine" });
     }
 
-    const message = `💸 Fine of ₹${amount} imposed by Staff ID: ${staffId}. Reason: ${reason}`;
+    const message = `💸 Fine of ₹${amount} for Year ${academic_year} imposed by Staff ID: ${staffId}. Reason: ${reason}`;
     connection.query('INSERT INTO notifications (userId, message) VALUES (?, ?)', [userId, message], (err2) => {
       if (err2) {
-        console.error("Notification DB Error:", err2);
-        return res.status(500).json({ success: false, message: "Fine imposed but failed to send notification" });
+        console.error("❌ Notification insert error:", err2);
+        return res.status(500).json({ success: false, message: "Fine added, but notification failed" });
       }
 
       res.json({ success: true, message: "Fine imposed and student notified!" });
     });
   });
 });
+
 
 //total fine there exist before
 app.get('/total-fine/:userId', (req, res) => {
