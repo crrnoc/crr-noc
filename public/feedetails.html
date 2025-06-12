@@ -226,7 +226,7 @@
   const userId = localStorage.getItem("userId");
   document.getElementById("userId").textContent = userId || "Unknown";
 
-  fetch(`http://localhost:3000/yearwise-fee/${userId}`)
+  fetch(`https://crr-noc.onrender.com/yearwise-fee/${userId}`)
     .then(res => res.json())
     .then(res => {
       if (!res.success) throw new Error("Fee data not found.");
