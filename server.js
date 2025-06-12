@@ -1039,13 +1039,14 @@ app.get('/generate-noc/:userId', (req, res) => {
 
                   doc.end();
 
-                  stream.on("finish", () => {
-                    res.download(filePath, fileName, err => {
-                      if (err) {
-                        console.error("❌ Download failed:", err);
-                        res.status(500).send("Failed to download file.");
-                      }
-                    });
+stream.on("finish", () => {
+  res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
+  res.setHeader("Content-Type", "application/pdf");
+
+  const readStream = fs.createReadStream(filePath);
+  readStream.pipe(res);
+});
+
                   });
                 });
               }
