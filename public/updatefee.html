@@ -177,54 +177,54 @@
     </div>
   </div>
 
-  <script>
-    const userId = localStorage.getItem("userId");
-    document.getElementById("userId").textContent = userId;
+<script>
+  const userId = localStorage.getItem("userId");
+  document.getElementById("userId").textContent = userId;
 
-    function updateFee() {
-      const data = {
-        reg_no: document.getElementById("reg_no").value.trim(),
-        academic_year: parseInt(document.getElementById("year").value),
-        tuition: parseFloat(document.getElementById("tuition").value) || 0,
-        hostel: parseFloat(document.getElementById("hostel").value) || 0,
-        bus: parseFloat(document.getElementById("bus").value) || 0,
-        university: parseFloat(document.getElementById("university").value) || 0,
-        semester: parseFloat(document.getElementById("semester").value) || 0,
-        library: parseFloat(document.getElementById("library").value) || 0,
-        fines: parseFloat(document.getElementById("fines").value) || 0
-      };
+  function updateFee() {
+    const data = {
+      reg_no: document.getElementById("reg_no").value.trim(),
+      academic_year: parseInt(document.getElementById("year").value),
+      tuition: parseFloat(document.getElementById("tuition").value) || 0,
+      hostel: parseFloat(document.getElementById("hostel").value) || 0,
+      bus: parseFloat(document.getElementById("bus").value) || 0,
+      university: parseFloat(document.getElementById("university").value) || 0,
+      semester: parseFloat(document.getElementById("semester").value) || 0,
+      library: parseFloat(document.getElementById("library").value) || 0
+    };
 
-      if (!data.reg_no || !data.academic_year) {
-        alert("Please enter both Reg. No and Academic Year.");
-        return;
-      }
-
-      fetch('http://localhost:3000/update-fee-structure', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      })
-      .then(res => res.json())
-      .then(response => {
-        if (response.success) {
-          alert("✅ Fee updated successfully for Year " + data.academic_year);
-        } else {
-          alert("❌ Error updating fee: " + response.message);
-        }
-      })
-      .catch(err => {
-        console.error("Fetch error:", err);
-        alert("❌ Server error while updating fee");
-      });
+    if (!data.reg_no || !data.academic_year) {
+      alert("⚠️ Please enter both Reg. No and Academic Year.");
+      return;
     }
 
-    function logout() {
-      localStorage.removeItem("userId");
-      if ("caches" in window) {
-        caches.keys().then(names => names.forEach(name => caches.delete(name)));
+    fetch('https://crr-noc.onrender.com/update-fee-structure', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(response => {
+      if (response.success) {
+        alert(`✅ Fee updated successfully for Year ${data.academic_year}`);
+      } else {
+        alert("❌ Update failed: " + response.message);
       }
-      window.location.replace("index.html");
+    })
+    .catch(err => {
+      console.error("❌ Fetch error:", err);
+      alert("❌ Server error while updating fee.");
+    });
+  }
+
+  function logout() {
+    localStorage.removeItem("userId");
+    if ("caches" in window) {
+      caches.keys().then(names => names.forEach(name => caches.delete(name)));
     }
-  </script>
+    window.location.replace("index.html");
+  }
+</script>
+
 </body>
 </html>
