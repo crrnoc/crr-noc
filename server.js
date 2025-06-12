@@ -971,7 +971,7 @@ app.get('/generate-noc/:userId', (req, res) => {
                 );
                 doc.moveDown(0.5);
                 doc.font('Times-Roman').text(
-                  `A bonafide student of ${student.course}, has the following fee details (paid/unpaid) towards the institution for **Year ${academicYear}**.`,
+                  `A bonafide student of ${student.course}, has the following fee details (paid/unpaid) towards the institution for   **Year ${academicYear}**.`,
                   { align: 'justify' }
                 );
                 doc.moveDown(1);
@@ -1006,7 +1006,7 @@ app.get('/generate-noc/:userId', (req, res) => {
                 doc.font('Times-Bold').text("COLLEGE STAMP", { align: 'center' });
 
                 // QR code
-                const qrLink = `https://crr-noc.onrender.com/verify-noc/${userId}?year=${academicYear}`;
+                const qrLink = `https://crr-noc.onrender.com/fee-status/${userId}`;
                 QRCode.toDataURL(qrLink, (err, qrUrl) => {
                   if (err) {
                     console.error("QR code generation failed", err);
