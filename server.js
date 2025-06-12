@@ -804,9 +804,12 @@ app.get('/staff/verify-noc/:reg_no', (req, res) => {
 // ✅ Staff updates fee structure for a student by reg_no
 app.post('/update-fee-structure', (req, res) => {
   const {
-    reg_no, academic_year, tuition, hostel, bus,
-    university, semester, library, fines
-  } = req.body;
+  reg_no, academic_year, tuition, hostel, bus,
+  university, semester, library
+} = req.body;
+
+const fines = parseFloat(req.body.fines) || 0;
+ req.body;
 
   if (!reg_no || !academic_year) {
     return res.status(400).json({ success: false, message: "Reg No and Year required" });
@@ -825,7 +828,7 @@ app.post('/update-fee-structure', (req, res) => {
           tuition=?, hostel=?, bus=?, university=?, semester=?, library=?, fines=?, updated_on=NOW()
          WHERE reg_no=? AND academic_year=?`
       : `INSERT INTO student_fee_structure 
-         (reg_no, academic_year, tuition, hostel, bus, university, semester, library, fines, updated_on)
+(reg_no, academic_year, tuition, hostel, bus, university, semester, library, fines, updated_on)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`;
 
     const values = result.length > 0
@@ -833,7 +836,7 @@ app.post('/update-fee-structure', (req, res) => {
       : [reg_no, academic_year, tuition, hostel, bus, university, semester, library, fines];
 
     connection.query(sql, values, (err2) => {
-      if (err2) return res.status(500).json({ success: false, message: "Query failed" });
+      if (err2) return res.status(500).json({ success: false, message: "Query failed", error: err2.message });
 
       res.json({ success: true, message: "✅ Year-wise fee updated successfully!" });
     });
