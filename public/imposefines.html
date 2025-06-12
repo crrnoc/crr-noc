@@ -43,7 +43,6 @@
     }
 
     .menu li {
-      list-style: none;
       margin-bottom: 15px;
     }
 
@@ -64,15 +63,6 @@
       font-weight: bold;
       transform: translateX(5px);
       box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
-    }
-
-    .menu li a span {
-      font-size: 18px;
-      transition: transform 0.3s ease;
-    }
-
-    .menu li a:hover span {
-      transform: scale(1.2);
     }
 
     .logout {
@@ -99,67 +89,65 @@
       overflow-y: auto;
     }
 
-.fine-box {
-  background: linear-gradient(135deg, rgba(30, 161, 242, 0.85), rgba(10, 120, 210, 0.85));
-  padding: 35px 30px;
-  border-radius: 20px;
-  color: white;
-  max-width: 500px;
-  margin: 0 auto;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  box-shadow: 0 12px 20px rgba(0, 0, 0, 0.3), 0 6px 8px rgba(0, 0, 0, 0.22);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
+    .fine-box {
+      background: linear-gradient(135deg, rgba(30, 161, 242, 0.85), rgba(10, 120, 210, 0.85));
+      padding: 35px 30px;
+      border-radius: 20px;
+      color: white;
+      max-width: 500px;
+      margin: 0 auto;
+      box-shadow: 0 12px 20px rgba(0, 0, 0, 0.3), 0 6px 8px rgba(0, 0, 0, 0.22);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
 
-.fine-box:hover {
-  transform: scale(1.01);
-  box-shadow: 0 16px 28px rgba(0, 0, 0, 0.35);
-}
-
+    .fine-box:hover {
+      transform: scale(1.01);
+      box-shadow: 0 16px 28px rgba(0, 0, 0, 0.35);
+    }
 
     .fine-box h2 {
       text-align: center;
       margin-bottom: 25px;
     }
 
-.fine-box input,
-.fine-box textarea {
-  width: 100%;
-  padding: 12px;
-  margin-bottom: 15px;
-  border-radius: 8px;
-  border: none;
-  font-size: 15px;
-  background-color: rgba(255, 255, 255, 0.9);
-  color: #000;
-  transition: box-shadow 0.3s ease;
-}
+    .fine-box input,
+    .fine-box textarea,
+    .fine-box select {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      border: none;
+      font-size: 15px;
+      background-color: rgba(255, 255, 255, 0.9);
+      color: #000;
+      transition: box-shadow 0.3s ease;
+    }
 
-.fine-box input:focus,
-.fine-box textarea:focus {
-  outline: none;
-  box-shadow: 0 0 5px rgba(30, 161, 242, 0.8);
-}
+    .fine-box input:focus,
+    .fine-box textarea:focus,
+    .fine-box select:focus {
+      outline: none;
+      box-shadow: 0 0 5px rgba(30, 161, 242, 0.8);
+    }
 
-.fine-box button {
-  padding: 12px;
-  width: 100%;
-  font-size: 16px;
-  font-weight: bold;
-  background-color: #28a745;
-  color: white;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: background 0.3s ease, transform 0.2s ease;
-}
+    .fine-box button {
+      padding: 12px;
+      width: 100%;
+      font-size: 16px;
+      font-weight: bold;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.2s ease;
+    }
 
-.fine-box button:hover {
-  background-color: #218838;
-  transform: scale(1.05);
-}
-
+    .fine-box button:hover {
+      background-color: #218838;
+      transform: scale(1.05);
+    }
 
     a {
       text-decoration: none;
@@ -169,7 +157,6 @@
 </head>
 <body>
   <div class="container">
-    <!-- Sidebar -->
     <div class="sidebar">
       <h2><strong>ID:</strong> <span id="userId">Loading...</span></h2>
       <ul class="menu">
@@ -184,71 +171,66 @@
       <button class="logout" onclick="logout()">Logout</button>
     </div>
 
-    <!-- Main Content -->
     <div class="main">
       <div class="fine-box">
         <h2>Impose Fine</h2>
         <input type="text" id="studentId" placeholder="Student User ID" required />
-        <textarea id="reason" rows="3" placeholder="Reason"></textarea>
+        <textarea id="reason" rows="3" placeholder="Reason for fine" required></textarea>
         <input type="number" id="amount" placeholder="Amount (₹)" required />
         <select id="academicYear" required>
-  <option value="">Select Academic Year</option>
-  <option value="1">1st Year</option>
-  <option value="2">2nd Year</option>
-  <option value="3">3rd Year</option>
-  <option value="4">4th Year</option>
-</select>
-
+          <option value="">Select Academic Year</option>
+          <option value="1">1st Year</option>
+          <option value="2">2nd Year</option>
+          <option value="3">3rd Year</option>
+          <option value="4">4th Year</option>
+        </select>
         <button onclick="imposeFine()">Impose Fine</button>
       </div>
     </div>
   </div>
-<script>
-  const userId = localStorage.getItem("userId");
-  document.getElementById("userId").textContent = userId;
 
-  function imposeFine() {
-    const studentId = document.getElementById("studentId").value.trim();
-    const reason = document.getElementById("reason").value.trim();
-    const amount = parseInt(document.getElementById("amount").value.trim());
-    const staffId = localStorage.getItem("userId"); // ✅ Fix: define staffId here
+  <script>
+    const userId = localStorage.getItem("userId");
+    document.getElementById("userId").textContent = userId;
 
-    if (!studentId || isNaN(amount)) {
-      alert("Please enter valid Student ID and Amount.");
-      return;
+    function imposeFine() {
+      const studentId = document.getElementById("studentId").value.trim();
+      const reason = document.getElementById("reason").value.trim();
+      const amount = parseInt(document.getElementById("amount").value.trim());
+      const academicYear = document.getElementById("academicYear").value.trim();
+      const staffId = localStorage.getItem("userId");
+
+      if (!studentId || isNaN(amount) || !reason || !academicYear) {
+        alert("Please fill in all fields correctly.");
+        return;
+      }
+
+      fetch("https://crr-noc.onrender.com/impose-fine", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: studentId, reason, amount, staffId, academic_year: academicYear })
+      })
+      .then(res => res.json())
+      .then(data => {
+        alert(data.message || "Fine imposed successfully!");
+        document.getElementById("studentId").value = "";
+        document.getElementById("reason").value = "";
+        document.getElementById("amount").value = "";
+        document.getElementById("academicYear").value = "";
+      })
+      .catch(err => {
+        console.error("Error:", err);
+        alert("Failed to impose fine.");
+      });
     }
 
-    if (!reason) {
-      alert("Please enter the reason for the fine.");
-      return;
+    function logout() {
+      localStorage.removeItem("userId");
+      if ("caches" in window) {
+        caches.keys().then((names) => names.forEach((name) => caches.delete(name)));
+      }
+      window.location.replace("index.html");
     }
-
-    fetch("https://crr-noc.onrender.com/impose-fine", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId: studentId, reason, amount, staffId }) // ✅ Send staffId
-    })
-    .then(res => res.json())
-    .then(data => {
-      alert(data.message || "Fine imposed successfully!");
-      document.getElementById("studentId").value = "";
-      document.getElementById("reason").value = "";
-      document.getElementById("amount").value = "";
-    })
-    .catch(err => {
-      console.error("Error:", err);
-      alert("Failed to impose fine.");
-    });
-  }
-
-  function logout() {
-    localStorage.removeItem("userId");
-    if ("caches" in window) {
-      caches.keys().then((names) => names.forEach((name) => caches.delete(name)));
-    }
-    window.location.replace("index.html");
-  }
-</script>
-
+  </script>
 </body>
 </html>
