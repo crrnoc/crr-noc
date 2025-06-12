@@ -212,25 +212,24 @@
     const userId = localStorage.getItem("userId");
     document.getElementById("userId").textContent = userId;
 
-    document.querySelector(".download").addEventListener("click", () => {
-      const year = document.getElementById("nocYear").value;
-      if (!year) {
-        alert("Please select an academic year to generate NOC.");
-        return;
-      }
+document.querySelector(".download").addEventListener("click", () => {
+  const year = document.getElementById("nocYear").value;
+  if (!year) {
+    alert("Please select an academic year to generate NOC.");
+    return;
+  }
 
-      const userId = localStorage.getItem("userId");
-      const url = `http://crr-noc.onrender.com/generate-noc/${userId}?year=${year}`;
-      window.open(url, '_blank');
-    });
+  const userId = localStorage.getItem("userId");
+  const url = `https://crr-noc.onrender.com/generate-noc/${userId}?year=${year}`;
 
-    function logout() {
-      localStorage.removeItem("userId");
-      if ("caches" in window) {
-        caches.keys().then((names) => names.forEach((name) => caches.delete(name)));
-      }
-      window.location.replace("index.html");
-    }
+  const a = document.createElement('a');
+  a.href = url;
+  a.target = '_blank';
+  a.download = `noc_${userId}_year${year}.pdf`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+});
   </script>
 </body>
 </html>
