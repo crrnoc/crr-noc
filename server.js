@@ -1055,7 +1055,7 @@ app.get('/generate-noc/:userId', (req, res) => {
       );
     });
   });
-});
+
 
 app.post('/api/submit-feedback', (req, res) => {
   const { name, email, message } = req.body;
