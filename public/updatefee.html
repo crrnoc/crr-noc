@@ -171,12 +171,13 @@
         <div class="input-group"><label>University Fee</label><input type="number" id="university"></div>
         <div class="input-group"><label>Semester Fee</label><input type="number" id="semester"></div>
         <div class="input-group"><label>Library Dues</label><input type="number" id="library"></div>
+        <div class="input-group"><label>Fine</label><input type="number" id="fines"></div>
         <button onclick="updateFee()">Update Fee</button>
       </div>
     </div>
   </div>
 
- <script>
+  <script>
     const userId = localStorage.getItem("userId");
     document.getElementById("userId").textContent = userId;
 
@@ -189,11 +190,12 @@
         bus: parseFloat(document.getElementById("bus").value) || 0,
         university: parseFloat(document.getElementById("university").value) || 0,
         semester: parseFloat(document.getElementById("semester").value) || 0,
-        library: parseFloat(document.getElementById("library").value) || 0
+        library: parseFloat(document.getElementById("library").value) || 0,
+        fines: parseFloat(document.getElementById("fines").value) || 0
       };
 
       if (!data.reg_no || !data.academic_year) {
-        alert("⚠️ Please enter both Reg. No and Academic Year.");
+        alert("Please enter both Reg. No and Academic Year.");
         return;
       }
 
@@ -205,14 +207,14 @@
       .then(res => res.json())
       .then(response => {
         if (response.success) {
-          alert(`✅ Fee updated successfully for Year ${data.academic_year}`);
+          alert("✅ Fee updated successfully for Year " + data.academic_year);
         } else {
-          alert("❌ Update failed: " + response.message);
+          alert("❌ Error updating fee: " + response.message);
         }
       })
       .catch(err => {
-        console.error("❌ Fetch error:", err);
-        alert("❌ Server error while updating fee.");
+        console.error("Fetch error:", err);
+        alert("❌ Server error while updating fee");
       });
     }
 
