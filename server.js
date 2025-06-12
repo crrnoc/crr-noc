@@ -1039,14 +1039,12 @@ app.get('/generate-noc/:userId', (req, res) => {
 
                   doc.end();
 
-stream.on("finish", () => {
-  res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
-  res.setHeader("Content-Type", "application/pdf");
+                  stream.on("finish", () => {
+                    res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
+                    res.setHeader("Content-Type", "application/pdf");
 
-  const readStream = fs.createReadStream(filePath);
-  readStream.pipe(res);
-});
-
+                    const readStream = fs.createReadStream(filePath);
+                    readStream.pipe(res);
                   });
                 });
               }
@@ -1054,8 +1052,10 @@ stream.on("finish", () => {
           });
         }
       );
-    });
-  });
+    }
+  );
+});
+
 
 
 app.post('/api/submit-feedback', (req, res) => {
