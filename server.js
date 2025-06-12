@@ -826,9 +826,6 @@ app.post('/update-fee-structure', (req, res) => {
     library: parseFloat(library) || 0
   };
 
-  console.log("📥 Fee update for:", reg_no, "Year:", academic_year);
-  console.log("📄 Fee values:", fees);
-
   const checkQuery = `
     SELECT * FROM student_fee_structure 
     WHERE reg_no = ? AND academic_year = ?
@@ -836,7 +833,6 @@ app.post('/update-fee-structure', (req, res) => {
 
   connection.query(checkQuery, [reg_no, academic_year], (err, rows) => {
     if (err) {
-      console.error("❌ SELECT error:", err.message);
       return res.status(500).json({ success: false, message: "DB check failed" });
     }
 
@@ -862,6 +858,7 @@ app.post('/update-fee-structure', (req, res) => {
     });
   });
 });
+
 
 
 
