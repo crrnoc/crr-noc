@@ -208,6 +208,15 @@
 .logout-btn:hover {
   background: #c82333;
 }
+.scroll-wrapper {
+  max-height: 400px;
+  overflow-y: auto;
+  margin-top: 15px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+  background-color: #fff;
+}
 
   </style>
 </head>
@@ -267,22 +276,26 @@
       <option value="F">F</option>
     </select>
 
-    <button onclick="applyDUFilter()()">Filter</button>
-    <button onclick="loadMatches())">Reset</button>
+<button onclick="applyDUFilter()">Filter</button>
+<button onclick="loadMatches()">Reset</button>
+
   </div>
       <button onclick="loadMatches()">Refresh Table</button>
-      <table id="matchTable">
-        <thead>
-          <tr>
-            <th>User ID</th>
-            <th>Fee Type</th>
-            <th>DU Number</th>
-            <th>Status</th>
-            <th>Matched On</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+      <div class="scroll-wrapper">
+  <table id="matchTable">
+    <thead>
+      <tr>
+        <th>User ID</th>
+        <th>Fee Type</th>
+        <th>DU Number</th>
+        <th>Status</th>
+        <th>Matched On</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
     </div>
 
    <div class="card" id="noc">
@@ -327,6 +340,7 @@
   </div>
 
   <!-- 🧾 Results Table -->
+  <div class="scroll-wrapper">
   <table id="nocTable">
     <thead>
       <tr>
@@ -336,6 +350,8 @@
     </thead>
     <tbody></tbody>
   </table>
+</div>
+
 </div>
 
 
