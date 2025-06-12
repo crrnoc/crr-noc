@@ -171,13 +171,14 @@
         <div class="input-group"><label>University Fee</label><input type="number" id="university"></div>
         <div class="input-group"><label>Semester Fee</label><input type="number" id="semester"></div>
         <div class="input-group"><label>Library Dues</label><input type="number" id="library"></div>
+        <div class="input-group"><label>Fine</label><input type="number" id="fines"></div>
         <button onclick="updateFee()">Update Fee</button>
       </div>
     </div>
   </div>
 
-<script>
- const userId = localStorage.getItem("userId");
+  <script>
+    const userId = localStorage.getItem("userId");
     document.getElementById("userId").textContent = userId;
 
     function updateFee() {
@@ -189,7 +190,8 @@
         bus: parseFloat(document.getElementById("bus").value) || 0,
         university: parseFloat(document.getElementById("university").value) || 0,
         semester: parseFloat(document.getElementById("semester").value) || 0,
-        library: parseFloat(document.getElementById("library").value) || 0
+        library: parseFloat(document.getElementById("library").value) || 0,
+        fines: parseFloat(document.getElementById("fines").value) || 0
       };
 
       if (!data.reg_no || !data.academic_year) {
@@ -197,7 +199,7 @@
         return;
       }
 
-      fetch('https://crr-noc.onrender.com/update-fee-structure', {
+      fetch('http://localhost:3000/update-fee-structure', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
@@ -223,7 +225,6 @@
       }
       window.location.replace("index.html");
     }
-</script>
-
+  </script>
 </body>
 </html>
