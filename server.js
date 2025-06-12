@@ -804,13 +804,17 @@ app.get('/staff/verify-noc/:reg_no', (req, res) => {
 // ✅ Staff updates fee structure for a student by reg_no
 app.post('/update-fee-structure', (req, res) => {
   const {
-    reg_no, academic_year,
+    reg_no,
+    academic_year,
     tuition, hostel, bus,
     university, semester, library
   } = req.body;
 
   if (!reg_no || !academic_year) {
-    return res.status(400).json({ success: false, message: "Reg No and Year required" });
+    return res.status(400).json({
+      success: false,
+      message: "Reg No and Year required"
+    });
   }
 
   const queryCheck = `
@@ -819,13 +823,16 @@ app.post('/update-fee-structure', (req, res) => {
   `;
 
   connection.query(queryCheck, [reg_no, academic_year], (err, result) => {
-    if (err) return res.status(500).json({ success: false, message: "DB error" });
+    if (err) {
+      console.error("❌ SELECT failed:", err.message);
+      return res.status(500).json({ success: false, message: "DB error" });
+    }
 
-    const sql = result.length > 0
+    const query = result.length > 0
       ? `UPDATE student_fee_structure SET
           tuition=?, hostel=?, bus=?, university=?, semester=?, library=?, updated_on=NOW()
          WHERE reg_no=? AND academic_year=?`
-      : `INSERT INTO student_fee_structure 
+      : `INSERT INTO student_fee_structure
          (reg_no, academic_year, tuition, hostel, bus, university, semester, library, updated_on)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())`;
 
@@ -833,7 +840,7 @@ app.post('/update-fee-structure', (req, res) => {
       ? [tuition, hostel, bus, university, semester, library, reg_no, academic_year]
       : [reg_no, academic_year, tuition, hostel, bus, university, semester, library];
 
-    connection.query(sql, values, (err2) => {
+    connection.query(query, values, (err2) => {
       if (err2) {
         console.error("❌ Query failed:", err2.message);
         return res.status(500).json({ success: false, message: "Query failed" });
