@@ -805,7 +805,7 @@ app.get('/staff/verify-noc/:reg_no', (req, res) => {
 app.post('/update-fee-structure', (req, res) => {
   const {
     reg_no,
-    academic_year, // 👈 NEW: coming from frontend dropdown
+    academic_year,
     tuition, hostel, bus,
     university, semester, library
   } = req.body;
@@ -862,6 +862,7 @@ app.post('/update-fee-structure', (req, res) => {
     });
   });
 });
+
 
 
 //noc code
