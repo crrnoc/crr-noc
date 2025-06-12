@@ -927,167 +927,154 @@ app.post('/update-fee-structure', (req, res) => {
 // ✅ Updated Generate NOC PDF logic (fixed hanging issue)
 app.get('/generate-noc/:userId', (req, res) => {
   const { userId } = req.params;
+  const academicYear = parseInt(req.query.year); // 👈 Get year from query param
 
-  connection.query(
-    'SELECT name, course, reg_no, year FROM students WHERE userId = ?',
-    [userId],
-    (err, studentResults) => {
-      if (err || studentResults.length === 0) {
-        return res.status(404).json({ success: false, message: 'Student not found' });
-      }
+  if (!academicYear || academicYear < 1 || academicYear > 4) {
+    return res.status(400).json({ success: false, message: 'Invalid or missing year' });
+  }
 
-      const student = studentResults[0];
+  connection.query('SELECT name, course, reg_no FROM students WHERE userId = ?', [userId], (err, studentResults) => {
+    if (err || studentResults.length === 0) {
+      return res.status(404).json({ success: false, message: 'Student not found' });
+    }
 
-      // 🧠 Convert number to string year
-      const yearMap = {
-        1: "1st Year",
-        2: "2nd Year",
-        3: "3rd Year",
-        4: "4th Year"
-      };
+    const student = studentResults[0];
+    const reg_no = student.reg_no;
 
-      const currentYear = new Date().getFullYear();
-      const currentMonth = new Date().getMonth() + 1;
-      const yearNumber = parseInt(student.year); // e.g., 2
+    connection.query(
+      'SELECT * FROM student_fee_structure WHERE reg_no = ? AND academic_year = ?',
+      [reg_no, academicYear],
+      (err2, feeRows) => {
+        if (err2 || feeRows.length === 0) {
+          return res.status(400).json({ success: false, message: 'Fee structure not found for that year' });
+        }
 
-      const studentYear = yearMap[yearNumber] || `${yearNumber} Year`;
+        const feeStructure = feeRows[0];
 
-      // 📅 Calculate academic year based on study year
-      const academicYearStart = currentMonth >= 6
-        ? currentYear - (yearNumber - 1)
-        : currentYear - yearNumber;
+        connection.query(
+          `SELECT fee_type, SUM(amount_paid) AS paid 
+           FROM student_fee_payments 
+           WHERE userId = ? AND matched = 1 AND academic_year = ?
+           GROUP BY fee_type`,
+          [userId, academicYear],
+          (err3, paidRows) => {
+            if (err3) return res.status(500).json({ success: false });
 
-      const academicYear = `${academicYearStart}-${academicYearStart + 1}`;
+            const paidMap = {};
+            paidRows.forEach(row => {
+              paidMap[row.fee_type] = parseFloat(row.paid);
+            });
 
-      const reg_no = student.reg_no;
+            connection.query(
+              'SELECT SUM(amount) AS fine FROM fines WHERE userId = ? AND academic_year = ?',
+              [userId, academicYear],
+              (err4, fineRes) => {
+                if (err4) return res.status(500).json({ success: false });
 
-      connection.query(
-        'SELECT * FROM student_fee_structure WHERE reg_no = ? ORDER BY updated_at DESC LIMIT 1',
-        [reg_no],
-        (err2, feeRows) => {
-          if (err2 || feeRows.length === 0) {
-            return res.status(400).json({ success: false, message: 'Fee structure not found' });
-          }
+                const fineAmount = parseFloat(fineRes[0].fine) || 0;
 
-          const feeStructure = feeRows[0];
+                const expected = {
+                  tuition: parseFloat(feeStructure.tuition || 0),
+                  hostel: parseFloat(feeStructure.hostel || 0),
+                  bus: parseFloat(feeStructure.bus || 0),
+                  university: parseFloat(feeStructure.university || 0),
+                  semester: parseFloat(feeStructure.semester || 0),
+                  library: parseFloat(feeStructure.library || 0),
+                  fines: fineAmount
+                };
 
-          connection.query(
-            'SELECT fee_type, SUM(amount_paid) AS paid FROM student_fee_payments WHERE userId = ? AND matched = 1 GROUP BY fee_type',
-            [userId],
-            (err3, paidRows) => {
-              if (err3) return res.status(500).json({ success: false });
+                const readableMap = {
+                  tuition: "TUTION FEE",
+                  hostel: "HOSTEL FEE",
+                  bus: "BUS FEE",
+                  university: "UNIVERSITY FEE",
+                  semester: "EXAMINATION CELL",
+                  library: "LIBRARY DUE",
+                  fines: "FINE"
+                };
 
-              const paidMap = {};
-              paidRows.forEach(row => paidMap[row.fee_type] = parseFloat(row.paid));
+                const status = {};
+                for (const key in expected) {
+                  const paid = paidMap[key] || 0;
+                  const remaining = expected[key] - paid;
+                  status[readableMap[key]] = remaining <= 0 ? "PAID ✅" : "NOT PAID ❌";
+                }
 
-              connection.query(
-                'SELECT SUM(amount) AS fine FROM fines WHERE userId = ?',
-                [userId],
-                async (err4, fineRes) => {
-                  if (err4) return res.status(500).json({ success: false });
+                const fileName = `noc_${userId}_year${academicYear}.pdf`;
+                const filePath = path.join(__dirname, 'uploads', fileName);
+                const doc = new PDFDocument({ margin: 50 });
+                const stream = fs.createWriteStream(filePath);
+                doc.pipe(stream);
 
-                  const fineAmount = parseFloat(fineRes[0].fine) || 0;
+                // Header
+                const headerPath = path.join(__dirname, 'public', 'noc_header.jpg');
+                if (fs.existsSync(headerPath)) {
+                  doc.image(headerPath, { fit: [500, 150], align: 'center' });
+                  doc.moveDown(3);
+                }
 
-                  const expected = {
-                    tuition: parseFloat(feeStructure.tuition || 0),
-                    hostel: parseFloat(feeStructure.hostel || 0),
-                    bus: parseFloat(feeStructure.bus || 0),
-                    university: parseFloat(feeStructure.university || 0),
-                    semester: parseFloat(feeStructure.semester || 0),
-                    library: parseFloat(feeStructure.library || 0),
-                    fines: fineAmount
-                  };
+                // Title
+                doc.font('Times-Bold').fontSize(18).text('NO OBJECTION CERTIFICATE', {
+                  align: 'center',
+                  underline: true,
+                });
+                doc.moveDown(1.5);
 
-                  const readableMap = {
-                    tuition: "TUTION FEE",
-                    hostel: "HOSTEL FEE",
-                    bus: "BUS FEE",
-                    university: "UNIVERSITY FEE",
-                    semester: "EXAMINATION CELL",
-                    library: "LIBRARY DUE",
-                    fines: "FINE"
-                  };
+                // Certificate body
+                doc.font('Times-Bold').fontSize(12).text(
+                  `This is to certify that Mr./Ms. ${student.name} (Roll No: ${student.reg_no}),`,
+                  { align: 'justify' }
+                );
+                doc.moveDown(0.5);
+                doc.font('Times-Roman').text(
+                  `A bonafide student of ${student.course}, has the following fee details (paid/unpaid) towards the institution for **Year ${academicYear}**.`,
+                  { align: 'justify' }
+                );
+                doc.moveDown(1);
+                doc.text(
+                  `He/She has no objection from the college to appear for <exam purpose / leave purpose / higher studies / internships>`,
+                  { align: 'justify' }
+                );
+                doc.moveDown();
 
-                  const status = {};
-                  for (const key in expected) {
-                    const paid = paidMap[key] || 0;
-                    const remaining = expected[key] - paid;
-                    status[readableMap[key]] = remaining <= 0 ? "PAID ✅" : "NOT PAID ❌";
+                // Fee Details
+                doc.font('Times-Bold').fontSize(13).text("FEE DETAILS", { align: 'center', underline: true });
+                doc.moveDown();
+                doc.font('Times-Roman').fontSize(12);
+
+                const tableLeftX = 70;
+                const tableRightX = 380;
+                const rowHeight = 20;
+                let y = doc.y;
+
+                Object.keys(status).forEach(feeType => {
+                  doc.text(feeType, tableLeftX, y);
+                  doc.text(status[feeType], tableRightX, y);
+                  y += rowHeight;
+                });
+
+                doc.moveDown();
+                doc.text(
+                  `This is a system-generated certificate and does not require a manual signature.`,
+                  { align: 'center' }
+                );
+                doc.moveDown(1);
+                doc.font('Times-Bold').text("COLLEGE STAMP", { align: 'center' });
+
+                // QR code
+                const qrLink = `https://yourdomain.com/verify-noc/${userId}?year=${academicYear}`;
+                QRCode.toDataURL(qrLink, (err, qrUrl) => {
+                  if (err) {
+                    console.error("QR code generation failed", err);
+                    doc.end();
+                    return;
                   }
-
-                  // Create PDF
-                  const fileName = `noc_${userId}.pdf`;
-                  const filePath = path.join(__dirname, 'uploads', fileName);
-                  const doc = new PDFDocument({ margin: 50 });
-                  const stream = fs.createWriteStream(filePath);
-                  doc.pipe(stream);
-
-                  // Header
-                  const headerPath = path.join(__dirname, 'public', 'noc_header.jpg');
-                  if (fs.existsSync(headerPath)) {
-                    doc.image(headerPath, { fit: [500, 150], align: 'center' });
-                    doc.moveDown(3);
-                  }
-
-                  // Title
-                  doc.font('Times-Bold').fontSize(18).text('NO OBJECTION CERTIFICATE', {
-                    align: 'center',
-                    underline: true,
-                  });
-                  doc.moveDown(1.5);
-
-                  // Certificate Body
-                  doc.font('Times-Bold').fontSize(12).text(
-                    `This is to certify that Mr./Ms. ${student.name} (Roll No: ${student.reg_no}),`,
-                    { align: 'justify' }
-                  );
-                  doc.moveDown(0.5);
-
-                  doc.font('Times-Roman').text(
-                    `A bonafide ${studentYear} student of ${student.course}, has the following fee details (paid/unpaid) towards the institution including Tuition Fee, Bus Fee, Hostel Fee, University Fee for the academic year ${academicYear}.`,
-                    { align: 'justify' }
-                  );
-
-                  doc.moveDown(1);
-                  doc.text(
-                    `He/She has no objection from the college to appear for <exam purpose / leave purpose / higher studies / internships>.`,
-                    { align: 'justify' }
-                  );
-                  doc.moveDown();
-
-                  // Fee Table
-                  doc.font('Times-Bold').fontSize(13).text("FEE DETAILS", { align: 'center', underline: true });
-                  doc.moveDown();
-                  doc.font('Times-Roman').fontSize(12);
-
-                  const tableLeftX = 70;
-                  const tableRightX = 380;
-                  const rowHeight = 20;
-                  let y = doc.y;
-
-                  Object.keys(status).forEach(feeType => {
-                    doc.text(feeType, tableLeftX, y);
-                    doc.text(status[feeType], tableRightX, y);
-                    y += rowHeight;
-                  });
-
-                  doc.moveDown();
-                  doc.text(`This is a system-generated certificate and does not require a manual signature.`, {
-                    align: 'center'
-                  });
-                  doc.moveDown(1);
-                  doc.font('Times-Bold').text("COLLEGE STAMP", { align: 'center' });
-
-                  // QR Code
-                  const qrLink = `https://crr-noc.onrender.com/verifybyqr.html?userId=${userId}`; 
-                  const qrBuffer = await QRCode.toBuffer(qrLink);
 
                   const qrSize = 50;
                   const qrX = 150;
                   const qrY = doc.page.height - qrSize - 150;
 
-                  doc.image(qrBuffer, qrX, qrY, { width: qrSize });
-
+                  doc.image(qrUrl, qrX, qrY, { width: qrSize });
                   doc.font('Times-Roman')
                     .fontSize(10)
                     .text('Scan to verify the NOC', qrX - 10, qrY + qrSize + 5, {
@@ -1095,7 +1082,6 @@ app.get('/generate-noc/:userId', (req, res) => {
                       align: 'center'
                     });
 
-                  // Footer
                   const footerPath = path.join(__dirname, 'public', 'noc_footer.jpg');
                   if (fs.existsSync(footerPath)) {
                     const footerWidth = 500;
@@ -1118,15 +1104,16 @@ app.get('/generate-noc/:userId', (req, res) => {
                       }
                     });
                   });
-                }
-              );
-            }
-          );
+                });
+              }
+            );
+          });
         }
       );
-    }
-  );
+    });
+  });
 });
+
 app.post('/api/submit-feedback', (req, res) => {
   const { name, email, message } = req.body;
 
