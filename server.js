@@ -804,17 +804,12 @@ app.get('/staff/verify-noc/:reg_no', (req, res) => {
 // ✅ Staff updates fee structure for a student by reg_no
 app.post('/update-fee-structure', (req, res) => {
   const {
-    reg_no,
-    academic_year,
-    tuition, hostel, bus,
-    university, semester, library
+    reg_no, academic_year, tuition, hostel, bus,
+    university, semester, library, fines
   } = req.body;
 
   if (!reg_no || !academic_year) {
-    return res.status(400).json({
-      success: false,
-      message: "Reg No and Year required"
-    });
+    return res.status(400).json({ success: false, message: "Reg No and Year required" });
   }
 
   const queryCheck = `
@@ -823,33 +818,28 @@ app.post('/update-fee-structure', (req, res) => {
   `;
 
   connection.query(queryCheck, [reg_no, academic_year], (err, result) => {
-    if (err) {
-      console.error("❌ SELECT failed:", err.message);
-      return res.status(500).json({ success: false, message: "DB error" });
-    }
+    if (err) return res.status(500).json({ success: false, message: "DB error" });
 
-    const query = result.length > 0
+    const sql = result.length > 0
       ? `UPDATE student_fee_structure SET
-          tuition=?, hostel=?, bus=?, university=?, semester=?, library=?, updated_on=NOW()
+          tuition=?, hostel=?, bus=?, university=?, semester=?, library=?, fines=?, updated_on=NOW()
          WHERE reg_no=? AND academic_year=?`
-      : `INSERT INTO student_fee_structure
-         (reg_no, academic_year, tuition, hostel, bus, university, semester, library, updated_on)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())`;
+      : `INSERT INTO student_fee_structure 
+         (reg_no, academic_year, tuition, hostel, bus, university, semester, library, fines, updated_on)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`;
 
     const values = result.length > 0
-      ? [tuition, hostel, bus, university, semester, library, reg_no, academic_year]
-      : [reg_no, academic_year, tuition, hostel, bus, university, semester, library];
+      ? [tuition, hostel, bus, university, semester, library, fines, reg_no, academic_year]
+      : [reg_no, academic_year, tuition, hostel, bus, university, semester, library, fines];
 
-    connection.query(query, values, (err2) => {
-      if (err2) {
-        console.error("❌ Query failed:", err2.message);
-        return res.status(500).json({ success: false, message: "Query failed" });
-      }
+    connection.query(sql, values, (err2) => {
+      if (err2) return res.status(500).json({ success: false, message: "Query failed" });
 
       res.json({ success: true, message: "✅ Year-wise fee updated successfully!" });
     });
   });
 });
+
 
 
 //noc code
