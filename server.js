@@ -1047,6 +1047,11 @@ QRCode.toDataURL(qrLink, (err, qrUrl) => {
     readStream.pipe(res);
   });
 });
+});
+});
+});
+});
+});
 
 
 
