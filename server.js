@@ -1003,7 +1003,8 @@ app.get('/generate-noc/:userId', (req, res) => {
                 doc.font('Times-Bold').text("COLLEGE STAMP", { align: 'center' });
 
                 // QR code
-                const qrLink = `https://crr-noc.onrender.com/fee-status/${userId}`;
+              const qrLink = `https://crr-noc.onrender.com/verifybyqr.html?userId=${userId}&year=${year}`;
+
                 QRCode.toDataURL(qrLink, (err, qrUrl) => {
                   if (err) {
                     console.error("QR code generation failed", err);
