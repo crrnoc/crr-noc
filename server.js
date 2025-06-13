@@ -426,9 +426,9 @@ app.get('/paid-amounts/:userId', (req, res) => {
 
 //reference number submission
 app.post("/submit-du", (req, res) => {
-  const { userId, payments } = req.body;
+  const { userId, payments, academic_year } = req.body;
 
-  if (!userId || !Array.isArray(payments)) {
+  if (!userId || !Array.isArray(payments) || !academic_year) {
     return res.status(400).json({ success: false, message: "Invalid data" });
   }
 
@@ -440,43 +440,51 @@ app.post("/submit-du", (req, res) => {
     const amt = parseFloat(p.amount);
     const feeType = p.type;
 
-    values.push([userId, feeType, du, amt]);
+    // 🧠 Push with academic_year & dummy matched (0 by default)
+    values.push([userId, feeType, du, amt, academic_year, 0]);
 
-    checkMatches.push(new Promise(resolve => {
-      connection.query(
-        "SELECT * FROM sbi_uploaded_references WHERE sbi_ref_no = ? AND amount = ?",
-        [du, amt],
-        (err, results) => {
-          if (err) return resolve([du, false]);
-          resolve([du, results.length > 0]);
-        }
-      );
-    }));
+    // Check match against SBI data
+    checkMatches.push(
+      new Promise(resolve => {
+        connection.query(
+          "SELECT * FROM sbi_uploaded_references WHERE sbi_ref_no = ? AND amount = ?",
+          [du, amt],
+          (err, results) => {
+            if (err) return resolve([du, false]);
+            resolve([du, results.length > 0]);
+          }
+        );
+      })
+    );
   }
+
   Promise.all(checkMatches).then(matchResults => {
     const matchMap = Object.fromEntries(matchResults);
 
-    const finalValues = values.map(([userId, type, du, amt]) => {
+    // ✅ Replace matched=0 with actual match result
+    const finalValues = values.map(([userId, type, du, amt, year, matched]) => {
       const isMatched = matchMap[du] ? 1 : 0;
-      return [userId, type, du, amt, isMatched];
+      return [userId, type, du, amt, year, isMatched];
     });
 
-const sql = `
-  INSERT INTO student_fee_payments (userId, fee_type, sbi_ref_no, amount_paid, matched)
-  VALUES ?
-  ON DUPLICATE KEY UPDATE
-    sbi_ref_no = VALUES(sbi_ref_no),
-    amount_paid = VALUES(amount_paid),
-    matched = VALUES(matched),
-    matched_on = IF(matched = 0 AND VALUES(matched) = 1, NOW(), matched_on)
-`;
+    const sql = `
+      INSERT INTO student_fee_payments (userId, fee_type, sbi_ref_no, amount_paid, academic_year, matched)
+      VALUES ?
+      ON DUPLICATE KEY UPDATE
+        sbi_ref_no = VALUES(sbi_ref_no),
+        amount_paid = VALUES(amount_paid),
+        matched = VALUES(matched),
+        academic_year = VALUES(academic_year),
+        matched_on = IF(matched = 0 AND VALUES(matched) = 1, NOW(), matched_on)
+    `;
+
     connection.query(sql, [finalValues], (err2) => {
       if (err2) {
-        console.error("Insert error:", err2);
+        console.error("❌ Insert error:", err2);
         return res.status(500).json({ success: false, message: "DB error" });
       }
 
-      res.json({ success: true, message: "DU entries verified and stored successfully." });
+      res.json({ success: true, message: "✅ DU entries verified and stored successfully." });
     });
   });
 });
