@@ -682,60 +682,58 @@ app.get('/admin/noc-status', (req, res) => {
 });
 
 //logic for the fee status for qr code
+
 app.get("/fee-status/:userId", (req, res) => {
   const { userId } = req.params;
 
-  // Step 1: Get reg_no
   connection.query('SELECT reg_no FROM students WHERE userId = ?', [userId], (err, studentRows) => {
-    if (err || studentRows.length === 0) {
-      return res.status(500).json({ success: false, message: "Student not found" });
-    }
+    if (err || studentRows.length === 0) return res.status(500).json({ success: false });
 
     const reg_no = studentRows[0].reg_no;
 
-    // Step 2: Get all fee structures by academic year
+    // 1. Get ALL fee structures by year
     connection.query(`
-      SELECT * FROM student_fee_structure
+      SELECT * FROM student_fee_structure 
       WHERE reg_no = ?
     `, [reg_no], (err2, feeRows) => {
-      if (err2 || feeRows.length === 0) {
-        return res.status(400).json({ success: false, message: "No fee structure found" });
-      }
+      if (err2 || feeRows.length === 0) return res.status(400).json({ success: false });
 
-      // Step 3: Get all paid amounts grouped by academic year and fee type
+      // 2. Get ALL payments by user grouped by year and fee_type
       connection.query(`
         SELECT academic_year, fee_type, SUM(amount_paid) AS paid
         FROM student_fee_payments
         WHERE userId = ? AND matched = 1
         GROUP BY academic_year, fee_type
       `, [userId], (err3, paidRows) => {
-        if (err3) {
-          return res.status(500).json({ success: false, message: "Error fetching payments" });
-        }
+        if (err3) return res.status(500).json({ success: false });
 
-        // Organize payments by year
-        const paidByYear = {};
+        const paidMap = {};
         paidRows.forEach(row => {
           const year = row.academic_year;
-          if (!paidByYear[year]) paidByYear[year] = {};
-          paidByYear[year][row.fee_type.toLowerCase()] = parseFloat(row.paid);
+          const type = row.fee_type.toLowerCase();
+          if (!paidMap[year]) paidMap[year] = {};
+          paidMap[year][type] = parseFloat(row.paid);
         });
 
-        // Structure the response
         const years = {};
+
         feeRows.forEach(row => {
-          const year = row.academic_year.toString();
+          const year = row.academic_year;
+          const expected = {
+            tuition: parseFloat(row.tuition) || 0,
+            hostel: parseFloat(row.hostel) || 0,
+            bus: parseFloat(row.bus) || 0,
+            university: parseFloat(row.university) || 0,
+            semester: parseFloat(row.semester) || 0,
+            library: parseFloat(row.library) || 0,
+            fines: parseFloat(row.fines) || 0
+          };
+
+          const paid = paidMap[year] || {};
+
           years[year] = {
-            expected: {
-              tuition: parseFloat(row.tuition) || 0,
-              hostel: parseFloat(row.hostel) || 0,
-              bus: parseFloat(row.bus) || 0,
-              university: parseFloat(row.university) || 0,
-              semester: parseFloat(row.semester) || 0,
-              library: parseFloat(row.library) || 0,
-              fines: parseFloat(row.fines) || 0
-            },
-            paid: paidByYear[year] || {}
+            expected,
+            paid
           };
         });
 
@@ -748,6 +746,7 @@ app.get("/fee-status/:userId", (req, res) => {
     });
   });
 });
+
 
 
 
