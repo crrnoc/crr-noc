@@ -6,7 +6,7 @@
   <title>Fee Details</title>
   <link rel="icon" href="crrengglogo.png" type="image/png" />
   <style>
-    * {
+   * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
@@ -22,19 +22,36 @@
       color: inherit;
     }
 
-    .container {
-      display: flex;
-      min-height: 100vh;
+.container {
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: 270px;
+  background-color: rgb(247, 201, 155);
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+
+  position: fixed; /* 🧷 Lock it */
+  top: 0;
+  bottom: 0;
+  left: 0;
+  overflow-y: auto;
     }
 
-    .sidebar {
-      width: 270px;
-      background-color: rgb(247, 201, 155);
-      display: flex;
-      flex-direction: column;
-      padding: 20px;
-      box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
-    }
+    .content {
+  margin-left: 270px; /* match sidebar width */
+  flex-grow: 1;
+  padding: 30px;
+  min-height: 100vh;
+  background-color: white;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  overflow-y: auto;
+}
 
     .sidebar h2 {
       margin: 40px 20px 20px 20px;
@@ -97,14 +114,6 @@
       background-color: #d07900;
     }
 
-    .content {
-      flex-grow: 1;
-      background-color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 30px;
-    }
 
  .fee-details {
   background: linear-gradient(to right, #fefefe, #f4f9fd);
@@ -205,6 +214,38 @@ tfoot tr {
         overflow-x: auto;
       }
     }
+    .accordion-toggle {
+  background: #1f75cb;
+  color: white;
+  padding: 12px 20px;
+  width: 100%;
+  text-align: left;
+  border: none;
+  border-radius: 10px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.accordion-toggle:hover {
+  background: #135aa3;
+}
+
+.accordion-content {
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  padding: 20px;
+  margin-top: 10px;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
   </style>
 </head>
 <body>
@@ -235,52 +276,53 @@ tfoot tr {
 
 <script>
   const userId = localStorage.getItem("userId");
-  document.getElementById("userId").textContent = userId || "Unknown";
+document.getElementById("userId").textContent = userId || "Unknown";
 
-  fetch(`https://crr-noc.onrender.com/yearwise-fee/${userId}`)
-    .then(res => res.json())
-    .then(res => {
-      if (!res.success) throw new Error("Fee data not found.");
+fetch(`https://crr-noc.onrender.com/yearwise-fee/${userId}`)
+  .then(res => res.json())
+  .then(res => {
+    if (!res.success) throw new Error("Fee data not found.");
 
-      const data = res.data;
-      const container = document.querySelector(".fee-details");
-      container.innerHTML = `<h2>📘 Year-wise Fee Details</h2>`;
+    const data = res.data;
+    const container = document.querySelector(".fee-details");
+    container.innerHTML = `<h2>📘 Year-wise Fee Details</h2>`;
 
-      data.forEach(({ year, structure, paid, fines }) => {
-        const items = [
-          { label: "Tuition Fee", key: "tuition" },
-          { label: "Hostel Fee", key: "hostel" },
-          { label: "Bus Fee", key: "bus" },
-          { label: "University Fee", key: "university" },
-          { label: "Semester Fee", key: "semester" },
-          { label: "Library Dues", key: "library" },
-          { label: "Fines", key: "fines" }
-        ];
+    data.forEach(({ year, structure, paid, fines }, index) => {
+      const items = [
+        { label: "Tuition Fee", key: "tuition" },
+        { label: "Hostel Fee", key: "hostel" },
+        { label: "Bus Fee", key: "bus" },
+        { label: "University Fee", key: "university" },
+        { label: "Semester Fee", key: "semester" },
+        { label: "Library Dues", key: "library" },
+        { label: "Fines", key: "fines" }
+      ];
 
-        let paidTotal = 0, remainingTotal = 0, actualTotal = 0;
-        let rowsHTML = "";
+      let paidTotal = 0, remainingTotal = 0, actualTotal = 0;
+      let rowsHTML = "";
 
-        items.forEach(({ label, key }) => {
-          const total = key === "fines" ? fines : parseFloat(structure[key]) || 0;
-          const paidAmt = parseFloat(paid[key]) || 0;
-          const remain = Math.max(0, total - paidAmt);
+      items.forEach(({ label, key }) => {
+        const total = key === "fines" ? fines : parseFloat(structure[key]) || 0;
+        const paidAmt = parseFloat(paid[key]) || 0;
+        const remain = Math.max(0, total - paidAmt);
 
-          paidTotal += paidAmt;
-          remainingTotal += remain;
-          actualTotal += total;
+        paidTotal += paidAmt;
+        remainingTotal += remain;
+        actualTotal += total;
 
-          rowsHTML += `
-            <tr>
-              <td>${label}</td>
-              <td>₹${paidAmt.toFixed(2)}</td>
-              <td>₹${remain.toFixed(2)}</td>
-              <td>₹${total.toFixed(2)}</td>
-            </tr>`;
-        });
+        rowsHTML += `
+          <tr>
+            <td>${label}</td>
+            <td>₹${paidAmt.toFixed(2)}</td>
+            <td>₹${remain.toFixed(2)}</td>
+            <td>₹${total.toFixed(2)}</td>
+          </tr>`;
+      });
 
-        container.innerHTML += `
-          <div class="fee-details" style="margin-top: 25px;">
-            <h2>📅 Academic Year ${year}</h2>
+      container.innerHTML += `
+        <div class="accordion-card" style="margin-top: 20px;">
+          <button class="accordion-toggle" data-index="${index}">📅 Academic Year ${year}</button>
+          <div class="accordion-content" style="display: none;">
             <table>
               <thead>
                 <tr>
@@ -300,13 +342,31 @@ tfoot tr {
                 </tr>
               </tfoot>
             </table>
-          </div>`;
-      });
-    })
-    .catch(err => {
-      console.error("❌ Error loading fee data:", err);
-      alert("Failed to load year-wise fee details.");
+          </div>
+        </div>`;
     });
+
+    // Accordion behavior
+    const toggles = document.querySelectorAll(".accordion-toggle");
+    const contents = document.querySelectorAll(".accordion-content");
+
+    toggles.forEach((btn, i) => {
+      btn.addEventListener("click", () => {
+        contents.forEach((content, j) => {
+          if (i === j) {
+            content.style.display = content.style.display === "block" ? "none" : "block";
+          } else {
+            content.style.display = "none";
+          }
+        });
+      });
+    });
+  })
+  .catch(err => {
+    console.error("❌ Error loading fee data:", err);
+    alert("Failed to load year-wise fee details.");
+  });
+
 
   function logout() {
     localStorage.removeItem("userId");
