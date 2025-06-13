@@ -820,23 +820,27 @@ app.post('/update-fee-structure', (req, res) => {
   connection.query(queryCheck, [reg_no, academic_year], (err, result) => {
     if (err) return res.status(500).json({ success: false, message: "DB error" });
 
-    const sql = result.length > 0
-      ? `UPDATE student_fee_structure SET
-          tuition=?, hostel=?, bus=?, university=?, semester=?, library=?, fines=?, updated_on=NOW()
-         WHERE reg_no=? AND academic_year=?`
-      : `INSERT INTO student_fee_structure 
-         (reg_no, academic_year, tuition, hostel, bus, university, semester, library, fines, updated_on)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`;
+   const sql = result.length > 0
+  ? `UPDATE student_fee_structure SET
+      tuition=?, hostel=?, bus=?, university=?, semester=?, library=?, fines=?, updated_at=NOW()
+     WHERE reg_no=? AND academic_year=?`
+  : `INSERT INTO student_fee_structure 
+     (reg_no, academic_year, tuition, hostel, bus, university, semester, library, fines, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`;
 
     const values = result.length > 0
       ? [tuition, hostel, bus, university, semester, library, fines, reg_no, academic_year]
       : [reg_no, academic_year, tuition, hostel, bus, university, semester, library, fines];
 
-    connection.query(sql, values, (err2) => {
-      if (err2) return res.status(500).json({ success: false, message: "Query failed" });
+   connection.query(sql, values, (err2) => {
+  if (err2) {
+    console.error("❌ Fee update query failed:", err2.message); // this logs the actual MySQL error
+    return res.status(500).json({ success: false, message: "Query failed", error: err2.message });
+  }
 
-      res.json({ success: true, message: "✅ Year-wise fee updated successfully!" });
-    });
+  res.json({ success: true, message: "✅ Year-wise fee updated successfully!" });
+});
+
   });
 });
 //noc code
