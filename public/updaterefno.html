@@ -317,7 +317,7 @@ if (!academicYear) {
   return;
 }
 
-    fetch("http://localhost:3000/submit-du", {
+    fetch("https://crr-noc.onrender.com/submit-du", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
 body: JSON.stringify({ userId, payments: paymentData, academic_year: academicYear })
