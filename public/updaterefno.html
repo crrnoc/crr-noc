@@ -200,6 +200,23 @@
         padding: 20px;
       }
     }
+
+    .form select {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  margin-top: 6px;
+  background-color: rgba(255, 255, 255, 0.9);
+  color: #000;
+  font-size: 15px;
+  transition: box-shadow 0.3s ease;
+}
+.form select:focus {
+  outline: none;
+  box-shadow: 0 0 6px rgba(54, 169, 225, 0.8);
+}
+
   </style>
 </head>
 <body>
@@ -223,6 +240,16 @@
     <!-- Main Content -->
     <div class="main">
       <div class="form">
+         <div class="input-group">
+  <label>Select Academic Year</label>
+  <select id="academicYear" required>
+    <option value="" disabled selected>Choose Year</option>
+    <option value="1">1st Year</option>
+    <option value="2">2nd Year</option>
+    <option value="3">3rd Year</option>
+    <option value="4">4th Year</option>
+  </select>
+</div>
         <div class="input-group">
           <label>Tuition Fee</label>
           <input type="text" id="tuition" placeholder="Enter DU number">
@@ -284,11 +311,17 @@
       alert("Please enter at least one DU number.");
       return;
     }
+      const academicYear = parseInt(document.getElementById("academicYear").value);
+if (!academicYear) {
+  alert("Please select academic year.");
+  return;
+}
 
-      fetch('https://crr-noc.onrender.com/submit-du', {
+    fetch("http://localhost:3000/submit-du", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId, payments: paymentData })
+body: JSON.stringify({ userId, payments: paymentData, academic_year: academicYear })
+
     })
       .then(res => res.json())
       .then(data => {
