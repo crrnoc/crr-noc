@@ -685,59 +685,70 @@ app.get('/admin/noc-status', (req, res) => {
 app.get("/fee-status/:userId", (req, res) => {
   const { userId } = req.params;
 
+  // Step 1: Get reg_no
   connection.query('SELECT reg_no FROM students WHERE userId = ?', [userId], (err, studentRows) => {
-    if (err || studentRows.length === 0) return res.status(500).json({ success: false });
+    if (err || studentRows.length === 0) {
+      return res.status(500).json({ success: false, message: "Student not found" });
+    }
 
     const reg_no = studentRows[0].reg_no;
 
+    // Step 2: Get all fee structures by academic year
     connection.query(`
-      SELECT * FROM student_fee_structure 
-      WHERE reg_no = ? ORDER BY updated_at DESC LIMIT 1
+      SELECT * FROM student_fee_structure
+      WHERE reg_no = ?
     `, [reg_no], (err2, feeRows) => {
-      if (err2 || feeRows.length === 0) return res.status(400).json({ success: false });
+      if (err2 || feeRows.length === 0) {
+        return res.status(400).json({ success: false, message: "No fee structure found" });
+      }
 
-      const feeStructure = feeRows[0];
-
-      // ✅ Fix: use userId and correct column 'amount_paid'
+      // Step 3: Get all paid amounts grouped by academic year and fee type
       connection.query(`
-        SELECT fee_type, SUM(amount_paid) AS paid 
+        SELECT academic_year, fee_type, SUM(amount_paid) AS paid
         FROM student_fee_payments
         WHERE userId = ? AND matched = 1
-        GROUP BY fee_type
+        GROUP BY academic_year, fee_type
       `, [userId], (err3, paidRows) => {
-        if (err3) return res.status(500).json({ success: false });
+        if (err3) {
+          return res.status(500).json({ success: false, message: "Error fetching payments" });
+        }
 
-        const paidMap = {};
+        // Organize payments by year
+        const paidByYear = {};
         paidRows.forEach(row => {
-          paidMap[row.fee_type.toLowerCase()] = parseFloat(row.paid);
+          const year = row.academic_year;
+          if (!paidByYear[year]) paidByYear[year] = {};
+          paidByYear[year][row.fee_type.toLowerCase()] = parseFloat(row.paid);
         });
 
-        const expected = {
-          tuition: parseFloat(feeStructure.tuition) || 0,
-          hostel: parseFloat(feeStructure.hostel) || 0,
-          bus: parseFloat(feeStructure.bus) || 0,
-          university: parseFloat(feeStructure.university) || 0,
-          semester: parseFloat(feeStructure.semester) || 0,
-          library: parseFloat(feeStructure.library) || 0,
-          fines: parseFloat(feeStructure.fines) || 0
-        };
-
-        const remaining = {};
-        for (const key in expected) {
-          remaining[key] = expected[key] - (paidMap[key] || 0);
-        }
+        // Structure the response
+        const years = {};
+        feeRows.forEach(row => {
+          const year = row.academic_year.toString();
+          years[year] = {
+            expected: {
+              tuition: parseFloat(row.tuition) || 0,
+              hostel: parseFloat(row.hostel) || 0,
+              bus: parseFloat(row.bus) || 0,
+              university: parseFloat(row.university) || 0,
+              semester: parseFloat(row.semester) || 0,
+              library: parseFloat(row.library) || 0,
+              fines: parseFloat(row.fines) || 0
+            },
+            paid: paidByYear[year] || {}
+          };
+        });
 
         return res.json({
           success: true,
           reg_no,
-          expected,
-          paid: paidMap,
-          remaining
+          years
         });
       });
     });
   });
 });
+
 
 
 
