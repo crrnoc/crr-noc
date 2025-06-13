@@ -14,12 +14,11 @@
 
     body {
       font-family: 'Poppins', sans-serif;
-      background: linear-gradient(135deg, #1e3c72, #2a5298);
+      background: linear-gradient(to bottom right, #0f2027, #203a43, #2c5364);
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      overflow: hidden;
       padding: 20px;
     }
 
@@ -76,23 +75,23 @@
     .status {
       font-size: 18px;
       font-weight: 600;
-      padding: 12px 25px;
-      border-radius: 30px;
+      padding: 14px 24px;
+      border-radius: 50px;
       display: inline-block;
       transition: all 0.3s ease;
       box-shadow: 0 5px 15px rgba(0,0,0,0.1);
     }
 
     .eligible {
-      color: #0f5132;
-      background: #d1e7dd;
-      border: 2px solid #0f5132;
+      color: #1e7e34;
+      background: #d4edda;
+      border: 2px solid #28a745;
     }
 
     .not-eligible {
       color: #842029;
       background: #f8d7da;
-      border: 2px solid #842029;
+      border: 2px solid #dc3545;
     }
 
     .footer {
@@ -104,12 +103,15 @@
     }
 
     .footer span {
-      color: #fff;
+      color: white;
       background: linear-gradient(to right, #00c6ff, #0072ff);
-      padding: 6px 12px;
-      border-radius: 20px;
+      padding: 10px 18px;
+      font-size: 15px;
+      font-weight: 600;
+      border-radius: 30px;
       display: inline-block;
-      margin-top: 8px;
+      margin-top: 10px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.15);
     }
 
     @keyframes fadeIn {
@@ -140,7 +142,7 @@
     <div id="result" class="status">Checking...</div>
     <div class="footer">
       This portal developed by <br>
-      <span>Cyber Team 2023-2027 Batch</span>
+      <span>Cyber Team 2023–2027 Batch</span>
     </div>
   </div>
 
@@ -164,9 +166,7 @@
 
         const expected = data.expected || {};
         const paid = data.paid || {};
-
         const keys = ["tuition", "hostel", "bus", "university", "semester", "library", "fines"];
-
         let totalExpected = 0;
         let totalPaid = 0;
 
@@ -174,8 +174,6 @@
           totalExpected += parseFloat(expected[key]) || 0;
           totalPaid += parseFloat(paid[key]) || 0;
         });
-
-        console.log("Expected:", totalExpected, "Paid:", totalPaid);
 
         if (totalPaid >= totalExpected && totalExpected > 0) {
           showSuccess("✅ Eligible for NOC");
@@ -202,9 +200,5 @@
     resultDiv.textContent = message;
   }
 </script>
-
-
-
-
 </body>
 </html>
