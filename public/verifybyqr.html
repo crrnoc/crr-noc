@@ -154,27 +154,24 @@
   const studentIdPara = document.getElementById("student-id");
   const resultDiv = document.getElementById("result");
 
-  if (userId && year) {
+  if (!userId || !year) {
+    studentIdPara.textContent = "❌ Missing User ID or Year";
+    showError("❌ Invalid QR Code");
+  } else {
     studentIdPara.textContent = `User ID: ${userId} | Year: ${year}`;
 
     fetch(`https://crr-noc.onrender.com/fee-status/${userId}`)
       .then((res) => res.json())
       .then((data) => {
-        if (!data.success) {
-          showError("❌ Error: Unable to fetch fee status.");
+        if (!data.success || !data.years[year]) {
+          showError("❌ Error: No data for this year.");
           return;
         }
 
-        const yearData = data.years?.[year];
-        if (!yearData) {
-          showError(`❌ No fee data available for Year ${year}`);
-          return;
-        }
-
-        const expected = yearData.expected || {};
-        const paid = yearData.paid || {};
+        const expected = data.years[year].expected || {};
+        const paid = data.years[year].paid || {};
         const keys = ["tuition", "hostel", "bus", "university", "semester", "library", "fines"];
-        
+
         let totalExpected = 0;
         let totalPaid = 0;
 
@@ -183,20 +180,16 @@
           totalPaid += parseFloat(paid[key]) || 0;
         });
 
-        console.log(`Year ${year} - Expected: ₹${totalExpected}, Paid: ₹${totalPaid}`);
-
         if (totalPaid >= totalExpected && totalExpected > 0) {
-          showSuccess(`✅ Eligible for NOC (Year ${year})`);
+          showSuccess("✅ Eligible for NOC");
         } else {
-          showError(`❌ Not Eligible for NOC (Year ${year})`);
+          showError("❌ Not Eligible for NOC. Dues remaining.");
         }
       })
       .catch((err) => {
         console.error(err);
-        showError("❌ Error checking fee status.");
+        showError("❌ Failed to connect to server.");
       });
-  } else {
-    showError("❌ Missing user ID or year in QR link.");
   }
 
   function showError(message) {
@@ -209,6 +202,7 @@
     resultDiv.textContent = message;
   }
 </script>
+
 
 
 </body>
