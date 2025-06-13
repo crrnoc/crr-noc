@@ -1002,58 +1002,52 @@ app.get('/generate-noc/:userId', (req, res) => {
                 doc.moveDown(1);
                 doc.font('Times-Bold').text("COLLEGE STAMP", { align: 'center' });
 
-                // QR code
-              const qrLink = `https://crr-noc.onrender.com/verifybyqr.html?userId=${userId}&year=${year}`;
+ // QR code
+const qrLink = `https://crr-noc.onrender.com/verifybyqr.html?userId=${userId}&year=${academicYear}`;
 
-                QRCode.toDataURL(qrLink, (err, qrUrl) => {
-                  if (err) {
-                    console.error("QR code generation failed", err);
-                    doc.end();
-                    return;
-                  }
+QRCode.toDataURL(qrLink, (err, qrUrl) => {
+  if (err) {
+    console.error("QR code generation failed", err);
+    doc.end();
+    return;
+  }
 
-                  const qrSize = 50;
-                  const qrX = 150;
-                  const qrY = doc.page.height - qrSize - 150;
+  const qrSize = 50;
+  const qrX = 150;
+  const qrY = doc.page.height - qrSize - 150;
 
-                  doc.image(qrUrl, qrX, qrY, { width: qrSize });
-                  doc.font('Times-Roman')
-                    .fontSize(10)
-                    .text('Scan to verify the NOC', qrX - 10, qrY + qrSize + 5, {
-                      width: qrSize + 30,
-                      align: 'center'
-                    });
+  doc.image(qrUrl, qrX, qrY, { width: qrSize });
+  doc.font('Times-Roman')
+    .fontSize(10)
+    .text('Scan to verify the NOC', qrX - 10, qrY + qrSize + 5, {
+      width: qrSize + 30,
+      align: 'center'
+    });
 
-                  const footerPath = path.join(__dirname, 'public', 'noc_footer.jpg');
-                  if (fs.existsSync(footerPath)) {
-                    const footerWidth = 500;
-                    const footerX = (doc.page.width - footerWidth) / 2;
-                    const footerY = doc.page.height - 100;
+  // Add footer image if exists
+  const footerPath = path.join(__dirname, 'public', 'noc_footer.jpg');
+  if (fs.existsSync(footerPath)) {
+    const footerWidth = 500;
+    const footerX = (doc.page.width - footerWidth) / 2;
+    const footerY = doc.page.height - 100;
 
-                    doc.image(footerPath, footerX, footerY, {
-                      width: footerWidth,
-                      align: 'center'
-                    });
-                  }
+    doc.image(footerPath, footerX, footerY, {
+      width: footerWidth,
+      align: 'center'
+    });
+  }
 
-                  doc.end();
+  doc.end();
 
-                  stream.on("finish", () => {
-                    res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
-                    res.setHeader("Content-Type", "application/pdf");
+  stream.on("finish", () => {
+    res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
+    res.setHeader("Content-Type", "application/pdf");
 
-                    const readStream = fs.createReadStream(filePath);
-                    readStream.pipe(res);
-                  });
-                });
-              }
-            );
-          });
-        }
-      );
-    }
-  );
+    const readStream = fs.createReadStream(filePath);
+    readStream.pipe(res);
+  });
 });
+
 
 
 
