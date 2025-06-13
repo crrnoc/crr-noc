@@ -159,23 +159,32 @@
     fetch(`https://crr-noc.onrender.com/fee-status/${userId}`)
       .then((res) => res.json())
       .then((data) => {
-        if (!data.success) {
-          showError("❌ Error: Unable to fetch fee status.");
+        if (!data.success || !data.years) {
+          showError("❌ Error: Invalid or missing data.");
           return;
         }
 
-        const expected = data.expected || {};
-        const paid = data.paid || {};
         const keys = ["tuition", "hostel", "bus", "university", "semester", "library", "fines"];
-        let totalExpected = 0;
-        let totalPaid = 0;
+        let allYearsCleared = true;
 
-        keys.forEach((key) => {
-          totalExpected += parseFloat(expected[key]) || 0;
-          totalPaid += parseFloat(paid[key]) || 0;
-        });
+        for (const year in data.years) {
+          const expected = data.years[year].expected || {};
+          const paid = data.years[year].paid || {};
 
-        if (totalPaid >= totalExpected && totalExpected > 0) {
+          for (const key of keys) {
+            const expectedAmount = parseFloat(expected[key]) || 0;
+            const paidAmount = parseFloat(paid[key]) || 0;
+
+            if (paidAmount < expectedAmount) {
+              allYearsCleared = false;
+              break;
+            }
+          }
+
+          if (!allYearsCleared) break;
+        }
+
+        if (allYearsCleared) {
           showSuccess("✅ Eligible for NOC");
         } else {
           showError("❌ Not Eligible for NOC. Dues remaining.");
@@ -200,5 +209,6 @@
     resultDiv.textContent = message;
   }
 </script>
+
 </body>
 </html>
