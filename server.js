@@ -820,13 +820,14 @@ app.post('/update-fee-structure', (req, res) => {
   connection.query(queryCheck, [reg_no, academic_year], (err, result) => {
     if (err) return res.status(500).json({ success: false, message: "DB error" });
 
-   const sql = result.length > 0
+  const sql = result.length > 0
   ? `UPDATE student_fee_structure SET
-      tuition=?, hostel=?, bus=?, university=?, semester=?, library=?, fines=?, updated_at=NOW()
+      tuition=?, hostel=?, bus=?, university=?, semester=?, \`library\`=?, fines=?, updated_at=NOW()
      WHERE reg_no=? AND academic_year=?`
   : `INSERT INTO student_fee_structure 
-     (reg_no, academic_year, tuition, hostel, bus, university, semester, library, fines, updated_at)
+     (reg_no, academic_year, tuition, hostel, bus, university, semester, \`library\`, fines, updated_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`;
+
 
     const values = result.length > 0
       ? [tuition, hostel, bus, university, semester, library, fines, reg_no, academic_year]
