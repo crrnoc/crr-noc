@@ -236,6 +236,9 @@
   </div>
 
   <script>
+    const userId = localStorage.getItem("userId");
+    document.getElementById("userId").textContent = userId;
+    
     document.getElementById("studentForm").addEventListener("submit", function(e) {
       e.preventDefault();
       const formData = new FormData(this);
