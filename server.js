@@ -1053,6 +1053,148 @@ QRCode.toDataURL(qrLink, (err, qrUrl) => {
 });
 });
 
+//logic for combined-noc
+app.get('/generate-combined-noc/:userId', (req, res) => {
+  const { userId } = req.params;
+
+  connection.query('SELECT name, course, reg_no FROM students WHERE userId = ?', [userId], (err, studentRows) => {
+    if (err || studentRows.length === 0) {
+      return res.status(404).json({ success: false, message: "Student not found" });
+    }
+
+    const student = studentRows[0];
+    const reg_no = student.reg_no;
+
+    connection.query(`SELECT * FROM student_fee_structure WHERE reg_no = ? ORDER BY academic_year ASC`, [reg_no], (err2, feeRows) => {
+      if (err2 || feeRows.length === 0) {
+        return res.status(400).json({ success: false, message: 'No fee structure found' });
+      }
+
+      const promises = feeRows.map(fee => {
+        const year = fee.academic_year;
+
+        return new Promise(resolve => {
+          connection.query(
+            `SELECT fee_type, SUM(amount_paid) AS paid 
+             FROM student_fee_payments 
+             WHERE userId = ? AND matched = 1 AND academic_year = ?
+             GROUP BY fee_type`,
+            [userId, year],
+            (err3, paidRows) => {
+              const paidMap = {};
+              paidRows?.forEach(row => paidMap[row.fee_type] = parseFloat(row.paid));
+
+              connection.query(
+                'SELECT SUM(amount) AS fine FROM fines WHERE userId = ? AND academic_year = ?',
+                [userId, year],
+                (err4, fineRes) => {
+                  const fineAmount = parseFloat(fineRes[0]?.fine || 0);
+
+                  const expected = {
+                    tuition: parseFloat(fee.tuition || 0),
+                    hostel: parseFloat(fee.hostel || 0),
+                    bus: parseFloat(fee.bus || 0),
+                    university: parseFloat(fee.university || 0),
+                    semester: parseFloat(fee.semester || 0),
+                    library: parseFloat(fee.library || 0),
+                    fines: fineAmount
+                  };
+
+                  let allPaid = true;
+                  for (const key in expected) {
+                    const paid = paidMap[key] || 0;
+                    const remaining = expected[key] - paid;
+                    if (remaining > 0) {
+                      allPaid = false;
+                      break;
+                    }
+                  }
+
+                  resolve({ year, status: allPaid ? "✅ Paid" : "❌ Not Paid" });
+                }
+              );
+            }
+          );
+        });
+      });
+
+      Promise.all(promises).then(yearStatuses => {
+        const fileName = `combined_noc_${userId}.pdf`;
+        const filePath = path.join(__dirname, 'uploads', fileName);
+        const doc = new PDFDocument({ margin: 50 });
+        const stream = fs.createWriteStream(filePath);
+        doc.pipe(stream);
+
+        // Header
+        const headerPath = path.join(__dirname, 'public', 'noc_header.jpg');
+        if (fs.existsSync(headerPath)) {
+          doc.image(headerPath, { fit: [500, 150], align: 'center' });
+          doc.moveDown(2);
+        }
+
+        // Title
+        doc.font('Times-Bold').fontSize(18).text('NO OBJECTION CERTIFICATE – FEE STATUS (ALL YEARS)', {
+          align: 'center',
+          underline: true
+        });
+        doc.moveDown();
+
+        // Professional body
+        doc.font('Times-Roman').fontSize(12).text(
+          `This is to formally certify that Mr./Ms. ${student.name} (Reg. No: ${reg_no}), currently enrolled in the ${student.course} program at our institution, has completed the prescribed fee payments as per the academic requirements. The year-wise fee payment status is verified from official records and is provided below:`,
+          { align: 'justify' }
+        );
+        doc.moveDown();
+
+        doc.font('Times-Roman').fontSize(12).text(
+          `This certificate is being issued upon the request of the student for the purpose of submission to external academic institutions, internship providers, employers, or any other authorities where official confirmation of fee clearance is required.`,
+          { align: 'justify' }
+        );
+        doc.moveDown();
+
+        // Year-wise status list
+        yearStatuses.forEach(({ year, status }) => {
+          doc.font('Times-Bold').fontSize(13).text(`${year} Year: ${status}`);
+        });
+
+        doc.moveDown(2);
+        doc.font('Times-Italic').fontSize(11).text(
+          "This certificate has been digitally generated and does not require a physical signature. It is valid for all official and academic purposes.",
+          { align: 'center' }
+        );
+
+        doc.moveDown();
+        doc.font('Times-Roman').fontSize(11).text(
+          `This certificate remains valid unless found altered or tampered with. Verification can be performed using the QR code provided below.`,
+          { align: 'center' }
+        );
+
+        doc.moveDown(2);
+        doc.font('Times-Roman').text("Authorized By", { align: 'right' });
+        doc.font('Times-Italic').text("Head of Accounts Department", { align: 'right' });
+
+        // QR Code
+        const qrLink = `https://crr-noc.onrender.com/verify-noc/${userId}?combined=true`;
+        QRCode.toDataURL(qrLink, (err, qrUrl) => {
+          if (!err && qrUrl) {
+            doc.image(qrUrl, 250, doc.y + 10, { width: 60 });
+          }
+
+          // Footer
+          const footerPath = path.join(__dirname, 'public', 'noc_footer.jpg');
+          if (fs.existsSync(footerPath)) {
+            doc.image(footerPath, (doc.page.width - 500) / 2, doc.page.height - 100, { width: 500 });
+          }
+
+          doc.end();
+          stream.on("finish", () => {
+            res.download(filePath, fileName);
+          });
+        });
+      });
+    });
+  });
+});
 
 
 
