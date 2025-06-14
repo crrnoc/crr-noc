@@ -202,6 +202,7 @@
               <option value="4">4th Year</option>
             </select>
             <button class="download">Download</button>
+            <button onclick="downloadCombinedNOC()" class="download" style="background-color: darkblue;">Download Combined 4-Year NOC</button>
           </div>
         </div>
       </div>
@@ -212,24 +213,48 @@
     const userId = localStorage.getItem("userId");
     document.getElementById("userId").textContent = userId;
 
-document.querySelector(".download").addEventListener("click", () => {
-  const year = document.getElementById("nocYear").value;
-  if (!year) {
-    alert("Please select an academic year to generate NOC.");
-    return;
-  }
+    document.querySelector(".download").addEventListener("click", () => {
+      const year = document.getElementById("nocYear").value;
+      if (!year) {
+        alert("Please select an academic year to generate NOC.");
+        return;
+      }
 
+      const userId = localStorage.getItem("userId");
+      const url = `http://localhost:3000/generate-noc/${userId}?year=${year}`;
+      window.open(url, '_blank');
+    });
+          function downloadCombinedNOC() {
   const userId = localStorage.getItem("userId");
-  const url = `https://crr-noc.onrender.com/generate-noc/${userId}?year=${year}`;
+  if (!userId) return alert("User ID not found!");
 
-  const a = document.createElement('a');
-  a.href = url;
-  a.target = '_blank';
-  a.download = `noc_${userId}_year${year}.pdf`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-});
+  fetch(`http://localhost:3000/generate-combined-noc/${userId}`)
+    .then(res => {
+      if (!res.ok) throw new Error("Failed to generate combined NOC");
+      return res.blob();
+    })
+    .then(blob => {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Combined_NOC_${userId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    })
+    .catch(err => {
+      console.error("Download error:", err);
+      alert("Something went wrong while generating NOC.");
+    });
+}
+
+    function logout() {
+      localStorage.removeItem("userId");
+      if ("caches" in window) {
+        caches.keys().then((names) => names.forEach((name) => caches.delete(name)));
+      }
+      window.location.replace("index.html");
+    }
   </script>
 </body>
 </html>
