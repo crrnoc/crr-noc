@@ -5,264 +5,234 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Know About Student</title>
   <link rel="icon" href="crrengglogo.png" type="image/png" />
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
 
-    body {
-      background-color: #1d1d1d;
-      color: #000;
-    }
+  body {
+    background-color: #1d1d1d;
+    color: #000;
+  }
 
-    .main-container {
-      display: flex;
-      height: 100vh;
-    }
-
-    .sidebar {
-      width: 270px;
-      background-color: rgb(247, 201, 155);
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      padding: 20px;
-    }
-
-    .sidebar h2 {
-      margin: 40px 20px 20px 20px;
-      color: black;
-      font-size: 18px;
-    }
-
-    .menu {
-      list-style-type: none;
-      padding: 0;
-    }
-
-    .menu li {
-      list-style: none;
-      margin-bottom: 15px;
-    }
-
-    .menu li a {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 16px;
-      color: black;
-      padding: 12px 20px;
-      border-radius: 8px;
-      transition: all 0.3s ease;
-    }
-
-    .menu li a:hover,
-    .menu li.active a {
-      background-color: #d4d4d4;
-      font-weight: bold;
-      transform: translateX(5px);
-      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
-    }
-
-    .menu li a span {
-      font-size: 18px;
-      transition: transform 0.3s ease;
-    }
-
-    .menu li a:hover span {
-      transform: scale(1.2);
-    }
-
-    .logout {
-      background-color: #f09000;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 20px;
-      cursor: pointer;
-      font-size: 16px;
-      width: 50%;
-      margin: 20px auto;
-      transition: background 0.3s ease;
-    }
-
-    .logout:hover {
-      background-color: #d07900;
-    }
-
-    .content {
-      flex-grow: 1;
-      background-color: white;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-    }
-
-.student-info {
-  background: linear-gradient(135deg, rgba(91, 192, 222, 0.85), rgba(60, 150, 200, 0.85));
-  border-radius: 20px;
-  padding: 30px 25px;
-  text-align: center;
-  width: 400px;
-  color: white;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  box-shadow: 0 12px 20px rgba(0, 0, 0, 0.3), 0 6px 8px rgba(0, 0, 0, 0.2);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.student-info:hover {
-  transform: scale(1.01);
-  box-shadow: 0 16px 28px rgba(0, 0, 0, 0.35);
-}
-
-
-    .student-info h3 {
-      font-size: 16px;
-      color: black;
-      margin-bottom: 20px;
-    }
-
-.student-info input {
-  width: 90%;
-  padding: 10px;
-  margin-bottom: 20px;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  background-color: rgba(255, 255, 255, 0.9);
-  color: #000;
-  transition: box-shadow 0.3s ease;
-}
-
-.student-info input:focus {
-  outline: none;
-  box-shadow: 0 0 5px rgba(91, 192, 222, 0.9);
-}
-
-
-    .know-btn {
-      background-color: #007bff;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      font-size: 14px;
-      border-radius: 5px;
-      cursor: pointer;
-      margin-bottom: 20px;
-    }
-
-    .know-btn:hover {
-      background-color: #0056b3;
-      transition: 0.2s;
-    }
-
-.student-details {
-  background-color: rgba(255, 255, 255, 0.95);
-  color: #1d1d1d;
-  border-radius: 15px;
-  padding: 25px 30px;
-  width: 400px;
-  text-align: left;
-  font-size: 15px;
-  box-shadow: 0 12px 20px rgba(0, 0, 0, 0.2);
-  margin-top: 20px;
-  transition: box-shadow 0.3s ease;
-}
-
-.student-details:hover {
-  box-shadow: 0 16px 28px rgba(0, 0, 0, 0.25);
-}
-
-
-    a {
-      text-decoration: none;
-      color: inherit;
-    }
-
-    /* Responsive design for mobile & tablet */
-@media (max-width: 768px) {
   .main-container {
-    flex-direction: column;
-    height: auto;
+    display: flex;
+    height: 100vh;
+    flex-direction: row;
   }
 
   .sidebar {
-    width: 100%;
+    width: 270px;
+    background-color: rgb(247, 201, 155);
+    display: flex;
     flex-direction: column;
-    align-items: center;
-    padding: 15px;
-    gap: 10px;
-    box-shadow: none;
+    justify-content: space-between;
+    padding: 20px;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 100;
+    overflow-y: auto;
+    transition: top 0.3s ease-in-out;
   }
 
   .sidebar h2 {
-    margin: 0;
-    font-size: 16px;
-    text-align: center;
+    margin: 40px 20px 20px 20px;
+    color: black;
+    font-size: 18px;
   }
 
   .menu {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 10px;
-    width: 100%;
-    padding: 10px 0;
+    list-style-type: none;
+    padding: 0;
   }
 
   .menu li {
-    margin: 0;
-    flex: 1 1 auto;
+    margin-bottom: 15px;
   }
 
   .menu li a {
-    font-size: 14px;
-    padding: 8px 12px;
-    border-radius: 6px;
-    text-align: center;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 16px;
+    color: black;
+    padding: 12px 20px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+  }
+
+  .menu li a:hover,
+  .menu li.active a {
+    background-color: #d4d4d4;
+    font-weight: bold;
+    transform: translateX(5px);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  .menu li a span {
+    font-size: 18px;
+    transition: transform 0.3s ease;
+  }
+
+  .menu li a:hover span {
+    transform: scale(1.2);
   }
 
   .logout {
-    margin: 10px 0;
-    padding: 8px 16px;
-    font-size: 14px;
-    width: 60%;
+    background-color: #f09000;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 16px;
+    width: 50%;
+    margin: 20px auto;
+    transition: background 0.3s ease;
+  }
+
+  .logout:hover {
+    background-color: #d07900;
   }
 
   .content {
-    padding: 20px;
+    flex-grow: 1;
+    background-color: white;
+    display: flex;
+    justify-content: center;
     align-items: center;
+    flex-direction: column;
+    margin-left: 270px;
+    padding: 20px;
   }
 
-  .student-info,
-  .student-details {
-    width: 95%;
-    max-width: 500px;
-    margin: 0 auto;
+  .student-info {
+    background: linear-gradient(135deg, rgba(91, 192, 222, 0.85), rgba(60, 150, 200, 0.85));
+    border-radius: 20px;
+    padding: 30px 25px;
+    text-align: center;
+    width: 400px;
+    color: white;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.3), 0 6px 8px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .student-info:hover {
+    transform: scale(1.01);
+    box-shadow: 0 16px 28px rgba(0, 0, 0, 0.35);
   }
 
   .student-info h3 {
-    font-size: 14px;
+    font-size: 16px;
+    color: black;
+    margin-bottom: 20px;
   }
 
   .student-info input {
-    font-size: 14px;
+    width: 90%;
     padding: 10px;
+    margin-bottom: 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    background-color: rgba(255, 255, 255, 0.9);
+    color: #000;
+    transition: box-shadow 0.3s ease;
+  }
+
+  .student-info input:focus {
+    outline: none;
+    box-shadow: 0 0 5px rgba(91, 192, 222, 0.9);
   }
 
   .know-btn {
-    width: 100%;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
     font-size: 14px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-bottom: 20px;
   }
-}
 
+  .know-btn:hover {
+    background-color: #0056b3;
+    transition: 0.2s;
+  }
 
-  </style>
+  .student-details {
+    background-color: rgba(255, 255, 255, 0.95);
+    color: #1d1d1d;
+    border-radius: 15px;
+    padding: 25px 30px;
+    width: 400px;
+    text-align: left;
+    font-size: 15px;
+    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.2);
+    margin-top: 20px;
+    transition: box-shadow 0.3s ease;
+  }
+
+  .student-details:hover {
+    box-shadow: 0 16px 28px rgba(0, 0, 0, 0.25);
+  }
+
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .mobile-toggle {
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #1f75cb;
+    color: white;
+    font-size: 24px;
+    padding: 12px 18px;
+    border-radius: 50px;
+    z-index: 9999;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  }
+
+  @media (max-width: 768px) {
+    .main-container {
+      flex-direction: column;
+    }
+
+    .sidebar {
+      width: 100%;
+      top: -100%;
+      position: fixed;
+      max-height: 90vh;
+      z-index: 999;
+    }
+
+    .sidebar.open {
+      top: 0;
+    }
+
+    .content {
+      margin-left: 0;
+      padding: 20px;
+    }
+
+    .mobile-toggle {
+      display: block;
+    }
+  }
+</style>
 </head>
 <body>
   <div class="main-container">
@@ -291,7 +261,7 @@
       <div id="studentDetails" class="student-details"></div>
     </div>
   </div>
-
+<div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
   <script>
     const userId = localStorage.getItem("userId");
     document.getElementById("userId").textContent = userId;
@@ -333,6 +303,18 @@
           alert(err.message);
         });
     });
+  function toggleMobileMenu() {
+    const sidebar = document.querySelector('.sidebar');
+    sidebar.classList.toggle('open');
+  }
+
+  document.querySelectorAll(".menu li a").forEach(link => {
+    link.addEventListener("click", () => {
+      if (window.innerWidth <= 768) {
+        document.querySelector('.sidebar').classList.remove('open');
+      }
+    });
+  });
         function logout() {
     localStorage.removeItem("userId");
     if ("caches" in window) {
