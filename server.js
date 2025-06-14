@@ -1196,6 +1196,79 @@ app.get('/generate-combined-noc/:userId', (req, res) => {
   });
 });
 
+// logic for the combined noc verification by qr
+
+app.get('/verify-combined-noc/:userId', (req, res) => {
+  const { userId } = req.params;
+
+  connection.query('SELECT reg_no FROM students WHERE userId = ?', [userId], (err, result) => {
+    if (err || result.length === 0) {
+      return res.json({ success: false, message: "User not found" });
+    }
+
+    const reg_no = result[0].reg_no;
+
+    connection.query(
+      'SELECT * FROM student_fee_structure WHERE reg_no = ? ORDER BY academic_year ASC',
+      [reg_no],
+      async (err2, feeRows) => {
+        if (err2 || feeRows.length === 0) {
+          return res.json({ success: false, message: "No fee structure found" });
+        }
+
+        const yearStatuses = await Promise.all(feeRows.map(fee => {
+          const year = fee.academic_year;
+          return new Promise(resolve => {
+            connection.query(
+              `SELECT fee_type, SUM(amount_paid) AS paid 
+               FROM student_fee_payments 
+               WHERE userId = ? AND matched = 1 AND academic_year = ?
+               GROUP BY fee_type`,
+              [userId, year],
+              (err3, paidRows) => {
+                const paidMap = {};
+                paidRows?.forEach(row => {
+                  paidMap[row.fee_type.toLowerCase()] = parseFloat(row.paid);
+                });
+
+                connection.query(
+                  'SELECT SUM(amount) AS fine FROM fines WHERE userId = ? AND academic_year = ?',
+                  [userId, year],
+                  (err4, fineRes) => {
+                    const fineAmount = parseFloat(fineRes?.[0]?.fine || 0);
+
+                    const expected = {
+                      tuition: fee.tuition || 0,
+                      hostel: fee.hostel || 0,
+                      bus: fee.bus || 0,
+                      university: fee.university || 0,
+                      semester: fee.semester || 0,
+                      library: fee.library || 0,
+                      fines: fineAmount
+                    };
+
+                    let allPaid = true;
+                    for (const key in expected) {
+                      const paid = paidMap[key] || 0;
+                      if ((expected[key] - paid) > 0) {
+                        allPaid = false;
+                        break;
+                      }
+                    }
+
+                    resolve({ year, status: allPaid ? "✅ Paid" : "❌ Not Paid" });
+                  }
+                );
+              }
+            );
+          });
+        }));
+
+        return res.json({ success: true, reg_no, yearStatuses });
+      }
+    );
+  });
+});
 
 
 app.post('/api/submit-feedback', (req, res) => {
