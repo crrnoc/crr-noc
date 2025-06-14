@@ -181,17 +181,54 @@
       font-weight: bold;
     }
 
+    .mobile-toggle {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #1f75cb;
+      color: white;
+      font-size: 24px;
+      padding: 12px 18px;
+      border-radius: 50px;
+      z-index: 9999;
+      cursor: pointer;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+
     @media (max-width: 768px) {
       .container {
         flex-direction: column;
       }
 
       .sidebar {
+        top: -100%;
+        left: 0;
         width: 100%;
+        max-height: 90vh;
+      }
+
+      .sidebar.open {
+        top: 0;
       }
 
       .main {
+        margin-left: 0;
         padding: 20px;
+      }
+
+      .form {
+        padding: 20px;
+        width: 100%;
+      }
+
+      input, textarea {
+        font-size: 14px;
+      }
+
+      .mobile-toggle {
+        display: block;
       }
     }
   </style>
@@ -238,6 +275,7 @@
       </div>
     </div>
   </div>
+    <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
 <script>
   const userId = localStorage.getItem("userId");
   document.getElementById("userId").textContent = userId || "Unknown";
@@ -293,6 +331,19 @@
 
     setTimeout(() => (msgEl.innerText = ""), 5000);
   });
+
+   function toggleMobileMenu() {
+      const sidebar = document.querySelector('.sidebar');
+      sidebar.classList.toggle('open');
+    }
+
+    document.querySelectorAll(".menu li a").forEach(link => {
+      link.addEventListener("click", () => {
+        if (window.innerWidth <= 768) {
+          document.querySelector('.sidebar').classList.remove('open');
+        }
+      });
+    });
 
   function logout() {
     localStorage.removeItem("userId");
