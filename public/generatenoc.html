@@ -221,14 +221,14 @@
       }
 
       const userId = localStorage.getItem("userId");
-      const url = `http://localhost:3000/generate-noc/${userId}?year=${year}`;
+      const url = `http://crr-noc.onrender.com/generate-noc/${userId}?year=${year}`;
       window.open(url, '_blank');
     });
           function downloadCombinedNOC() {
   const userId = localStorage.getItem("userId");
   if (!userId) return alert("User ID not found!");
 
-  fetch(`http://localhost:3000/generate-combined-noc/${userId}`)
+  fetch(`http://crr-noc.onrender.com/generate-combined-noc/${userId}`)
     .then(res => {
       if (!res.ok) throw new Error("Failed to generate combined NOC");
       return res.blob();
