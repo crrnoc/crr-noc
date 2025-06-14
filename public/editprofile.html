@@ -34,6 +34,13 @@
       flex-direction: column;
       padding: 20px;
       box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      overflow-y: auto;
+      transition: top 0.3s ease-in-out;
+      z-index: 999;
     }
 
     .sidebar h2 {
@@ -106,28 +113,28 @@
       flex-direction: column;
       align-items: center;
       overflow-y: auto;
+      margin-left: 270px;
     }
 
-.edit-profile-form {
-  width: 100%;
-  max-width: 600px;
-  background: linear-gradient(135deg, rgba(0, 164, 228, 0.85), rgba(0, 120, 180, 0.85));
-  color: #fff;
-  padding: 35px;
-  border-radius: 20px;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  box-shadow: 0 12px 20px rgba(0, 0, 0, 0.3), 0 6px 8px rgba(0, 0, 0, 0.22);
-  display: flex;
-  flex-direction: column;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
+    .edit-profile-form {
+      width: 100%;
+      max-width: 600px;
+      background: linear-gradient(135deg, rgba(0, 164, 228, 0.85), rgba(0, 120, 180, 0.85));
+      color: #fff;
+      padding: 35px;
+      border-radius: 20px;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      box-shadow: 0 12px 20px rgba(0, 0, 0, 0.3), 0 6px 8px rgba(0, 0, 0, 0.22);
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
 
-.edit-profile-form:hover {
-  transform: scale(1.01);
-  box-shadow: 0 16px 28px rgba(0, 0, 0, 0.35);
-}
-
+    .edit-profile-form:hover {
+      transform: scale(1.01);
+      box-shadow: 0 16px 28px rgba(0, 0, 0, 0.35);
+    }
 
     .form-row {
       margin-bottom: 15px;
@@ -194,18 +201,56 @@
       align-self: flex-start;
     }
 
+    .mobile-toggle {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #1f75cb;
+      color: white;
+      font-size: 24px;
+      padding: 12px 18px;
+      border-radius: 50px;
+      z-index: 9999;
+      cursor: pointer;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+
     @media (max-width: 768px) {
       .container {
         flex-direction: column;
       }
 
       .sidebar {
+        top: -100%;
+        left: 0;
         width: 100%;
-        padding: 15px;
+        max-height: 90vh;
+        background-color: rgb(247, 201, 155);
+        position: fixed;
+      }
+
+      .sidebar.open {
+        top: 0;
+      }
+
+      .mobile-toggle {
+        display: block;
       }
 
       .content {
-        padding: 15px;
+        margin-left: 0;
+        padding: 20px;
+      }
+
+      .edit-profile-form {
+        width: 100%;
+        padding: 25px;
+      }
+
+      .form-row input {
+        font-size: 15px;
       }
     }
   </style>
@@ -252,8 +297,21 @@
       </form>
     </div>
   </div>
-
+  <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
 <script>
+      function toggleMobileMenu() {
+      const sidebar = document.querySelector('.sidebar');
+      sidebar.classList.toggle('open');
+    }
+
+    document.querySelectorAll(".menu li a").forEach(link => {
+      link.addEventListener("click", () => {
+        if (window.innerWidth <= 768) {
+          document.querySelector('.sidebar').classList.remove('open');
+        }
+      });
+    });
+  
   const baseUrl = window.location.hostname.includes("localhost")
     ? "http://localhost:3000"
     : "https://crr-noc.onrender.com";
