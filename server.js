@@ -754,31 +754,48 @@ app.get("/fee-status/:userId", (req, res) => {
 //logic for add student in staff page
 app.post('/add-student', async (req, res) => {
   const {
-    name, dob, reg_no, unique_id, year,
-    course, semester, aadhar, mobile, email, password
+    userId, name, dob, reg_no, unique_id,
+    year, course, semester, aadhar_no, mobile_no,
+    email, password, section
   } = req.body;
 
-  // Basic validation
-  if (!name || !dob || !reg_no || !unique_id || !year || !course || !semester || !mobile || !email || !password) {
+  if (
+    !userId || !name || !dob || !reg_no || !unique_id ||
+    !year || !course || !semester || !mobile_no ||
+    !email || !password
+  ) {
     return res.status(400).json({ success: false, message: "Please fill all required fields" });
   }
 
   try {
-    const hashedPassword = await bcrypt.hash(password, 10); // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    const sql = `
-      INSERT INTO students 
-      (name, dob, reg_no, unique_id, year, course, semester, aadhar, mobile, email, password)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    // 1. Insert into students table
+    const studentSql = `
+      INSERT INTO students
+      (userId, name, dob, reg_no, unique_id, year, course, semester, aadhar_no, mobile_no, email, section)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
-    const values = [name, dob, reg_no, unique_id, year, course, semester, aadhar || null, mobile, email, hashedPassword];
 
-    connection.query(sql, values, (err, result) => {
-      if (err) {
-        console.error("DB Insert Error:", err);
+    connection.query(studentSql, [
+      userId, name, dob, reg_no, unique_id, year, course, semester, aadhar_no, mobile_no, email, section
+    ], (err1) => {
+      if (err1) {
+        console.error("Student Insert Error:", err1);
         return res.status(500).json({ success: false, message: "Failed to add student" });
       }
-      res.json({ success: true, message: "✅ Student added successfully!" });
+
+      // 2. Insert into users table
+      const userSql = `INSERT INTO users (userid, password, role) VALUES (?, ?, 'student')`;
+
+      connection.query(userSql, [userId, hashedPassword], (err2) => {
+        if (err2) {
+          console.error("User Insert Error:", err2);
+          return res.status(500).json({ success: false, message: "Failed to create login" });
+        }
+
+        return res.json({ success: true, message: "✅ Student added successfully!" });
+      });
     });
   } catch (err) {
     console.error("Hashing error:", err);
