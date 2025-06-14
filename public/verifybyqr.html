@@ -186,31 +186,40 @@
         console.error(err);
         showError("❌ Failed to connect to server.");
       });
+
   } else if (year) {
     studentIdPara.textContent = `User ID: ${userId} | Year: ${year}`;
 
     fetch(`https://crr-noc.onrender.com/fee-status/${userId}`)
       .then((res) => res.json())
       .then((data) => {
-        if (!data.success || !data.remaining) {
+        if (!data.success || !data.years || !data.years[year]) {
           showError("❌ Error fetching year-wise fee data.");
           return;
         }
 
-        const keys = Object.keys(data.remaining);
-        let totalDue = 0;
-        keys.forEach(key => totalDue += data.remaining[key]);
+        const expected = data.years[year].expected || {};
+        const paid = data.years[year].paid || {};
 
-        if (totalDue <= 0) {
+        let totalExpected = 0;
+        let totalPaid = 0;
+
+        Object.keys(expected).forEach((key) => {
+          totalExpected += parseFloat(expected[key] || 0);
+          totalPaid += parseFloat(paid[key] || 0);
+        });
+
+        if (totalPaid >= totalExpected && totalExpected > 0) {
           showSuccess("✅ Eligible for NOC");
         } else {
-          showError("❌ Not Eligible – Dues remaining.");
+          showError(`❌ Not Eligible – Dues remaining.<br><br>Total Expected: ₹${totalExpected.toFixed(2)}<br>Total Paid: ₹${totalPaid.toFixed(2)}`);
         }
       })
       .catch((err) => {
         console.error(err);
         showError("❌ Failed to connect to server.");
       });
+
   } else {
     studentIdPara.textContent = "❌ Invalid Parameters";
     showError("❌ Missing year or combined flag");
@@ -226,9 +235,6 @@
     resultDiv.innerHTML = message;
   }
 </script>
-
-
-
 
 </body>
 </html>
