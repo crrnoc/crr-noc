@@ -5,171 +5,210 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>My Notifications</title>
   <link rel="icon" href="crrengglogo.png" type="image/png" />
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
 
-    body {
-      background-color: #2e2e2e;
-    }
+  body {
+    background-color: #2e2e2e;
+  }
 
-    a {
-      text-decoration: none;
-      color: inherit;
-    }
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
 
+  .container {
+    display: flex;
+    min-height: 100vh;
+    flex-direction: row;
+  }
+
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: -100%;
+    bottom: 0;
+    width: 270px;
+    background-color: rgb(247, 201, 155);
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+    z-index: 100;
+    overflow-y: auto;
+    transition: top 0.3s ease-in-out;
+  }
+
+  .sidebar.open {
+    top: 0;
+  }
+
+  .sidebar h2 {
+    margin: 40px 20px 20px 20px;
+    color: black;
+    font-size: 18px;
+    font-weight: bold;
+  }
+
+  .menu {
+    list-style-type: none;
+    padding: 0;
+  }
+
+  .menu li {
+    margin-bottom: 15px;
+  }
+
+  .menu li a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 16px;
+    color: black;
+    padding: 12px 20px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+  }
+
+  .menu li a:hover,
+  .menu li.active a {
+    background-color: #d4d4d4;
+    font-weight: bold;
+    transform: translateX(5px);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  .menu li a span {
+    font-size: 18px;
+    transition: transform 0.3s ease;
+  }
+
+  .menu li a:hover span {
+    transform: scale(1.2);
+  }
+
+  .logout {
+    background-color: #f09000;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 16px;
+    width: 50%;
+    margin: 20px auto 0;
+    transition: background 0.3s ease;
+  }
+
+  .logout:hover {
+    background-color: #d07900;
+  }
+
+  .main {
+    margin-left: 270px;
+    background-color: #ffffff;
+    padding: 40px;
+    overflow-y: auto;
+    min-height: 100vh;
+    width: calc(100% - 270px);
+    transition: all 0.3s ease;
+  }
+
+  .main h2 {
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 24px;
+  }
+
+  .notification {
+    background: linear-gradient(145deg, #e3f2fd, #ffffff);
+    padding: 18px 20px;
+    margin-bottom: 20px;
+    border-left: 6px solid #2196f3;
+    border-radius: 12px;
+    font-size: 16px;
+    line-height: 1.6;
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.15);
+    transition: transform 0.2s ease;
+  }
+
+  .notification:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(33, 150, 243, 0.2);
+  }
+
+  .notification time {
+    display: block;
+    font-size: 13px;
+    color: #666;
+    margin-top: 10px;
+    opacity: 0.8;
+    font-style: italic;
+  }
+
+  .mobile-toggle {
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #1f75cb;
+    color: white;
+    font-size: 24px;
+    padding: 12px 18px;
+    border-radius: 50px;
+    z-index: 9999;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  }
+
+  @media (max-width: 768px) {
     .container {
-      display: flex;
-      min-height: 100vh;
+      flex-direction: column;
     }
 
-      .sidebar {
-        position: fixed;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        width: 270px;
-        background-color: rgb(247, 201, 155);
-        display: flex;
-        flex-direction: column;
-        padding: 20px;
-        box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
-        z-index: 100;
-        overflow-y: auto;
-      }
-
-
-    .sidebar h2 {
-      margin: 40px 20px 20px 20px;
-      color: black;
-      font-size: 18px;
-      font-weight: bold;
-    }
-
-    .menu {
-      list-style-type: none;
-      padding: 0;
-    }
-
-    .menu li {
-      margin-bottom: 15px;
-    }
-
-    .menu li a {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 16px;
-      color: black;
-      padding: 12px 20px;
-      border-radius: 8px;
-      transition: all 0.3s ease;
-    }
-
-    .menu li a:hover,
-    .menu li.active a {
-      background-color: #d4d4d4;
-      font-weight: bold;
-      transform: translateX(5px);
-      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
-    }
-
-    .menu li a span {
-      font-size: 18px;
-      transition: transform 0.3s ease;
-    }
-
-    .menu li a:hover span {
-      transform: scale(1.2);
-    }
-
-    .logout {
-      background-color: #f09000;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 20px;
-      cursor: pointer;
-      font-size: 16px;
-      width: 50%;
-      margin: 20px auto 0;
-      transition: background 0.3s ease;
-    }
-
-    .logout:hover {
-      background-color: #d07900;
-    }
-.main {
-  margin-left: 270px; /* because sidebar is fixed at 270px */
-  background-color: #ffffff;
-  padding: 40px;
+.sidebar {
+  top: -100%;
+  left: 0;
+  width: 100%;
+  background-color: rgb(247, 201, 155);
+  max-height: 830px;
   overflow-y: auto;
-  min-height: 100vh;
-  width: calc(100% - 270px); /* take full remaining width */
-  transition: all 0.3s ease;
+  position: fixed;
+  z-index: 999;
+  transition: top 0.3s ease-in-out;
 }
 
 
-    .main h2 {
-      color: #333;
-      margin-bottom: 20px;
-      font-size: 24px;
+    .sidebar.open {
+      top: 0;
     }
 
- .notification {
-  background: linear-gradient(145deg, #e3f2fd, #ffffff);
-  padding: 18px 20px;
-  margin-bottom: 20px;
-  border-left: 6px solid #2196f3;
-  border-radius: 12px;
-  font-size: 16px;
-  line-height: 1.6;
-  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.15);
-  transition: transform 0.2s ease;
-}
-
-.notification:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 16px rgba(33, 150, 243, 0.2);
-}
-
-
-.notification time {
-  display: block;
-  font-size: 13px;
-  color: #666;
-  margin-top: 10px;
-  opacity: 0.8;
-  font-style: italic;
-}
-
-    @media (max-width: 768px) {
-.container {
-  display: flex;
-}
-      .sidebar {
-        width: 100%;
-      }
-
-      .main {
-        padding: 20px;
-      }
+    .main {
+      margin-left: 0;
+      width: 100%;
+      padding: 20px;
     }
 
-    @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
+    .mobile-toggle {
+      display: block;
+    }
+  }
 
-.fade-in {
-  animation: fadeIn 0.5s ease forwards;
-}
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 
-  </style>
+  .fade-in {
+    animation: fadeIn 0.5s ease forwards;
+  }
+</style>
 </head>
 <body>
   <div class="container">
@@ -195,7 +234,7 @@
       <div id="notificationList">Loading...</div>
     </div>
   </div>
-
+    <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
   <script>
     const userId = localStorage.getItem("userId");
     document.getElementById("userId").textContent = userId || "Unknown";
@@ -229,6 +268,18 @@
         console.error("Error fetching notifications:", err);
         document.getElementById("notificationList").innerHTML = "<p>Error loading notifications.</p>";
       });
+    
+      function toggleMobileMenu() {
+    document.querySelector('.sidebar').classList.toggle('open');
+  }
+
+  document.querySelectorAll(".menu li a").forEach(link => {
+    link.addEventListener("click", () => {
+      if (window.innerWidth <= 768) {
+        document.querySelector('.sidebar').classList.remove('open');
+      }
+    });
+  });
 
     function logout() {
       localStorage.removeItem('userId');
