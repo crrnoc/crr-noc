@@ -34,6 +34,13 @@
       flex-direction: column;
       padding: 20px;
       box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      overflow-y: auto;
+      transition: top 0.3s ease-in-out;
+      z-index: 999;
     }
 
     .sidebar h2 {
@@ -105,33 +112,86 @@
       justify-content: center;
       background-color: #ffffff;
       padding: 20px;
+      margin-left: 270px;
     }
 
     .details-card {
-  background: linear-gradient(135deg, rgba(30, 157, 216, 0.85), rgba(23, 124, 171, 0.85));
-  color: #fff;
-  width: 80%;
-  max-width: 800px;
-  padding: 35px;
-  border-radius: 25px;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  box-shadow: 0 12px 20px rgba(0, 0, 0, 0.3), 0 6px 8px rgba(0, 0, 0, 0.22);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
+      background: linear-gradient(135deg, rgba(30, 157, 216, 0.85), rgba(23, 124, 171, 0.85));
+      color: #fff;
+      width: 90%;
+      max-width: 800px;
+      padding: 35px;
+      border-radius: 25px;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      box-shadow: 0 12px 20px rgba(0, 0, 0, 0.3), 0 6px 8px rgba(0, 0, 0, 0.22);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
 
-.details-card:hover {
-  transform: scale(1.01);
-  box-shadow: 0 15px 25px rgba(0, 0, 0, 0.4);
-}
+    .details-card:hover {
+      transform: scale(1.01);
+      box-shadow: 0 15px 25px rgba(0, 0, 0, 0.4);
+    }
 
-.details-card p {
-  margin: 12px 0;
-  font-size: 18px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  padding-bottom: 6px;
-}
+    .details-card p {
+      margin: 12px 0;
+      font-size: 18px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      padding-bottom: 6px;
+    }
 
+    .mobile-toggle {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #1f75cb;
+      color: white;
+      font-size: 24px;
+      padding: 12px 18px;
+      border-radius: 50px;
+      z-index: 9999;
+      cursor: pointer;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        top: -100%;
+        left: 0;
+        width: 100%;
+        max-height: 90vh;
+        background-color: rgb(247, 201, 155);
+      }
+
+      .sidebar.open {
+        top: 0;
+      }
+
+      .mobile-toggle {
+        display: block;
+      }
+
+      .details-section {
+        margin-left: 0;
+        padding: 15px;
+        justify-content: center;
+      }
+
+      .details-card {
+        width: 100%;
+        padding: 20px;
+      }
+
+      .details-card p {
+        font-size: 16px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -168,8 +228,21 @@
       </div>
     </div>
   </div>
-
+  <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
   <script>
+
+     function toggleMobileMenu() {
+      const sidebar = document.querySelector('.sidebar');
+      sidebar.classList.toggle('open');
+    }
+
+    document.querySelectorAll(".menu li a").forEach(link => {
+      link.addEventListener("click", () => {
+        if (window.innerWidth <= 768) {
+          document.querySelector('.sidebar').classList.remove('open');
+        }
+      });
+    });
     // Handle browser back/forward navigation to prevent cache issues
     window.onpageshow = function(event) {
       if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
