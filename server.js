@@ -1174,7 +1174,8 @@ app.get('/generate-combined-noc/:userId', (req, res) => {
         doc.font('Times-Italic').text("Head of Accounts Department", { align: 'right' });
 
         // QR Code
-        const qrLink = `https://crr-noc.onrender.com/verify-noc/${userId}?combined=true`;
+        const qrLink = `https://crr-noc.onrender.com/verifybyqr.html?userId=${userId}&combined=true`;
+
         QRCode.toDataURL(qrLink, (err, qrUrl) => {
           if (!err && qrUrl) {
             doc.image(qrUrl, 250, doc.y + 10, { width: 60 });
