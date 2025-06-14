@@ -99,60 +99,70 @@
       align-items: center;
     }
 
-    .form-container {
+    .form-box {
       background: linear-gradient(135deg, rgba(54, 169, 225, 0.85), rgba(30, 130, 190, 0.85));
-      padding: 30px;
+      padding: 35px 30px;
       border-radius: 20px;
-      max-width: 500px;
+      max-width: 600px;
       width: 100%;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
       color: white;
-      box-shadow: 0 12px 20px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 12px 20px rgba(0, 0, 0, 0.3), 0 6px 8px rgba(0, 0, 0, 0.22);
+      max-height: 90vh;
+      overflow-y: auto;
     }
 
-    .form-container h2 {
+    .form-box h2 {
       text-align: center;
       margin-bottom: 20px;
     }
 
-    .form-group {
-      margin-bottom: 15px;
-    }
-
-    label {
+    .form-box label {
+      display: block;
+      margin: 10px 0 5px;
       font-weight: bold;
     }
 
-    input, select {
+    .form-box input,
+    .form-box select {
       width: 100%;
       padding: 10px;
+      margin-bottom: 10px;
       border-radius: 6px;
       border: none;
-      margin-top: 5px;
+      font-size: 14px;
       color: #000;
     }
 
-    button {
+    .form-box button {
       width: 100%;
       padding: 12px;
-      font-size: 16px;
       background-color: #1D73D2;
       color: white;
       border: none;
+      font-size: 16px;
+      font-weight: bold;
       border-radius: 8px;
       cursor: pointer;
-      transition: background 0.3s ease;
+      margin-top: 10px;
     }
 
-    button:hover {
+    .form-box button:hover {
       background-color: #155ea8;
+    }
+
+    .message {
+      text-align: center;
+      margin-top: 10px;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
   <div class="main-container">
-    <!-- Sidebar -->
     <div class="sidebar">
-      <h2><strong>ID:</strong> <span id="userId">Loading...</span></h2>
+      <h2><strong>ID:</strong> <span id="userId">Admin</span></h2>
       <ul class="menu">
         <li><a href="knowaboutstd1.html"><span>👤</span> Know about Student</a></li>
         <li><a href="sendnotification.html"><span>📨</span> Send Notification</a></li>
@@ -165,77 +175,92 @@
       <button class="logout" onclick="logout()">Logout</button>
     </div>
 
-    <!-- Main Content -->
     <div class="main">
-      <div class="form-container">
+      <div class="form-box">
         <h2>Add New Student</h2>
-        <div class="form-group"><label>Name</label><input type="text" id="name"></div>
-        <div class="form-group"><label>Date of Birth</label><input type="date" id="dob"></div>
-        <div class="form-group"><label>Reg. No</label><input type="text" id="reg_no"></div>
-        <div class="form-group"><label>Unique ID</label><input type="text" id="unique_id"></div>
-        <div class="form-group"><label>Year</label>
-          <select id="year">
-            <option value="">Select Year</option>
-            <option value="1">1st Year</option>
-            <option value="2">2nd Year</option>
-            <option value="3">3rd Year</option>
-            <option value="4">4th Year</option>
+        <form id="studentForm">
+          <label>User ID</label>
+          <input type="text" name="userId" required />
+
+          <label>Full Name</label>
+          <input type="text" name="name" required />
+
+          <label>DOB</label>
+          <input type="date" name="dob" required />
+
+          <label>Registration No</label>
+          <input type="text" name="reg_no" required />
+
+          <label>Unique ID</label>
+          <input type="text" name="unique_id" required />
+
+          <label>Year</label>
+          <select name="year" required>
+            <option value="">Select</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
           </select>
-        </div>
-        <div class="form-group"><label>Course</label><input type="text" id="course"></div>
-        <div class="form-group"><label>Semester</label><input type="number" id="semester"></div>
-        <div class="form-group"><label>Aadhar No</label><input type="text" id="aadhar"></div>
-        <div class="form-group"><label>Mobile No</label><input type="tel" id="mobile"></div>
-        <div class="form-group"><label>Email</label><input type="email" id="email"></div>
-        <div class="form-group"><label>Password</label><input type="password" id="password"></div>
-        <button onclick="addStudent()">Submit</button>
+
+          <label>Course</label>
+          <input type="text" name="course" required />
+
+          <label>Semester</label>
+          <select name="semester" required>
+            <option value="">Select</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+          </select>
+
+          <label>Section</label>
+          <input type="text" name="section" maxlength="2" />
+
+          <label>Aadhar No</label>
+          <input type="text" name="aadhar_no" />
+
+          <label>Mobile No</label>
+          <input type="text" name="mobile_no" required />
+
+          <label>Email</label>
+          <input type="email" name="email" required />
+
+          <label>Password</label>
+          <input type="password" name="password" required />
+
+          <button type="submit">Add Student</button>
+          <p id="response" class="message"></p>
+        </form>
       </div>
     </div>
   </div>
 
   <script>
-    const userId = localStorage.getItem("userId");
-    document.getElementById("userId").textContent = userId;
-
-    function addStudent() {
-      const student = {
-        name: document.getElementById("name").value,
-        dob: document.getElementById("dob").value,
-        reg_no: document.getElementById("reg_no").value,
-        unique_id: document.getElementById("unique_id").value,
-        year: document.getElementById("year").value,
-        course: document.getElementById("course").value,
-        semester: document.getElementById("semester").value,
-        aadhar: document.getElementById("aadhar").value,
-        mobile: document.getElementById("mobile").value,
-        email: document.getElementById("email").value,
-        password: document.getElementById("password").value
-      };
+    document.getElementById("studentForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      const data = Object.fromEntries(formData.entries());
 
       fetch("https://crr-noc.onrender.com/add-student", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(student)
+        body: JSON.stringify(data)
       })
       .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          alert("✅ Student added successfully!");
-        } else {
-          alert("❌ Failed: " + data.message);
-        }
+      .then(result => {
+        const msg = document.getElementById("response");
+        msg.textContent = result.message;
+        msg.style.color = result.success ? "green" : "red";
+        if (result.success) this.reset();
       })
       .catch(err => {
-        alert("❌ Server error");
         console.error(err);
+        document.getElementById("response").textContent = "Server error!";
       });
-    }
+    });
 
     function logout() {
       localStorage.removeItem("userId");
-      if ("caches" in window) {
-        caches.keys().then(names => names.forEach(name => caches.delete(name)));
-      }
       window.location.replace("index.html");
     }
   </script>
