@@ -751,71 +751,39 @@ app.get("/fee-status/:userId", (req, res) => {
 
 
 
-//logic for noc verification in staff page
-app.get('/staff/verify-noc/:reg_no', (req, res) => {
-  const { reg_no } = req.params;
+//logic for add student in staff page
+app.post('/add-student', async (req, res) => {
+  const {
+    name, dob, reg_no, unique_id, year,
+    course, semester, aadhar, mobile, email, password
+  } = req.body;
 
-  // Step 1: Get userId from reg_no
-  connection.query('SELECT userId FROM students WHERE reg_no = ?', [reg_no], (err, studentRows) => {
-    if (err || studentRows.length === 0) {
-      return res.status(404).json({ success: false, message: 'Student not found' });
-    }
+  // Basic validation
+  if (!name || !dob || !reg_no || !unique_id || !year || !course || !semester || !mobile || !email || !password) {
+    return res.status(400).json({ success: false, message: "Please fill all required fields" });
+  }
 
-    const { userId } = studentRows[0];
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10); // Hash password
 
-    // Step 2: Get latest fee structure for this student
-    connection.query(
-      'SELECT * FROM student_fee_structure WHERE reg_no = ? ORDER BY updated_at DESC LIMIT 1',
-      [reg_no],
-      (err2, feeRows) => {
-        if (err2 || feeRows.length === 0) {
-          return res.status(400).json({ success: false, message: 'Fee structure not found' });
-        }
-        const feeStructure = feeRows[0];
-        // Step 3: Get matched paid amounts
-        connection.query(
-          `SELECT fee_type, SUM(amount_paid) AS paid 
-           FROM student_fee_payments 
-           WHERE userId = ? AND matched = 1 
-           GROUP BY fee_type`,
-          [userId],
-          (err3, paidRows) => {
-            if (err3) return res.status(500).json({ success: false });
-            const paidMap = {};
-            paidRows.forEach(row => paidMap[row.fee_type] = parseFloat(row.paid));
-            // Step 4: Fetch total fines
-            connection.query(
-              'SELECT SUM(amount) AS fine FROM fines WHERE userId = ?',
-              [userId],
-              (err4, fineRes) => {
-                if (err4) return res.status(500).json({ success: false });
+    const sql = `
+      INSERT INTO students 
+      (name, dob, reg_no, unique_id, year, course, semester, aadhar, mobile, email, password)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+    const values = [name, dob, reg_no, unique_id, year, course, semester, aadhar || null, mobile, email, hashedPassword];
 
-                const fineAmount = parseFloat(fineRes[0].fine) || 0;
-
-                const expected = {
-                  tuition: parseFloat(feeStructure.tuition) || 0,
-                  hostel: parseFloat(feeStructure.hostel) || 0,
-                  bus: parseFloat(feeStructure.bus) || 0,
-                  university: parseFloat(feeStructure.university) || 0,
-                  semester: parseFloat(feeStructure.semester) || 0,
-                  library: parseFloat(feeStructure.library) || 0,
-                  fines: fineAmount
-                };
-                // Step 5: Compare expected vs paid
-                for (const key in expected) {
-                  const remaining = expected[key] - (paidMap[key] || 0);
-                  if (remaining > 0) {
-                    return res.json({ success: true, eligible: false, userId, reg_no });
-                  }
-                }
-                return res.json({ success: true, eligible: true, userId, reg_no });
-              }
-            );
-          }
-        );
+    connection.query(sql, values, (err, result) => {
+      if (err) {
+        console.error("DB Insert Error:", err);
+        return res.status(500).json({ success: false, message: "Failed to add student" });
       }
-    );
-  });
+      res.json({ success: true, message: "✅ Student added successfully!" });
+    });
+  } catch (err) {
+    console.error("Hashing error:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
 });
 
 //logic for the fee upadate by staff
