@@ -149,59 +149,84 @@
 <script>
   const urlParams = new URLSearchParams(window.location.search);
   const userId = urlParams.get("userId");
+  const isCombined = urlParams.get("combined") === "true";
   const year = urlParams.get("year");
 
   const studentIdPara = document.getElementById("student-id");
   const resultDiv = document.getElementById("result");
 
-  if (!userId || !year) {
-    studentIdPara.textContent = "❌ Missing User ID or Year";
+  if (!userId) {
+    studentIdPara.textContent = "❌ Missing User ID";
     showError("❌ Invalid QR Code");
-  } else {
-    studentIdPara.textContent = `User ID: ${userId} | Year: ${year}`;
+  } else if (isCombined) {
+    studentIdPara.textContent = `User ID: ${userId} | Combined NOC`;
 
-    fetch(`https://crr-noc.onrender.com/fee-status/${userId}`)
+    fetch(`https://crr-noc.onrender.com/verify-combined-noc/${userId}`)
       .then((res) => res.json())
       .then((data) => {
-        if (!data.success || !data.years[year]) {
-          showError("❌ Error: No data for this year.");
+        if (!data.success) {
+          showError("❌ Error verifying combined NOC.");
           return;
         }
 
-        const expected = data.years[year].expected || {};
-        const paid = data.years[year].paid || {};
-        const keys = ["tuition", "hostel", "bus", "university", "semester", "library", "fines"];
-
-        let totalExpected = 0;
-        let totalPaid = 0;
-
-        keys.forEach((key) => {
-          totalExpected += parseFloat(expected[key]) || 0;
-          totalPaid += parseFloat(paid[key]) || 0;
+        let allPaid = true;
+        let html = `<strong>📘 Year-wise Fee Status:</strong><br/><br/>`;
+        data.yearStatuses.forEach((yearStatus) => {
+          html += `${yearStatus.year} Year: ${yearStatus.status}<br/>`;
+          if (yearStatus.status.includes("❌")) allPaid = false;
         });
 
-        if (totalPaid >= totalExpected && totalExpected > 0) {
-          showSuccess("✅ Eligible for NOC");
+        if (allPaid) {
+          showSuccess("✅ Eligible for Combined NOC");
         } else {
-          showError("❌ Not Eligible for NOC. Dues remaining.");
+          showError("❌ Not Eligible – Some dues remaining.<br><br>" + html);
         }
       })
       .catch((err) => {
         console.error(err);
         showError("❌ Failed to connect to server.");
       });
+  } else if (year) {
+    studentIdPara.textContent = `User ID: ${userId} | Year: ${year}`;
+
+    fetch(`https://crr-noc.onrender.com/fee-status/${userId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (!data.success || !data.remaining) {
+          showError("❌ Error fetching year-wise fee data.");
+          return;
+        }
+
+        const keys = Object.keys(data.remaining);
+        let totalDue = 0;
+        keys.forEach(key => totalDue += data.remaining[key]);
+
+        if (totalDue <= 0) {
+          showSuccess("✅ Eligible for NOC");
+        } else {
+          showError("❌ Not Eligible – Dues remaining.");
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+        showError("❌ Failed to connect to server.");
+      });
+  } else {
+    studentIdPara.textContent = "❌ Invalid Parameters";
+    showError("❌ Missing year or combined flag");
   }
 
   function showError(message) {
     resultDiv.className = "status not-eligible";
-    resultDiv.textContent = message;
+    resultDiv.innerHTML = message;
   }
 
   function showSuccess(message) {
     resultDiv.className = "status eligible";
-    resultDiv.textContent = message;
+    resultDiv.innerHTML = message;
   }
 </script>
+
 
 
 
