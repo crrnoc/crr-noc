@@ -6,7 +6,7 @@
   <title>Fee Details</title>
   <link rel="icon" href="crrengglogo.png" type="image/png" />
   <style>
-   * {
+    * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
@@ -22,36 +22,38 @@
       color: inherit;
     }
 
-.container {
-  min-height: 100vh;
-}
+    .container {
+      min-height: 100vh;
+      display: flex;
+    }
 
-.sidebar {
-  width: 270px;
-  background-color: rgb(247, 201, 155);
-  display: flex;
-  flex-direction: column;
-  padding: 20px;
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
-
-  position: fixed; /* 🧷 Lock it */
-  top: 0;
-  bottom: 0;
-  left: 0;
-  overflow-y: auto;
+    .sidebar {
+      width: 270px;
+      background-color: rgb(247, 201, 155);
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      overflow-y: auto;
+      transition: top 0.3s ease-in-out;
+      z-index: 999;
     }
 
     .content {
-  margin-left: 270px; /* match sidebar width */
-  flex-grow: 1;
-  padding: 30px;
-  min-height: 100vh;
-  background-color: white;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  overflow-y: auto;
-}
+      margin-left: 270px;
+      flex-grow: 1;
+      padding: 30px;
+      min-height: 100vh;
+      background-color: white;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      overflow-y: auto;
+    }
 
     .sidebar h2 {
       margin: 40px 20px 20px 20px;
@@ -114,85 +116,113 @@
       background-color: #d07900;
     }
 
+    .fee-details {
+      background: #ffffff;
+      color: #333;
+      padding: 35px 40px;
+      border-radius: 20px;
+      width: 90%;
+      max-width: 1000px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+      border: 1px solid #e0e0e0;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      overflow-x: auto;
+    }
 
- .fee-details {
-  background: linear-gradient(to right, #fefefe, #f4f9fd);
-  color: #2c3e50;
-  padding: 40px 50px;
-  border-radius: 20px;
-  width: 95%;
-  max-width: 1100px;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
-  border: 1px solid #e3eaf5;
-  transition: all 0.3s ease;
-  overflow-x: auto;
-}
+    .fee-details:hover {
+      transform: scale(1.01);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
+    }
 
-.fee-details:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.2);
-}
+    .fee-details h2 {
+      text-align: center;
+      margin-bottom: 25px;
+      font-size: 24px;
+      color: #1f75cb;
+      background: rgba(31, 117, 203, 0.1);
+      padding: 12px;
+      border-radius: 10px;
+    }
 
-.fee-details {
-  background: #ffffff;
-  color: #333;
-  padding: 35px 40px;
-  border-radius: 20px;
-  width: 90%;
-  max-width: 1000px;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-  border: 1px solid #e0e0e0;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  overflow-x: auto;
-}
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 17px;
+    }
 
-.fee-details:hover {
-  transform: scale(1.01);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
-}
+    thead tr {
+      background-color: #f5f7fa;
+      color: #333;
+    }
 
-.fee-details h2 {
-  text-align: center;
-  margin-bottom: 25px;
-  font-size: 24px;
-  color: #1f75cb;
-  background: rgba(31, 117, 203, 0.1);
-  padding: 12px;
-  border-radius: 10px;
-}
+    th, td {
+      padding: 12px 15px;
+      text-align: right;
+      border-bottom: 1px solid #ddd;
+    }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 17px;
-}
+    th:first-child, td:first-child {
+      text-align: left;
+    }
 
-thead tr {
-  background-color: #f5f7fa;
-  color: #333;
-}
+    tbody tr:hover {
+      background-color: #f0f8ff;
+    }
 
-th, td {
-  padding: 12px 15px;
-  text-align: right;
-  border-bottom: 1px solid #ddd;
-}
+    tfoot tr {
+      background-color: #e6f0ff;
+      font-weight: bold;
+      color: #0b3e75;
+      border-top: 2px solid #d0e3ff;
+    }
 
-th:first-child, td:first-child {
-  text-align: left;
-}
+    .accordion-toggle {
+      background: #1f75cb;
+      color: white;
+      padding: 12px 20px;
+      width: 100%;
+      text-align: left;
+      border: none;
+      border-radius: 10px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
 
-tbody tr:hover {
-  background-color: #f0f8ff;
-}
+    .accordion-toggle:hover {
+      background: #135aa3;
+    }
 
-tfoot tr {
-  background-color: #e6f0ff;
-  font-weight: bold;
-  color: #0b3e75;
-  border-top: 2px solid #d0e3ff;
-}
+    .accordion-content {
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      padding: 20px;
+      margin-top: 10px;
+      animation: fadeIn 0.3s ease-in-out;
+    }
 
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .mobile-toggle {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #1f75cb;
+      color: white;
+      font-size: 24px;
+      padding: 12px 18px;
+      border-radius: 50px;
+      z-index: 9999;
+      cursor: pointer;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
 
     @media (max-width: 768px) {
       .container {
@@ -200,52 +230,60 @@ tfoot tr {
       }
 
       .sidebar {
+        top: -100%;
+        left: 0;
         width: 100%;
-        padding: 15px;
+        max-height: 90vh;
+        overflow-y: auto;
+        background-color: rgb(247, 201, 155);
+      }
+
+      .sidebar.open {
+        top: 0;
+      }
+
+      .mobile-toggle {
+        display: block;
       }
 
       .content {
-        padding: 15px;
+        margin-left: 0;
+        padding: 20px;
       }
 
       .fee-details {
         width: 100%;
-        padding: 20px;
+        max-width: 100%;
+        padding: 16px 10px;
+        margin: 10px auto;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        font-size: 15px;
         overflow-x: auto;
+        background: white;
       }
-    }
-    .accordion-toggle {
-  background: #1f75cb;
-  color: white;
-  padding: 12px 20px;
+
+      .fee-details table {
+        font-size: 15px;
+        min-width: 600px;
+        width: 100%;
+      }
+
+      .fee-details h2 {
+        font-size: 20px;
+        padding: 8px;
+      }
+      .accordion-content {
   width: 100%;
-  text-align: left;
-  border: none;
-  border-radius: 10px;
-  font-size: 18px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background 0.3s ease;
+  overflow-x: auto;
 }
 
-.accordion-toggle:hover {
-  background: #135aa3;
+.accordion-content table {
+  width: 100%;
+  min-width: 600px;
 }
 
-.accordion-content {
-  background: #fff;
-  border: 1px solid #ccc;
-  border-radius: 10px;
-  padding: 20px;
-  margin-top: 10px;
-  animation: fadeIn 0.3s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-10px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
+    }
   </style>
 </head>
 <body>
@@ -273,7 +311,7 @@ tfoot tr {
       </div>
     </div>
   </div>
-
+<div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
 <script>
   const userId = localStorage.getItem("userId");
 document.getElementById("userId").textContent = userId || "Unknown";
@@ -367,6 +405,19 @@ fetch(`https://crr-noc.onrender.com/yearwise-fee/${userId}`)
     alert("Failed to load year-wise fee details.");
   });
 
+    function toggleMobileMenu() {
+  const sidebar = document.querySelector('.sidebar');
+  sidebar.classList.toggle('open');
+}
+
+// Close mobile sidebar on menu click (only on mobile)
+document.querySelectorAll(".menu li a").forEach(link => {
+  link.addEventListener("click", () => {
+    if (window.innerWidth <= 768) {
+      document.querySelector('.sidebar').classList.remove('open');
+    }
+  });
+});
 
   function logout() {
     localStorage.removeItem("userId");
