@@ -233,36 +233,45 @@
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
 }
 
-@media (max-width: 768px) {
-  .mobile-toggle {
-    display: block;
-  }
+   .mobile-toggle {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #1f75cb;
+      color: white;
+      font-size: 24px;
+      padding: 12px 18px;
+      border-radius: 50px;
+      z-index: 9999;
+      cursor: pointer;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
 
-  .sidebar {
-    position: fixed;
-    top: -100%;
-    left: 0;
-    width: 100%;
-    max-height: 90vh;
-    background-color: rgb(247, 201, 155);
-    transition: top 0.3s ease-in-out;
-    z-index: 999;
-  }
-
-  .sidebar.open {
-    top: 0;
-  }
-
-  .main {
-    margin-left: 0 !important;
-    width: 100% !important;
-  }
-
-  body {
-    flex-direction: column;
-    overflow-x: hidden;
-  }
-}
+    @media (max-width: 768px) {
+      .mobile-toggle { display: block; }
+      .sidebar {
+        position: fixed;
+        top: -100%;
+        left: 0;
+        width: 100%;
+        max-height: 90vh;
+        background-color: rgb(247, 201, 155);
+        overflow-y: auto;
+        transition: top 0.3s ease-in-out;
+      }
+      .sidebar.open { top: 0; }
+      .main {
+        margin-left: 0 !important;
+        width: 100% !important;
+        padding: 20px;
+      }
+      body {
+        flex-direction: column;
+        overflow-x: hidden;
+      }
+    }
   </style>
 </head>
 <body>
@@ -398,7 +407,7 @@
 </div>
 </div>
   </div>
-<div class="mobile-toggle" onclick="toggleSidebar()">☰</div>
+  <div class="mobile-toggle" onclick="toggleSidebar()">☰</div>
   <script>
     document.getElementById("sbiFile").addEventListener("change", function () {
   const file = this.files[0];
@@ -534,18 +543,18 @@ function applyNOCFilter() {
     });
   });
 }
-function toggleSidebar() {
-    document.querySelector('.sidebar').classList.toggle('open');
-  }
+ function toggleSidebar() {
+      document.querySelector('.sidebar').classList.toggle('open');
+    }
 
-  // Close sidebar when any menu item is clicked (mobile only)
-  document.querySelectorAll(".sidebar li").forEach(link => {
-    link.addEventListener("click", () => {
-      if (window.innerWidth <= 768) {
-        document.querySelector('.sidebar').classList.remove('open');
-      }
+    document.querySelectorAll(".sidebar li").forEach(link => {
+      link.addEventListener("click", () => {
+        if (window.innerWidth <= 768) {
+          document.querySelector('.sidebar').classList.remove('open');
+        }
+      });
     });
-  });
+
     function logout() {
     localStorage.removeItem("userId");
     if ("caches" in window) {
