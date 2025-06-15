@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Add Student</title>
   <link rel="icon" href="crrengglogo.png" type="image/png" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
     * {
       margin: 0;
@@ -285,49 +286,64 @@
     </div>
   </div>
 <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
-  <script>
-    const userId = localStorage.getItem("userId");
-    document.getElementById("userId").textContent = userId;
-    
-    document.getElementById("studentForm").addEventListener("submit", function(e) {
-      e.preventDefault();
-      const formData = new FormData(this);
-      const data = Object.fromEntries(formData.entries());
+<script>
+  const userId = localStorage.getItem("userId");
+  document.getElementById("userId").textContent = userId;
 
-      fetch("https://crr-noc.onrender.com/add-student", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-      })
-      .then(res => res.json())
-      .then(result => {
-        const msg = document.getElementById("response");
-        msg.textContent = result.message;
-        msg.style.color = result.success ? "green" : "red";
-        if (result.success) this.reset();
-      })
-      .catch(err => {
-        console.error(err);
-        document.getElementById("response").textContent = "Server error!";
+  document.getElementById("studentForm").addEventListener("submit", function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    const data = Object.fromEntries(formData.entries());
+
+    fetch("https://crr-noc.onrender.com/add-student", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(result => {
+      if (result.success) {
+        Swal.fire({
+          icon: "success",
+          title: "Student Added",
+          text: result.message || "The student was added successfully!"
+        });
+        this.reset();
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: result.message || "Failed to add student."
+        });
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      Swal.fire({
+        icon: "error",
+        title: "Server Error",
+        text: "Something went wrong. Please try again later."
       });
     });
-
-     function toggleMobileMenu() {
-  document.querySelector('.sidebar').classList.toggle('open');
-}
-
-document.querySelectorAll(".menu li a").forEach(link => {
-  link.addEventListener("click", () => {
-    if (window.innerWidth <= 768) {
-      document.querySelector('.sidebar').classList.remove('open');
-    }
   });
-});
 
-    function logout() {
-      localStorage.removeItem("userId");
-      window.location.replace("index.html");
-    }
-  </script>
+  function toggleMobileMenu() {
+    document.querySelector('.sidebar').classList.toggle('open');
+  }
+
+  document.querySelectorAll(".menu li a").forEach(link => {
+    link.addEventListener("click", () => {
+      if (window.innerWidth <= 768) {
+        document.querySelector('.sidebar').classList.remove('open');
+      }
+    });
+  });
+
+  function logout() {
+    localStorage.removeItem("userId");
+    window.location.replace("index.html");
+  }
+</script>
+
 </body>
 </html>
