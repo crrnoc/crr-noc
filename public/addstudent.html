@@ -15,18 +15,14 @@
   }
 
   body {
-    background-color: #ffffff;
+    background-color: #1d1d1d;
     color: #000;
-  }
-
-  a {
-    text-decoration: none;
-    color: inherit;
   }
 
   .main-container {
     display: flex;
-    min-height: 100vh;
+    height: 100vh;
+    flex-direction: row;
   }
 
   .sidebar {
@@ -40,8 +36,9 @@
     top: 0;
     bottom: 0;
     left: 0;
-    z-index: 1000;
-    transition: all 0.3s ease-in-out;
+    z-index: 100;
+    overflow-y: auto;
+    transition: top 0.3s ease-in-out;
   }
 
   .sidebar h2 {
@@ -78,6 +75,15 @@
     box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
   }
 
+  .menu li a span {
+    font-size: 18px;
+    transition: transform 0.3s ease;
+  }
+
+  .menu li a:hover span {
+    transform: scale(1.2);
+  }
+
   .logout {
     background-color: #f09000;
     color: white;
@@ -94,7 +100,6 @@
   .logout:hover {
     background-color: #d07900;
   }
-
   .main {
     flex-grow: 1;
     background-color: white;
