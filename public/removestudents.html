@@ -2,322 +2,217 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Delete Students</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Remove Students</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" href="crrengglogo.png" type="image/png" />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
     body {
-      font-family: 'Poppins', sans-serif;
-      background-color: #f4f6fa;
-      display: flex;
-      height: 100vh;
-      overflow: hidden;
-    }
-
-    .sidebar {
-      width: 250px;
-      background: linear-gradient(145deg, #ffb97d, #f7c99b);
-      padding: 30px 20px;
-      box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+      background: linear-gradient(to right, #ffe8d6, #f9d5c2);
+      padding: 40px 20px;
       display: flex;
       flex-direction: column;
-      animation: slideIn 0.5s ease;
+      align-items: center;
+      gap: 40px;
     }
-
-    .sidebar h2 {
-      font-size: 22px;
-      text-align: center;
-      color: #222;
-      margin-bottom: 40px;
-      font-weight: 600;
+    h1 {
+      font-size: 28px;
+      color: #333;
+      margin-bottom: 10px;
     }
-
-    .sidebar ul {
-      list-style: none;
-    }
-
-    .sidebar li {
-      margin: 15px 0;
-      padding: 12px 20px;
-      border-radius: 10px;
-      transition: 0.3s;
-      cursor: pointer;
-      color: #111;
-    }
-
-    .sidebar li:hover {
+    .card {
       background: #fff;
-      transform: translateX(5px);
-      font-weight: bold;
-    }
-
-    .main {
-      flex: 1;
-      padding: 40px;
-      overflow-y: auto;
-      background: #ffffff;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 600px;
       animation: fadeIn 0.6s ease;
     }
-
-    .card {
-      background: white;
-      border-radius: 20px;
-      box-shadow: 0 6px 16px rgba(0,0,0,0.06);
-      padding: 30px;
-      margin-bottom: 40px;
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    label {
+      font-weight: 600;
+      display: block;
+      margin-bottom: 8px;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 20px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 15px;
+    }
+    button {
+      background: linear-gradient(to right, #ff5e62, #ff9966);
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
       transition: 0.3s ease;
     }
-
-    .card:hover {
-      transform: translateY(-5px);
+    button:hover {
+      background: linear-gradient(to right, #ff9966, #ff5e62);
     }
-
-    .mobile-toggle {
-      display: none;
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background-color: #1f75cb;
-      color: white;
-      font-size: 24px;
-      padding: 12px 18px;
-      border-radius: 50px;
-      z-index: 9999;
-      cursor: pointer;
-      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    .student-info {
+      margin-bottom: 20px;
+      background: #f8f8f8;
+      padding: 15px;
+      border-radius: 10px;
+      font-size: 14px;
     }
+    .back-btn {
+  display: inline-block;
+  margin-bottom: 20px;
+  background: linear-gradient(to right, #36d1dc, #5b86e5);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 30px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: 0.3s ease;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+.back-btn:hover {
+  background: linear-gradient(to right, #5b86e5, #36d1dc);
+  transform: scale(1.05);
+}
 
-    @media (max-width: 768px) {
-      body {
-        flex-direction: column;
-        overflow-x: hidden;
-      }
-
-      .sidebar {
-        position: fixed;
-        top: -100%;
-        left: 0;
-        width: 100%;
-        max-height: 90vh;
-        background-color: rgb(247, 201, 155);
-        overflow-y: auto;
-        transition: top 0.3s ease-in-out;
-        z-index: 1000;
-      }
-
-      .sidebar.open {
-        top: 0;
-      }
-
-      .mobile-toggle {
-        display: block;
-      }
-
-      .main {
-        padding: 20px;
-        width: 100%;
-      }
-    }
   </style>
 </head>
 <body>
+<a href="adminpanel.html" class="back-btn">← Back to Admin Panel</a>
 
-  <!-- Sidebar -->
-  <div class="sidebar">
-    <h2>Admin Panel</h2>
-    <ul>
-      <li onclick="location.href='adminpanel.html'">🏠 Dashboard</li>
-      <li onclick="location.href='removestudents.html'">🗑️ Delete Students</li>
-      <!-- Add more menu items if needed -->
-    </ul>
-    <button onclick="logout()" style="margin-top:auto; padding: 10px 20px; border: none; border-radius: 8px; background-color: #dc3545; color: white; cursor: pointer;">Logout</button>
-  </div>
-
-  <!-- Main Content -->
   <div class="card">
-  <h3>🗃️ Delete Students by Batch</h3>
-  <p>Enter the registration prefix and select branch to remove a batch.</p>
+    <h1>🧍 Delete a Specific Student</h1>
+    <label for="regNo">Enter Registration Number</label>
+    <input type="text" id="regNo" placeholder="e.g., 23B81A1234" />
+    <div id="studentInfo" class="student-info" style="display:none;"></div>
+    <button onclick="fetchStudentDetails()">Get Student</button>
+    <button onclick="confirmDelete()" style="background-color:#e74c3c;">Delete Student</button>
+  </div>
 
-  <div style="margin-top: 15px; display: flex; gap: 15px; flex-wrap: wrap;">
-    <input type="text" id="batchPrefix" placeholder="Enter Prefix (e.g. 23B8)" style="padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 15px;"/>
-
-    <select id="batchBranch" style="padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 15px;">
-      <option value="">Select Branch</option>
-      <option>CIVIL</option>
-      <option>MECH</option>
-      <option>EEE</option>
-      <option>ECE</option>
-      <option>CSE</option>
-      <option>CSD</option>
-      <option>CSM</option>
-      <option>CSC</option>
-      <option>IT</option>
+  <div class="card">
+    <h1>📦 Delete Batch of Students</h1>
+    <label for="batchPrefix">Enter Batch Prefix (e.g. 23B8)</label>
+    <input type="text" id="batchPrefix" placeholder="e.g., 23B8" />
+    <label for="batchBranch">Select Branch</label>
+    <select id="batchBranch">
+      <option value="">-- Select Branch --</option>
+      <option>CIVIL</option><option>MECH</option><option>EEE</option><option>ECE</option>
+      <option>CSE</option><option>CSD</option><option>CSM</option><option>CSC</option><option>IT</option>
     </select>
-
-    <button onclick="confirmBatchDelete()">🗑️ Delete Batch</button>
-  </div>
-</div>
-
-
-   <div class="card">
-  <h3>👤 Delete Individual Student</h3>
-  <p>Enter full registration number to find and delete a specific student.</p>
-
-  <div style="margin-top: 15px; display: flex; gap: 15px; flex-wrap: wrap;">
-    <input type="text" id="regNumber" placeholder="Enter Reg Number (e.g. 23B81A0501)"
-      style="padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 15px;" />
-
-    <button onclick="fetchStudent()">🔍 View Details</button>
+    <button onclick="filterBatch()">View Batch Students</button>
+    <div id="batchList" class="student-info" style="display:none;"></div>
+    <button onclick="confirmBatchDelete()" style="background-color:#c0392b;">Delete Batch</button>
   </div>
 
-  <div id="studentPreview" style="margin-top: 20px; display: none;">
-    <p><strong>Student Details:</strong></p>
-    <ul style="line-height: 1.6;">
-      <li><strong>Name:</strong> <span id="studentName"></span></li>
-      <li><strong>Branch:</strong> <span id="studentBranch"></span></li>
-      <li><strong>Year:</strong> <span id="studentYear"></span></li>
-      <li><strong>Section:</strong> <span id="studentSection"></span></li>
-    </ul>
-    <button style="margin-top: 10px;" onclick="confirmStudentDelete()">🗑️ Delete Student</button>
-  </div>
-</div>
+<script>
+let fetchedReg = "";
 
+function fetchStudentDetails() {
+  const regNo = document.getElementById("regNo").value.trim();
+  if (!regNo) return Swal.fire("Error", "Please enter a registration number", "warning");
 
-  <!-- Mobile Toggle Button -->
-  <div class="mobile-toggle" onclick="toggleSidebar()">☰</div>
-
-  <script>
-function confirmBatchDelete() {
-  const prefix = document.getElementById("batchPrefix").value.trim().toUpperCase();
-  const branch = document.getElementById("batchBranch").value.trim();
-
-  if (!prefix || !branch) {
-    Swal.fire("Missing Fields", "Please enter both prefix and branch.", "warning");
-    return;
-  }
-
-  Swal.fire({
-    title: "Are you sure?",
-    text: `Delete all students with Reg No starting with ${prefix} in ${branch}?`,
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonColor: "#d33",
-    cancelButtonColor: "#aaa",
-    confirmButtonText: "Yes, Delete!"
-  }).then((result) => {
-    if (result.isConfirmed) {
-      deleteBatch(prefix, branch);
-    }
-  });
-}
-
-function deleteBatch(prefix, branch) {
-  fetch("https://crr-noc.onrender.com/delete-batch", {
+  fetch("/admin/get-student-details", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ prefix, branch })
+    body: JSON.stringify({ reg_no: regNo })
   })
   .then(res => res.json())
   .then(data => {
-    if (data.success) {
-      Swal.fire("Deleted!", data.message || "Batch deleted successfully.", "success");
-    } else {
-      Swal.fire("Error", data.message || "Failed to delete batch.", "error");
-    }
+    if (!data.success) return Swal.fire("Not Found", data.message, "error");
+    fetchedReg = data.student.reg_no;
+    const infoBox = document.getElementById("studentInfo");
+    infoBox.innerHTML = `
+      <strong>Name:</strong> ${data.student.name}<br>
+      <strong>Reg No:</strong> ${data.student.reg_no}<br>
+      <strong>Course:</strong> ${data.student.course}<br>
+      <strong>Section:</strong> ${data.student.section}
+    `;
+    infoBox.style.display = "block";
   })
-  .catch(() => {
-    Swal.fire("Error", "Network error. Try again.", "error");
-  });
-}
-  let currentStudent = null; // to hold details after fetch
-
-function fetchStudent() {
-  const reg = document.getElementById("regNumber").value.trim().toUpperCase();
-  if (!reg) {
-    Swal.fire("Required", "Please enter a registration number.", "warning");
-    return;
-  }
-
-  fetch("https://crr-noc.onrender.com/get-student-details", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ reg_no: reg })
-  })
-    .then(res => res.json())
-    .then(data => {
-      if (data.success && data.student) {
-        currentStudent = data.student;
-        document.getElementById("studentPreview").style.display = "block";
-        document.getElementById("studentName").textContent = currentStudent.name;
-        document.getElementById("studentBranch").textContent = currentStudent.branch;
-        document.getElementById("studentYear").textContent = currentStudent.year;
-        document.getElementById("studentSection").textContent = currentStudent.section;
-      } else {
-        Swal.fire("Not Found", "Student not found with that registration number.", "error");
-        document.getElementById("studentPreview").style.display = "none";
-      }
-    })
-    .catch(() => {
-      Swal.fire("Error", "Unable to fetch student. Try again.", "error");
-    });
+  .catch(() => Swal.fire("Error", "Failed to fetch student data", "error"));
 }
 
-function confirmStudentDelete() {
-  if (!currentStudent) return;
+function confirmDelete() {
+  if (!fetchedReg) return Swal.fire("No Student", "Please fetch a student first.", "warning");
 
   Swal.fire({
-    title: "Are you sure?",
-    html: `Delete <strong>${currentStudent.name}</strong> (${currentStudent.reg_no})?`,
+    title: `Are you sure?`,
+    text: `Delete student ${fetchedReg}?`,
     icon: "warning",
     showCancelButton: true,
-    confirmButtonColor: "#d33",
-    cancelButtonColor: "#aaa",
-    confirmButtonText: "Yes, Delete!"
+    confirmButtonText: "Yes, delete"
   }).then((result) => {
     if (result.isConfirmed) {
-      deleteStudent(currentStudent.reg_no);
+      fetch("/admin/delete-student", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reg_no: fetchedReg })
+      })
+      .then(res => res.json())
+      .then(data => Swal.fire("Done", data.message, "success"))
+      .catch(() => Swal.fire("Error", "Failed to delete student", "error"));
     }
   });
 }
 
-function deleteStudent(reg_no) {
-  fetch("https://crr-noc.onrender.com/delete-student", {
+function filterBatch() {
+  const prefix = document.getElementById("batchPrefix").value.trim();
+  const branch = document.getElementById("batchBranch").value;
+
+  if (!prefix || !branch) return Swal.fire("Missing", "Please enter both prefix and branch", "warning");
+
+  fetch("/admin/filter-batch", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ reg_no })
+    body: JSON.stringify({ batchPrefix: prefix, branch })
   })
-    .then(res => res.json())
-    .then(data => {
-      if (data.success) {
-        Swal.fire("Deleted!", "Student deleted successfully.", "success");
-        document.getElementById("studentPreview").style.display = "none";
-        document.getElementById("regNumber").value = "";
-        currentStudent = null;
-      } else {
-        Swal.fire("Error", data.message || "Failed to delete student.", "error");
-      }
-    })
-    .catch(() => {
-      Swal.fire("Error", "Server error. Try again.", "error");
-    });
+  .then(res => res.json())
+  .then(data => {
+    const list = document.getElementById("batchList");
+    if (!data.success || data.students.length === 0) {
+      list.innerHTML = "No students found.";
+      list.style.display = "block";
+      return;
+    }
+    list.innerHTML = data.students.map(s => `${s.reg_no} - ${s.name}`).join("<br>");
+    list.style.display = "block";
+  })
+  .catch(() => Swal.fire("Error", "Failed to fetch batch data", "error"));
 }
 
-    function toggleSidebar() {
-      document.querySelector('.sidebar').classList.toggle('open');
-    }
+function confirmBatchDelete() {
+  const prefix = document.getElementById("batchPrefix").value.trim();
+  const branch = document.getElementById("batchBranch").value;
 
-    function logout() {
-      localStorage.removeItem("userId");
-      if ("caches" in window) {
-        caches.keys().then(keys => keys.forEach(key => caches.delete(key)));
-      }
-      window.location.replace("index.html");
+  if (!prefix || !branch) return Swal.fire("Missing Info", "Prefix and branch required", "warning");
+
+  Swal.fire({
+    title: "Delete Entire Batch?",
+    text: `This will delete all students starting with ${prefix} from ${branch}.`,
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "Yes, delete batch"
+  }).then(result => {
+    if (result.isConfirmed) {
+      fetch("/admin/delete-batch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ batchPrefix: prefix, branch })
+      })
+      .then(res => res.json())
+      .then(data => Swal.fire("Deleted", data.message, "success"))
+      .catch(() => Swal.fire("Error", "Failed to delete batch", "error"));
     }
-  </script>
+  });
+}
+</script>
 
 </body>
 </html>
