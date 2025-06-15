@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Send Notification</title>
   <link rel="icon" href="crrengglogo.png" type="image/png" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <style>
    * {
     margin: 0;
@@ -246,69 +247,85 @@
     </div>
   </div>
 <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
-  <script>
-    const userId = localStorage.getItem("userId");
-    document.getElementById("userId").textContent = userId;
+<script>
+  const userId = localStorage.getItem("userId");
+  document.getElementById("userId").textContent = userId;
 
- function sendNotification() {
-  const studentId = document.getElementById("studentId").value.trim();
-  const message = document.getElementById("message").value.trim();
-  const btn = document.querySelector(".form button");
+  function sendNotification() {
+    const studentId = document.getElementById("studentId").value.trim();
+    const message = document.getElementById("message").value.trim();
+    const btn = document.querySelector(".form button");
 
-  if (!studentId || !message) {
-    alert("Please enter both User ID and message.");
-    return;
-  }
+    if (!studentId || !message) {
+      Swal.fire({
+        icon: "warning",
+        title: "Missing Information",
+        text: "Please enter both User ID and message."
+      });
+      return;
+    }
 
-  // Show sending status
-  btn.disabled = true;
-  btn.textContent = "Sending Notification...";
+    // Show sending status
+    btn.disabled = true;
+    btn.textContent = "Sending Notification...";
 
-  fetch("https://crr-noc.onrender.com/send-notification", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ userId: studentId, message })
-  })
-  .then(res => res.json())
-  .then(data => {
-    btn.textContent = "Sent ✅";
-    document.getElementById("studentId").value = "";
-    document.getElementById("message").value = "";
+    fetch("https://crr-noc.onrender.com/send-notification", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: studentId, message })
+    })
+    .then(res => res.json())
+    .then(data => {
+      btn.textContent = "Sent ✅";
+      document.getElementById("studentId").value = "";
+      document.getElementById("message").value = "";
 
-    // Reset back after 2 seconds
-    setTimeout(() => {
+      Swal.fire({
+        icon: "success",
+        title: "Notification Sent!",
+        text: "The notification was sent successfully."
+      });
+
+      // Reset back after 2 seconds
+      setTimeout(() => {
+        btn.disabled = false;
+        btn.textContent = "Send Notification";
+      }, 2000);
+    })
+    .catch(error => {
+      console.error("Error sending notification:", error);
       btn.disabled = false;
       btn.textContent = "Send Notification";
-    }, 2000);
-  })
-  .catch(error => {
-    console.error("Error sending notification:", error);
-    btn.disabled = false;
-    btn.textContent = "Send Notification";
-    alert("Something went wrong. Please try again.");
+
+      Swal.fire({
+        icon: "error",
+        title: "Failed!",
+        text: "Something went wrong. Please try again."
+      });
+    });
+  }
+
+  function toggleMobileMenu() {
+    const sidebar = document.querySelector('.sidebar');
+    sidebar.classList.toggle('open');
+  }
+
+  document.querySelectorAll(".menu li a").forEach(link => {
+    link.addEventListener("click", () => {
+      if (window.innerWidth <= 768) {
+        document.querySelector('.sidebar').classList.remove('open');
+      }
+    });
   });
-}
 
-    function toggleMobileMenu() {
-  const sidebar = document.querySelector('.sidebar');
-  sidebar.classList.toggle('open');
-}
-
-document.querySelectorAll(".menu li a").forEach(link => {
-  link.addEventListener("click", () => {
-    if (window.innerWidth <= 768) {
-      document.querySelector('.sidebar').classList.remove('open');
-    }
-  });
-});
-
-        function logout() {
+  function logout() {
     localStorage.removeItem("userId");
     if ("caches" in window) {
       caches.keys().then((names) => names.forEach((name) => caches.delete(name)));
     }
     window.location.replace("index.html");
   }
-  </script>
+</script>
+
 </body>
 </html>
