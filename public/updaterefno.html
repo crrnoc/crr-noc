@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Update Fee Payment</title>
   <link rel="icon" href="crrengglogo.png" type="image/png" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <style>
   * {
     margin: 0;
@@ -315,28 +316,44 @@
     ].filter(entry => entry.du.trim() !== "" && entry.amount.trim() !== "");
 
     if (paymentData.length === 0) {
-      alert("Please enter at least one DU number.");
+      Swal.fire({
+        icon: "warning",
+        title: "Missing DU Number",
+        text: "Please enter at least one DU number."
+      });
       return;
     }
-      const academicYear = parseInt(document.getElementById("academicYear").value);
-if (!academicYear) {
-  alert("Please select academic year.");
-  return;
-}
+
+    const academicYear = parseInt(document.getElementById("academicYear").value);
+    if (!academicYear) {
+      Swal.fire({
+        icon: "info",
+        title: "Academic Year Required",
+        text: "Please select academic year."
+      });
+      return;
+    }
 
     fetch("https://crr-noc.onrender.com/submit-du", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-body: JSON.stringify({ userId, payments: paymentData, academic_year: academicYear })
-
+      body: JSON.stringify({ userId, payments: paymentData, academic_year: academicYear })
     })
       .then(res => res.json())
       .then(data => {
-        alert(data.message || "DU numbers submitted successfully.");
+        Swal.fire({
+          icon: "success",
+          title: "Success",
+          text: data.message || "DU numbers submitted successfully."
+        });
       })
       .catch(err => {
         console.error("Error submitting DU numbers:", err);
-        alert("Something went wrong.");
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "Something went wrong."
+        });
       });
   });
 
@@ -357,7 +374,7 @@ body: JSON.stringify({ userId, payments: paymentData, academic_year: academicYea
     });
   });
 
-    function toggleMobileMenu() {
+  function toggleMobileMenu() {
     document.querySelector('.sidebar').classList.toggle('open');
   }
 
@@ -368,6 +385,7 @@ body: JSON.stringify({ userId, payments: paymentData, academic_year: academicYea
       }
     });
   });
+
   // Logout handler
   function logout() {
     localStorage.removeItem("userId");
@@ -381,10 +399,16 @@ body: JSON.stringify({ userId, payments: paymentData, academic_year: academicYea
   window.addEventListener("pageshow", function (event) {
     const userId = localStorage.getItem("userId");
     if (!userId) {
-      alert("Please login first.");
-      window.location.replace("index.html");
+      Swal.fire({
+        icon: "warning",
+        title: "Login Required",
+        text: "Please login first."
+      }).then(() => {
+        window.location.replace("index.html");
+      });
     }
   });
 </script>
+
 </body>
 </html>
