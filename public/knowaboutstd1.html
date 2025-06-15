@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Know About Student</title>
   <link rel="icon" href="crrengglogo.png" type="image/png" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <style>
   * {
     margin: 0;
@@ -262,47 +263,62 @@
     </div>
   </div>
 <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
-  <script>
-    const userId = localStorage.getItem("userId");
-    document.getElementById("userId").textContent = userId;
+<script>
+  const userId = localStorage.getItem("userId");
+  document.getElementById("userId").textContent = userId;
 
-    const fetchBtn = document.getElementById("fetchStudentBtn");
-    const studentIdInput = document.getElementById("studentIdInput");
-    const studentDetailsDiv = document.getElementById("studentDetails");
+  const fetchBtn = document.getElementById("fetchStudentBtn");
+  const studentIdInput = document.getElementById("studentIdInput");
+  const studentDetailsDiv = document.getElementById("studentDetails");
 
-    fetchBtn.addEventListener("click", () => {
-      const studentId = studentIdInput.value.trim();
-      if (!studentId) {
-        alert("Please enter a valid student user ID");
-        return;
-      }
+  fetchBtn.addEventListener("click", () => {
+    const studentId = studentIdInput.value.trim();
+    if (!studentId) {
+      Swal.fire({
+        icon: "warning",
+        title: "Student ID Missing",
+        text: "Please enter a valid student user ID."
+      });
+      return;
+    }
 
-      fetch(`https://crr-noc.onrender.com/student/${studentId}`)
-        .then(res => {
-          if (!res.ok) {
-            throw new Error("Student not found");
-          }
-          return res.json();
-        })
-        .then(data => {
-          studentDetailsDiv.style.display = "block";
-          studentDetailsDiv.innerHTML = `
-            <h3>Student Details</h3>
-            <p><strong>Name:</strong> ${data.name}</p>
-            <p><strong>DOB:</strong> ${new Date(data.dob).toLocaleDateString('en-GB')}</p>
-            <p><strong>Year:</strong> ${data.year}</p>
-            <p><strong>Course:</strong> ${data.course}</p>
-            <p><strong>Semester:</strong> ${data.semester}</p>
-            <p><strong>Aadhar No:</strong> ${data.aadhar_no}</p>
-            <p><strong>Mobile No:</strong> ${data.mobile_no}</p>
-            <p><strong>Email:</strong> ${data.email}</p>
-          `;
-        })
-        .catch(err => {
-          studentDetailsDiv.style.display = "none";
-          alert(err.message);
+    fetch(`https://crr-noc.onrender.com/student/${studentId}`)
+      .then(res => {
+        if (!res.ok) {
+          throw new Error("Student not found.");
+        }
+        return res.json();
+      })
+      .then(data => {
+        studentDetailsDiv.style.display = "block";
+        studentDetailsDiv.innerHTML = `
+          <h3>Student Details</h3>
+          <p><strong>Name:</strong> ${data.name}</p>
+          <p><strong>DOB:</strong> ${new Date(data.dob).toLocaleDateString('en-GB')}</p>
+          <p><strong>Year:</strong> ${data.year}</p>
+          <p><strong>Course:</strong> ${data.course}</p>
+          <p><strong>Semester:</strong> ${data.semester}</p>
+          <p><strong>Aadhar No:</strong> ${data.aadhar_no}</p>
+          <p><strong>Mobile No:</strong> ${data.mobile_no}</p>
+          <p><strong>Email:</strong> ${data.email}</p>
+        `;
+
+        Swal.fire({
+          icon: "success",
+          title: "Student Found",
+          text: "Student details loaded successfully."
         });
-    });
+      })
+      .catch(err => {
+        studentDetailsDiv.style.display = "none";
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: err.message
+        });
+      });
+  });
+
   function toggleMobileMenu() {
     const sidebar = document.querySelector('.sidebar');
     sidebar.classList.toggle('open');
@@ -315,13 +331,15 @@
       }
     });
   });
-        function logout() {
+
+  function logout() {
     localStorage.removeItem("userId");
     if ("caches" in window) {
       caches.keys().then((names) => names.forEach((name) => caches.delete(name)));
     }
     window.location.replace("index.html");
   }
-  </script>
+</script>
+
 </body>
 </html>
