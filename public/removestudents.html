@@ -216,7 +216,7 @@ function confirmBatchDelete() {
 }
 
 function deleteBatch(prefix, branch) {
-  fetch("https://crr-noc.onrender.com/admin/delete-batch", {
+  fetch("https://crr-noc.onrender.com/delete-batch", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ prefix, branch })
@@ -242,7 +242,7 @@ function fetchStudent() {
     return;
   }
 
-  fetch("https://crr-noc.onrender.com/admin/get-student-details", {
+  fetch("https://crr-noc.onrender.com/get-student-details", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ reg_no: reg })
@@ -285,7 +285,7 @@ function confirmStudentDelete() {
 }
 
 function deleteStudent(reg_no) {
-  fetch("https://crr-noc.onrender.com/admin/delete-student", {
+  fetch("https://crr-noc.onrender.com/delete-student", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ reg_no })
