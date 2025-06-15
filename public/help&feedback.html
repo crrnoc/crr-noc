@@ -299,16 +299,17 @@
     const name = document.getElementById("name").value.trim();
     const email = document.getElementById("email").value.trim();
     const message = document.getElementById("message").value.trim();
-    const msgEl = document.getElementById("successMsg");
     const submitBtn = document.querySelector('button[type="submit"]');
 
-    if (message.split(" ").length < 5) {
-      msgEl.innerText = "❌ Please enter at least 5 words.";
-      msgEl.style.color = "red";
+    if (message.split(" ").length < 3) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Message too short',
+        text: 'Please enter at least 3 words.'
+      });
       return;
     }
 
-    // Disable the button
     submitBtn.disabled = true;
     submitBtn.innerText = "Sending...";
 
@@ -322,37 +323,43 @@
       const data = await res.json();
 
       if (data.success) {
-        msgEl.innerText = "✅ Mail sent successfully!";
-        msgEl.style.color = "green";
+        Swal.fire({
+          icon: 'success',
+          title: 'Feedback Sent',
+          text: '✅ Mail sent successfully!'
+        });
         document.getElementById("feedbackForm").reset();
       } else {
-        msgEl.innerText = "❌ Failed to send mail.";
-        msgEl.style.color = "red";
+        Swal.fire({
+          icon: 'error',
+          title: 'Failed to Send',
+          text: '❌ Failed to send mail.'
+        });
       }
     } catch (err) {
-      msgEl.innerText = "❌ Network error. Try again later.";
-      msgEl.style.color = "red";
+      Swal.fire({
+        icon: 'error',
+        title: 'Network Error',
+        text: '❌ Network error. Try again later.'
+      });
     }
 
-    // Enable the button again
     submitBtn.disabled = false;
     submitBtn.innerText = "Submit";
-
-    setTimeout(() => (msgEl.innerText = ""), 5000);
   });
 
-   function toggleMobileMenu() {
-      const sidebar = document.querySelector('.sidebar');
-      sidebar.classList.toggle('open');
-    }
+  function toggleMobileMenu() {
+    const sidebar = document.querySelector('.sidebar');
+    sidebar.classList.toggle('open');
+  }
 
-    document.querySelectorAll(".menu li a").forEach(link => {
-      link.addEventListener("click", () => {
-        if (window.innerWidth <= 768) {
-          document.querySelector('.sidebar').classList.remove('open');
-        }
-      });
+  document.querySelectorAll(".menu li a").forEach(link => {
+    link.addEventListener("click", () => {
+      if (window.innerWidth <= 768) {
+        document.querySelector('.sidebar').classList.remove('open');
+      }
     });
+  });
 
   function logout() {
     localStorage.removeItem("userId");
@@ -362,6 +369,7 @@
     window.location.replace("index.html");
   }
 </script>
+
 
 </body>
 </html>
