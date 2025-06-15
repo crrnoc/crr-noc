@@ -118,7 +118,7 @@ function fetchStudentDetails() {
   const regNo = document.getElementById("regNo").value.trim();
   if (!regNo) return Swal.fire("Error", "Please enter a registration number", "warning");
 
-  fetch("/admin/get-student-details", {
+  fetch("/get-student-details", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ reg_no: regNo })
@@ -150,7 +150,7 @@ function confirmDelete() {
     confirmButtonText: "Yes, delete"
   }).then((result) => {
     if (result.isConfirmed) {
-      fetch("/admin/delete-student", {
+      fetch("/delete-student", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ reg_no: fetchedReg })
@@ -168,7 +168,7 @@ function filterBatch() {
 
   if (!prefix || !branch) return Swal.fire("Missing", "Please enter both prefix and branch", "warning");
 
-  fetch("/admin/filter-batch", {
+  fetch("/filter-batch", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ batchPrefix: prefix, branch })
@@ -201,7 +201,7 @@ function confirmBatchDelete() {
     confirmButtonText: "Yes, delete batch"
   }).then(result => {
     if (result.isConfirmed) {
-      fetch("/admin/delete-batch", {
+      fetch("/delete-batch", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ batchPrefix: prefix, branch })
