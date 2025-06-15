@@ -187,30 +187,35 @@
     cursor: pointer;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
   }
-
-  @media (max-width: 768px) {
-    .main-container {
-      flex-direction: column;
-    }
-
-    .sidebar {
-      width: 100%;
-      max-height: 90vh;
-    }
-
-    .sidebar.open {
-      top: 0;
-    }
-
-    .main {
-      margin-left: 0;
-      padding: 20px;
-    }
-
-    .mobile-toggle {
-      display: block;
-    }
+@media (max-width: 768px) {
+  .main-container {
+    flex-direction: column;
   }
+
+  .sidebar {
+    width: 100%;
+    position: fixed;
+    left: 0;
+    top: -100%; /* hide sidebar initially */
+    max-height: 90vh;
+    background-color: rgb(247, 201, 155);
+    transition: top 0.3s ease-in-out;
+  }
+
+  .sidebar.open {
+    top: 0; /* slide down when open */
+  }
+
+  .main {
+    margin-left: 0;
+    padding: 20px;
+  }
+
+  .mobile-toggle {
+    display: block;
+  }
+}
+
 </style>
 </head>
 <body>
