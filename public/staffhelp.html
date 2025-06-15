@@ -263,7 +263,7 @@ button[type="submit"]:hover {
         <li><a href="sendnotification.html"><span>📨</span> Send Notification</a></li>
         <li><a href="updatefee.html"><span>💵</span> Update Fee</a></li>
         <li><a href="imposefines.html"><span>💰</span> Impose Fines</a></li>
-        <li><a href="addstudent.html"><span>🔍</span> Verify NOC</a></li>
+        <li><a href="addstudent.html"><span>➕</span> Add Student</a></li>
         <li class="active"><a href="staffsettings.html"><span>⚙️</span> Settings</a></li>
         <li><a href="privacypolicy.html"><span>📄</span> Privacy Policy</a></li>
       </ul>
@@ -285,7 +285,7 @@ button[type="submit"]:hover {
           <input type="email" id="email" placeholder="Enter your mail" required />
 
           <label for="message">Message</label>
-          <textarea id="message" rows="5" placeholder="Enter at least 5 words" required></textarea>
+          <textarea id="message" rows="5" placeholder="Enter at least 3 words" required></textarea>
 
           <button type="submit">Submit</button>
         </form>
@@ -304,11 +304,11 @@ button[type="submit"]:hover {
     const email = e.target.email.value.trim();
     const message = e.target.message.value.trim();
 
-    if (message.split(" ").length < 5) {
+    if (message.split(" ").length < 3) {
       Swal.fire({
         icon: "warning",
         title: "Too Short",
-        text: "Please enter at least 5 words in your message."
+        text: "Please enter at least 3 words in your message."
       });
       return;
     }
