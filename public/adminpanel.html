@@ -5,12 +5,9 @@
   <title>Admin Dashboard</title>
   <link rel="icon" href="crrengglogo.png" type="image/png" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
       font-family: 'Poppins', sans-serif;
@@ -31,14 +28,8 @@
     }
 
     @keyframes slideIn {
-      from {
-        transform: translateX(-100px);
-        opacity: 0;
-      }
-      to {
-        transform: translateX(0);
-        opacity: 1;
-      }
+      from { transform: translateX(-100px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
     }
 
     .sidebar h2 {
@@ -49,10 +40,7 @@
       font-weight: 600;
     }
 
-    .sidebar ul {
-      list-style: none;
-    }
-
+    .sidebar ul { list-style: none; }
     .sidebar li {
       margin: 15px 0;
       cursor: pointer;
@@ -92,42 +80,28 @@
       transition: transform 0.3s ease;
     }
 
-    .card:hover {
-      transform: translateY(-5px);
+    .card:hover { transform: translateY(-5px); }
+
+    input[type="file"] { display: none; }
+
+    .file-label {
+      display: inline-block;
+      padding: 10px 20px;
+      background: linear-gradient(to right, #ff9966, #ff5e62);
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      font-size: 14px;
+      font-weight: 500;
     }
 
-    .card h3 {
-      margin-bottom: 20px;
-      font-size: 20px;
-      color: #333;
-    }
+    .file-label:hover { background: linear-gradient(to right, #ff5e62, #ff9966); }
 
-   input[type="file"] {
-  display: none;
-}
-
-.file-label {
-  display: inline-block;
-  padding: 10px 20px;
-  background: linear-gradient(to right, #ff9966, #ff5e62);
-  color: white;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background 0.3s ease;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.file-label:hover {
-  background: linear-gradient(to right, #ff5e62, #ff9966);
-}
-
-    input[type="text"] {
+    select, input[type="text"] {
       padding: 12px;
-      width: 100%;
       border-radius: 8px;
       border: 1px solid #ccc;
-      margin-bottom: 15px;
       font-size: 15px;
     }
 
@@ -164,76 +138,25 @@
       background: linear-gradient(to right, #5b86e5, #36d1dc);
     }
 
-    .danger {
-      background: #dc3545 !important;
-    }
-
-    .danger:hover {
-      background: #bd2130 !important;
-    }
-
-    @media (max-width: 768px) {
-      body {
-        flex-direction: column;
-      }
-
-      .sidebar {
-        width: 100%;
-        flex-direction: row;
-        overflow-x: auto;
-      }
-
-      .sidebar ul {
-        display: flex;
-        flex-direction: row;
-        gap: 20px;
-      }
-
-      .main {
-        padding: 20px;
-      }
-    }
     .logout-btn {
-  margin-top: auto;
-  padding: 10px 20px;
-  background: #dc3545;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: bold;
-  transition: background 0.3s ease;
-}
+      margin-top: auto;
+      background: #dc3545;
+    }
 
-.logout-btn:hover {
-  background: #c82333;
-}
-.scroll-wrapper {
-  max-height: 400px;
-  overflow-y: auto;
-  margin-top: 15px;
-  border: 1px solid #ddd;
-  border-radius: 10px;
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
-  background-color: #fff;
-}
-.mobile-toggle {
-  display: none;
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: #1f75cb;
-  color: white;
-  font-size: 24px;
-  padding: 12px 18px;
-  border-radius: 50px;
-  z-index: 9999;
-  cursor: pointer;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-}
+    .logout-btn:hover {
+      background: #c82333;
+    }
 
-   .mobile-toggle {
+    .scroll-wrapper {
+      max-height: 400px;
+      overflow-y: auto;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+      background-color: #fff;
+    }
+
+    .mobile-toggle {
       display: none;
       position: fixed;
       bottom: 20px;
@@ -283,174 +206,116 @@
       <li onclick="scrollToSection('noc')">📜 NOC Status</li>
     </ul>
     <button class="logout-btn" onclick="logout()">🚪 Logout</button>
-
   </div>
 
   <div class="main">
-
+    <!-- Upload Section -->
     <div class="card" id="upload">
       <h3>Upload SBI DU Reference Numbers</h3>
-<input type="file" id="sbiFile" accept=".txt,.csv" />
-<label for="sbiFile" class="file-label">📎 Choose File</label>
-<span id="fileName" style="margin-left: 10px; font-weight: 500; color: #444;"></span>
-
+      <input type="file" id="sbiFile" accept=".txt,.csv" />
+      <label for="sbiFile" class="file-label">📎 Choose File</label>
+      <span id="fileName" style="margin-left: 10px; font-weight: 500; color: #444;"></span>
       <button onclick="uploadSBI()">Upload</button>
     </div>
 
+    <!-- DU Match Section -->
     <div class="card" id="matches">
       <h3>DU Match Status</h3>
-        <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
-<select id="filterCourse">
-  <option value="">-- Course --</option>
-  <option value="CIVIL">CIVIL</option>
-  <option value="MECH">MECH</option>
-  <option value="EEE">EEE</option>
-  <option value="ECE">ECE</option>
-  <option value="CSE">CSE</option>
-  <option value="CSD">CSD</option>
-  <option value="CSM">CSM</option>
-  <option value="CSC">CSC</option>
-  <option value="IT">IT</option>
-</select>
-              <select id="filterYear">
-      <option value="">-- Year --</option>
-      <option value="1">1st Year</option>
-      <option value="2">2nd Year</option>
-      <option value="3">3rd Year</option>
-      <option value="4">4th Year</option>
-    </select>
-
-    <select id="filterSection">
-      <option value="">-- Section --</option>
-      <option value="A">A</option>
-      <option value="B">B</option>
-      <option value="C">C</option>
-      <option value="D">D</option>
-      <option value="E">E</option>
-      <option value="F">F</option>
-    </select>
-
-<button onclick="applyDUFilter()">Filter</button>
-<button onclick="loadMatches()">Reset</button>
-
-  </div>
-      <button onclick="loadMatches()">Refresh Table</button>
+      <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+        <select id="duCourse">
+          <option value="">-- Course --</option>
+          <option>CIVIL</option><option>MECH</option><option>EEE</option>
+          <option>ECE</option><option>CSE</option><option>CSD</option>
+          <option>CSM</option><option>CSC</option><option>IT</option>
+        </select>
+        <select id="duYear">
+          <option value="">-- Year --</option>
+          <option value="1">1st Year</option><option value="2">2nd Year</option>
+          <option value="3">3rd Year</option><option value="4">4th Year</option>
+        </select>
+        <select id="duSection">
+          <option value="">-- Section --</option>
+          <option>A</option><option>B</option><option>C</option>
+          <option>D</option><option>E</option><option>F</option>
+        </select>
+        <button onclick="applyDUFilter()">Filter</button>
+        <button onclick="loadMatches()">Reset</button>
+      </div>
       <div class="scroll-wrapper">
-  <table id="matchTable">
-    <thead>
-      <tr>
-        <th>User ID</th>
-        <th>Fee Type</th>
-        <th>DU Number</th>
-        <th>Status</th>
-        <th>Matched On</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-</div>
-
+        <table id="matchTable">
+          <thead>
+            <tr><th>User ID</th><th>Fee Type</th><th>DU Number</th><th>Status</th><th>Matched On</th></tr>
+          </thead><tbody></tbody>
+        </table>
+      </div>
     </div>
 
-   <div class="card" id="noc">
-  <h3>NOC Generation Status</h3>
-
-  <!-- 🔽 Filter Dropdowns -->
-  <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
-<select id="filterCourse">
-  <option value="">-- Course --</option>
-  <option value="CIVIL">CIVIL</option>
-  <option value="MECH">MECH</option>
-  <option value="EEE">EEE</option>
-  <option value="ECE">ECE</option>
-  <option value="CSE">CSE</option>
-  <option value="CSD">CSD</option>
-  <option value="CSM">CSM</option>
-  <option value="CSC">CSC</option>
-  <option value="IT">IT</option>
-</select>
-
-
-    <select id="filterYear">
-      <option value="">-- Year --</option>
-      <option value="1">1st Year</option>
-      <option value="2">2nd Year</option>
-      <option value="3">3rd Year</option>
-      <option value="4">4th Year</option>
-    </select>
-
-    <select id="filterSection">
-      <option value="">-- Section --</option>
-      <option value="A">A</option>
-      <option value="B">B</option>
-      <option value="C">C</option>
-      <option value="D">D</option>
-      <option value="E">E</option>
-      <option value="F">F</option>
-    </select>
-
-    <button onclick="applyNOCFilter()">Filter</button>
-    <button onclick="loadNOC()">Reset</button>
+    <!-- NOC Section -->
+    <div class="card" id="noc">
+      <h3>NOC Generation Status</h3>
+      <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+        <select id="nocCourse">
+          <option value="">-- Course --</option>
+          <option>CIVIL</option><option>MECH</option><option>EEE</option>
+          <option>ECE</option><option>CSE</option><option>CSD</option>
+          <option>CSM</option><option>CSC</option><option>IT</option>
+        </select>
+        <select id="nocYear">
+          <option value="">-- Year --</option>
+          <option value="1">1st Year</option><option value="2">2nd Year</option>
+          <option value="3">3rd Year</option><option value="4">4th Year</option>
+        </select>
+        <select id="nocSection">
+          <option value="">-- Section --</option>
+          <option>A</option><option>B</option><option>C</option>
+          <option>D</option><option>E</option><option>F</option>
+        </select>
+        <button onclick="applyNOCFilter()">Filter</button>
+        <button onclick="loadNOC()">Reset</button>
+      </div>
+      <div class="scroll-wrapper">
+        <table id="nocTable">
+          <thead><tr><th>User ID</th><th>Status</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
-  <!-- 🧾 Results Table -->
-  <div class="scroll-wrapper">
-  <table id="nocTable">
-    <thead>
-      <tr>
-        <th>User ID</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-</div>
-</div>
-  </div>
   <div class="mobile-toggle" onclick="toggleSidebar()">☰</div>
+
   <script>
     document.getElementById("sbiFile").addEventListener("change", function () {
-  const file = this.files[0];
-  const fileNameSpan = document.getElementById("fileName");
-  if (file) {
-    fileNameSpan.textContent = file.name;
-  } else {
-    fileNameSpan.textContent = "";
-  }
-});
+      document.getElementById("fileName").textContent = this.files[0]?.name || "";
+    });
 
     function scrollToSection(id) {
       document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
     }
 
     function uploadSBI() {
-      const fileInput = document.getElementById("sbiFile");
-      const file = fileInput.files[0];
-      if (!file) return alert("Please select a file.");
-
+      const file = document.getElementById("sbiFile").files[0];
+      if (!file) {
+        Swal.fire("No File Selected", "Please choose a file first.", "warning");
+        return;
+      }
       const formData = new FormData();
       formData.append("sbiFile", file);
-
       fetch("https://crr-noc.onrender.com/admin/upload-sbi", {
         method: "POST",
         body: formData
       })
       .then(res => res.json())
-      .then(data => alert(data.message || "Uploaded successfully!"))
-      .catch(err => {
-        console.error(err);
-        alert("Upload failed.");
-      });
+      .then(data => Swal.fire("Upload Success", data.message || "File uploaded!", "success"))
+      .catch(() => Swal.fire("Upload Failed", "Something went wrong.", "error"));
     }
 
     function loadMatches() {
       fetch("https://crr-noc.onrender.com/admin/matches")
-      .then(res => res.json())
-      .then(data => {
-        const table = document.querySelector("#matchTable tbody");
-        table.innerHTML = "";
-        data.forEach(row => {
-          table.innerHTML += `
+        .then(res => res.json())
+        .then(data => {
+          const table = document.querySelector("#matchTable tbody");
+          table.innerHTML = data.map(row => `
             <tr>
               <td>${row.userId}</td>
               <td>${row.fee_type}</td>
@@ -458,110 +323,83 @@
               <td>${row.matched ? '✅' : '❌'}</td>
               <td>${row.matched_on || '-'}</td>
             </tr>
-          `;
+          `).join("");
         });
-      });
     }
 
     function loadNOC() {
       fetch("https://crr-noc.onrender.com/admin/noc-status")
-      .then(res => res.json())
-      .then(data => {
-        const table = document.querySelector("#nocTable tbody");
-        table.innerHTML = "";
-        data.forEach(user => {
-          table.innerHTML += `
+        .then(res => res.json())
+        .then(data => {
+          const table = document.querySelector("#nocTable tbody");
+          table.innerHTML = data.map(user => `
             <tr>
               <td>${user.userId}</td>
               <td>${user.eligible ? '✅ Approved' : '❌ Pending'}</td>
             </tr>
-          `;
+          `).join("");
         });
-      });
     }
-function applyNOCFilter() {
-  const course = document.getElementById("filterCourse").value;
-  const year = document.getElementById("filterYear").value;
-  const section = document.getElementById("filterSection").value;
-
-  fetch("https://crr-noc.onrender.com/admin/noc-filter", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ course, year, section })
-  })
-  .then(res => res.json())
-  .then(data => {
-    const table = document.querySelector("#nocTable tbody");
-    table.innerHTML = "";
-
-    if (!data.length) {
-      table.innerHTML = `<tr><td colspan="2">No matching records found.</td></tr>`;
-      return;
-    }
-
-    data.forEach(user => {
-      table.innerHTML += `
-        <tr>
-          <td>${user.userId}</td>
-          <td>${user.eligible ? '✅ Approved' : '❌ Pending'}</td>
-        </tr>
-      `;
-    });
-  });
-}
 
     function applyDUFilter() {
-  const course = document.getElementById("filterCourse").value;
-  const year = document.getElementById("filterYear").value;
-  const section = document.getElementById("filterSection").value;
-
-  fetch("https://crr-noc.onrender.com/admin/match-filter", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ course, year, section })
-  })
-  .then(res => res.json())
-  .then(data => {
-    const table = document.querySelector("#matchTable tbody");
-    table.innerHTML = "";
-
-    if (!data.length) {
-      table.innerHTML = `<tr><td colspan="5">No records found.</td></tr>`;
-      return;
+      const course = document.getElementById("duCourse").value;
+      const year = document.getElementById("duYear").value;
+      const section = document.getElementById("duSection").value;
+      fetch("https://crr-noc.onrender.com/admin/match-filter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ course, year, section })
+      })
+      .then(res => res.json())
+      .then(data => {
+        const table = document.querySelector("#matchTable tbody");
+        table.innerHTML = data.length ? data.map(row => `
+          <tr>
+            <td>${row.userId}</td>
+            <td>${row.fee_type}</td>
+            <td>${row.sbi_ref_no}</td>
+            <td>${row.matched ? '✅' : '❌'}</td>
+            <td>${row.matched_on || '-'}</td>
+          </tr>
+        `).join("") : `<tr><td colspan="5">No records found.</td></tr>`;
+      });
     }
 
-    data.forEach(row => {
-      table.innerHTML += `
-        <tr>
-          <td>${row.userId}</td>
-          <td>${row.fee_type}</td>
-          <td>${row.sbi_ref_no}</td>
-          <td>${row.matched ? '✅' : '❌'}</td>
-          <td>${row.matched_on || '-'}</td>
-        </tr>
-      `;
-    });
-  });
-}
- function toggleSidebar() {
+    function applyNOCFilter() {
+      const course = document.getElementById("nocCourse").value;
+      const year = document.getElementById("nocYear").value;
+      const section = document.getElementById("nocSection").value;
+      fetch("https://crr-noc.onrender.com/admin/noc-filter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ course, year, section })
+      })
+      .then(res => res.json())
+      .then(data => {
+        const table = document.querySelector("#nocTable tbody");
+        table.innerHTML = data.length ? data.map(user => `
+          <tr>
+            <td>${user.userId}</td>
+            <td>${user.eligible ? '✅ Approved' : '❌ Pending'}</td>
+          </tr>
+        `).join("") : `<tr><td colspan="2">No matching records found.</td></tr>`;
+      });
+    }
+
+    function toggleSidebar() {
       document.querySelector('.sidebar').classList.toggle('open');
     }
 
-    document.querySelectorAll(".sidebar li").forEach(link => {
-      link.addEventListener("click", () => {
-        if (window.innerWidth <= 768) {
-          document.querySelector('.sidebar').classList.remove('open');
-        }
-      });
-    });
-
     function logout() {
-    localStorage.removeItem("userId");
-    if ("caches" in window) {
-      caches.keys().then((names) => names.forEach((name) => caches.delete(name)));
+      localStorage.removeItem("userId");
+      if ("caches" in window) {
+        caches.keys().then(keys => keys.forEach(key => caches.delete(key)));
+      }
+      window.location.replace("index.html");
     }
-    window.location.replace("index.html");
-  }
+
+    loadMatches();
+    loadNOC();
   </script>
 </body>
 </html>
