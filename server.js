@@ -1532,3 +1532,64 @@ app.get('/yearwise-fee/:userId', (req, res) => {
     );
   });
 });
+// GET student details by reg_no
+router.post('/get-student-details', async (req, res) => {
+  const { reg_no } = req.body;
+
+  if (!reg_no) return res.status(400).json({ success: false, message: "Registration number is required" });
+
+  try {
+    const [student] = await db.query('SELECT name, reg_no, course, year, section FROM students WHERE reg_no = ?', [reg_no]);
+
+    if (!student || student.length === 0) {
+      return res.status(404).json({ success: false, message: "Student not found" });
+    }
+
+    return res.json({ success: true, student: student[0] });
+  } catch (err) {
+    console.error("Error fetching student:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+
+app.post("/admin/delete-student", (req, res) => {
+  const { reg_no } = req.body;
+  if (!reg_no) return res.status(400).json({ success: false, message: "Reg number missing" });
+
+  const query = "DELETE FROM students WHERE reg_no = ?";
+  db.query(query, [reg_no], (err, result) => {
+    if (err) {
+      console.error("Delete error:", err);
+      return res.status(500).json({ success: false, message: "Failed to delete student" });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.json({ success: false, message: "No student found with that Reg No" });
+    }
+
+    return res.json({ success: true, message: "Student removed successfully." });
+  });
+});
+
+// DELETE student by reg_no (from all relevant tables)
+router.post('/delete-student', async (req, res) => {
+  const { reg_no } = req.body;
+
+  if (!reg_no) return res.status(400).json({ success: false, message: "Registration number is required" });
+
+  try {
+    // Execute all delete queries
+    await db.query('DELETE FROM users WHERE userid = ?', [reg_no]);
+    await db.query('DELETE FROM students WHERE reg_no = ?', [reg_no]);
+    await db.query('DELETE FROM student_fee_structure WHERE reg_no = ?', [reg_no]);
+    await db.query('DELETE FROM student_fee_payments WHERE userId = ?', [reg_no]);
+    await db.query('DELETE FROM notifications WHERE userId = ?', [reg_no]);
+    await db.query('DELETE FROM fines WHERE userId = ?', [reg_no]);
+
+    return res.json({ success: true, message: `Student ${reg_no} removed successfully.` });
+  } catch (err) {
+    console.error("Error deleting student:", err);
+    res.status(500).json({ success: false, message: "Failed to delete student." });
+  }
+});
