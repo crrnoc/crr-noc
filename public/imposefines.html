@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Impose Fines</title>
   <link rel="icon" href="crrengglogo.png" type="image/png" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
     * {
       margin: 0;
@@ -250,57 +251,73 @@
   </div>
 
   <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
+<script>
+  const userId = localStorage.getItem("userId");
+  document.getElementById("userId").textContent = userId;
 
-  <script>
-    const userId = localStorage.getItem("userId");
-    document.getElementById("userId").textContent = userId;
+  function imposeFine() {
+    const studentId = document.getElementById("studentId").value.trim();
+    const reason = document.getElementById("reason").value.trim();
+    const amount = parseInt(document.getElementById("amount").value.trim());
+    const staffId = localStorage.getItem("userId");
 
-    function imposeFine() {
-      const studentId = document.getElementById("studentId").value.trim();
-      const reason = document.getElementById("reason").value.trim();
-      const amount = parseInt(document.getElementById("amount").value.trim());
-      const staffId = localStorage.getItem("userId");
-
-      if (!studentId || isNaN(amount)) {
-        alert("Please enter valid Student ID and Amount.");
-        return;
-      }
-
-      if (!reason) {
-        alert("Please enter the reason for the fine.");
-        return;
-      }
-
-      fetch("https://crr-noc.onrender.com/impose-fine", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: studentId, reason, amount, staffId })
-      })
-        .then(res => res.json())
-        .then(data => {
-          alert(data.message || "Fine imposed successfully!");
-          document.getElementById("studentId").value = "";
-          document.getElementById("reason").value = "";
-          document.getElementById("amount").value = "";
-        })
-        .catch(err => {
-          console.error("Error:", err);
-          alert("Failed to impose fine.");
-        });
+    if (!studentId || isNaN(amount)) {
+      Swal.fire({
+        icon: "warning",
+        title: "Invalid Input",
+        text: "Please enter valid Student ID and Amount."
+      });
+      return;
     }
 
-    function toggleMobileMenu() {
-      const sidebar = document.querySelector('.sidebar');
-      sidebar.classList.toggle('open');
+    if (!reason) {
+      Swal.fire({
+        icon: "warning",
+        title: "Missing Reason",
+        text: "Please enter the reason for the fine."
+      });
+      return;
     }
 
-    function logout() {
-      localStorage.removeItem("userId");
-      if ("caches" in window) {
-        caches.keys().then((names) => names.forEach((name) => caches.delete(name)));
-      }
-      window.location.replace("index.html");
+    fetch("https://crr-noc.onrender.com/impose-fine", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: studentId, reason, amount, staffId })
+    })
+    .then(res => res.json())
+    .then(data => {
+      Swal.fire({
+        icon: "success",
+        title: "Fine Imposed",
+        text: data.message || "Fine imposed successfully!"
+      });
+      document.getElementById("studentId").value = "";
+      document.getElementById("reason").value = "";
+      document.getElementById("amount").value = "";
+    })
+    .catch(err => {
+      console.error("Error:", err);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Failed to impose fine. Please try again."
+      });
+    });
+  }
+
+  function toggleMobileMenu() {
+    const sidebar = document.querySelector('.sidebar');
+    sidebar.classList.toggle('open');
+  }
+
+  function logout() {
+    localStorage.removeItem("userId");
+    if ("caches" in window) {
+      caches.keys().then((names) => names.forEach((name) => caches.delete(name)));
     }
-  </script>
+    window.location.replace("index.html");
+  }
+</script>
+
 </body>
 </html>
