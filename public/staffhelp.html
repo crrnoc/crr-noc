@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Help & Feedback</title>
   <link rel="icon" href="crrengglogo.png" type="image/png" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
    * {
       margin: 0;
@@ -294,15 +295,25 @@ button[type="submit"]:hover {
     </div>
   </div>
 <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
-  <script>
-    document.getElementById("userId").textContent = localStorage.getItem("userId") || "Unknown";
+<script>
+  document.getElementById("userId").textContent = localStorage.getItem("userId") || "Unknown";
 
-    document.getElementById("feedbackForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const name = e.target.name.value;
-      const email = e.target.email.value;
-      const message = e.target.message.value;
+  document.getElementById("feedbackForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const name = e.target.name.value.trim();
+    const email = e.target.email.value.trim();
+    const message = e.target.message.value.trim();
 
+    if (message.split(" ").length < 5) {
+      Swal.fire({
+        icon: "warning",
+        title: "Too Short",
+        text: "Please enter at least 5 words in your message."
+      });
+      return;
+    }
+
+    try {
       const res = await fetch("https://crr-noc.onrender.com/api/submit-feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -310,35 +321,51 @@ button[type="submit"]:hover {
       });
 
       const { success, error } = await res.json();
-      const msgEl = document.getElementById("successMsg");
 
       if (success) {
-        msgEl.innerText = "✅ Feedback submitted successfully!";
+        Swal.fire({
+          icon: "success",
+          title: "Feedback Submitted",
+          text: "Thank you for your feedback!"
+        });
         e.target.reset();
-        setTimeout(() => msgEl.innerText = "", 4000);
       } else {
-        msgEl.innerText = "❌ " + (error || "Something went wrong");
+        Swal.fire({
+          icon: "error",
+          title: "Submission Failed",
+          text: error || "Something went wrong. Please try again."
+        });
       }
-    });
-    function toggleMobileMenu() {
-  document.querySelector('.sidebar').classList.toggle('open');
-}
-
-document.querySelectorAll(".menu li a").forEach(link => {
-  link.addEventListener("click", () => {
-    if (window.innerWidth <= 768) {
-      document.querySelector('.sidebar').classList.remove('open');
+    } catch (err) {
+      console.error("Error submitting feedback:", err);
+      Swal.fire({
+        icon: "error",
+        title: "Server Error",
+        text: "Unable to connect to the server."
+      });
     }
   });
-});
 
-    function logout() {
+  function toggleMobileMenu() {
+    document.querySelector('.sidebar').classList.toggle('open');
+  }
+
+  document.querySelectorAll(".menu li a").forEach(link => {
+    link.addEventListener("click", () => {
+      if (window.innerWidth <= 768) {
+        document.querySelector('.sidebar').classList.remove('open');
+      }
+    });
+  });
+
+  function logout() {
     localStorage.removeItem("userId");
     if ("caches" in window) {
       caches.keys().then((names) => names.forEach((name) => caches.delete(name)));
     }
     window.location.replace("index.html");
   }
-  </script>
+</script>
+
 </body>
 </html>
