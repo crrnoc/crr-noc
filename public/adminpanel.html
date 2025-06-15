@@ -215,6 +215,8 @@
       <li onclick="scrollToSection('upload')">📤 Upload SBI References</li>
       <li onclick="scrollToSection('matches')">📊 DU Match Status</li>
       <li onclick="scrollToSection('noc')">📜 NOC Status</li>
+      <li onclick="goToDeletePage()">🗑️ Delete Students</li>
+
     </ul>
     <button class="logout-btn" onclick="logout()">🚪 Logout</button>
   </div>
@@ -296,6 +298,18 @@
   <div class="mobile-toggle" onclick="toggleSidebar()">☰</div>
 
 <script>
+  function goToDeletePage() {
+  window.location.href = "removestudents.html"; // 🔁 or your actual filename
+}
+
+function goToDeletePage() {
+  document.querySelector('.sidebar').classList.remove('open'); // close sidebar
+  setTimeout(() => {
+    window.location.href = "removestudents.html";
+  }, 150);
+}
+
+
   document.getElementById("sbiFile").addEventListener("change", function () {
     document.getElementById("fileName").textContent = this.files[0]?.name || "";
   });
