@@ -283,47 +283,79 @@
     </div>
   </div>
     <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
-  <script>
-    const userId = localStorage.getItem("userId");
-    document.getElementById("userId").textContent = userId;
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+  const userId = localStorage.getItem("userId");
+  document.getElementById("userId").textContent = userId;
 
-function downloadNOC() {
-  const year = document.getElementById("nocYear").value;
-  if (!year) {
-    alert("Please select an academic year to generate NOC.");
-    return;
+  function downloadNOC() {
+    const year = document.getElementById("nocYear").value;
+    if (!year) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Select Year',
+        text: 'Please select an academic year to generate NOC.'
+      });
+      return;
+    }
+
+    const userId = localStorage.getItem("userId");
+    const url = `https://crr-noc.onrender.com/generate-noc/${userId}?year=${year}`;
+    window.open(url, '_blank');
+    
+    Swal.fire({
+      icon: 'success',
+      title: 'NOC Downloaded',
+      text: `NOC for ${year} year downloaded successfully.`,
+      timer: 2000,
+      showConfirmButton: false
+    });
   }
 
-  const userId = localStorage.getItem("userId");
-  const url = `https://crr-noc.onrender.com/generate-noc/${userId}?year=${year}`;
-  window.open(url, '_blank');
-}
+  function downloadCombinedNOC() {
+    const userId = localStorage.getItem("userId");
+    if (!userId) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'User ID not found!'
+      });
+      return;
+    }
 
-          function downloadCombinedNOC() {
-  const userId = localStorage.getItem("userId");
-  if (!userId) return alert("User ID not found!");
+    fetch(`https://crr-noc.onrender.com/generate-combined-noc/${userId}`)
+      .then(res => {
+        if (!res.ok) throw new Error("Failed to generate combined NOC");
+        return res.blob();
+      })
+      .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `Combined_NOC_${userId}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
 
-  fetch(`https://crr-noc.onrender.com/generate-combined-noc/${userId}`)
-    .then(res => {
-      if (!res.ok) throw new Error("Failed to generate combined NOC");
-      return res.blob();
-    })
-    .then(blob => {
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `Combined_NOC_${userId}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-    })
-    .catch(err => {
-      console.error("Download error:", err);
-      alert("Something went wrong while generating NOC.");
-    });
-}
+        Swal.fire({
+          icon: 'success',
+          title: 'Final Clearance Certificate Downloaded',
+          text: 'Combined NOC downloaded successfully.',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      })
+      .catch(err => {
+        console.error("Download error:", err);
+        Swal.fire({
+          icon: 'error',
+          title: 'Download Failed',
+          text: 'Something went wrong while generating NOC.'
+        });
+      });
+  }
 
-     function toggleMobileMenu() {
+  function toggleMobileMenu() {
     document.querySelector('.sidebar').classList.toggle('open');
   }
 
@@ -334,14 +366,15 @@ function downloadNOC() {
       }
     });
   });
-    
-    function logout() {
-      localStorage.removeItem("userId");
-      if ("caches" in window) {
-        caches.keys().then((names) => names.forEach((name) => caches.delete(name)));
-      }
-      window.location.replace("index.html");
+
+  function logout() {
+    localStorage.removeItem("userId");
+    if ("caches" in window) {
+      caches.keys().then((names) => names.forEach((name) => caches.delete(name)));
     }
-  </script>
+    window.location.replace("index.html");
+  }
+</script>
+
 </body>
 </html>
