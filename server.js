@@ -1532,81 +1532,75 @@ app.get('/yearwise-fee/:userId', (req, res) => {
     );
   });
 });
-// GET student details by reg_no
-app.post("/admin/get-student-details", async (req, res) => {
+// 🧠 Get Student Details for Removal
+app.post("/get-student-details", async (req, res) => {
   const { reg_no } = req.body;
-
   try {
-    const [rows] = await db.query(
-      "SELECT name, reg_no, course, section, year FROM students WHERE reg_no = ?",
-      [reg_no]
-    );
-
+    const [rows] = await connection.promise().query("SELECT * FROM students WHERE reg_no = ?", [reg_no]);
     if (rows.length === 0) {
-      return res.status(404).json({ success: false, message: "Student not found" });
+      return res.json({ success: false, message: "Student not found" });
     }
-
-    return res.json({ success: true, student: rows[0] });
+    res.json({ success: true, student: rows[0] });
   } catch (err) {
     console.error("Fetch error:", err);
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
-app.post("/admin/delete-student", async (req, res) => {
+// ✅ Delete Student
+app.post("/delete-student", async (req, res) => {
   const { reg_no } = req.body;
-
   try {
-    await db.query("DELETE FROM fines WHERE userId = ?", [reg_no]);
-    await db.query("DELETE FROM notifications WHERE userId = ?", [reg_no]);
-    await db.query("DELETE FROM student_fee_payments WHERE userId = ?", [reg_no]);
-    await db.query("DELETE FROM student_fee_structure WHERE reg_no = ?", [reg_no]);
-    await db.query("DELETE FROM students WHERE reg_no = ?", [reg_no]);
-    await db.query("DELETE FROM users WHERE userid = ?", [reg_no]);
+    await connection.promise().query("DELETE FROM users WHERE userid = ?", [reg_no]);
+    await connection.promise().query("DELETE FROM students WHERE reg_no = ?", [reg_no]);
+    await connection.promise().query("DELETE FROM student_fee_structure WHERE reg_no = ?", [reg_no]);
+    await connection.promise().query("DELETE FROM student_fee_payments WHERE userId = ?", [reg_no]);
+    await connection.promise().query("DELETE FROM notifications WHERE userId = ?", [reg_no]);
+    await connection.promise().query("DELETE FROM fines WHERE userId = ?", [reg_no]);
 
     res.json({ success: true, message: "Student deleted successfully" });
   } catch (err) {
     console.error("Delete error:", err);
-    res.status(500).json({ success: false, message: "Server error during deletion" });
+    res.status(500).json({ success: false, message: "Error deleting student" });
   }
 });
-app.post("/admin/filter-batch", async (req, res) => {
-  const { batchPrefix, branch } = req.body;
 
+// ✅ Filter Batch
+app.post("/filter-batch", async (req, res) => {
+  const { batchPrefix, branch } = req.body;
   try {
-    const [students] = await db.query(
-      "SELECT reg_no, name, course, section FROM students WHERE reg_no LIKE ? AND course = ?",
+    const [students] = await connection.promise().query(
+      "SELECT reg_no, name FROM students WHERE reg_no LIKE ? AND course = ?",
       [`${batchPrefix}%`, branch]
     );
-
     res.json({ success: true, students });
   } catch (err) {
     console.error("Batch filter error:", err);
-    res.status(500).json({ success: false, message: "Error filtering students" });
+    res.status(500).json({ success: false, students: [] });
   }
 });
-app.post("/admin/delete-batch", async (req, res) => {
-  const { batchPrefix, branch } = req.body;
 
+// ✅ Delete Batch
+app.post("/delete-batch", async (req, res) => {
+  const { batchPrefix, branch } = req.body;
   try {
-    const [students] = await db.query(
+    const [students] = await connection.promise().query(
       "SELECT reg_no FROM students WHERE reg_no LIKE ? AND course = ?",
       [`${batchPrefix}%`, branch]
     );
 
-    for (const row of students) {
-      const reg_no = row.reg_no;
-      await db.query("DELETE FROM fines WHERE userId = ?", [reg_no]);
-      await db.query("DELETE FROM notifications WHERE userId = ?", [reg_no]);
-      await db.query("DELETE FROM student_fee_payments WHERE userId = ?", [reg_no]);
-      await db.query("DELETE FROM student_fee_structure WHERE reg_no = ?", [reg_no]);
-      await db.query("DELETE FROM students WHERE reg_no = ?", [reg_no]);
-      await db.query("DELETE FROM users WHERE userid = ?", [reg_no]);
+    for (const student of students) {
+      const reg_no = student.reg_no;
+      await connection.promise().query("DELETE FROM users WHERE userid = ?", [reg_no]);
+      await connection.promise().query("DELETE FROM students WHERE reg_no = ?", [reg_no]);
+      await connection.promise().query("DELETE FROM student_fee_structure WHERE reg_no = ?", [reg_no]);
+      await connection.promise().query("DELETE FROM student_fee_payments WHERE userId = ?", [reg_no]);
+      await connection.promise().query("DELETE FROM notifications WHERE userId = ?", [reg_no]);
+      await connection.promise().query("DELETE FROM fines WHERE userId = ?", [reg_no]);
     }
 
-    res.json({ success: true, message: `Batch (${batchPrefix}-${branch}) deleted successfully.` });
+    res.json({ success: true, message: "Batch deleted successfully" });
   } catch (err) {
-    console.error("Batch deletion error:", err);
+    console.error("Batch delete error:", err);
     res.status(500).json({ success: false, message: "Error deleting batch" });
   }
 });
-
