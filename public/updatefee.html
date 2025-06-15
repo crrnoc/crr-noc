@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Staff - Update Fee</title>
   <link rel="icon" href="crrengglogo.png" type="image/png" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
   * {
     margin: 0;
@@ -259,58 +260,76 @@
     </div>
   </div>
   <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
-  <script>
-    const userId = localStorage.getItem("userId");
-    document.getElementById("userId").textContent = userId;
+<script>
+  const userId = localStorage.getItem("userId");
+  document.getElementById("userId").textContent = userId;
 
-    function updateFee() {
-      const data = {
-        reg_no: document.getElementById("reg_no").value.trim(),
-        academic_year: parseInt(document.getElementById("year").value),
-        tuition: parseFloat(document.getElementById("tuition").value) || 0,
-        hostel: parseFloat(document.getElementById("hostel").value) || 0,
-        bus: parseFloat(document.getElementById("bus").value) || 0,
-        university: parseFloat(document.getElementById("university").value) || 0,
-        semester: parseFloat(document.getElementById("semester").value) || 0,
-        library: parseFloat(document.getElementById("library").value) || 0,
-        fines: parseFloat(document.getElementById("fines").value) || 0
-      };
+  function updateFee() {
+    const data = {
+      reg_no: document.getElementById("reg_no").value.trim(),
+      academic_year: parseInt(document.getElementById("year").value),
+      tuition: parseFloat(document.getElementById("tuition").value) || 0,
+      hostel: parseFloat(document.getElementById("hostel").value) || 0,
+      bus: parseFloat(document.getElementById("bus").value) || 0,
+      university: parseFloat(document.getElementById("university").value) || 0,
+      semester: parseFloat(document.getElementById("semester").value) || 0,
+      library: parseFloat(document.getElementById("library").value) || 0,
+      fines: parseFloat(document.getElementById("fines").value) || 0
+    };
 
-      if (!data.reg_no || !data.academic_year) {
-        alert("Please enter both Reg. No and Academic Year.");
-        return;
-      }
-
-      fetch('https://crr-noc.onrender.com/update-fee-structure', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      })
-      .then(res => res.json())
-      .then(response => {
-        if (response.success) {
-          alert("✅ Fee updated successfully for Year " + data.academic_year);
-        } else {
-          alert("❌ Error updating fee: " + response.message);
-        }
-      })
-      .catch(err => {
-        console.error("Fetch error:", err);
-        alert("❌ Server error while updating fee");
+    if (!data.reg_no || !data.academic_year) {
+      Swal.fire({
+        icon: "warning",
+        title: "Missing Fields",
+        text: "Please enter both Reg. No and Academic Year."
       });
-    }
-     function toggleMobileMenu() {
-      const sidebar = document.querySelector('.sidebar');
-      sidebar.classList.toggle('open');
+      return;
     }
 
-    function logout() {
-      localStorage.removeItem("userId");
-      if ("caches" in window) {
-        caches.keys().then(names => names.forEach(name => caches.delete(name)));
+    fetch('https://crr-noc.onrender.com/update-fee-structure', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(response => {
+      if (response.success) {
+        Swal.fire({
+          icon: "success",
+          title: "Fee Updated",
+          text: `Fee updated successfully for Year ${data.academic_year}`
+        });
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Update Failed",
+          text: `Error updating fee: ${response.message}`
+        });
       }
-      window.location.replace("index.html");
+    })
+    .catch(err => {
+      console.error("Fetch error:", err);
+      Swal.fire({
+        icon: "error",
+        title: "Server Error",
+        text: "❌ Server error while updating fee"
+      });
+    });
+  }
+
+  function toggleMobileMenu() {
+    const sidebar = document.querySelector('.sidebar');
+    sidebar.classList.toggle('open');
+  }
+
+  function logout() {
+    localStorage.removeItem("userId");
+    if ("caches" in window) {
+      caches.keys().then(names => names.forEach(name => caches.delete(name)));
     }
-  </script>
+    window.location.replace("index.html");
+  }
+</script>
+
 </body>
 </html>
