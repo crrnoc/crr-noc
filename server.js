@@ -1553,7 +1553,7 @@ router.post('/get-student-details', async (req, res) => {
 });
 
 
-app.post("/admin/delete-student", (req, res) => {
+app.post("/delete-student", (req, res) => {
   const { reg_no } = req.body;
   if (!reg_no) return res.status(400).json({ success: false, message: "Reg number missing" });
 
