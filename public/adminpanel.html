@@ -284,72 +284,85 @@
 
   <div class="mobile-toggle" onclick="toggleSidebar()">☰</div>
 
-  <script>
-    document.getElementById("sbiFile").addEventListener("change", function () {
-      document.getElementById("fileName").textContent = this.files[0]?.name || "";
-    });
+<script>
+  document.getElementById("sbiFile").addEventListener("change", function () {
+    document.getElementById("fileName").textContent = this.files[0]?.name || "";
+  });
 
-    function scrollToSection(id) {
-      document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+  function scrollToSection(id) {
+    document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function uploadSBI() {
+    const file = document.getElementById("sbiFile").files[0];
+    if (!file) {
+      Swal.fire("No File Selected", "Please choose a file first.", "warning");
+      return;
     }
 
-    function uploadSBI() {
-      const file = document.getElementById("sbiFile").files[0];
-      if (!file) {
-        Swal.fire("No File Selected", "Please choose a file first.", "warning");
-        return;
-      }
-      const formData = new FormData();
-      formData.append("sbiFile", file);
-      fetch("https://crr-noc.onrender.com/admin/upload-sbi", {
-        method: "POST",
-        body: formData
+    const formData = new FormData();
+    formData.append("sbiFile", file);
+
+    fetch("https://crr-noc.onrender.com/admin/upload-sbi", {
+      method: "POST",
+      body: formData
+    })
+      .then(async (res) => {
+        const data = await res.json();
+        if (res.ok && data.success) {
+          Swal.fire("Upload Success", data.message || "File uploaded successfully!", "success");
+          loadMatches(); // Refresh match table
+        } else {
+          Swal.fire("Upload Failed", data.message || "Something went wrong during upload.", "error");
+        }
       })
+      .catch((err) => {
+        console.error("Upload error:", err);
+        Swal.fire("Upload Failed", "Network error or server not responding.", "error");
+      });
+  }
+
+  function loadMatches() {
+    fetch("https://crr-noc.onrender.com/admin/matches")
       .then(res => res.json())
-      .then(data => Swal.fire("Upload Success", data.message || "File uploaded!", "success"))
-      .catch(() => Swal.fire("Upload Failed", "Something went wrong.", "error"));
-    }
+      .then(data => {
+        const table = document.querySelector("#matchTable tbody");
+        table.innerHTML = data.map(row => `
+          <tr>
+            <td>${row.userId}</td>
+            <td>${row.fee_type}</td>
+            <td>${row.sbi_ref_no}</td>
+            <td>${row.matched ? '✅' : '❌'}</td>
+            <td>${row.matched_on || '-'}</td>
+          </tr>
+        `).join("");
+      });
+  }
 
-    function loadMatches() {
-      fetch("https://crr-noc.onrender.com/admin/matches")
-        .then(res => res.json())
-        .then(data => {
-          const table = document.querySelector("#matchTable tbody");
-          table.innerHTML = data.map(row => `
-            <tr>
-              <td>${row.userId}</td>
-              <td>${row.fee_type}</td>
-              <td>${row.sbi_ref_no}</td>
-              <td>${row.matched ? '✅' : '❌'}</td>
-              <td>${row.matched_on || '-'}</td>
-            </tr>
-          `).join("");
-        });
-    }
+  function loadNOC() {
+    fetch("https://crr-noc.onrender.com/admin/noc-status")
+      .then(res => res.json())
+      .then(data => {
+        const table = document.querySelector("#nocTable tbody");
+        table.innerHTML = data.map(user => `
+          <tr>
+            <td>${user.userId}</td>
+            <td>${user.eligible ? '✅ Approved' : '❌ Pending'}</td>
+          </tr>
+        `).join("");
+      });
+  }
 
-    function loadNOC() {
-      fetch("https://crr-noc.onrender.com/admin/noc-status")
-        .then(res => res.json())
-        .then(data => {
-          const table = document.querySelector("#nocTable tbody");
-          table.innerHTML = data.map(user => `
-            <tr>
-              <td>${user.userId}</td>
-              <td>${user.eligible ? '✅ Approved' : '❌ Pending'}</td>
-            </tr>
-          `).join("");
-        });
-    }
+  function applyDUFilter() {
+    const course = document.getElementById("duCourse").value.trim();
+    const year = document.getElementById("duYear").value.trim();
+    const section = document.getElementById("duSection").value.trim();
 
-    function applyDUFilter() {
-      const course = document.getElementById("duCourse").value;
-      const year = document.getElementById("duYear").value;
-      const section = document.getElementById("duSection").value;
-      fetch("https://crr-noc.onrender.com/admin/match-filter", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ course, year, section })
-      })
+    fetch("https://crr-noc.onrender.com/admin/match-filter", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ course, year, section })
+    })
       .then(res => res.json())
       .then(data => {
         const table = document.querySelector("#matchTable tbody");
@@ -362,18 +375,22 @@
             <td>${row.matched_on || '-'}</td>
           </tr>
         `).join("") : `<tr><td colspan="5">No records found.</td></tr>`;
-      });
-    }
-
-    function applyNOCFilter() {
-      const course = document.getElementById("nocCourse").value;
-      const year = document.getElementById("nocYear").value;
-      const section = document.getElementById("nocSection").value;
-      fetch("https://crr-noc.onrender.com/admin/noc-filter", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ course, year, section })
       })
+      .catch(() => {
+        Swal.fire("Error", "Failed to apply filter. Try again.", "error");
+      });
+  }
+
+  function applyNOCFilter() {
+    const course = document.getElementById("nocCourse").value.trim();
+    const year = document.getElementById("nocYear").value.trim();
+    const section = document.getElementById("nocSection").value.trim();
+
+    fetch("https://crr-noc.onrender.com/admin/noc-filter", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ course, year, section })
+    })
       .then(res => res.json())
       .then(data => {
         const table = document.querySelector("#nocTable tbody");
@@ -383,23 +400,28 @@
             <td>${user.eligible ? '✅ Approved' : '❌ Pending'}</td>
           </tr>
         `).join("") : `<tr><td colspan="2">No matching records found.</td></tr>`;
+      })
+      .catch(() => {
+        Swal.fire("Error", "Failed to apply NOC filter. Try again.", "error");
       });
-    }
+  }
 
-    function toggleSidebar() {
-      document.querySelector('.sidebar').classList.toggle('open');
-    }
+  function toggleSidebar() {
+    document.querySelector('.sidebar').classList.toggle('open');
+  }
 
-    function logout() {
-      localStorage.removeItem("userId");
-      if ("caches" in window) {
-        caches.keys().then(keys => keys.forEach(key => caches.delete(key)));
-      }
-      window.location.replace("index.html");
+  function logout() {
+    localStorage.removeItem("userId");
+    if ("caches" in window) {
+      caches.keys().then(keys => keys.forEach(key => caches.delete(key)));
     }
+    window.location.replace("index.html");
+  }
 
-    loadMatches();
-    loadNOC();
-  </script>
+  // Initial load
+  loadMatches();
+  loadNOC();
+</script>
+
 </body>
 </html>
