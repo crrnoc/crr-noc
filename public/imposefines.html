@@ -271,7 +271,7 @@
         return;
       }
 
-      fetch("http://localhost:3000/impose-fine", {
+      fetch("https://crr-noc.onrender.com/impose-fine", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId: studentId, reason, amount, staffId })
