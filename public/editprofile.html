@@ -300,7 +300,24 @@
   </div>
   <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
 <script>
-  window.onpageshow = function(event) {
+  function toggleMobileMenu() {
+    const sidebar = document.querySelector('.sidebar');
+    sidebar.classList.toggle('open');
+  }
+
+  document.querySelectorAll(".menu li a").forEach(link => {
+    link.addEventListener("click", () => {
+      if (window.innerWidth <= 768) {
+        document.querySelector('.sidebar').classList.remove('open');
+      }
+    });
+  });
+
+  const baseUrl = window.location.hostname.includes("localhost")
+    ? "http://localhost:3000"
+    : "https://crr-noc.onrender.com";
+
+  window.onpageshow = function (event) {
     if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
       window.location.reload();
     }
@@ -310,7 +327,7 @@
   if (!userId) {
     Swal.fire({
       icon: 'warning',
-      title: 'Not Logged In',
+      title: 'Login Required',
       text: 'Please login first.',
       confirmButtonColor: '#3085d6'
     }).then(() => {
@@ -342,7 +359,7 @@
   }
 
   function loadUserData() {
-    fetch(`http://localhost:3000/student/${userId}`)
+    fetch(`${baseUrl}/student/${userId}`)
       .then(res => res.json())
       .then(data => {
         form.name.value = data.name || "";
@@ -350,6 +367,7 @@
         form.year.value = data.year || "";
         form.course.value = data.course || "";
         form.semester.value = data.semester || "";
+        form.unique_id.value = data.unique_id || "";
         form.aadhar.value = data.aadhar_no || "";
         form.mobile.value = data.mobile_no || "";
         form.email.value = data.email || "";
@@ -362,7 +380,7 @@
         console.error("Error fetching user data:", err);
         Swal.fire({
           icon: 'error',
-          title: 'Error',
+          title: 'Load Failed',
           text: 'Failed to load profile data'
         });
       });
@@ -385,22 +403,23 @@
       year: form.year.value,
       course: form.course.value,
       semester: form.semester.value,
+      unique_id: form.unique_id.value,
       aadhar: form.aadhar.value,
       mobile: form.mobile.value,
       email: form.email.value
     };
 
-    fetch("http://localhost:3000/editprofile", {
+    fetch(`${baseUrl}/editprofile`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updatedData)
+      body: JSON.stringify(updatedData),
     })
       .then(res => res.json())
       .then(data => {
         Swal.fire({
           icon: 'success',
           title: 'Success',
-          text: data.message || "Profile updated successfully!"
+          text: data.message || 'Profile updated successfully!'
         });
         loadUserData();
       })
@@ -408,7 +427,7 @@
         console.error("Error updating profile:", err);
         Swal.fire({
           icon: 'error',
-          title: 'Error',
+          title: 'Update Failed',
           text: 'Failed to update profile'
         });
       });
@@ -426,6 +445,7 @@
     window.location.replace("index.html");
   }
 </script>
+
 
 
 </body>
