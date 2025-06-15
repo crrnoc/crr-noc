@@ -5,6 +5,8 @@
   <title>Admin Dashboard</title>
   <link rel="icon" href="crrengglogo.png" type="image/png" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -172,28 +174,37 @@
       box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
     }
 
-    @media (max-width: 768px) {
-      .mobile-toggle { display: block; }
-      .sidebar {
-        position: fixed;
-        top: -100%;
-        left: 0;
-        width: 100%;
-        max-height: 90vh;
-        background-color: rgb(247, 201, 155);
-        overflow-y: auto;
-        transition: top 0.3s ease-in-out;
-      }
-      .sidebar.open { top: 0; }
-      .main {
-        margin-left: 0 !important;
-        width: 100% !important;
-        padding: 20px;
-      }
-      body {
-        flex-direction: column;
-        overflow-x: hidden;
-      }
+   @media (max-width: 768px) {
+  .mobile-toggle {
+    display: block;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: -100%;
+    left: 0;
+    width: 100%;
+    max-height: 90vh;
+    background-color: rgb(247, 201, 155); /* Same shade */
+    overflow-y: auto;
+    transition: top 0.3s ease-in-out;
+    z-index: 1000;
+  }
+
+  .sidebar.open {
+    top: 0;
+  }
+
+  .main {
+    margin-left: 0 !important;
+    width: 100% !important;
+    padding: 20px;
+  }
+
+  body {
+    flex-direction: column;
+    overflow-x: hidden;
+  }
     }
   </style>
 </head>
@@ -409,6 +420,13 @@
   function toggleSidebar() {
     document.querySelector('.sidebar').classList.toggle('open');
   }
+   document.querySelectorAll(".sidebar li").forEach(link => {
+  link.addEventListener("click", () => {
+    if (window.innerWidth <= 768) {
+      document.querySelector('.sidebar').classList.remove('open');
+    }
+  });
+});
 
   function logout() {
     localStorage.removeItem("userId");
