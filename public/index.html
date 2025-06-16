@@ -288,32 +288,41 @@
   });
 
   hideAll();
-
 async function submitLogin(event, role) {
-  event.preventDefault();
+    event.preventDefault();
 
-  const form = event.target;
-  const userId = form.querySelector('input[type="text"]').value.trim();
-  const password = form.querySelector('input[type="password"]').value.trim();
+    const form = event.target;
+    const userId = form.querySelector('input[type="text"]').value.trim();
+    const password = form.querySelector('input[type="password"]').value.trim();
 
-  const response = await fetch("/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ userId, password, role })
-  });
+    const response = await fetch("https://crr-noc.onrender.com/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, password, role })
+    });
 
-  const result = await response.json();
+    const data = await response.json();
 
-  if (result.success) {
-    showModal("✅ Login Successful", `Welcome ${role.toUpperCase()} - ${userId}`);
-    // Optional: redirect after delay
-    setTimeout(() => {
-      window.location.href = `/dashboard/${userId}`;
-    }, 2000);
-  } else {
-    showModal("❌ Login Failed", result.message || "Invalid credentials.");
+    if (data.success) {
+      // Store login info in localStorage
+      localStorage.setItem("userId", data.userId);
+      localStorage.setItem("role", role);
+
+      // Optional alert/modal (you can replace with showModal if you want it styled)
+      alert(`✅ Login Successful!\nWelcome ${role.toUpperCase()} - ${data.userId}`);
+
+      // Redirect based on role
+      if (role === "admin") {
+        window.location.href = "adminpanel.html";
+      } else if (role === "student") {
+        window.location.href = "studentdetails.html";
+      } else if (role === "staff") {
+        window.location.href = "knowaboutstd1.html";
+      }
+    } else {
+      alert(`❌ Login Failed!\n${data.message}`);
+    }
   }
-}
 function showModal(title, message) {
   const modal = document.createElement("div");
   modal.style.position = "fixed";
