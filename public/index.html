@@ -275,6 +275,8 @@
   © 2025 Sir C.R.R. College of Engineering. All rights reserved.<br />
   Developed by CSC 2023-2027 Batch Students | <a href="privacypolicy.html">Privacy Policy</a>
 </div>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
   const buttons = document.querySelectorAll('.role-button');
   const wrapper = document.getElementById('mainWrapper');
@@ -326,8 +328,14 @@ async function submitLogin(event, role) {
       localStorage.setItem("userId", data.userId);
       localStorage.setItem("role", role);
 
-      // Optional alert/modal (you can replace with showModal if you want it styled)
-      alert(`✅ Login Successful!\nWelcome ${role.toUpperCase()} - ${data.userId}`);
+Swal.fire({
+  icon: 'success',
+  title: 'Login Successful',
+  text: `Welcome ${role.toUpperCase()} - ${data.userId}`,
+  timer: 2000,
+  showConfirmButton: false
+});
+
 
       // Redirect based on role
       if (role === "admin") {
@@ -338,7 +346,13 @@ async function submitLogin(event, role) {
         window.location.href = "knowaboutstd1.html";
       }
     } else {
-      alert(`❌ Login Failed!\n${data.message}`);
+Swal.fire({
+  icon: 'error',
+  title: 'Login Failed',
+  text: data.message || 'Invalid credentials.',
+  confirmButtonColor: '#d33'
+});
+
     }
   }
 function showModal(title, message) {
