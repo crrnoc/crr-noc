@@ -7,95 +7,104 @@
   <link rel="icon" href="crrengglogo.png" type="image/png" />
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <style>
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  }
+     * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
 
-  body {
-    background-color: #1d1d1d;
-  }
+    body {
+      background-color: #2e2e2e;
+    }
 
-  a {
-    text-decoration: none;
-    color: inherit;
-  }
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
 
-  .container {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: row;
-  }
+    .container {
+      display: flex;
+      min-height: 100vh;
+    }
 
-  .sidebar {
-    width: 270px;
-    background-color: rgb(247, 201, 155);
-    display: flex;
-    flex-direction: column;
-    padding: 20px;
-    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    overflow-y: auto;
-    transition: top 0.3s ease-in-out;
-    z-index: 999;
-  }
+    .sidebar {
+      width: 270px;
+      background-color: rgb(247, 201, 155);
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      overflow-y: auto;
+      transition: top 0.3s ease-in-out;
+      z-index: 999;
+    }
 
-  .sidebar h2 {
-    margin: 40px 20px 20px 20px;
-    color: black;
-    font-size: 18px;
-    font-weight: bold;
-  }
+    .sidebar h2 {
+      margin: 40px 20px 20px 20px;
+      color: black;
+      font-size: 18px;
+      font-weight: bold;
+    }
 
-  .menu {
-    list-style-type: none;
-    padding: 0;
-  }
+    .menu {
+      list-style: none;
+      padding: 0;
+    }
 
-  .menu li {
-    margin-bottom: 15px;
-  }
+    .menu li {
+      list-style: none;
+      margin-bottom: 15px;
+    }
 
-  .menu li a {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 16px;
-    color: black;
-    padding: 12px 20px;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-  }
+    .menu li a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 16px;
+      color: black;
+      padding: 12px 20px;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
 
-  .menu li a:hover,
-  .menu li.active a {
-    background-color: #d4d4d4;
-    font-weight: bold;
-    transform: translateX(5px);
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
-  }
+    .menu li a:hover,
+    .menu li.active a {
+      background-color: #d4d4d4;
+      font-weight: bold;
+      transform: translateX(5px);
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+    }
 
-  .logout {
-    background-color: #f09000;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 20px;
-    cursor: pointer;
-    font-size: 16px;
-    width: 50%;
-    margin: 20px auto 0;
-    transition: background 0.3s ease;
-  }
+    .menu li a span {
+      font-size: 18px;
+      transition: transform 0.3s ease;
+    }
 
-  .logout:hover {
-    background-color: #d07900;
-  }
+    .menu li a:hover span {
+      transform: scale(1.2);
+    }
+
+    .logout {
+      background-color: #f09000;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 16px;
+      width: 50%;
+      margin: 20px auto 0;
+      transition: background 0.3s ease;
+    }
+
+    .logout:hover {
+      background-color: #d07900;
+    }
 
   .main {
     flex-grow: 1;
