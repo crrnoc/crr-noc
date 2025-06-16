@@ -21,12 +21,16 @@
       font-family: 'Poppins', sans-serif;
     }
 
-    body {
-      background: url('https://i.ytimg.com/vi/zKGq-sYdaw8/maxresdefault.jpg') no-repeat center center/cover;
-      min-height: 100vh;
-      overflow-x: hidden;
-      position: relative;
-    }
+body {
+  background: url('https://i.ytimg.com/vi/zKGq-sYdaw8/maxresdefault.jpg') no-repeat center center/cover;
+  height: 100dvh; /* Use dynamic viewport height (mobile safe) */
+  overflow: hidden; 
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
 
     .overlay {
       background: rgba(0, 0, 0, 0.6);
@@ -141,7 +145,7 @@
       box-shadow: 0 0 25px rgba(0,191,255,0.2);
       margin-top: 5px;
     }
-
+     
     .login-container.show {
       display: block !important;
       opacity: 1;
@@ -217,6 +221,23 @@
       .login-container { margin: 20px; padding: 20px; }
       .branding h1 { font-size: 20px; }
     }
+    @media (max-width: 480px) {
+  .branding h1 {
+    font-size: 20px;
+  }
+  .branding p {
+    font-size: 12px;
+  }
+  .role-button {
+    font-size: 14px;
+    padding: 10px 18px;
+  }
+  .login-container {
+    padding: 16px;
+    margin: 8px;
+  }
+}
+
   </style>
 </head>
 <body>
