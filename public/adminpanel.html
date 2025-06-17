@@ -1,214 +1,180 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Admin Dashboard</title>
-  <link rel="icon" href="crrengglogo.png" type="image/png" />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CRR Admin Panel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron&family=Poppins:wght@300;500;700&display=swap" rel="stylesheet" />
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    body {
-      font-family: 'Poppins', sans-serif;
-      background-color: #f4f6fa;
-      display: flex;
-      height: 100vh;
-      overflow: hidden;
+    :root {
+      --main-color: #3cb6ff;
+      --accent-color: #ff3d3d;
     }
-
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+    body {
+      display: flex;
+      min-height: 100vh;
+      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+      color: white;
+    }
     .sidebar {
-      width: 250px;
-      background: linear-gradient(145deg, #ffb97d, #f7c99b);
+      width: 260px;
+      background: rgba(60, 66, 84, 0.5);
+      backdrop-filter: blur(8px);
       padding: 30px 20px;
-      box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+      color: rgb(255, 255, 255);
       display: flex;
       flex-direction: column;
-      animation: slideIn 0.5s ease;
+      box-shadow: 4px 0 25px rgba(0, 0, 0, 0.4);
+      position: fixed;
+      height: 100vh;
+      left: 0;
+      top: 0;
+      z-index: 10;
     }
-
-    @keyframes slideIn {
-      from { transform: translateX(-100px); opacity: 0; }
-      to { transform: translateX(0); opacity: 1; }
-    }
-
     .sidebar h2 {
-      font-size: 22px;
-      color: #222;
-      margin-bottom: 40px;
       text-align: center;
-      font-weight: 600;
+      font-size: 24px;
+      color: var(--main-color);
+      margin-bottom: 30px;
     }
-
-    .sidebar ul { list-style: none; }
+    .sidebar ul {
+      list-style: none;
+    }
     .sidebar li {
-      margin: 15px 0;
-      cursor: pointer;
-      padding: 12px 20px;
+      padding: 12px 18px;
+      margin: 12px 0;
+      background: rgba(255, 255, 255, 0.1);
       border-radius: 10px;
-      transition: all 0.3s ease;
-      font-size: 16px;
-      color: #111;
-    }
-
-    .sidebar li:hover {
-      background-color: #fff;
-      transform: translateX(5px);
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      font-weight: bold;
-    }
-
-    .main {
-      flex: 1;
-      padding: 40px;
-      overflow-y: auto;
-      background-color: #ffffff;
-      animation: fadeIn 0.6s ease;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .card {
-      background: white;
-      border-radius: 20px;
-      box-shadow: 0 6px 16px rgba(0,0,0,0.06);
-      padding: 30px;
-      margin-bottom: 40px;
-      transition: transform 0.3s ease;
-    }
-
-    .card:hover { transform: translateY(-5px); }
-
-    input[type="file"] { display: none; }
-
-    .file-label {
-      display: inline-block;
-      padding: 10px 20px;
-      background: linear-gradient(to right, #ff9966, #ff5e62);
-      color: white;
-      border-radius: 8px;
       cursor: pointer;
-      transition: background 0.3s ease;
-      font-size: 14px;
-      font-weight: 500;
+      transition: 0.3s ease;
     }
-
-    .file-label:hover { background: linear-gradient(to right, #ff5e62, #ff9966); }
-
-    select, input[type="text"] {
-      padding: 12px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      font-size: 15px;
+    .sidebar li:hover {
+      background: var(--main-color);
+      box-shadow: 0 0 12px var(--main-color);
     }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 14px;
-      margin-top: 10px;
-    }
-
-    th, td {
-      padding: 12px;
-      border-bottom: 1px solid #eee;
-      text-align: left;
-    }
-
-    th {
-      background-color: #f0f0f0;
-      font-weight: 600;
-    }
-
-    button {
+    .sidebar button {
+      margin-top: auto;
       padding: 10px 20px;
       border: none;
-      background: linear-gradient(to right, #36d1dc, #5b86e5);
+      background: linear-gradient(to right, #ff416c, #ff4b2b);
       color: white;
-      border-radius: 8px;
+      border-radius: 12px;
       cursor: pointer;
-      transition: background 0.3s ease;
-      font-size: 14px;
+      font-weight: bold;
+      box-shadow: 0 0 10px rgba(255, 65, 108, 0.5);
+      transition: 0.3s ease;
     }
-
-    button:hover {
-      background: linear-gradient(to right, #5b86e5, #36d1dc);
+    .sidebar button:hover {
+      transform: scale(1.05);
     }
-
-    .logout-btn {
-      margin-top: auto;
-      background: #dc3545;
+    .main {
+      margin-left: 260px;
+      padding: 70px;
+      flex: 1;
+      animation: slideIn 1s ease forwards;
     }
-
-    .logout-btn:hover {
-      background: #c82333;
+    .banner {
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 16px;
+      font-size: 18px;
+      text-align: center;
+      margin-bottom: 30px;
+      box-shadow: 0 0 15px rgba(0, 191, 255, 0.3);
     }
-
-    .scroll-wrapper {
-      max-height: 400px;
-      overflow-y: auto;
-      border: 1px solid #ddd;
-      border-radius: 10px;
-      box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
-      background-color: #fff;
+    .card {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(6px);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      opacity: 0;
+      transform: translateY(40px);
+      animation: fadeUp 0.6s ease forwards;
     }
+    .card:nth-child(2) { animation-delay: 0.2s; }
+    .card:nth-child(3) { animation-delay: 0.4s; }
+    .card:nth-child(4) { animation-delay: 0.6s; }
 
-    .mobile-toggle {
-      display: none;
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background-color: #1f75cb;
-      color: white;
-      font-size: 24px;
-      padding: 12px 18px;
-      border-radius: 50px;
-      z-index: 9999;
-      cursor: pointer;
-      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    @keyframes fadeUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
-
-   @media (max-width: 768px) {
-  .mobile-toggle {
-    display: block;
-  }
-
-  .sidebar {
-    position: fixed;
-    top: -100%;
-    left: 0;
-    width: 100%;
-    max-height: 90vh;
-    background-color: rgb(247, 201, 155); /* Same shade */
-    overflow-y: auto;
-    transition: top 0.3s ease-in-out;
-    z-index: 1000;
-  }
-
-  .sidebar.open {
-    top: 0;
-  }
-
-  .main {
-    margin-left: 0 !important;
-    width: 100% !important;
-    padding: 20px;
-  }
-
-  body {
-    flex-direction: column;
-    overflow-x: hidden;
-  }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(50px); }
+      to { opacity: 1; transform: translateX(0); }
     }
+    table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 700px;
+  color: white;
+}
+
+table th, table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  transition: background 0.3s ease;
+}
+
+.scroll-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+}
+select {
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.1);
+  color: rgb(0, 0, 0);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 15px;
+  backdrop-filter: blur(4px);
+  box-shadow: inset 0 0 8px rgba(111, 180, 218, 0.708);
+  transition: all 0.3s ease;
+}
+
+select:hover, select:focus {
+  border-color: var(--main-color);
+  box-shadow: 0 0 10px var(--main-color);
+  outline: none;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+button {
+  background: linear-gradient(135deg, var(--main-color), var(--accent-color));
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: none;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 12px rgba(60, 182, 255, 0.3);
+}
+
+button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 18px rgba(255, 61, 61, 0.5);
+}
+
   </style>
 </head>
-<body>
+ <body>
   <div class="sidebar">
     <h2>Admin Panel</h2>
     <ul>
@@ -216,25 +182,28 @@
       <li onclick="scrollToSection('matches')">📊 DU Match Status</li>
       <li onclick="scrollToSection('noc')">📜 NOC Status</li>
       <li onclick="goToDeletePage()">🗑️ Delete Students</li>
-
     </ul>
     <button class="logout-btn" onclick="logout()">🚪 Logout</button>
   </div>
 
   <div class="main">
+    <div class="banner">🚀 WELCOME TO CRR NOC ADMIN PANEL</div>
+
     <!-- Upload Section -->
-    <div class="card" id="upload">
+    <div class="card scrollable-card" id="upload" style="max-height: 300px; overflow-y: auto;">
       <h3>Upload SBI DU Reference Numbers</h3>
-      <input type="file" id="sbiFile" accept=".txt,.csv" />
-      <label for="sbiFile" class="file-label">📎 Choose File</label>
-      <span id="fileName" style="margin-left: 10px; font-weight: 500; color: #444;"></span>
-      <button onclick="uploadSBI()">Upload</button>
+      <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap; overflow-x: auto;">
+        <label for="sbiFile" class="file-label" style="padding: 10px 18px; background: linear-gradient(to right, #3cb6ff, #ff3d3d); color: white; border-radius: 8px; cursor: pointer; box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);">📎 Choose File</label>
+        <input type="file" id="sbiFile" accept=".txt,.csv" style="display: none;" />
+        <span id="fileName" style="font-weight: 500; color: #b3b770;"></span>
+        <button onclick="uploadSBI()" style="background: linear-gradient(135deg, #3cb6ff, #ff3d3d); border-radius: 8px; padding: 10px 20px; color: white; font-weight: bold; border: none;">Upload</button>
+      </div>
     </div>
 
     <!-- DU Match Section -->
-    <div class="card" id="matches">
+    <div class="card scrollable-card" id="matches" style="max-height: 350px; overflow-y: auto;">
       <h3>DU Match Status</h3>
-      <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+      <div style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; overflow-x: auto;">
         <select id="duCourse">
           <option value="">-- Course --</option>
           <option>CIVIL</option><option>MECH</option><option>EEE</option>
@@ -254,19 +223,19 @@
         <button onclick="applyDUFilter()">Filter</button>
         <button onclick="loadMatches()">Reset</button>
       </div>
-      <div class="scroll-wrapper">
-        <table id="matchTable">
+      <div class="scroll-wrapper" style="overflow-x: auto;">
+        <table id="matchTable" style="min-width: 700px; border-collapse: collapse; width: 100%;">
           <thead>
-            <tr><th>User ID</th><th>Fee Type</th><th>DU Number</th><th>Status</th><th>Matched On</th></tr>
+            <tr style="border-bottom: 1px solid white;"><th>User ID</th><th>Fee Type</th><th>DU Number</th><th>Status</th><th>Matched On</th></tr>
           </thead><tbody></tbody>
         </table>
       </div>
     </div>
 
     <!-- NOC Section -->
-    <div class="card" id="noc">
+    <div class="card scrollable-card" id="noc" style="max-height: 350px; overflow-y: auto;">
       <h3>NOC Generation Status</h3>
-      <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+      <div style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; overflow-x: auto;">
         <select id="nocCourse">
           <option value="">-- Course --</option>
           <option>CIVIL</option><option>MECH</option><option>EEE</option>
@@ -286,9 +255,9 @@
         <button onclick="applyNOCFilter()">Filter</button>
         <button onclick="loadNOC()">Reset</button>
       </div>
-      <div class="scroll-wrapper">
-        <table id="nocTable">
-          <thead><tr><th>User ID</th><th>Status</th></tr></thead>
+      <div class="scroll-wrapper" style="overflow-x: auto;">
+        <table id="nocTable" style="min-width: 500px; border-collapse: collapse; width: 100%;">
+          <thead><tr style="border-bottom: 1px solid white;"><th>User ID</th><th>Status</th></tr></thead>
           <tbody></tbody>
         </table>
       </div>
@@ -296,6 +265,7 @@
   </div>
 
   <div class="mobile-toggle" onclick="toggleSidebar()">☰</div>
+
 
 <script>
   function goToDeletePage() {
