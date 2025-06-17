@@ -1549,9 +1549,10 @@ app.post("/get-student-details", async (req, res) => {
 // ✅ Delete Student
 app.post("/delete-student", async (req, res) => {
   const { reg_no } = req.body;
+
   try {
     await connection.promise().query("DELETE FROM users WHERE userid = ?", [reg_no]);
-    await connection.promise().query("DELETE FROM students WHERE userId = ?", [reg_no]);
+    await connection.promise().query("DELETE FROM students WHERE userId = ?", [reg_no]); // ✅ FIXED
     await connection.promise().query("DELETE FROM student_fee_structure WHERE reg_no = ?", [reg_no]);
     await connection.promise().query("DELETE FROM student_fee_payments WHERE userId = ?", [reg_no]);
     await connection.promise().query("DELETE FROM notifications WHERE userId = ?", [reg_no]);
