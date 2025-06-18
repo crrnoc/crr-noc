@@ -2,189 +2,174 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Remove Students</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="icon" href="crrengglogo.png" type="image/png" />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron&family=Poppins:wght@300;500;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+    :root { --main-color: #3cb6ff; --accent-color: #ff3d3d; }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
     body {
-      background: linear-gradient(to right, #ffe8d6, #f9d5c2);
-      padding: 40px 20px;
+      display: flex;
+      min-height: 100vh;
+      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+      color: white;
+    }
+    .sidebar {
+      width: 260px;
+      background: rgba(60, 66, 84, 0.5);
+      backdrop-filter: blur(8px);
+      padding: 30px 20px;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      gap: 40px;
+      box-shadow: 4px 0 25px rgba(0, 0, 0, 0.4);
+      position: fixed;
+      height: 100vh;
+      left: 0;
+      top: 0;
+      z-index: 10;
     }
-    h1 {
-      font-size: 28px;
-      color: #333;
-      margin-bottom: 10px;
+    .sidebar h2 {
+      text-align: center;
+      font-size: 24px;
+      color: var(--main-color);
+      margin-bottom: 30px;
     }
+    .sidebar ul {
+      list-style: none;
+    }
+    .sidebar li {
+      padding: 12px 18px;
+      margin: 12px 0;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: 0.3s ease;
+    }
+    .sidebar li:hover {
+      background: var(--main-color);
+      box-shadow: 0 0 12px var(--main-color);
+    }
+    .sidebar button {
+      margin-top: auto;
+      padding: 10px 20px;
+      border: none;
+      background: linear-gradient(to right, #ff416c, #ff4b2b);
+      color: white;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: bold;
+      box-shadow: 0 0 10px rgba(255, 65, 108, 0.5);
+      transition: 0.3s ease;
+    }
+    .sidebar button:hover {
+      transform: scale(1.05);
+    }
+
+    .main {
+      margin-left: 260px;
+      padding: 70px 40px;
+      flex: 1;
+      animation: slideIn 1s ease forwards;
+    }
+
     .card {
-      background: #fff;
-      padding: 30px;
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(6px);
+      padding: 25px;
       border-radius: 16px;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.1);
-      width: 100%;
-      max-width: 600px;
-      animation: fadeIn 0.6s ease;
+      margin-bottom: 30px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      animation: fadeUp 0.6s ease forwards;
     }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
+
     label {
       font-weight: 600;
       display: block;
       margin-bottom: 8px;
     }
-    input, select, button {
+    input, select {
       width: 100%;
       padding: 12px;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
+      border-radius: 10px;
       border: 1px solid #ccc;
-      border-radius: 8px;
       font-size: 15px;
     }
     button {
-      background: linear-gradient(to right, #ff5e62, #ff9966);
+      background: linear-gradient(135deg, var(--main-color), var(--accent-color));
+      padding: 10px 18px;
+      border-radius: 10px;
+      border: none;
       color: white;
       font-weight: bold;
       cursor: pointer;
-      transition: 0.3s ease;
+      transition: all 0.3s ease;
+      box-shadow: 0 0 12px rgba(60, 182, 255, 0.3);
     }
     button:hover {
-      background: linear-gradient(to right, #ff9966, #ff5e62);
+      transform: scale(1.05);
+      box-shadow: 0 0 18px rgba(255, 61, 61, 0.5);
     }
     .student-info {
       margin-bottom: 20px;
-      background: #f8f8f8;
+      background: rgba(255, 255, 255, 0.05);
       padding: 15px;
       border-radius: 10px;
       font-size: 14px;
+      color: white;
+      border: 1px solid rgba(255,255,255,0.15);
     }
-    .back-btn {
-  display: inline-block;
-  margin-bottom: 20px;
-  background: linear-gradient(to right, #36d1dc, #5b86e5);
-  color: white;
-  padding: 12px 20px;
-  border-radius: 30px;
-  font-weight: 600;
-  text-decoration: none;
-  transition: 0.3s ease;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-}
-.back-btn:hover {
-  background: linear-gradient(to right, #5b86e5, #36d1dc);
-  transform: scale(1.05);
-}
-    .sidebar {
-  width: 250px;
-  background-color: #f7c99b;
-  padding: 20px;
-  box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-  position: fixed;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  z-index: 1001;
-  transition: all 0.3s ease-in-out;
-}
-
-@media (max-width: 768px) {
-  .sidebar {
-    position: fixed;
-    top: -100%;
-    width: 100%;
-    height: auto;
-    box-shadow: none;
-    background-color: #f7c99b;
-  }
-
-  .sidebar.open {
-    top: 0;
-  }
-}
-
     .mobile-toggle {
-  display: none;
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: #1f75cb;
-  color: white;
-  font-size: 24px;
-  padding: 12px 18px;
-  border-radius: 50px;
-  z-index: 9999;
-  cursor: pointer;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-}
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      font-size: 26px;
+      z-index: 20;
+      cursor: pointer;
+      display: none;
+      color: white;
+    }
 
-@media (max-width: 768px) {
-  .mobile-toggle {
-    display: block;
-  }
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); transition: 0.4s ease; }
+      .sidebar.open { transform: translateX(0); }
+      .mobile-toggle { display: block; }
+      .main { margin-left: 0; padding: 80px 20px 20px; }
+    }
 
-  .sidebar {
-    position: fixed;
-    top: -100%;
-    left: 0;
-    width: 100%;
-    max-height: 90vh;
-    background-color: #f7c99b;
-    overflow-y: auto;
-    transition: top 0.3s ease-in-out;
-    z-index: 1000;
-  }
-
-  .sidebar.open {
-    top: 0;
-  }
-
-  .main {
-    margin-left: 0 !important;
-    width: 100% !important;
-    padding: 20px;
-  }
-
-  body {
-    flex-direction: column;
-    overflow-x: hidden;
-  }
-}
-
-
+    @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(50px); } to { opacity: 1; transform: translateX(0); } }
   </style>
 </head>
 <body>
-  <div class="sidebar">
-  <h2 style="text-align:center; color:#333;">Remove Students</h2>
-  <ul style="list-style: none; padding: 0;">
-    <li onclick="document.getElementById('regNo').scrollIntoView({behavior:'smooth'}); closeSidebarIfMobile()" style="padding: 12px; cursor: pointer;">🧍 Delete Student</li>
-    <li onclick="document.getElementById('batchPrefix').scrollIntoView({behavior:'smooth'}); closeSidebarIfMobile()" style="padding: 12px; cursor: pointer;">📦 Delete Batch</li>
-    <li onclick="window.location.href='adminpanel.html'; closeSidebarIfMobile()" style="padding: 12px; cursor: pointer;">🏠 Back to Admin Panel</li>
+
+<div class="sidebar">
+  <h2>Admin Panel</h2>
+  <ul>
+    <li onclick="navigateTo('upload-sbi.html')">📤 Upload SBI References</li>
+    <li onclick="navigateTo('du-match-status.html')">📊 DU Match Status</li>
+    <li onclick="navigateTo('noc-status.html')">📜 NOC Status</li>
+    <li onclick="navigateTo('removestudents.html')">🗑️ Delete Students</li>
   </ul>
+  <button onclick="logout()">🚪 Logout</button>
 </div>
 
-<a href="adminpanel.html" class="back-btn">← Back to Admin Panel</a>
+<div class="mobile-toggle" onclick="toggleSidebar()">☰</div>
 
+<div class="main">
   <div class="card">
-    <h1>🧍 Delete a Specific Student</h1>
+    <h3>🧍 Delete a Specific Student</h3>
     <label for="regNo">Enter Registration Number</label>
     <input type="text" id="regNo" placeholder="e.g., 23B81A1234" />
     <div id="studentInfo" class="student-info" style="display:none;"></div>
     <button onclick="fetchStudentDetails()">Get Student</button>
-    <button onclick="confirmDelete()" style="background-color:#e74c3c;">Delete Student</button>
+    <button onclick="confirmDelete()" style="background: linear-gradient(to right, #e74c3c, #c0392b);">Delete Student</button>
   </div>
 
   <div class="card">
-    <h1>📦 Delete Batch of Students</h1>
-    <label for="batchPrefix">Enter Batch Prefix (e.g. 23B8)</label>
+    <h3>📦 Delete Batch of Students</h3>
+    <label for="batchPrefix">Enter Batch Prefix</label>
     <input type="text" id="batchPrefix" placeholder="e.g., 23B8" />
     <label for="batchBranch">Select Branch</label>
     <select id="batchBranch">
@@ -194,10 +179,21 @@
     </select>
     <button onclick="filterBatch()">View Batch Students</button>
     <div id="batchList" class="student-info" style="display:none;"></div>
-    <button onclick="confirmBatchDelete()" style="background-color:#c0392b;">Delete Batch</button>
+    <button onclick="confirmBatchDelete()" style="background: linear-gradient(to right, #c0392b, #8e44ad);">Delete Batch</button>
   </div>
-<div class="mobile-toggle" onclick="toggleSidebar()">☰</div>
+</div>
+
 <script>
+function navigateTo(page) {
+  window.location.href = page;
+}
+function toggleSidebar() {
+  document.querySelector('.sidebar').classList.toggle('open');
+}
+function logout() {
+  localStorage.removeItem("userId");
+  window.location.replace("index.html");
+}
 let fetchedReg = "";
 
 function fetchStudentDetails() {
@@ -298,47 +294,6 @@ function confirmBatchDelete() {
     }
   });
 }
-function closeSidebarIfMobile() {
-  const sidebar = document.querySelector(".sidebar");
-  if (window.innerWidth <= 768) {
-    sidebar.classList.remove("open"); // forcibly close if on mobile
-  }
-}
-
-function toggleSidebar() {
-  document.querySelector(".sidebar").classList.toggle("open");
-}
-
-  function confirmDelete(regNo) {
-  Swal.fire({
-    title: "Are you sure?",
-    text: `This will delete all data for ${regNo}.`,
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonText: "Yes, delete it!",
-    cancelButtonText: "Cancel"
-  }).then((result) => {
-    if (result.isConfirmed) {
-      fetch("/delete-student", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reg_no: regNo })
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          // ✅ Refresh the page after deletion
-          Swal.fire("Deleted!", "Student has been removed.", "success").then(() => {
-            location.reload(); // 👈 This reloads the full page
-          });
-        } else {
-          Swal.fire("Error", data.message || "Deletion failed", "error");
-        }
-      });
-    }
-  });
-}
-
 </script>
 
 </body>

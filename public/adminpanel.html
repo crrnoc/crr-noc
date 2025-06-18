@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,28 +6,15 @@
   <title>CRR Admin Panel</title>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron&family=Poppins:wght@300;500;700&display=swap" rel="stylesheet" />
   <style>
-    :root {
-      --main-color: #3cb6ff;
-      --accent-color: #ff3d3d;
-    }
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Poppins', sans-serif;
-    }
-    body {
-      display: flex;
-      min-height: 100vh;
-      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
-      color: white;
-    }
+    :root { --main-color: #3cb6ff; --accent-color: #ff3d3d; }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+    body { display: flex; min-height: 100vh; background: linear-gradient(to right, #0f2027, #203a43, #2c5364); color: white; }
+
     .sidebar {
       width: 260px;
       background: rgba(60, 66, 84, 0.5);
       backdrop-filter: blur(8px);
       padding: 30px 20px;
-      color: rgb(255, 255, 255);
       display: flex;
       flex-direction: column;
       box-shadow: 4px 0 25px rgba(0, 0, 0, 0.4);
@@ -74,12 +60,14 @@
     .sidebar button:hover {
       transform: scale(1.05);
     }
+
     .main {
       margin-left: 260px;
       padding: 70px;
       flex: 1;
       animation: slideIn 1s ease forwards;
     }
+
     .banner {
       background: rgba(255, 255, 255, 0.08);
       border-radius: 14px;
@@ -89,341 +77,69 @@
       margin-bottom: 30px;
       box-shadow: 0 0 15px rgba(0, 191, 255, 0.3);
     }
-    .card {
-      background: rgba(255, 255, 255, 0.08);
-      backdrop-filter: blur(6px);
-      padding: 25px;
-      border-radius: 16px;
-      margin-bottom: 30px;
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      opacity: 0;
-      transform: translateY(40px);
-      animation: fadeUp 0.6s ease forwards;
-    }
-    .card:nth-child(2) { animation-delay: 0.2s; }
-    .card:nth-child(3) { animation-delay: 0.4s; }
-    .card:nth-child(4) { animation-delay: 0.6s; }
 
-    @keyframes fadeUp {
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+    .mobile-toggle {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      font-size: 26px;
+      z-index: 20;
+      cursor: pointer;
+      display: none;
+      color: white;
     }
+
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); transition: 0.4s ease; }
+      .sidebar.open { transform: translateX(0); }
+      .mobile-toggle { display: block; }
+      .main { margin-left: 0; padding: 80px 20px 20px; }
+    }
+
     @keyframes slideIn {
       from { opacity: 0; transform: translateX(50px); }
       to { opacity: 1; transform: translateX(0); }
     }
-    table {
-  border-collapse: collapse;
-  width: 100%;
-  min-width: 700px;
-  color: white;
-}
-
-table th, table td {
-  padding: 12px;
-  text-align: left;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-}
-
-table tbody tr:hover {
-  background-color: rgba(255, 255, 255, 0.08);
-  transition: background 0.3s ease;
-}
-
-.scroll-wrapper::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: 6px;
-}
-select {
-  padding: 10px 14px;
-  border-radius: 10px;
-  background: rgba(0, 0, 0, 0.1);
-  color: rgb(0, 0, 0);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  font-size: 15px;
-  backdrop-filter: blur(4px);
-  box-shadow: inset 0 0 8px rgba(111, 180, 218, 0.708);
-  transition: all 0.3s ease;
-}
-
-select:hover, select:focus {
-  border-color: var(--main-color);
-  box-shadow: 0 0 10px var(--main-color);
-  outline: none;
-  background: rgba(255, 255, 255, 0.15);
-}
-
-button {
-  background: linear-gradient(135deg, var(--main-color), var(--accent-color));
-  padding: 10px 18px;
-  border-radius: 10px;
-  border: none;
-  color: white;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 0 12px rgba(60, 182, 255, 0.3);
-}
-
-button:hover {
-  transform: scale(1.05);
-  box-shadow: 0 0 18px rgba(255, 61, 61, 0.5);
-}
-
   </style>
 </head>
- <body>
+<body>
   <div class="sidebar">
     <h2>Admin Panel</h2>
     <ul>
-      <li onclick="scrollToSection('upload')">📤 Upload SBI References</li>
-      <li onclick="scrollToSection('matches')">📊 DU Match Status</li>
-      <li onclick="scrollToSection('noc')">📜 NOC Status</li>
-      <li onclick="goToDeletePage()">🗑️ Delete Students</li>
+      <li onclick="navigateTo('upload-sbi.html')">📤 Upload SBI References</li>
+      <li onclick="navigateTo('du-match-status.html')">📊 DU Match Status</li>
+      <li onclick="navigateTo('noc-status.html')">📜 NOC Status</li>
+      <li onclick="navigateTo('removestudents.html')">🗑️ Delete Students</li>
     </ul>
-    <button class="logout-btn" onclick="logout()">🚪 Logout</button>
-  </div>
-
-  <div class="main">
-    <div class="banner">🚀 WELCOME TO CRR NOC ADMIN PANEL</div>
-
-    <!-- Upload Section -->
-    <div class="card scrollable-card" id="upload" style="max-height: 300px; overflow-y: auto;">
-      <h3>Upload SBI DU Reference Numbers</h3>
-      <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap; overflow-x: auto;">
-        <label for="sbiFile" class="file-label" style="padding: 10px 18px; background: linear-gradient(to right, #3cb6ff, #ff3d3d); color: white; border-radius: 8px; cursor: pointer; box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);">📎 Choose File</label>
-        <input type="file" id="sbiFile" accept=".txt,.csv" style="display: none;" />
-        <span id="fileName" style="font-weight: 500; color: #b3b770;"></span>
-        <button onclick="uploadSBI()" style="background: linear-gradient(135deg, #3cb6ff, #ff3d3d); border-radius: 8px; padding: 10px 20px; color: white; font-weight: bold; border: none;">Upload</button>
-      </div>
-    </div>
-
-    <!-- DU Match Section -->
-    <div class="card scrollable-card" id="matches" style="max-height: 350px; overflow-y: auto;">
-      <h3>DU Match Status</h3>
-      <div style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; overflow-x: auto;">
-        <select id="duCourse">
-          <option value="">-- Course --</option>
-          <option>CIVIL</option><option>MECH</option><option>EEE</option>
-          <option>ECE</option><option>CSE</option><option>CSD</option>
-          <option>CSM</option><option>CSC</option><option>IT</option>
-        </select>
-        <select id="duYear">
-          <option value="">-- Year --</option>
-          <option value="1">1st Year</option><option value="2">2nd Year</option>
-          <option value="3">3rd Year</option><option value="4">4th Year</option>
-        </select>
-        <select id="duSection">
-          <option value="">-- Section --</option>
-          <option>A</option><option>B</option><option>C</option>
-          <option>D</option><option>E</option><option>F</option>
-        </select>
-        <button onclick="applyDUFilter()">Filter</button>
-        <button onclick="loadMatches()">Reset</button>
-      </div>
-      <div class="scroll-wrapper" style="overflow-x: auto;">
-        <table id="matchTable" style="min-width: 700px; border-collapse: collapse; width: 100%;">
-          <thead>
-            <tr style="border-bottom: 1px solid white;"><th>User ID</th><th>Fee Type</th><th>DU Number</th><th>Status</th><th>Matched On</th></tr>
-          </thead><tbody></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- NOC Section -->
-    <div class="card scrollable-card" id="noc" style="max-height: 350px; overflow-y: auto;">
-      <h3>NOC Generation Status</h3>
-      <div style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; overflow-x: auto;">
-        <select id="nocCourse">
-          <option value="">-- Course --</option>
-          <option>CIVIL</option><option>MECH</option><option>EEE</option>
-          <option>ECE</option><option>CSE</option><option>CSD</option>
-          <option>CSM</option><option>CSC</option><option>IT</option>
-        </select>
-        <select id="nocYear">
-          <option value="">-- Year --</option>
-          <option value="1">1st Year</option><option value="2">2nd Year</option>
-          <option value="3">3rd Year</option><option value="4">4th Year</option>
-        </select>
-        <select id="nocSection">
-          <option value="">-- Section --</option>
-          <option>A</option><option>B</option><option>C</option>
-          <option>D</option><option>E</option><option>F</option>
-        </select>
-        <button onclick="applyNOCFilter()">Filter</button>
-        <button onclick="loadNOC()">Reset</button>
-      </div>
-      <div class="scroll-wrapper" style="overflow-x: auto;">
-        <table id="nocTable" style="min-width: 500px; border-collapse: collapse; width: 100%;">
-          <thead><tr style="border-bottom: 1px solid white;"><th>User ID</th><th>Status</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
+    <button onclick="logout()">🚪 Logout</button>
   </div>
 
   <div class="mobile-toggle" onclick="toggleSidebar()">☰</div>
 
+  <div class="main">
+    <div class="banner">🚀 WELCOME TO CRR NOC ADMIN PANEL</div>
+    <p style="font-size: 18px; line-height: 1.6;">
+      Use the sidebar to navigate between modules like <b>Uploading SBI DU References</b>, checking <b>DU Match Status</b>, verifying <b>NOC Eligibility</b>, and <b>Deleting Students</b>.
+      <br><br>Each section is now optimized in its own page for better performance and maintainability.
+    </p>
+  </div>
 
-<script>
-  function goToDeletePage() {
-  window.location.href = "removestudents.html"; // 🔁 or your actual filename
-}
-
-function goToDeletePage() {
-  document.querySelector('.sidebar').classList.remove('open'); // close sidebar
-  setTimeout(() => {
-    window.location.href = "removestudents.html";
-  }, 150);
-}
-
-
-  document.getElementById("sbiFile").addEventListener("change", function () {
-    document.getElementById("fileName").textContent = this.files[0]?.name || "";
-  });
-
-  function scrollToSection(id) {
-    document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
-  }
-
-  function uploadSBI() {
-    const file = document.getElementById("sbiFile").files[0];
-    if (!file) {
-      Swal.fire("No File Selected", "Please choose a file first.", "warning");
-      return;
+  <script>
+    function navigateTo(page) {
+      window.location.href = page;
     }
 
-    const formData = new FormData();
-    formData.append("sbiFile", file);
-
-    fetch("https://crr-noc.onrender.com/admin/upload-sbi", {
-      method: "POST",
-      body: formData
-    })
-      .then(async (res) => {
-        const data = await res.json();
-        if (res.ok && data.success) {
-          Swal.fire("Upload Success", data.message || "File uploaded successfully!", "success");
-          loadMatches(); // Refresh match table
-        } else {
-          Swal.fire("Upload Failed", data.message || "Something went wrong during upload.", "error");
-        }
-      })
-      .catch((err) => {
-        console.error("Upload error:", err);
-        Swal.fire("Upload Failed", "Network error or server not responding.", "error");
-      });
-  }
-
-  function loadMatches() {
-    fetch("https://crr-noc.onrender.com/admin/matches")
-      .then(res => res.json())
-      .then(data => {
-        const table = document.querySelector("#matchTable tbody");
-        table.innerHTML = data.map(row => `
-          <tr>
-            <td>${row.userId}</td>
-            <td>${row.fee_type}</td>
-            <td>${row.sbi_ref_no}</td>
-            <td>${row.matched ? '✅' : '❌'}</td>
-            <td>${row.matched_on || '-'}</td>
-          </tr>
-        `).join("");
-      });
-  }
-
-  function loadNOC() {
-    fetch("https://crr-noc.onrender.com/admin/noc-status")
-      .then(res => res.json())
-      .then(data => {
-        const table = document.querySelector("#nocTable tbody");
-        table.innerHTML = data.map(user => `
-          <tr>
-            <td>${user.userId}</td>
-            <td>${user.eligible ? '✅ Approved' : '❌ Pending'}</td>
-          </tr>
-        `).join("");
-      });
-  }
-
-  function applyDUFilter() {
-    const course = document.getElementById("duCourse").value.trim();
-    const year = document.getElementById("duYear").value.trim();
-    const section = document.getElementById("duSection").value.trim();
-
-    fetch("https://crr-noc.onrender.com/admin/match-filter", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ course, year, section })
-    })
-      .then(res => res.json())
-      .then(data => {
-        const table = document.querySelector("#matchTable tbody");
-        table.innerHTML = data.length ? data.map(row => `
-          <tr>
-            <td>${row.userId}</td>
-            <td>${row.fee_type}</td>
-            <td>${row.sbi_ref_no}</td>
-            <td>${row.matched ? '✅' : '❌'}</td>
-            <td>${row.matched_on || '-'}</td>
-          </tr>
-        `).join("") : `<tr><td colspan="5">No records found.</td></tr>`;
-      })
-      .catch(() => {
-        Swal.fire("Error", "Failed to apply filter. Try again.", "error");
-      });
-  }
-
-  function applyNOCFilter() {
-    const course = document.getElementById("nocCourse").value.trim();
-    const year = document.getElementById("nocYear").value.trim();
-    const section = document.getElementById("nocSection").value.trim();
-
-    fetch("https://crr-noc.onrender.com/admin/noc-filter", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ course, year, section })
-    })
-      .then(res => res.json())
-      .then(data => {
-        const table = document.querySelector("#nocTable tbody");
-        table.innerHTML = data.length ? data.map(user => `
-          <tr>
-            <td>${user.userId}</td>
-            <td>${user.eligible ? '✅ Approved' : '❌ Pending'}</td>
-          </tr>
-        `).join("") : `<tr><td colspan="2">No matching records found.</td></tr>`;
-      })
-      .catch(() => {
-        Swal.fire("Error", "Failed to apply NOC filter. Try again.", "error");
-      });
-  }
-
-  function toggleSidebar() {
-    document.querySelector('.sidebar').classList.toggle('open');
-  }
-   document.querySelectorAll(".sidebar li").forEach(link => {
-  link.addEventListener("click", () => {
-    if (window.innerWidth <= 768) {
-      document.querySelector('.sidebar').classList.remove('open');
+    function toggleSidebar() {
+      document.querySelector('.sidebar').classList.toggle('open');
     }
-  });
-});
 
-  function logout() {
-    localStorage.removeItem("userId");
-    if ("caches" in window) {
-      caches.keys().then(keys => keys.forEach(key => caches.delete(key)));
+    function logout() {
+      localStorage.removeItem("userId");
+      if ("caches" in window) {
+        caches.keys().then(keys => keys.forEach(key => caches.delete(key)));
+      }
+      window.location.replace("index.html");
     }
-    window.location.replace("index.html");
-  }
-
-  // Initial load
-  loadMatches();
-  loadNOC();
-</script>
-
+  </script>
 </body>
 </html>
