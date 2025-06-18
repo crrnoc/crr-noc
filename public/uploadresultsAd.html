@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>📥 Upload Student Results</title>
+  <link rel="icon" href="crrengglogo.png" />
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #6dd5ed, #2193b0);
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card {
+      background: #fff;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+      max-width: 500px;
+      width: 100%;
+    }
+
+    h2 {
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 20px;
+    }
+
+    select, input[type="file"], button {
+      width: 100%;
+      padding: 12px;
+      margin: 12px 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    button {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s ease-in-out;
+    }
+
+    button:hover {
+      background-color: #2980b9;
+      transform: scale(1.02);
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 10px;
+      font-size: 12px;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h2>📤 Upload Result PDF</h2>
+    <form id="uploadForm">
+      <label for="semester">📘 Select Semester</label>
+      <select id="semester" required>
+        <option value="">-- Select Semester --</option>
+        <option>1-1</option>
+        <option>1-2</option>
+        <option>2-1</option>
+        <option>2-2</option>
+        <option>3-1</option>
+        <option>3-2</option>
+        <option>4-1</option>
+        <option>4-2</option>
+      </select>
+
+      <label for="pdfFile">📎 Choose PDF File</label>
+      <input type="file" id="pdfFile" accept="application/pdf" required />
+
+      <button type="submit">Upload Now</button>
+    </form>
+    <div class="footer">Supported Format: University Result PDFs (Max 5MB)</div>
+  </div>
+
+  <script>
+    document.getElementById("uploadForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData();
+      formData.append("semester", document.getElementById("semester").value);
+      formData.append("pdf", document.getElementById("pdfFile").files[0]);
+
+      try {
+        const response = await fetch("http://localhost:3000/admin/upload-result-pdf", {
+          method: "POST",
+          body: formData
+        });
+
+        const result = await response.json();
+        if (result.success) {
+          alert(result.message || "✅ Upload successful!");
+        } else {
+          alert("❌ Upload failed: " + (result.message || "Unknown error"));
+        }
+      } catch (error) {
+        console.error("Network error:", error);
+        alert("❌ Server connection failed. Please try again.");
+      }
+    });
+  </script>
+
+</body>
+</html>
