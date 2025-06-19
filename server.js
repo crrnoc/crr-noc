@@ -1731,7 +1731,7 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
     const logStream = fs.createWriteStream(logPath, { flags: "w" });
 
     for (const originalLine of lines) {
-      if (originalLine.includes("HtnoSubcodeSubnameInternalsGradeCredits")) {
+      if (originalLine.includes("SnoHtnoSubcodeSubnameInternalsGradeCredits")) {
         startReading = true;
         logStream.write("🔔 Found header. Starting parse...\n");
         continue;
