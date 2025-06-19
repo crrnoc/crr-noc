@@ -1722,7 +1722,6 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
 
     const filePath = req.file.path;
     const pdfParser = new PDFParser();
-
     const logPath = path.join(__dirname, "parselog.txt");
     const logStream = fs.createWriteStream(logPath, { flags: "w" });
 
@@ -1731,12 +1730,13 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
     pdfParser.on("pdfParser_dataError", errData => {
       console.error("❌ PDF error:", errData.parserError);
       fs.unlinkSync(filePath);
-      return res.status(500).json({ message: "❌ PDF parsing failed." });
+      return res.status(500).json({ success: false, message: "❌ PDF parsing failed." });
     });
 
     pdfParser.on("pdfParser_dataReady", async pdfData => {
       let allText = "";
 
+      // Combine all text from all pages
       pdfData.formImage.Pages.forEach(page => {
         page.Texts.forEach(text => {
           const lineText = decodeURIComponent(text.R[0].T || "").replace(/\\n/g, "");
@@ -1746,14 +1746,14 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
       });
 
       const lines = allText.split("\n").map(l => l.trim()).filter(Boolean);
-      let startReading = false;
       let snoPresent = false;
+      let startReading = false;
 
       for (const originalLine of lines) {
-        if (!startReading && /Htno\s+Subcode/i.test(originalLine)) {
+        if (/^(Sno\s+)?Htno\s+Subcode/i.test(originalLine)) {
           startReading = true;
-          snoPresent = /^Sno\s+/i.test(originalLine);
-          logStream.write(`🔔 Found header: Sno Present = ${snoPresent}\n`);
+          snoPresent = originalLine.startsWith("Sno");
+          logStream.write(`🔔 Found header. Sno Present: ${snoPresent}\n`);
           continue;
         }
 
@@ -1761,7 +1761,7 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
 
         const parts = originalLine.trim().split(/\s+/);
         if ((snoPresent && parts.length < 7) || (!snoPresent && parts.length < 6)) {
-          logStream.write(`⚠️ Skipped: Insufficient parts - ${originalLine}\n`);
+          logStream.write(`⚠️ Skipping short line: ${originalLine}\n`);
           continue;
         }
 
@@ -1782,26 +1782,24 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
             credits = parseFloat(parts[parts.length - 1]);
           }
 
-          // Truncate subcode to 7 characters
-          subcode = subcode.slice(0, 7);
-
           // Normalize grade
           if (["COMPLE", "COMPLETE", "COMPLETED"].includes(gradeRaw)) gradeRaw = "Completed";
           if (gradeRaw === "ABSENT") gradeRaw = "Ab";
 
           const validGrades = ["S", "A", "B", "C", "D", "E", "F", "Ab", "Completed"];
           if (!validGrades.includes(gradeRaw)) {
-            logStream.write(`❌ Invalid grade: ${gradeRaw} in ${originalLine}\n`);
+            logStream.write(`❌ Invalid grade: ${gradeRaw} → ${originalLine}\n`);
             continue;
           }
 
-          // R21 regulation check
+          // Regulation filter: only R21 and above
           const regYear = parseInt(subcode.slice(1, 3));
           if (isNaN(regYear) || regYear < 21) {
-            logStream.write(`⏩ Skipped old regulation: ${regno} - ${subcode}\n`);
+            logStream.write(`⏩ Skipped old regulation < R21: ${regno} - ${subcode}\n`);
             continue;
           }
 
+          // Insert or update record
           const sql = `
             INSERT INTO results (regno, semester, subcode, subname, grade, credits)
             VALUES (?, ?, ?, ?, ?, ?)
@@ -1824,7 +1822,7 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
           });
 
         } catch (err) {
-          logStream.write(`❌ Exception while parsing: ${originalLine} - ${err.message}\n`);
+          logStream.write(`❌ Exception in line: ${originalLine} → ${err.message}\n`);
         }
       }
 
@@ -1833,7 +1831,7 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
 
       return res.json({
         success: true,
-        message: `✅ Upload complete. ${insertCount} records stored. Check parselog.txt for full details.`
+        message: `✅ Upload complete. ${insertCount} records stored. Check parselog.txt for details.`
       });
     });
 
