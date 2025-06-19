@@ -1713,11 +1713,6 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
 
 // result pdf upload
 // 📥 Admin uploads result PDF
-const multer = require("multer");
-const upload = multer({ dest: "uploads/" });
-const pdfParse = require("pdf-parse");
-const fs = require("fs");
-
 app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
   try {
     const { semester } = req.body;
