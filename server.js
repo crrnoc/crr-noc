@@ -1728,15 +1728,14 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
     let insertCount = 0;
 
     pdfParser.on("pdfParser_dataError", errData => {
-      console.error("❌ PDF error:", errData.parserError);
       fs.unlinkSync(filePath);
+      logStream.write(`❌ PDF parsing error: ${errData.parserError}\n`);
+      logStream.end();
       return res.status(500).json({ success: false, message: "❌ PDF parsing failed." });
     });
 
     pdfParser.on("pdfParser_dataReady", async pdfData => {
       let allText = "";
-
-      // Combine all text from all pages
       pdfData.formImage.Pages.forEach(page => {
         page.Texts.forEach(text => {
           const lineText = decodeURIComponent(text.R[0].T || "").replace(/\\n/g, "");
@@ -1765,41 +1764,32 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
           continue;
         }
 
-        let regno, subcode, subname, gradeRaw, credits;
-
         try {
-          if (snoPresent) {
-            regno = parts[1];
-            subcode = parts[2];
-            subname = parts.slice(3, parts.length - 3).join(" ");
-            gradeRaw = parts[parts.length - 2].toUpperCase();
-            credits = parseFloat(parts[parts.length - 1]);
-          } else {
-            regno = parts[0];
-            subcode = parts[1];
-            subname = parts.slice(2, parts.length - 3).join(" ");
-            gradeRaw = parts[parts.length - 2].toUpperCase();
-            credits = parseFloat(parts[parts.length - 1]);
-          }
+          let regno = snoPresent ? parts[1] : parts[0];
+          let subcode = snoPresent ? parts[2] : parts[1];
+          const subname = parts.slice(snoPresent ? 3 : 2, -3).join(" ");
+          let gradeRaw = parts[parts.length - 2].toUpperCase();
+          const credits = parseFloat(parts[parts.length - 1]);
 
           // Normalize grade
           if (["COMPLE", "COMPLETE", "COMPLETED"].includes(gradeRaw)) gradeRaw = "Completed";
           if (gradeRaw === "ABSENT") gradeRaw = "Ab";
 
-          const validGrades = ["S", "A", "B", "C", "D", "E", "F", "Ab", "Completed"];
+          const validGrades = ["S", "A", "B", "C", "D", "E", "F", "Ab", "Completed", "MP"];
           if (!validGrades.includes(gradeRaw)) {
             logStream.write(`❌ Invalid grade: ${gradeRaw} → ${originalLine}\n`);
             continue;
           }
 
-          // Regulation filter: only R21 and above
+          // Regulation filter
           const regYear = parseInt(subcode.slice(1, 3));
           if (isNaN(regYear) || regYear < 21) {
-            logStream.write(`⏩ Skipped old regulation < R21: ${regno} - ${subcode}\n`);
+            logStream.write(`⏩ Skipped < R21 regulation: ${regno} - ${subcode}\n`);
             continue;
           }
 
-          // Insert or update record
+          if (subcode.length > 7) subcode = subcode.substring(0, 7);
+
           const sql = `
             INSERT INTO results (regno, semester, subcode, subname, grade, credits)
             VALUES (?, ?, ?, ?, ?, ?)
