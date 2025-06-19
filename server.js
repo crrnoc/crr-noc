@@ -1720,73 +1720,116 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
       return res.status(400).json({ success: false, message: "❌ Semester or PDF missing." });
     }
 
-    const fileBuffer = fs.readFileSync(req.file.path);
+    const filePath = req.file.path;
+    const fileBuffer = fs.readFileSync(filePath);
     const data = await pdfParse(fileBuffer);
     const lines = data.text.split("\n").map(line => line.trim()).filter(Boolean);
 
     let startReading = false;
-    const insertPromises = [];
+    let insertCount = 0;
 
-    for (let line of lines) {
-      if (line.includes("SnoHtnoSubcodeSubnameInternalsGradeCredits")) {
+    const logPath = path.join(__dirname, "parselog.txt");
+    const logStream = fs.createWriteStream(logPath, { flags: "w" });
+
+    for (const originalLine of lines) {
+      if (originalLine.includes("HtnoSubcodeSubnameInternalsGradeCredits")) {
         startReading = true;
+        logStream.write("🔔 Found header. Starting parse...\n");
         continue;
       }
 
-      if (!startReading || line === "") continue;
+      if (!startReading || originalLine === "") continue;
 
-      // Extract regno (10 characters)
+      const line = originalLine.replace(/\s/g, '').toUpperCase();
+
       const regnoMatch = line.match(/(\d{2}B8[A-Z0-9]{6})/);
-      if (!regnoMatch) continue;
+      if (!regnoMatch) {
+        logStream.write(`❌ Could not find regno: ${originalLine}\n`);
+        continue;
+      }
       const regno = regnoMatch[1];
 
-      // Extract subcode (starts with R)
-      const subcodeMatch = line.match(/(R[A-Z0-9]{6})/);
-      if (!subcodeMatch) continue;
-      const subcode = subcodeMatch[1];
-      const subcodeIndex = line.indexOf(subcode);
-      const afterSubcode = line.slice(subcodeIndex + 7);
+      const subcodeMatch = line.match(/R[A-Z0-9]{6}/);
+      if (!subcodeMatch) {
+        logStream.write(`❌ Could not find subcode: ${originalLine}\n`);
+        continue;
+      }
+      const subcode = subcodeMatch[0].substring(0, 7);
 
-      // Extract subname
+      const regYear = parseInt(subcode.slice(1, 3));
+      if (isNaN(regYear) || regYear < 21) {
+        logStream.write(`⏩ Skipped old regulation: ${regno} - ${subcode}\n`);
+        continue;
+      }
+
+      const subcodeIndex = line.indexOf(subcode);
+      const afterSubcode = line.slice(subcodeIndex + subcode.length);
+
       const subnameMatch = afterSubcode.match(/^(.+?)(\d)/);
-      if (!subnameMatch) continue;
+      if (!subnameMatch) {
+        logStream.write(`❌ Could not extract subname: ${originalLine}\n`);
+        continue;
+      }
       const subname = subnameMatch[1].trim();
 
-      // Extract grade and credits
-      const gradeCreditPart = afterSubcode.slice(subname.length);
-      const gradeCreditMatch = gradeCreditPart.match(/^(\d{1,3})(S|A|B|C|D|E|F|Ab|Completed|MP)(\d+(\.\d+)?)/);
+      const gradeCreditsPart = afterSubcode.slice(subname.length);
+      const gradeCreditMatch = gradeCreditsPart.match(/^(\d{1,3})([A-Z]+)(\d+(\.\d+)?)/);
+      if (!gradeCreditMatch) {
+        logStream.write(`❌ Could not extract grade/credits: ${originalLine}\n`);
+        continue;
+      }
 
-      if (!gradeCreditMatch) continue;
-
-      const grade = gradeCreditMatch[2];
+      let gradeRaw = gradeCreditMatch[2].toUpperCase();
       const credits = parseFloat(gradeCreditMatch[3]);
 
-      // Insert into results table
-      const insertQuery = `
+      // Normalize grade
+      if (["COMPLE", "COMPLETE", "COMPLETED"].includes(gradeRaw)) {
+        gradeRaw = "Completed";
+      } else if (gradeRaw === "ABSENT") {
+        gradeRaw = "Ab";
+      }
+
+      const validGrades = ["S", "A", "B", "C", "D", "E", "F", "Ab", "Completed"];
+      if (!validGrades.includes(gradeRaw)) {
+        logStream.write(`❌ Invalid grade: ${gradeRaw} in ${originalLine}\n`);
+        continue;
+      }
+
+      const grade = gradeRaw;
+
+      const sql = `
         INSERT INTO results (regno, semester, subcode, subname, grade, credits)
         VALUES (?, ?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE
+          semester = VALUES(semester),
+          grade = VALUES(grade),
+          credits = VALUES(credits)
       `;
 
-      insertPromises.push(
-        new Promise(resolve => {
-          connection.query(insertQuery, [regno, semester, subcode, subname, grade, credits], (err) => {
-            if (err) {
-              console.error("❌ DB Insert Error:", err.message);
-            } else {
-              console.log("✅ Inserted:", regno, subcode);
-            }
-            resolve();
-          });
-        })
-      );
+      await new Promise((resolve) => {
+        connection.query(sql, [regno, semester, subcode, subname, grade, credits], (err) => {
+          if (err) {
+            logStream.write(`❌ DB Error for ${regno}: ${err.message}\n`);
+          } else {
+            insertCount++;
+            logStream.write(`✅ Stored: ${regno} - ${subcode} (${grade})\n`);
+          }
+          resolve();
+        });
+      });
     }
 
-    await Promise.all(insertPromises);
+    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    logStream.end();
 
-    res.json({ success: true, message: "📥 Results inserted successfully!" });
+    return res.json({
+      success: true,
+      message: `✅ Upload complete. ${insertCount} records stored. Check parselog.txt for full details.`
+    });
 
   } catch (err) {
-    console.error("❌ PDF Processing Error:", err);
-    res.status(500).json({ success: false, message: "Server error" });
+    console.error("❌ Server error:", err);
+    if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+    return res.status(500).json({ success: false, message: "❌ Internal server error." });
   }
 });
