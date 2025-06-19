@@ -1738,7 +1738,8 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
 
       if (originalLine === "") continue;
 
-      const line = originalLine.replace(/\s/g, '').toUpperCase();
+      const line = originalLine.toUpperCase();
+
 
       const regnoMatch = line.match(/(\d{2}B8[A-Z0-9]{6})/);
       if (!regnoMatch) {
