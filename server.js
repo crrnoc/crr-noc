@@ -1834,9 +1834,7 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
         message: `✅ Upload complete. ${insertCount} records stored. Check parselog.txt for full details.`
       });
     });
-
     pdfParser.loadPDF(filePath);
-
   } catch (err) {
     console.error("❌ Server error:", err);
     if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
