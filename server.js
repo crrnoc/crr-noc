@@ -1724,20 +1724,19 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
     const data = await pdfParse(fileBuffer);
     const lines = data.text.split("\n").map(line => line.trim()).filter(Boolean);
 
-    let startReading = false;
     let insertCount = 0;
-
     const logPath = path.join(__dirname, "parselog.txt");
     const logStream = fs.createWriteStream(logPath, { flags: "w" });
 
     for (const originalLine of lines) {
-      if (originalLine.includes("HtnoSubcodeSubnameInternalsGradeCredits")) {
-        startReading = true;
-        logStream.write("🔔 Found header. Starting parse...\n");
+
+      // ✅ FIXED HEADER SKIP LOGIC (handles with or without Sno)
+      if (/^(Sno\s+)?Htno\s+Subcode/i.test(originalLine)) {
+        logStream.write("🔔 Skipping header line...\n");
         continue;
       }
 
-      if (!startReading || originalLine === "") continue;
+      if (originalLine === "") continue;
 
       const line = originalLine.replace(/\s/g, '').toUpperCase();
 
@@ -1788,7 +1787,7 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
         gradeRaw = "Ab";
       }
 
-      const validGrades = ["S", "A", "B", "C", "D", "E", "F", "Ab", "Completed"];
+      const validGrades = ["S", "A", "B", "C", "D", "E", "F", "Ab", "Completed","MP"];
       if (!validGrades.includes(gradeRaw)) {
         logStream.write(`❌ Invalid grade: ${gradeRaw} in ${originalLine}\n`);
         continue;
@@ -1832,3 +1831,4 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
     return res.status(500).json({ success: false, message: "❌ Internal server error." });
   }
 });
+
