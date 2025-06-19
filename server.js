@@ -1713,6 +1713,11 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
 
 // result pdf upload
 // 📥 Admin uploads result PDF
+const multer = require("multer");
+const upload = multer({ dest: "uploads/" });
+const pdfParse = require("pdf-parse");
+const fs = require("fs");
+
 app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
   try {
     const { semester } = req.body;
@@ -1728,20 +1733,23 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
 
     let startReading = false;
     const insertPromises = [];
-
-    // 🔥 Create log stream
     const logStream = fs.createWriteStream("parselog.txt", { flags: "w" });
 
     for (let line of lines) {
-      if (line.includes("SnoHtnoSubcodeSubnameInternalsGradeCredits")) {
+      const normalized = line.replace(/\s+/g, "").toLowerCase();
+
+      if (
+        normalized.includes("htnosubcodesubnameinternalsgradecredits") ||
+        normalized.includes("snohtnosubcodesubnameinternalsgradecredits")
+      ) {
         startReading = true;
-        console.log("🔔 Found header, starting...");
+        console.log("🔔 Header matched:", line);
         continue;
       }
 
       if (!startReading || line === "") continue;
 
-      const originalLine = line; // Save before trimming
+      const originalLine = line;
 
       // ✅ Extract regno
       const regnoMatch = line.match(/(\d{2}B8[A-Z0-9]{6})/);
@@ -1807,7 +1815,10 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
     fs.unlinkSync(req.file.path);
     logStream.end();
 
-    res.json({ success: true, message: "✅ Results uploaded and stored. Check parselog.txt for details." });
+    res.json({
+      success: true,
+      message: "✅ Results uploaded and stored. Check parselog.txt for details."
+    });
 
   } catch (err) {
     console.error("❌ Server error:", err);
