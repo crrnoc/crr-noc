@@ -1726,99 +1726,88 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
     const lines = data.text.split("\n").map(line => line.trim()).filter(Boolean);
 
     let startReading = false;
+    let snoPresent = false;
     let insertCount = 0;
 
     const logPath = path.join(__dirname, "parselog.txt");
     const logStream = fs.createWriteStream(logPath, { flags: "w" });
 
     for (const originalLine of lines) {
-      // 🟢 Flexible header match
-      const normalizedHeader = originalLine.replace(/\s+/g, '').toUpperCase();
-      if (!startReading && normalizedHeader.includes("HTNOSUBCODESUBNAME")) {
+      if (/^(Sno\s+)?Htno\s+Subcode/i.test(originalLine)) {
         startReading = true;
-        logStream.write(`🔔 Found header: ${originalLine}\n`);
+        snoPresent = originalLine.startsWith("Sno");
+        logStream.write(`🔔 Found header. Sno Present: ${snoPresent}\n`);
         continue;
       }
 
       if (!startReading || originalLine === "") continue;
 
-      const line = originalLine.replace(/\s/g, '').toUpperCase();
-
-      // ✅ Extract RegNo
-      const regnoMatch = line.match(/(\d{2}B8[A-Z0-9]{6})/);
-      if (!regnoMatch) {
-        logStream.write(`❌ Could not find regno: ${originalLine}\n`);
-        continue;
-      }
-      const regno = regnoMatch[1];
-
-      // ✅ Extract Subcode
-      const subcodeMatch = line.match(/R[A-Z0-9]{6}/);
-      if (!subcodeMatch) {
-        logStream.write(`❌ Could not find subcode: ${originalLine}\n`);
-        continue;
-      }
-      const subcode = subcodeMatch[0].substring(0, 7);
-
-      // ✅ Check regulation R21+
-      const regYear = parseInt(subcode.slice(1, 3));
-      if (isNaN(regYear) || regYear < 21) {
-        logStream.write(`⏩ Skipped old regulation < R21: ${regno} - ${subcode}\n`);
+      const parts = originalLine.trim().split(/\s+/);
+      if ((snoPresent && parts.length < 7) || (!snoPresent && parts.length < 6)) {
+        logStream.write(`⚠️ Skipping short line: ${originalLine}\n`);
         continue;
       }
 
-      const subcodeIndex = line.indexOf(subcode);
-      const afterSubcode = line.slice(subcodeIndex + subcode.length);
+      let regno, subcode, subname, gradeRaw, credits;
 
-      // ✅ Extract Subname
-      const subnameMatch = afterSubcode.match(/^(.+?)(\d)/);
-      if (!subnameMatch) {
-        logStream.write(`❌ Could not extract subname: ${originalLine}\n`);
-        continue;
-      }
-      const subname = subnameMatch[1].trim();
+      try {
+        if (snoPresent) {
+          regno = parts[1];
+          subcode = parts[2];
+          subname = parts.slice(3, parts.length - 3).join(" ");
+          gradeRaw = parts[parts.length - 2].toUpperCase();
+          credits = parseFloat(parts[parts.length - 1]);
+        } else {
+          regno = parts[0];
+          subcode = parts[1];
+          subname = parts.slice(2, parts.length - 3).join(" ");
+          gradeRaw = parts[parts.length - 2].toUpperCase();
+          credits = parseFloat(parts[parts.length - 1]);
+        }
 
-      // ✅ Extract Grade and Credits
-      const gradeCreditsPart = afterSubcode.slice(subname.length);
-      const gradeCreditMatch = gradeCreditsPart.match(/^(\d{1,3})([A-Z]+)(\d+(\.\d+)?)/);
-      if (!gradeCreditMatch) {
-        logStream.write(`❌ Could not extract grade/credits: ${originalLine}\n`);
-        continue;
-      }
+        // Normalize grade
+        if (["COMPLE", "COMPLETE", "COMPLETED"].includes(gradeRaw)) gradeRaw = "Completed";
+        if (gradeRaw === "ABSENT") gradeRaw = "Ab";
+        if (gradeRaw === "MP") gradeRaw = "MP";
 
-      let gradeRaw = gradeCreditMatch[2].toUpperCase();
-      const credits = parseFloat(gradeCreditMatch[3]);
+        const validGrades = ["S", "A", "B", "C", "D", "E", "F", "Ab", "Completed", "MP"];
+        if (!validGrades.includes(gradeRaw)) {
+          logStream.write(`❌ Invalid grade: ${gradeRaw} → ${originalLine}\n`);
+          continue;
+        }
 
-      // ✅ Normalize Grade
-      if (["COMPLE", "COMPLETE", "COMPLETED"].includes(gradeRaw)) gradeRaw = "Completed";
-      else if (gradeRaw === "ABSENT") gradeRaw = "Ab";
+        // Regulation filter: only R21 and above
+        const regYear = parseInt(subcode.slice(1, 3));
+        if (isNaN(regYear) || regYear < 21) {
+          logStream.write(`⏩ Skipped old regulation < R21: ${regno} - ${subcode}\n`);
+          continue;
+        }
 
-      const validGrades = ["S", "A", "B", "C", "D", "E", "F", "Ab", "Completed", "MP"];
-      if (!validGrades.includes(gradeRaw)) {
-        logStream.write(`❌ Invalid grade: ${gradeRaw} → ${originalLine}\n`);
-        continue;
-      }
+        // Insert or update record
+        const sql = `
+          INSERT INTO results (regno, semester, subcode, subname, grade, credits)
+          VALUES (?, ?, ?, ?, ?, ?)
+          ON DUPLICATE KEY UPDATE
+            semester = VALUES(semester),
+            grade = VALUES(grade),
+            credits = VALUES(credits)
+        `;
 
-      const sql = `
-        INSERT INTO results (regno, semester, subcode, subname, grade, credits)
-        VALUES (?, ?, ?, ?, ?, ?)
-        ON DUPLICATE KEY UPDATE
-          semester = VALUES(semester),
-          grade = VALUES(grade),
-          credits = VALUES(credits)
-      `;
-
-      await new Promise(resolve => {
-        connection.query(sql, [regno, semester, subcode, subname, gradeRaw, credits], (err) => {
-          if (!err) {
-            insertCount++;
-            logStream.write(`✅ Stored: ${regno} - ${subcode} (${gradeRaw})\n`);
-          } else {
-            logStream.write(`❌ DB Error for ${regno}: ${err.message}\n`);
-          }
-          resolve();
+        await new Promise(resolve => {
+          connection.query(sql, [regno, semester, subcode, subname, gradeRaw, credits], (err) => {
+            if (!err) {
+              insertCount++;
+              logStream.write(`✅ Stored: ${regno} - ${subcode} (${gradeRaw})\n`);
+            } else {
+              logStream.write(`❌ DB Error for ${regno}: ${err.message}\n`);
+            }
+            resolve();
+          });
         });
-      });
+
+      } catch (err) {
+        logStream.write(`❌ Exception in line: ${originalLine} → ${err.message}\n`);
+      }
     }
 
     if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
@@ -1835,6 +1824,7 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
     return res.status(500).json({ success: false, message: "❌ Internal server error." });
   }
 });
+
 
 
 
