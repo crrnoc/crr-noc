@@ -17,6 +17,7 @@ const PORT = 3000;
 const nodemailer = require('nodemailer');
 const QRCode = require('qrcode');
 const pdfParse = require("pdf-parse"); 
+const PDFParser = require("pdf2json");
 require('dotenv').config();
 
 const logoBase64 = fs.readFileSync('./public/crrengglogo.png', { encoding: 'base64' }); // rename your image to logo.png in public
@@ -1712,6 +1713,7 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
 
 // result pdf upload
 // 📥 Admin uploads result PDF
+
 app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
   try {
     const { semester } = req.body;
@@ -1719,95 +1721,78 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
       return res.status(400).json({ message: "❌ Semester or PDF missing." });
     }
 
-    const fileBuffer = fs.readFileSync(req.file.path);
-    const data = await pdfParse(fileBuffer);
-    const lines = data.text.split("\n").map(line => line.trim()).filter(Boolean);
+    const filePath = req.file.path;
+    const pdfParser = new PDFParser();
 
-    console.log("📝 Total lines parsed:", lines.length);
+    pdfParser.on("pdfParser_dataError", errData => {
+      console.error("❌ PDF error:", errData.parserError);
+      fs.unlinkSync(filePath);
+      return res.status(500).json({ message: "❌ PDF parsing failed." });
+    });
 
-    let startReading = false;
-    const insertPromises = [];
+    pdfParser.on("pdfParser_dataReady", async pdfData => {
+      let allText = "";
 
-    for (let line of lines) {
-      // ✅ Detect header line with or without 'Sno'
-      if (/^(Sno\s+)?Htno\s+Subcode/i.test(line)) {
-        startReading = true;
-        console.log("🔔 Found header, starting.");
-        continue;
-      }
-
-      if (!startReading || line === "") continue;
-
-      console.log("🔍 RAW LINE:", line);
-
-      const parts = line.trim().split(/\s+/);
-      if (parts.length < 6) {
-        console.log("⚠️ Line too short, skipping:", line);
-        continue;
-      }
-
-      const regno = parts[0];
-      const subcode = parts[1];
-
-      // Join the subname from part[2] up to the 3rd-last part
-      const subname = parts.slice(2, parts.length - 3).join(" ");
-      const internals = parts[parts.length - 3]; // not used
-      let gradeRaw = parts[parts.length - 2].toUpperCase();
-      const credits = parseFloat(parts[parts.length - 1]);
-
-      // Normalize grade
-      if (["COMPLE", "COMPLETE", "COMPLETED"].includes(gradeRaw)) {
-        gradeRaw = "Completed";
-      } else if (gradeRaw === "ABSENT") {
-        gradeRaw = "Ab";
-      }
-
-      const validGrades = ["S", "A", "B", "C", "D", "E", "F", "Ab", "Completed"];
-      if (!validGrades.includes(gradeRaw)) {
-        console.log(`❌ Invalid grade: ${gradeRaw} → skipping`);
-        continue;
-      }
-
-      const grade = gradeRaw;
-
-      // Skip old regulations
-      const regYear = parseInt(subcode.slice(1, 3));
-      if (isNaN(regYear) || regYear < 21) {
-        console.log(`⏩ Skipped old regulation: ${regno} - ${subcode}`);
-        continue;
-      }
-
-      const sql = `
-        INSERT INTO results (regno, semester, subcode, subname, grade, credits)
-        VALUES (?, ?, ?, ?, ?, ?)
-        ON DUPLICATE KEY UPDATE
-          semester = VALUES(semester),
-          grade = VALUES(grade),
-          credits = VALUES(credits)
-      `;
-
-      console.log("📌 Parsed →", { regno, subcode, subname, grade, credits });
-
-      insertPromises.push(new Promise(resolve => {
-        connection.query(sql, [regno, semester, subcode, subname, grade, credits], (err) => {
-          if (err) {
-            console.error(`❌ DB Error for ${regno}:`, err.message);
-          } else {
-            console.log(`✅ Stored: ${regno} - ${subcode} (${grade})`);
-          }
-          resolve();
+      pdfData.formImage.Pages.forEach(page => {
+        page.Texts.forEach(text => {
+          const lineText = decodeURIComponent(text.R[0].T || "").replace(/\\n/g, "");
+          allText += lineText + " ";
         });
-      }));
-    }
+        allText += "\n";
+      });
 
-    await Promise.all(insertPromises);
-    fs.unlinkSync(req.file.path);
+      const lines = allText.split("\n").map(l => l.trim()).filter(Boolean);
+      console.log("📄 Total lines extracted:", lines.length);
 
-    res.json({ success: true, message: "✅ Results uploaded and stored successfully." });
+      let insertCount = 0;
+
+      for (const line of lines) {
+        const parts = line.trim().split(/\s+/);
+        if (parts.length < 6) continue;
+
+        const regno = parts[0];
+        const subcode = parts[1];
+        const subname = parts.slice(2, parts.length - 3).join(" ");
+        const internals = parts[parts.length - 3];
+        let gradeRaw = parts[parts.length - 2].toUpperCase();
+        const credits = parseFloat(parts[parts.length - 1]);
+
+        if (["COMPLE", "COMPLETE", "COMPLETED"].includes(gradeRaw)) gradeRaw = "Completed";
+        if (gradeRaw === "ABSENT") gradeRaw = "Ab";
+
+        const validGrades = ["S", "A", "B", "C", "D", "E", "F", "Ab", "Completed"];
+        if (!validGrades.includes(gradeRaw)) continue;
+
+        const regYear = parseInt(subcode.slice(1, 3));
+        if (isNaN(regYear) || regYear < 21) continue;
+
+        const sql = `
+          INSERT INTO results (regno, semester, subcode, subname, grade, credits)
+          VALUES (?, ?, ?, ?, ?, ?)
+          ON DUPLICATE KEY UPDATE
+            semester = VALUES(semester),
+            grade = VALUES(grade),
+            credits = VALUES(credits)
+        `;
+
+        await new Promise(resolve => {
+          connection.query(sql, [regno, semester, subcode, subname, gradeRaw, credits], err => {
+            if (!err) insertCount++;
+            resolve();
+          });
+        });
+      }
+
+      fs.unlinkSync(filePath);
+      return res.json({ success: true, message: `✅ Upload complete. ${insertCount} records inserted.` });
+    });
+
+    // Start parsing
+    pdfParser.loadPDF(filePath);
 
   } catch (err) {
     console.error("❌ Server error:", err);
-    res.status(500).json({ message: "❌ Internal server error." });
+    if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+    return res.status(500).json({ message: "❌ Internal server error." });
   }
 });
-
