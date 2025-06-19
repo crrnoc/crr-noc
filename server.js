@@ -1767,8 +1767,8 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
 
         // Normalize grade
         if (["COMPLE", "COMPLETE", "COMPLETED"].includes(gradeRaw)) gradeRaw = "Completed";
-        if (gradeRaw === "ABSENT") gradeRaw = "Ab";
-        if (gradeRaw === "MP") gradeRaw = "MP";
+        else if (gradeRaw === "ABSENT") gradeRaw = "Ab";
+        else if (gradeRaw === "MP") gradeRaw = "MP";
 
         const validGrades = ["S", "A", "B", "C", "D", "E", "F", "Ab", "Completed", "MP"];
         if (!validGrades.includes(gradeRaw)) {
@@ -1776,14 +1776,13 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
           continue;
         }
 
-        // Regulation filter: only R21 and above
+        // Regulation filter
         const regYear = parseInt(subcode.slice(1, 3));
         if (isNaN(regYear) || regYear < 21) {
           logStream.write(`⏩ Skipped old regulation < R21: ${regno} - ${subcode}\n`);
           continue;
         }
 
-        // Insert or update record
         const sql = `
           INSERT INTO results (regno, semester, subcode, subname, grade, credits)
           VALUES (?, ?, ?, ?, ?, ?)
