@@ -1713,6 +1713,7 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
 
 // result pdf upload
 // 📥 Admin uploads result PDF
+
 app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
   try {
     const { semester } = req.body;
@@ -1772,9 +1773,9 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
       }
       const subname = subnameMatch[1].trim();
 
-      // ✅ Extract grade and credits
+      // ✅ Extract grade and credits (space-separated)
       const gradeCreditsPart = afterSubcode.slice(subname.length);
-      const gradeCreditMatch = gradeCreditsPart.match(/^(\d{1,3})(S|A|B|C|D|E|F|ABSENT)(\d+(\.\d+)?)/);
+      const gradeCreditMatch = gradeCreditsPart.match(/^(\d{1,3})\s+(S|A|B|C|D|E|F|ABSENT)\s+(\d+(\.\d+)?)/);
 
       if (!gradeCreditMatch) {
         logStream.write(`❌ Could not extract grade/credits: ${originalLine}\n`);
@@ -1785,15 +1786,16 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
       const credits = parseFloat(gradeCreditMatch[3]);
       const grade = gradeRaw === "ABSENT" ? "Ab" : gradeRaw;
 
-     const sql = `
-  INSERT INTO results (regno, semester, subcode, subname, grade, credits)
-  VALUES (?, ?, ?, ?, ?, ?)
-  ON DUPLICATE KEY UPDATE 
-    semester = VALUES(semester),
-    grade = VALUES(grade),
-    credits = VALUES(credits)
-`;
-      
+      // ✅ Valid MySQL syntax — no aliasing
+      const sql = `
+        INSERT INTO results (regno, semester, subcode, subname, grade, credits)
+        VALUES (?, ?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE
+          semester = VALUES(semester),
+          grade = VALUES(grade),
+          credits = VALUES(credits)
+      `;
+
       insertPromises.push(new Promise(resolve => {
         connection.query(sql, [regno, semester, subcode, subname, grade, credits], (err) => {
           if (err) {
