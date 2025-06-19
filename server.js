@@ -17,7 +17,6 @@ const PORT = 3000;
 const nodemailer = require('nodemailer');
 const QRCode = require('qrcode');
 const pdfParse = require("pdf-parse"); 
-const PDFParser = require("pdf2json");
 require('dotenv').config();
 
 const logoBase64 = fs.readFileSync('./public/crrengglogo.png', { encoding: 'base64' }); // rename your image to logo.png in public
