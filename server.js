@@ -1721,111 +1721,115 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
     }
 
     const filePath = req.file.path;
-    const pdfParser = new PDFParser();
+    const fileBuffer = fs.readFileSync(filePath);
+    const data = await pdfParse(fileBuffer);
+    const lines = data.text.split("\n").map(line => line.trim()).filter(Boolean);
+
+    let startReading = false;
+    let insertCount = 0;
+
     const logPath = path.join(__dirname, "parselog.txt");
     const logStream = fs.createWriteStream(logPath, { flags: "w" });
 
-    let insertCount = 0;
-
-    pdfParser.on("pdfParser_dataError", errData => {
-      fs.unlinkSync(filePath);
-      logStream.write(`❌ PDF parsing error: ${errData.parserError}\n`);
-      logStream.end();
-      return res.status(500).json({ success: false, message: "❌ PDF parsing failed." });
-    });
-
-    pdfParser.on("pdfParser_dataReady", async pdfData => {
-      let allText = "";
-      pdfData.formImage.Pages.forEach(page => {
-        page.Texts.forEach(text => {
-          const lineText = decodeURIComponent(text.R[0].T || "").replace(/\\n/g, "");
-          allText += lineText + " ";
-        });
-        allText += "\n";
-      });
-
-      const lines = allText.split("\n").map(l => l.trim()).filter(Boolean);
-      let snoPresent = false;
-      let startReading = false;
-
-      for (const originalLine of lines) {
-        if (/^(Sno\s+)?Htno\s+Subcode/i.test(originalLine)) {
-          startReading = true;
-          snoPresent = originalLine.startsWith("Sno");
-          logStream.write(`🔔 Found header. Sno Present: ${snoPresent}\n`);
-          continue;
-        }
-
-        if (!startReading || originalLine === "") continue;
-
-        const parts = originalLine.trim().split(/\s+/);
-        if ((snoPresent && parts.length < 7) || (!snoPresent && parts.length < 6)) {
-          logStream.write(`⚠️ Skipping short line: ${originalLine}\n`);
-          continue;
-        }
-
-        try {
-          let regno = snoPresent ? parts[1] : parts[0];
-          let subcode = snoPresent ? parts[2] : parts[1];
-          const subname = parts.slice(snoPresent ? 3 : 2, -3).join(" ");
-          let gradeRaw = parts[parts.length - 2].toUpperCase();
-          const credits = parseFloat(parts[parts.length - 1]);
-
-          // Normalize grade
-          if (["COMPLE", "COMPLETE", "COMPLETED"].includes(gradeRaw)) gradeRaw = "Completed";
-          if (gradeRaw === "ABSENT") gradeRaw = "Ab";
-
-          const validGrades = ["S", "A", "B", "C", "D", "E", "F", "Ab", "Completed", "MP"];
-          if (!validGrades.includes(gradeRaw)) {
-            logStream.write(`❌ Invalid grade: ${gradeRaw} → ${originalLine}\n`);
-            continue;
-          }
-
-          // Regulation filter
-          const regYear = parseInt(subcode.slice(1, 3));
-          if (isNaN(regYear) || regYear < 21) {
-            logStream.write(`⏩ Skipped < R21 regulation: ${regno} - ${subcode}\n`);
-            continue;
-          }
-
-          if (subcode.length > 7) subcode = subcode.substring(0, 7);
-
-          const sql = `
-            INSERT INTO results (regno, semester, subcode, subname, grade, credits)
-            VALUES (?, ?, ?, ?, ?, ?)
-            ON DUPLICATE KEY UPDATE
-              semester = VALUES(semester),
-              grade = VALUES(grade),
-              credits = VALUES(credits)
-          `;
-
-          await new Promise(resolve => {
-            connection.query(sql, [regno, semester, subcode, subname, gradeRaw, credits], err => {
-              if (!err) {
-                insertCount++;
-                logStream.write(`✅ Stored: ${regno} - ${subcode} (${gradeRaw})\n`);
-              } else {
-                logStream.write(`❌ DB Error for ${regno}: ${err.message}\n`);
-              }
-              resolve();
-            });
-          });
-
-        } catch (err) {
-          logStream.write(`❌ Exception in line: ${originalLine} → ${err.message}\n`);
-        }
+    for (const originalLine of lines) {
+      if (originalLine.includes("HtnoSubcodeSubnameInternalsGradeCredits")) {
+        startReading = true;
+        logStream.write("🔔 Found header. Starting parse...\n");
+        continue;
       }
 
-      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-      logStream.end();
+      if (!startReading || originalLine === "") continue;
 
-      return res.json({
-        success: true,
-        message: `✅ Upload complete. ${insertCount} records stored. Check parselog.txt for details.`
+      const line = originalLine.replace(/\s/g, '').toUpperCase();
+
+      const regnoMatch = line.match(/(\d{2}B8[A-Z0-9]{6})/);
+      if (!regnoMatch) {
+        logStream.write(`❌ Could not find regno: ${originalLine}\n`);
+        continue;
+      }
+      const regno = regnoMatch[1];
+
+      const subcodeMatch = line.match(/R[A-Z0-9]{6}/);
+      if (!subcodeMatch) {
+        logStream.write(`❌ Could not find subcode: ${originalLine}\n`);
+        continue;
+      }
+      const subcode = subcodeMatch[0].substring(0, 7);
+
+      const regYear = parseInt(subcode.slice(1, 3));
+      if (isNaN(regYear) || regYear < 21) {
+        logStream.write(`⏩ Skipped old regulation: ${regno} - ${subcode}\n`);
+        continue;
+      }
+
+      const subcodeIndex = line.indexOf(subcode);
+      const afterSubcode = line.slice(subcodeIndex + subcode.length);
+
+      const subnameMatch = afterSubcode.match(/^(.+?)(\d)/);
+      if (!subnameMatch) {
+        logStream.write(`❌ Could not extract subname: ${originalLine}\n`);
+        continue;
+      }
+      const subname = subnameMatch[1].trim();
+
+      const gradeCreditsPart = afterSubcode.slice(subname.length);
+      const gradeCreditMatch = gradeCreditsPart.match(/^(\d{1,3})([A-Z]+)(\d+(\.\d+)?)/);
+      if (!gradeCreditMatch) {
+        logStream.write(`❌ Could not extract grade/credits: ${originalLine}\n`);
+        continue;
+      }
+
+      let gradeRaw = gradeCreditMatch[2].toUpperCase();
+      const credits = parseFloat(gradeCreditMatch[3]);
+
+      // Normalize grade
+      if (["COMPLE", "COMPLETE", "COMPLETED"].includes(gradeRaw)) {
+        gradeRaw = "Completed";
+      } else if (gradeRaw === "ABSENT") {
+        gradeRaw = "Ab";
+      } else if (gradeRaw === "MP") {
+        gradeRaw = "MP";
+      }
+
+      const validGrades = ["S", "A", "B", "C", "D", "E", "F", "Ab", "Completed", "MP"];
+      if (!validGrades.includes(gradeRaw)) {
+        logStream.write(`❌ Invalid grade: ${gradeRaw} in ${originalLine}\n`);
+        continue;
+      }
+
+      const grade = gradeRaw;
+
+      const sql = `
+        INSERT INTO results (regno, semester, subcode, subname, grade, credits)
+        VALUES (?, ?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE
+          semester = VALUES(semester),
+          grade = VALUES(grade),
+          credits = VALUES(credits)
+      `;
+
+      await new Promise((resolve) => {
+        connection.query(sql, [regno, semester, subcode, subname, grade, credits], (err) => {
+          if (err) {
+            logStream.write(`❌ DB Error for ${regno}: ${err.message}\n`);
+            console.error(`❌ DB Error for ${regno}: ${err.message}`);
+          } else {
+            insertCount++;
+            logStream.write(`✅ Stored: ${regno} - ${subcode} (${grade})\n`);
+            console.log(`✅ Stored: ${regno} - ${subcode} (${grade})`);
+          }
+          resolve();
+        });
       });
-    });
+    }
 
-    pdfParser.loadPDF(filePath);
+    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    logStream.end();
+
+    return res.json({
+      success: true,
+      message: `✅ Upload complete. ${insertCount} records stored. Check parselog.txt for full details.`
+    });
 
   } catch (err) {
     console.error("❌ Server error:", err);
@@ -1833,4 +1837,5 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
     return res.status(500).json({ success: false, message: "❌ Internal server error." });
   }
 });
+
 
