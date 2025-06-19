@@ -1785,15 +1785,15 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
       const credits = parseFloat(gradeCreditMatch[3]);
       const grade = gradeRaw === "ABSENT" ? "Ab" : gradeRaw;
 
-      const sql = `
-        INSERT INTO results (regno, semester, subcode, subname, grade, credits)
-        VALUES (?, ?, ?, ?, ?, ?) AS new
-        ON DUPLICATE KEY UPDATE
-          semester = new.semester,
-          grade = new.grade,
-          credits = new.credits
-      `;
-
+     const sql = `
+  INSERT INTO results (regno, semester, subcode, subname, grade, credits)
+  VALUES (?, ?, ?, ?, ?, ?)
+  ON DUPLICATE KEY UPDATE 
+    semester = VALUES(semester),
+    grade = VALUES(grade),
+    credits = VALUES(credits)
+`;
+      
       insertPromises.push(new Promise(resolve => {
         connection.query(sql, [regno, semester, subcode, subname, grade, credits], (err) => {
           if (err) {
