@@ -16,6 +16,7 @@ const app = express();
 const PORT = 3000;
 const nodemailer = require('nodemailer');
 const QRCode = require('qrcode');
+const PDFParser = require("pdf2json");
 const pdfParse = require("pdf-parse"); 
 require('dotenv').config();
 
@@ -1722,105 +1723,119 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
     }
 
     const filePath = req.file.path;
-    const fileBuffer = fs.readFileSync(filePath);
-    const data = await pdfParse(fileBuffer);
-    const lines = data.text.split("\n").map(line => line.trim()).filter(Boolean);
-
-    let startReading = false;
-    let insertCount = 0;
-    let snoPresent = false;
+    const pdfParser = new PDFParser();
 
     const logPath = path.join(__dirname, "parselog.txt");
     const logStream = fs.createWriteStream(logPath, { flags: "w" });
 
-    for (const originalLine of lines) {
-      if (/^(Sno\s+)?Htno\s+Subcode/i.test(originalLine)) {
-        startReading = true;
-        snoPresent = originalLine.startsWith("Sno");
-        logStream.write(`🔔 Found header. Sno Present: ${snoPresent}\n`);
-        continue;
-      }
+    let insertCount = 0;
 
-      if (!startReading || originalLine === "") continue;
-
-      const parts = originalLine.trim().split(/\s+/);
-      if ((snoPresent && parts.length < 7) || (!snoPresent && parts.length < 6)) {
-        logStream.write(`⚠️ Line too short: ${originalLine}\n`);
-        continue;
-      }
-
-      let regno, subcode, subname, internals, gradeRaw, credits;
-
-      try {
-        if (snoPresent) {
-          // Sno present: [Sno, RegNo, Subcode, Subname..., Marks, Grade, Credits]
-          regno = parts[1];
-          subcode = parts[2];
-          subname = parts.slice(3, parts.length - 3).join(" ");
-          internals = parts[parts.length - 3];
-          gradeRaw = parts[parts.length - 2].toUpperCase();
-          credits = parseFloat(parts[parts.length - 1]);
-        } else {
-          // No Sno: [RegNo, Subcode, Subname..., Marks, Grade, Credits]
-          regno = parts[0];
-          subcode = parts[1];
-          subname = parts.slice(2, parts.length - 3).join(" ");
-          internals = parts[parts.length - 3];
-          gradeRaw = parts[parts.length - 2].toUpperCase();
-          credits = parseFloat(parts[parts.length - 1]);
-        }
-
-        // Normalize grade
-        if (["COMPLE", "COMPLETE", "COMPLETED"].includes(gradeRaw)) gradeRaw = "Completed";
-        if (gradeRaw === "ABSENT") gradeRaw = "Ab";
-
-        const validGrades = ["S", "A", "B", "C", "D", "E", "F", "Ab", "Completed"];
-        if (!validGrades.includes(gradeRaw)) {
-          logStream.write(`❌ Invalid grade: ${gradeRaw} → Skipping line: ${originalLine}\n`);
-          continue;
-        }
-
-        // Skip old regulation subcodes
-        const regYear = parseInt(subcode.slice(1, 3));
-        if (isNaN(regYear) || regYear < 21) {
-          logStream.write(`⏩ Skipped old regulation: ${regno} - ${subcode}\n`);
-          continue;
-        }
-
-        // Final insert
-        const sql = `
-          INSERT INTO results (regno, semester, subcode, subname, grade, credits)
-          VALUES (?, ?, ?, ?, ?, ?)
-          ON DUPLICATE KEY UPDATE
-            semester = VALUES(semester),
-            grade = VALUES(grade),
-            credits = VALUES(credits)
-        `;
-
-        await new Promise((resolve) => {
-          connection.query(sql, [regno, semester, subcode, subname, gradeRaw, credits], (err) => {
-            if (err) {
-              logStream.write(`❌ DB Error for ${regno}: ${err.message}\n`);
-            } else {
-              insertCount++;
-              logStream.write(`✅ Stored: ${regno} - ${subcode} (${gradeRaw})\n`);
-            }
-            resolve();
-          });
-        });
-
-      } catch (err) {
-        logStream.write(`❌ Exception in line: ${originalLine} → ${err.message}\n`);
-      }
-    }
-
-    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-    logStream.end();
-
-    return res.json({
-      success: true,
-      message: `✅ Upload complete. ${insertCount} records stored. Check parselog.txt for full details.`
+    pdfParser.on("pdfParser_dataError", errData => {
+      console.error("❌ PDF error:", errData.parserError);
+      fs.unlinkSync(filePath);
+      return res.status(500).json({ message: "❌ PDF parsing failed." });
     });
+
+    pdfParser.on("pdfParser_dataReady", async pdfData => {
+      let allText = "";
+
+      pdfData.formImage.Pages.forEach(page => {
+        page.Texts.forEach(text => {
+          const lineText = decodeURIComponent(text.R[0].T || "").replace(/\\n/g, "");
+          allText += lineText + " ";
+        });
+        allText += "\n";
+      });
+
+      const lines = allText.split("\n").map(l => l.trim()).filter(Boolean);
+      let snoPresent = false;
+      let startReading = false;
+
+      for (const originalLine of lines) {
+        if (/^(Sno\s+)?Htno\s+Subcode/i.test(originalLine)) {
+          startReading = true;
+          snoPresent = originalLine.startsWith("Sno");
+          logStream.write(`🔔 Found header. Sno Present: ${snoPresent}\n`);
+          continue;
+        }
+
+        if (!startReading || originalLine === "") continue;
+
+        const parts = originalLine.trim().split(/\s+/);
+        if ((snoPresent && parts.length < 7) || (!snoPresent && parts.length < 6)) {
+          logStream.write(`⚠️ Skipping short line: ${originalLine}\n`);
+          continue;
+        }
+
+        let regno, subcode, subname, gradeRaw, credits;
+
+        try {
+          if (snoPresent) {
+            regno = parts[1];
+            subcode = parts[2];
+            subname = parts.slice(3, parts.length - 3).join(" ");
+            gradeRaw = parts[parts.length - 2].toUpperCase();
+            credits = parseFloat(parts[parts.length - 1]);
+          } else {
+            regno = parts[0];
+            subcode = parts[1];
+            subname = parts.slice(2, parts.length - 3).join(" ");
+            gradeRaw = parts[parts.length - 2].toUpperCase();
+            credits = parseFloat(parts[parts.length - 1]);
+          }
+
+          // Normalize grade
+          if (["COMPLE", "COMPLETE", "COMPLETED"].includes(gradeRaw)) gradeRaw = "Completed";
+          if (gradeRaw === "ABSENT") gradeRaw = "Ab";
+
+          const validGrades = ["S", "A", "B", "C", "D", "E", "F", "Ab", "Completed"];
+          if (!validGrades.includes(gradeRaw)) {
+            logStream.write(`❌ Invalid grade: ${gradeRaw} → ${originalLine}\n`);
+            continue;
+          }
+
+          const regYear = parseInt(subcode.slice(1, 3));
+          if (isNaN(regYear) || regYear < 21) {
+            logStream.write(`⏩ Skipped old regulation: ${regno} - ${subcode}\n`);
+            continue;
+          }
+
+          const sql = `
+            INSERT INTO results (regno, semester, subcode, subname, grade, credits)
+            VALUES (?, ?, ?, ?, ?, ?)
+            ON DUPLICATE KEY UPDATE
+              semester = VALUES(semester),
+              grade = VALUES(grade),
+              credits = VALUES(credits)
+          `;
+
+          await new Promise(resolve => {
+            connection.query(sql, [regno, semester, subcode, subname, gradeRaw, credits], err => {
+              if (!err) {
+                insertCount++;
+                logStream.write(`✅ Stored: ${regno} - ${subcode} (${gradeRaw})\n`);
+              } else {
+                logStream.write(`❌ DB Error for ${regno}: ${err.message}\n`);
+              }
+              resolve();
+            });
+          });
+
+        } catch (err) {
+          logStream.write(`❌ Exception in line: ${originalLine} → ${err.message}\n`);
+        }
+      }
+
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      logStream.end();
+
+      return res.json({
+        success: true,
+        message: `✅ Upload complete. ${insertCount} records stored. Check parselog.txt for full details.`
+      });
+    });
+
+    pdfParser.loadPDF(filePath);
 
   } catch (err) {
     console.error("❌ Server error:", err);
