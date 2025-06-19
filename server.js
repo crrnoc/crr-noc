@@ -1713,8 +1713,11 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
 
 // result pdf upload
 // 📥 Admin uploads result PDF
-// result pdf upload
-// 📥 Admin uploads result PDF
+const fs = require('fs');
+const path = require('path');
+const PDFParser = require('pdf2json');
+const upload = multer({ dest: 'uploads/' });
+
 app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
   try {
     const { semester } = req.body;
@@ -1748,14 +1751,14 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
       });
 
       const lines = allText.split("\n").map(l => l.trim()).filter(Boolean);
-      let snoPresent = false;
       let startReading = false;
+      let snoPresent = false;
 
       for (const originalLine of lines) {
-        if (/^(Sno\s+)?Htno\s+Subcode/i.test(originalLine)) {
+        if (!startReading && /Htno\s+Subcode/i.test(originalLine)) {
           startReading = true;
-          snoPresent = originalLine.startsWith("Sno");
-          logStream.write(`🔔 Found header. Sno Present: ${snoPresent}\n`);
+          snoPresent = /^Sno\s+/i.test(originalLine);
+          logStream.write(`🔔 Found header: Sno Present = ${snoPresent}\n`);
           continue;
         }
 
@@ -1763,7 +1766,7 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
 
         const parts = originalLine.trim().split(/\s+/);
         if ((snoPresent && parts.length < 7) || (!snoPresent && parts.length < 6)) {
-          logStream.write(`⚠️ Skipping short line: ${originalLine}\n`);
+          logStream.write(`⚠️ Skipped: Insufficient parts - ${originalLine}\n`);
           continue;
         }
 
@@ -1784,15 +1787,20 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
             credits = parseFloat(parts[parts.length - 1]);
           }
 
+          // Truncate subcode to 7 characters
+          subcode = subcode.slice(0, 7);
+
+          // Normalize grade
           if (["COMPLE", "COMPLETE", "COMPLETED"].includes(gradeRaw)) gradeRaw = "Completed";
           if (gradeRaw === "ABSENT") gradeRaw = "Ab";
 
           const validGrades = ["S", "A", "B", "C", "D", "E", "F", "Ab", "Completed"];
           if (!validGrades.includes(gradeRaw)) {
-            logStream.write(`❌ Invalid grade: ${gradeRaw} → ${originalLine}\n`);
+            logStream.write(`❌ Invalid grade: ${gradeRaw} in ${originalLine}\n`);
             continue;
           }
 
+          // R21 regulation check
           const regYear = parseInt(subcode.slice(1, 3));
           if (isNaN(regYear) || regYear < 21) {
             logStream.write(`⏩ Skipped old regulation: ${regno} - ${subcode}\n`);
@@ -1821,7 +1829,7 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
           });
 
         } catch (err) {
-          logStream.write(`❌ Exception in line: ${originalLine} → ${err.message}\n`);
+          logStream.write(`❌ Exception while parsing: ${originalLine} - ${err.message}\n`);
         }
       }
 
@@ -1842,3 +1850,4 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
     return res.status(500).json({ success: false, message: "❌ Internal server error." });
   }
 });
+
