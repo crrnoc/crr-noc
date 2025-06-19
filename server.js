@@ -1783,14 +1783,15 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
           continue;
         }
 
-        const sql = `
-          INSERT INTO results (regno, semester, subcode, subname, grade, credits)
-          VALUES (?, ?, ?, ?, ?, ?)
-          ON DUPLICATE KEY UPDATE
-            semester = VALUES(semester),
-            grade = VALUES(grade),
-            credits = VALUES(credits)
-        `;
+const sql = `
+  INSERT INTO results (regno, semester, subcode, subname, grade, credits)
+  VALUES (?, ?, ?, ?, ?, ?) AS new
+  ON DUPLICATE KEY UPDATE
+    semester = new.semester,
+    grade = new.grade,
+    credits = new.credits
+`;
+
 
         await new Promise(resolve => {
           connection.query(sql, [regno, semester, subcode, subname, gradeRaw, credits], (err) => {
