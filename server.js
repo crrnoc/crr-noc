@@ -1720,111 +1720,73 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
       return res.status(400).json({ success: false, message: "❌ Semester or PDF missing." });
     }
 
-    const filePath = req.file.path;
-    const fileBuffer = fs.readFileSync(filePath);
+    const fileBuffer = fs.readFileSync(req.file.path);
     const data = await pdfParse(fileBuffer);
     const lines = data.text.split("\n").map(line => line.trim()).filter(Boolean);
 
     let startReading = false;
-    let snoPresent = false;
-    let insertCount = 0;
+    const insertPromises = [];
 
-    const logPath = path.join(__dirname, "parselog.txt");
-    const logStream = fs.createWriteStream(logPath, { flags: "w" });
-
-    for (const originalLine of lines) {
-      if (/^(Sno\s+)?Htno\s+Subcode/i.test(originalLine)) {
+    for (let line of lines) {
+      if (line.includes("SnoHtnoSubcodeSubnameInternalsGradeCredits")) {
         startReading = true;
-        snoPresent = originalLine.startsWith("Sno");
-        logStream.write(`🔔 Found header. Sno Present: ${snoPresent}\n`);
         continue;
       }
 
-      if (!startReading || originalLine === "") continue;
+      if (!startReading || line === "") continue;
 
-      const parts = originalLine.trim().split(/\s+/);
-      if ((snoPresent && parts.length < 7) || (!snoPresent && parts.length < 6)) {
-        logStream.write(`⚠️ Skipping short line: ${originalLine}\n`);
-        continue;
-      }
+      // Extract regno (10 characters)
+      const regnoMatch = line.match(/(\d{2}B8[A-Z0-9]{6})/);
+      if (!regnoMatch) continue;
+      const regno = regnoMatch[1];
 
-      let regno, subcode, subname, gradeRaw, credits;
+      // Extract subcode (starts with R)
+      const subcodeMatch = line.match(/(R[A-Z0-9]{6})/);
+      if (!subcodeMatch) continue;
+      const subcode = subcodeMatch[1];
+      const subcodeIndex = line.indexOf(subcode);
+      const afterSubcode = line.slice(subcodeIndex + 7);
 
-      try {
-        if (snoPresent) {
-          regno = parts[1];
-          subcode = parts[2];
-          subname = parts.slice(3, parts.length - 3).join(" ");
-          gradeRaw = parts[parts.length - 2].toUpperCase();
-          credits = parseFloat(parts[parts.length - 1]);
-        } else {
-          regno = parts[0];
-          subcode = parts[1];
-          subname = parts.slice(2, parts.length - 3).join(" ");
-          gradeRaw = parts[parts.length - 2].toUpperCase();
-          credits = parseFloat(parts[parts.length - 1]);
-        }
+      // Extract subname
+      const subnameMatch = afterSubcode.match(/^(.+?)(\d)/);
+      if (!subnameMatch) continue;
+      const subname = subnameMatch[1].trim();
 
-        // Normalize grade
-        if (["COMPLE", "COMPLETE", "COMPLETED"].includes(gradeRaw)) gradeRaw = "Completed";
-        else if (gradeRaw === "ABSENT") gradeRaw = "Ab";
-        else if (gradeRaw === "MP") gradeRaw = "MP";
+      // Extract grade and credits
+      const gradeCreditPart = afterSubcode.slice(subname.length);
+      const gradeCreditMatch = gradeCreditPart.match(/^(\d{1,3})(S|A|B|C|D|E|F|Ab|Completed|MP)(\d+(\.\d+)?)/);
 
-        const validGrades = ["S", "A", "B", "C", "D", "E", "F", "Ab", "Completed", "MP"];
-        if (!validGrades.includes(gradeRaw)) {
-          logStream.write(`❌ Invalid grade: ${gradeRaw} → ${originalLine}\n`);
-          continue;
-        }
+      if (!gradeCreditMatch) continue;
 
-        // Regulation filter
-        const regYear = parseInt(subcode.slice(1, 3));
-        if (isNaN(regYear) || regYear < 21) {
-          logStream.write(`⏩ Skipped old regulation < R21: ${regno} - ${subcode}\n`);
-          continue;
-        }
+      const grade = gradeCreditMatch[2];
+      const credits = parseFloat(gradeCreditMatch[3]);
 
-const sql = `
-  INSERT INTO results (regno, semester, subcode, subname, grade, credits)
-  VALUES (?, ?, ?, ?, ?, ?) AS new
-  ON DUPLICATE KEY UPDATE
-    semester = new.semester,
-    grade = new.grade,
-    credits = new.credits
-`;
+      // Insert into results table
+      const insertQuery = `
+        INSERT INTO results (regno, semester, subcode, subname, grade, credits)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `;
 
-
-        await new Promise(resolve => {
-          connection.query(sql, [regno, semester, subcode, subname, gradeRaw, credits], (err) => {
-            if (!err) {
-              insertCount++;
-              logStream.write(`✅ Stored: ${regno} - ${subcode} (${gradeRaw})\n`);
+      insertPromises.push(
+        new Promise(resolve => {
+          connection.query(insertQuery, [regno, semester, subcode, subname, grade, credits], (err) => {
+            if (err) {
+              console.error("❌ DB Insert Error:", err.message);
             } else {
-              logStream.write(`❌ DB Error for ${regno}: ${err.message}\n`);
+              console.log("✅ Inserted:", regno, subcode);
             }
             resolve();
           });
-        });
-
-      } catch (err) {
-        logStream.write(`❌ Exception in line: ${originalLine} → ${err.message}\n`);
-      }
+        })
+      );
     }
 
-    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-    logStream.end();
+    await Promise.all(insertPromises);
 
-    return res.json({
-      success: true,
-      message: `✅ Upload complete. ${insertCount} records stored. Check parselog.txt for full details.`
-    });
+    res.json({ success: true, message: "📥 Results inserted successfully!" });
 
   } catch (err) {
-    console.error("❌ Server error:", err);
-    if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-    return res.status(500).json({ success: false, message: "❌ Internal server error." });
+    console.error("❌ PDF Processing Error:", err);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 });
-
-
-
-
