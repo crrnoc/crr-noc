@@ -1713,6 +1713,10 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
 
 // result pdf upload
 // 📥 Admin uploads result PDF
+const pdfParse = require("pdf-parse");
+const fs = require("fs");
+const path = require("path");
+
 app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
   try {
     const { semester } = req.body;
@@ -1732,9 +1736,11 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
     const logStream = fs.createWriteStream(logPath, { flags: "w" });
 
     for (const originalLine of lines) {
-      if (originalLine.includes("HtnoSubcodeSubnameInternalsGradeCredits")) {
+      // 🟢 Flexible header match
+      const normalizedHeader = originalLine.replace(/\s+/g, '').toUpperCase();
+      if (!startReading && normalizedHeader.includes("HTNOSUBCODESUBNAME")) {
         startReading = true;
-        logStream.write("🔔 Found header. Starting parse...\n");
+        logStream.write(`🔔 Found header: ${originalLine}\n`);
         continue;
       }
 
@@ -1742,6 +1748,7 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
 
       const line = originalLine.replace(/\s/g, '').toUpperCase();
 
+      // ✅ Extract RegNo
       const regnoMatch = line.match(/(\d{2}B8[A-Z0-9]{6})/);
       if (!regnoMatch) {
         logStream.write(`❌ Could not find regno: ${originalLine}\n`);
@@ -1749,6 +1756,7 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
       }
       const regno = regnoMatch[1];
 
+      // ✅ Extract Subcode
       const subcodeMatch = line.match(/R[A-Z0-9]{6}/);
       if (!subcodeMatch) {
         logStream.write(`❌ Could not find subcode: ${originalLine}\n`);
@@ -1756,15 +1764,17 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
       }
       const subcode = subcodeMatch[0].substring(0, 7);
 
+      // ✅ Check regulation R21+
       const regYear = parseInt(subcode.slice(1, 3));
       if (isNaN(regYear) || regYear < 21) {
-        logStream.write(`⏩ Skipped old regulation: ${regno} - ${subcode}\n`);
+        logStream.write(`⏩ Skipped old regulation < R21: ${regno} - ${subcode}\n`);
         continue;
       }
 
       const subcodeIndex = line.indexOf(subcode);
       const afterSubcode = line.slice(subcodeIndex + subcode.length);
 
+      // ✅ Extract Subname
       const subnameMatch = afterSubcode.match(/^(.+?)(\d)/);
       if (!subnameMatch) {
         logStream.write(`❌ Could not extract subname: ${originalLine}\n`);
@@ -1772,6 +1782,7 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
       }
       const subname = subnameMatch[1].trim();
 
+      // ✅ Extract Grade and Credits
       const gradeCreditsPart = afterSubcode.slice(subname.length);
       const gradeCreditMatch = gradeCreditsPart.match(/^(\d{1,3})([A-Z]+)(\d+(\.\d+)?)/);
       if (!gradeCreditMatch) {
@@ -1782,22 +1793,15 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
       let gradeRaw = gradeCreditMatch[2].toUpperCase();
       const credits = parseFloat(gradeCreditMatch[3]);
 
-      // Normalize grade
-      if (["COMPLE", "COMPLETE", "COMPLETED"].includes(gradeRaw)) {
-        gradeRaw = "Completed";
-      } else if (gradeRaw === "ABSENT") {
-        gradeRaw = "Ab";
-      } else if (gradeRaw === "MP") {
-        gradeRaw = "MP";
-      }
+      // ✅ Normalize Grade
+      if (["COMPLE", "COMPLETE", "COMPLETED"].includes(gradeRaw)) gradeRaw = "Completed";
+      else if (gradeRaw === "ABSENT") gradeRaw = "Ab";
 
       const validGrades = ["S", "A", "B", "C", "D", "E", "F", "Ab", "Completed", "MP"];
       if (!validGrades.includes(gradeRaw)) {
-        logStream.write(`❌ Invalid grade: ${gradeRaw} in ${originalLine}\n`);
+        logStream.write(`❌ Invalid grade: ${gradeRaw} → ${originalLine}\n`);
         continue;
       }
-
-      const grade = gradeRaw;
 
       const sql = `
         INSERT INTO results (regno, semester, subcode, subname, grade, credits)
@@ -1808,15 +1812,13 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
           credits = VALUES(credits)
       `;
 
-      await new Promise((resolve) => {
-        connection.query(sql, [regno, semester, subcode, subname, grade, credits], (err) => {
-          if (err) {
-            logStream.write(`❌ DB Error for ${regno}: ${err.message}\n`);
-            console.error(`❌ DB Error for ${regno}: ${err.message}`);
-          } else {
+      await new Promise(resolve => {
+        connection.query(sql, [regno, semester, subcode, subname, gradeRaw, credits], (err) => {
+          if (!err) {
             insertCount++;
-            logStream.write(`✅ Stored: ${regno} - ${subcode} (${grade})\n`);
-            console.log(`✅ Stored: ${regno} - ${subcode} (${grade})`);
+            logStream.write(`✅ Stored: ${regno} - ${subcode} (${gradeRaw})\n`);
+          } else {
+            logStream.write(`❌ DB Error for ${regno}: ${err.message}\n`);
           }
           resolve();
         });
@@ -1837,5 +1839,6 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
     return res.status(500).json({ success: false, message: "❌ Internal server error." });
   }
 });
+
 
 
