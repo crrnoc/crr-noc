@@ -1716,101 +1716,98 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
   try {
     const { semester } = req.body;
     if (!req.file || !semester) {
-      return res.status(400).json({ success: false, message: "❌ Semester or PDF missing." });
+      return res.status(400).json({ message: "❌ Semester or PDF missing." });
     }
 
-    const filePath = req.file.path;
-    const fileBuffer = fs.readFileSync(filePath);
+    const fileBuffer = fs.readFileSync(req.file.path);
     const data = await pdfParse(fileBuffer);
     const lines = data.text.split("\n").map(line => line.trim()).filter(Boolean);
 
-    let insertCount = 0;
-    const logPath = path.join(__dirname, "parselog.txt");
-    const logStream = fs.createWriteStream(logPath, { flags: "w" });
+    console.log("📝 Total lines parsed:", lines.length);
 
-   for (const originalLine of lines) {
-  // Skip header rows
-  if (/^(Sno\s+)?Htno\s+Subcode/i.test(originalLine)) {
-    logStream.write("⏭️ Skipping header line...\n");
-    continue;
-  }
+    let startReading = false;
+    const insertPromises = [];
 
-  if (originalLine.trim() === "") continue;
-
-  // ✅ Split the line normally (do NOT remove spaces)
-  const parts = originalLine.trim().split(/\s+/);
-
-  // ✅ Must be at least 6 parts: regno, subcode, subname (1+), marks, grade, credits
-  if (parts.length < 6) {
-    logStream.write(`⚠️ Line too short: ${originalLine}\n`);
-    continue;
-  }
-
-  const regno = parts[0];
-  const subcode = parts[1];
-
-  // ✅ Subname could be multiple words, so join from 3rd to (n-3) index
-  const subname = parts.slice(2, parts.length - 3).join(" ");
-  const internals = parts[parts.length - 3]; // not used now
-  let gradeRaw = parts[parts.length - 2].toUpperCase();
-  const credits = parseFloat(parts[parts.length - 1]);
-
-  // ✅ Normalize grade
-  if (["COMPLE", "COMPLETE", "COMPLETED"].includes(gradeRaw)) {
-    gradeRaw = "Completed";
-  } else if (gradeRaw === "ABSENT") {
-    gradeRaw = "Ab";
-  }
-
-  const validGrades = ["S", "A", "B", "C", "D", "E", "F", "Ab", "Completed"];
-  if (!validGrades.includes(gradeRaw)) {
-    logStream.write(`❌ Invalid grade: ${gradeRaw} in ${originalLine}\n`);
-    continue;
-  }
-
-  const grade = gradeRaw;
-
-  // ✅ Skip old regulations
-  const regYear = parseInt(subcode.slice(1, 3));
-  if (isNaN(regYear) || regYear < 21) {
-    logStream.write(`⏩ Skipped old regulation: ${regno} - ${subcode}\n`);
-    continue;
-  }
-
-  const sql = `
-    INSERT INTO results (regno, semester, subcode, subname, grade, credits)
-    VALUES (?, ?, ?, ?, ?, ?)
-    ON DUPLICATE KEY UPDATE
-      semester = VALUES(semester),
-      grade = VALUES(grade),
-      credits = VALUES(credits)
-  `;
-
-  await new Promise((resolve) => {
-    connection.query(sql, [regno, semester, subcode, subname, grade, credits], (err) => {
-      if (err) {
-        logStream.write(`❌ DB Error for ${regno}: ${err.message}\n`);
-      } else {
-        insertCount++;
-        logStream.write(`✅ Stored: ${regno} - ${subcode} (${grade})\n`);
+    for (let line of lines) {
+      // ✅ Detect header line with or without 'Sno'
+      if (/^(Sno\s+)?Htno\s+Subcode/i.test(line)) {
+        startReading = true;
+        console.log("🔔 Found header, starting.");
+        continue;
       }
-      resolve();
-    });
-  });
-}
 
-    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-    logStream.end();
+      if (!startReading || line === "") continue;
 
-    return res.json({
-      success: true,
-      message: `✅ Upload complete. ${insertCount} records stored. Check parselog.txt for full details.`
-    });
+      console.log("🔍 RAW LINE:", line);
+
+      const parts = line.trim().split(/\s+/);
+      if (parts.length < 6) {
+        console.log("⚠️ Line too short, skipping:", line);
+        continue;
+      }
+
+      const regno = parts[0];
+      const subcode = parts[1];
+
+      // Join the subname from part[2] up to the 3rd-last part
+      const subname = parts.slice(2, parts.length - 3).join(" ");
+      const internals = parts[parts.length - 3]; // not used
+      let gradeRaw = parts[parts.length - 2].toUpperCase();
+      const credits = parseFloat(parts[parts.length - 1]);
+
+      // Normalize grade
+      if (["COMPLE", "COMPLETE", "COMPLETED"].includes(gradeRaw)) {
+        gradeRaw = "Completed";
+      } else if (gradeRaw === "ABSENT") {
+        gradeRaw = "Ab";
+      }
+
+      const validGrades = ["S", "A", "B", "C", "D", "E", "F", "Ab", "Completed"];
+      if (!validGrades.includes(gradeRaw)) {
+        console.log(`❌ Invalid grade: ${gradeRaw} → skipping`);
+        continue;
+      }
+
+      const grade = gradeRaw;
+
+      // Skip old regulations
+      const regYear = parseInt(subcode.slice(1, 3));
+      if (isNaN(regYear) || regYear < 21) {
+        console.log(`⏩ Skipped old regulation: ${regno} - ${subcode}`);
+        continue;
+      }
+
+      const sql = `
+        INSERT INTO results (regno, semester, subcode, subname, grade, credits)
+        VALUES (?, ?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE
+          semester = VALUES(semester),
+          grade = VALUES(grade),
+          credits = VALUES(credits)
+      `;
+
+      console.log("📌 Parsed →", { regno, subcode, subname, grade, credits });
+
+      insertPromises.push(new Promise(resolve => {
+        connection.query(sql, [regno, semester, subcode, subname, grade, credits], (err) => {
+          if (err) {
+            console.error(`❌ DB Error for ${regno}:`, err.message);
+          } else {
+            console.log(`✅ Stored: ${regno} - ${subcode} (${grade})`);
+          }
+          resolve();
+        });
+      }));
+    }
+
+    await Promise.all(insertPromises);
+    fs.unlinkSync(req.file.path);
+
+    res.json({ success: true, message: "✅ Results uploaded and stored successfully." });
 
   } catch (err) {
     console.error("❌ Server error:", err);
-    if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
-    return res.status(500).json({ success: false, message: "❌ Internal server error." });
+    res.status(500).json({ message: "❌ Internal server error." });
   }
 });
 
