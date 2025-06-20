@@ -1719,114 +1719,84 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
   try {
     const { semester } = req.body;
     if (!req.file || !semester) {
-      return res.status(400).json({ message: "Missing PDF or semester" });
+      return res.status(400).json({ success: false, message: "❌ Missing PDF or semester." });
     }
 
     const fileBuffer = fs.readFileSync(req.file.path);
     const pdfData = await pdfParse(fileBuffer);
-    const rawLines = pdfData.text.split("\n").map(line => line.trim()).filter(Boolean);
+    const lines = pdfData.text.split("\n").map(line => line.trim()).filter(Boolean);
+    const base = req.file.filename;
 
-    const txtPath = path.join("uploads", `${req.file.filename}.txt`);
-    let snoCounter = 1;
-    const linesWithSno = [];
+    const txtPath = path.join("uploads", `${base}.txt`);
+    fs.writeFileSync(txtPath, lines.join("\n"));
+    console.log("📄 Saved TXT:", txtPath);
+    console.log("🔍 Total Lines:", lines.length);
 
-    // ✅ Write to .txt file with auto Sno
-    for (let line of rawLines) {
-      const regnoMatch = line.match(/\d{2}B8[A-Z0-9]{6}/);
-      const subcodeMatch = line.match(/R[A-Z0-9]{6}/);
-      if (regnoMatch && subcodeMatch) {
-        linesWithSno.push(`${snoCounter} ${line}`);
-        snoCounter++;
-      } else {
-        linesWithSno.push(line);
-      }
-    }
+    const csvRows = [["regno", "subcode", "subname", "grade", "credits"]];
+    const tasks = [];
+    let inserted = 0;
 
-    fs.writeFileSync(txtPath, linesWithSno.join("\n"));
-    console.log("📄 Saved .txt with Sno numbers:", txtPath);
-
-    // ✅ Parse and Insert to DB
-    let insertedCount = 0;
-    let startReading = false;
-    const insertPromises = [];
-
-    for (let line of linesWithSno) {
-      // Remove SNO prefix for parser
-      const cleanLine = line.replace(/^\d+\s+/, "");
-
-      if (!startReading) {
-        const regnoMatch = cleanLine.match(/\d{2}B8[A-Z0-9]{6}/);
-        const subcodeMatch = cleanLine.match(/R[A-Z0-9]{6}/);
-        if (regnoMatch && subcodeMatch) {
-          console.log("🔔 First valid result line detected:", cleanLine);
-          startReading = true;
-        } else {
-          continue;
-        }
-      }
-
-      const regnoMatch = cleanLine.match(/\d{2}B8[A-Z0-9]{6}/);
-      const subcodeMatch = cleanLine.match(/R[A-Z0-9]{6}/);
-      if (!regnoMatch || !subcodeMatch) {
-        console.log("❌ Skipped (no regno/subcode):", cleanLine);
-        continue;
-      }
-
-      const regno = regnoMatch[1];
-      const subcode = subcodeMatch[1];
-      const subcodeIndex = cleanLine.indexOf(subcode);
-      const afterSubcode = cleanLine.slice(subcodeIndex + 7);
-      const subnameWithGrade = afterSubcode;
-
-      // ✅ Parse: subname + marks + grade + credits
-      const pattern = /(.+?)(\d{1,3})(S|A|B|C|D|E|F|ABSENT|Ab|MP|Completed)(\d+(\.\d+)?)/;
-      const match = subnameWithGrade.match(pattern);
+    for (const line of lines) {
+      const match = line.match(/(\d{2}B8[A-Z0-9]{6})(R\d{6}L?)/);
       if (!match) {
-        console.log("❌ Skipped (grade parse failed):", subnameWithGrade);
+        console.log("⛔ Skip (no reg/sub):", line);
         continue;
       }
 
-      const subname = match[1].trim();
-      const grade = match[3] === "ABSENT" ? "Ab" : match[3];
-      const credits = parseFloat(match[4]);
+      const regno = match[1];
+      const subcode = match[2];
+      const after = line.slice(line.indexOf(subcode) + subcode.length);
 
-      console.log("✅ Parsed Line:", {
-        regno, semester, subcode, subname, grade, credits
-      });
+      const gradeMatch = after.match(/(.+?)(\d{1,3})(S|A|B|C|D|E|F|Ab|ABSENT|MP|Completed)(\d+(\.\d+)?)/i);
+      if (!gradeMatch) {
+        console.log("⛔ Skip (grade parse failed):", after);
+        continue;
+      }
+
+      const subname = gradeMatch[1].trim();
+      const rawGrade = gradeMatch[3].toUpperCase();
+      const grade = rawGrade === "ABSENT" ? "Ab" : rawGrade;
+      const credits = parseFloat(gradeMatch[4]);
+
+      console.log(`✅ Parsed: ${regno} | ${subcode} | ${subname} | ${grade} | ${credits}`);
+      csvRows.push([regno, subcode, subname, grade, credits]);
 
       const sql = `
         INSERT INTO results (regno, semester, subcode, subname, grade, credits)
         VALUES (?, ?, ?, ?, ?, ?)
-        ON DUPLICATE KEY UPDATE 
+        ON DUPLICATE KEY UPDATE
           semester = VALUES(semester),
           grade = VALUES(grade),
-          credits = VALUES(credits)
+          credits = VALUES(credits),
+          subname = VALUES(subname)
       `;
 
-      insertPromises.push(new Promise(resolve => {
+      tasks.push(new Promise(resolve => {
         connection.query(sql, [regno, semester, subcode, subname, grade, credits], (err) => {
-          if (err) {
-            console.error("❌ DB Error for", regno, "→", err.message);
-          } else {
-            console.log("✅ Inserted into DB:", regno, subcode);
-            insertedCount++;
-          }
+          if (!err) inserted++;
           resolve();
         });
       }));
     }
 
-    await Promise.all(insertPromises);
+    await Promise.all(tasks);
+
+    const csvPath = path.join("uploads", `${base}.csv`);
+    fs.writeFileSync(csvPath, csvRows.map(r => r.join(",")).join("\n"));
     fs.unlinkSync(req.file.path);
+
+    console.log(`✅ Done. Inserted: ${inserted}`);
+    console.log("📦 CSV saved at:", csvPath);
 
     res.json({
       success: true,
-      message: `✅ PDF converted. ${insertedCount} rows inserted into database.`
+      message: `✅ Stored ${inserted} records successfully.`,
+      files: { csv: csvPath, txt: txtPath }
     });
 
   } catch (err) {
-    console.error("❌ Server Error:", err);
-    res.status(500).json({ message: "Internal server error" });
+    console.error("❌ Fatal Error:", err);
+    res.status(500).json({ success: false, message: "❌ Internal Server Error" });
   }
 });
 //AUTONOMOUS results upload
@@ -1928,8 +1898,4 @@ for (const line of lines) {
     console.error("❌ Fatal Error:", err);
     res.status(500).json({ success: false, message: "❌ Server error during parsing." });
   }
-});
-
-app.listen(3000, () => {
-  console.log("✅ Server running at http://localhost:3000");
 });
