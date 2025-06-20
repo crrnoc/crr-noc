@@ -1698,6 +1698,7 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
 //AUTONOMOUS results upload
 // Route: Upload Autonomous Student Result PDF
 // 🧠 Autonomous PDF Upload Route
+// Route: Upload Autonomous Student Result PDF
 app.post("/admin/upload-autonomous-result-pdf", upload.single("pdf"), async (req, res) => {
   try {
     const { semester } = req.body;
@@ -1709,83 +1710,81 @@ app.post("/admin/upload-autonomous-result-pdf", upload.single("pdf"), async (req
     const data = await pdfParse(buffer);
     const lines = data.text.split("\n").map(line => line.trim()).filter(Boolean);
 
+    // ✅ Save raw text to .txt file
     const baseName = path.basename(req.file.originalname, path.extname(req.file.originalname)).replace(/\s+/g, "_");
     const txtPath = path.join(__dirname, "uploads", `${baseName}.txt`);
     fs.writeFileSync(txtPath, data.text, "utf-8");
 
-    // ✅ Step 1: Extract subject codes from SGPA line
-    let subjectCodes = [];
-    for (const line of lines) {
-      if (line.includes("SGPA") && subjectCodes.length === 0) {
-        subjectCodes = line.split("SGPA")[0].match(/[A-Z0-9]{8}/g) || [];
+    const results = [];
+    let currentSubjectCodes = [];
+    const subjectMap = {}; // subcode → subname
+    let inserted = 0;
+
+    for (let i = 0; i < lines.length - 1; i++) {
+      const line = lines[i];
+
+      // 🎯 Update subject codes from SGPA line
+      if (line.includes("SGPA")) {
+        const subPart = line.split("SGPA")[0];
+        const subcodes = subPart.match(/[A-Z0-9]{8}/g);
+        if (subcodes && subcodes.length === 10) {
+          currentSubjectCodes = subcodes;
+        }
+        continue;
       }
-    }
 
-    if (subjectCodes.length !== 10) {
-      return res.status(400).json({ success: false, message: "❌ Could not extract exactly 10 subject codes." });
-    }
-
-    // ✅ Step 2: Extract subcode-subname map (for any year)
-    const subjectMap = {}; // subcode => subname
-    for (const line of lines) {
+      // 📚 Update subject map when subnames appear again
       const match = line.match(/^\d+\)\s*([A-Z0-9]{8})-(.+)$/);
       if (match) {
         const subcode = match[1].trim();
         const subname = match[2].trim();
         subjectMap[subcode] = subname;
+        continue;
       }
-    }
 
-    // ✅ Step 3: Parse student results (regno + grades + sgpa)
-    const studentBlocks = [];
-    for (let i = 0; i < lines.length - 1; i++) {
+      // 🎓 Process student result blocks
       const regno = lines[i];
       const resultLine = lines[i + 1];
 
       if (/^\d{2}B8[0-9A-Z]{6}$/.test(regno) && /^[A-FS]{10}[0-9.]+$/.test(resultLine)) {
         const grades = resultLine.slice(0, 10).split("");
         const sgpa = parseFloat(resultLine.slice(10)) || 0;
-        studentBlocks.push({ regno, grades, sgpa });
-        i++; // skip next line (already processed)
+
+        for (let j = 0; j < 10; j++) {
+          const subcode = currentSubjectCodes[j];
+          const subname = subjectMap[subcode] || null;
+          const grade = grades[j];
+
+          results.push([regno, semester, subcode, subname, grade, sgpa]);
+
+          const query = `
+            INSERT INTO autonomous_results (regno, semester, subcode, subname, grade, sgpa)
+            VALUES (?, ?, ?, ?, ?, ?)
+            ON DUPLICATE KEY UPDATE grade = VALUES(grade), subname = VALUES(subname), sgpa = VALUES(sgpa)
+          `;
+          connection.query(query, [regno, semester, subcode, subname, grade, sgpa], (err) => {
+            if (err) console.error(`❌ DB Error [${regno} - ${subcode}]:`, err.message);
+          });
+
+          inserted++;
+        }
+
+        i++; // skip result line
       }
     }
 
-    // ✅ Step 4: Store results in DB and CSV
-    const results = [];
-    let inserted = 0;
-
-    for (const student of studentBlocks) {
-      for (let j = 0; j < 10; j++) {
-        const subcode = subjectCodes[j];
-        const subname = subjectMap[subcode] || null;
-        const grade = student.grades[j];
-
-        results.push([student.regno, semester, subcode, subname, grade, student.sgpa]);
-
-        const query = `
-          INSERT INTO autonomous_results (regno, semester, subcode, subname, grade, sgpa)
-          VALUES (?, ?, ?, ?, ?, ?)
-          ON DUPLICATE KEY UPDATE grade = VALUES(grade), subname = VALUES(subname), sgpa = VALUES(sgpa)
-        `;
-        connection.query(query, [student.regno, semester, subcode, subname, grade, student.sgpa], (err) => {
-          if (err) console.error(`❌ DB Error [${student.regno} - ${subcode}]:`, err.message);
-        });
-
-        inserted++;
-      }
-    }
-
-    // ✅ Save CSV file
+    // ✅ Save .csv version
     const csvPath = path.join(__dirname, "uploads", `${baseName}.csv`);
     const csvHeader = "regno,semester,subcode,subname,grade,sgpa\n";
     const csvContent = csvHeader + results.map(r => r.join(",")).join("\n");
     fs.writeFileSync(csvPath, csvContent, "utf-8");
 
-    fs.unlinkSync(req.file.path); // cleanup temp PDF
+    // ✅ Clean up PDF
+    fs.unlinkSync(req.file.path);
 
     res.json({
       success: true,
-      message: `✅ ${inserted} records inserted successfully.`,
+      message: `✅ ${inserted} subject grades inserted successfully.`,
       csvFile: `/uploads/${baseName}.csv`,
       txtFile: `/uploads/${baseName}.txt`
     });
@@ -1795,6 +1794,7 @@ app.post("/admin/upload-autonomous-result-pdf", upload.single("pdf"), async (req
     res.status(500).json({ success: false, message: "❌ Server error during parsing." });
   }
 });
+
 // 📊 Fetch student results by regno and semester
 app.get('/student/results/:regno', async (req, res) => {
   const { regno } = req.params;
