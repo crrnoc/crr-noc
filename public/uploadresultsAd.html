@@ -12,21 +12,18 @@
       --main-color: #3cb6ff;
       --accent-color: #ff3d3d;
     }
-
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
       font-family: 'Poppins', sans-serif;
     }
-
     body {
       display: flex;
       min-height: 100vh;
       background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
       color: white;
     }
-
     .sidebar {
       width: 260px;
       background: rgba(60, 66, 84, 0.5);
@@ -41,18 +38,15 @@
       top: 0;
       z-index: 10;
     }
-
     .sidebar h2 {
       text-align: center;
       font-size: 24px;
       color: var(--main-color);
       margin-bottom: 30px;
     }
-
     .sidebar ul {
       list-style: none;
     }
-
     .sidebar li {
       padding: 12px 18px;
       margin: 12px 0;
@@ -61,12 +55,10 @@
       cursor: pointer;
       transition: 0.3s ease;
     }
-
     .sidebar li:hover {
       background: var(--main-color);
       box-shadow: 0 0 12px var(--main-color);
     }
-
     .sidebar button {
       margin-top: auto;
       padding: 10px 20px;
@@ -79,11 +71,9 @@
       box-shadow: 0 0 10px rgba(255, 65, 108, 0.5);
       transition: 0.3s ease;
     }
-
     .sidebar button:hover {
       transform: scale(1.05);
     }
-
     .mobile-toggle {
       position: fixed;
       top: 15px;
@@ -94,14 +84,12 @@
       display: none;
       color: white;
     }
-
     .main {
       margin-left: 260px;
       padding: 70px 20px;
       flex: 1;
       animation: slideIn 1s ease forwards;
     }
-
     .banner {
       background: rgba(255, 255, 255, 0.08);
       border-radius: 14px;
@@ -111,7 +99,6 @@
       margin-bottom: 30px;
       box-shadow: 0 0 15px rgba(0, 191, 255, 0.3);
     }
-
     .card {
       background: rgba(255, 255, 255, 0.08);
       backdrop-filter: blur(6px);
@@ -122,7 +109,6 @@
       margin: auto;
       animation: fadeUp 0.6s ease forwards;
     }
-
     select, input[type="file"], button {
       width: 100%;
       padding: 12px;
@@ -134,7 +120,6 @@
       color: white;
       backdrop-filter: blur(4px);
     }
-
     input[type="file"]::file-selector-button {
       padding: 10px;
       border-radius: 8px;
@@ -144,7 +129,6 @@
       font-weight: bold;
       cursor: pointer;
     }
-
     button {
       background: linear-gradient(135deg, var(--main-color), var(--accent-color));
       color: white;
@@ -152,40 +136,18 @@
       cursor: pointer;
       transition: all 0.3s ease;
     }
-
     button:hover {
       transform: scale(1.05);
       box-shadow: 0 0 18px rgba(255, 61, 61, 0.5);
     }
-
     @media (max-width: 768px) {
-      .sidebar {
-        transform: translateX(-100%);
-        transition: 0.4s ease;
-      }
-
-      .sidebar.open {
-        transform: translateX(0);
-      }
-
-      .mobile-toggle {
-        display: block;
-      }
-
-      .main {
-        margin-left: 0;
-        padding-top: 90px;
-      }
+      .sidebar { transform: translateX(-100%); transition: 0.4s ease; }
+      .sidebar.open { transform: translateX(0); }
+      .mobile-toggle { display: block; }
+      .main { margin-left: 0; padding-top: 90px; }
     }
-
-    @keyframes fadeUp {
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes slideIn {
-      from { opacity: 0; transform: translateX(50px); }
-      to { opacity: 1; transform: translateX(0); }
-    }
+    @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(50px); } to { opacity: 1; transform: translateX(0); } }
   </style>
 </head>
 <body>
@@ -208,6 +170,13 @@
     <div class="banner">📥 Upload Result PDF (Admin)</div>
     <div class="card">
       <form id="uploadForm">
+        <label for="resultType">📌 Select Result Type</label>
+        <select id="resultType" required>
+          <option value="">-- Select Type --</option>
+          <option value="regular">Regular (JNTUK)</option>
+          <option value="autonomous">Autonomous</option>
+        </select>
+
         <label for="semester">📘 Select Semester</label>
         <select id="semester" required>
           <option value="">-- Select Semester --</option>
@@ -247,11 +216,16 @@
 
       const semester = document.getElementById("semester").value;
       const file = document.getElementById("pdfFile").files[0];
+      const resultType = document.getElementById("resultType").value;
 
-      if (!semester || !file) {
-        Swal.fire("Missing Details", "Please select semester and upload a PDF", "warning");
+      if (!semester || !file || !resultType) {
+        Swal.fire("Missing Details", "Please select result type, semester and upload a PDF", "warning");
         return;
       }
+
+      const endpoint = resultType === "autonomous"
+        ? "https://crr-noc.onrender.com/admin/upload-autonomous-result-pdf"
+        : "https://crr-noc.onrender.com/admin/upload-result-pdf";
 
       const formData = new FormData();
       formData.append("semester", semester);
@@ -268,12 +242,10 @@
       });
 
       try {
-        // Auto-detect local or deployed URL
-        const response = await fetch("https://crr-noc.onrender.com/admin/upload-result-pdf", {
-  method: "POST",
-  body: formData
-});
-
+        const response = await fetch(endpoint, {
+          method: "POST",
+          body: formData
+        });
 
         const result = await response.json();
 
