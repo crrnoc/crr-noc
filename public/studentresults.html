@@ -62,7 +62,7 @@
 </head>
 <body>
 
-  <h2>View Semester Results</h2>
+  <h2>📘 View Semester Results</h2>
 
   <div style="text-align:center;">
     <label for="semester">Select Semester:</label>
@@ -90,7 +90,7 @@
     container.innerHTML = "";
 
     if (!regno) {
-      container.innerHTML = "<p class='error'>Student not logged in. Please login first.</p>";
+      container.innerHTML = "<p class='error'>Student not logged in. Please login again.</p>";
       return;
     }
 
@@ -102,9 +102,12 @@
     try {
       container.innerHTML = "<p>Loading results...</p>";
 
-      // ✅ Use FULL URL here to avoid wrong port/host
-      const response = await fetch(`https://crr-noc.onrender.com/student/results/${regno}?semester=${semester}`);
-      
+      const response = await fetch(`https://crr-noc.onrender.com/student/results`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ regno, semester })
+      });
+
       const data = await response.json();
 
       if (!data.results || data.results.length === 0) {
@@ -112,7 +115,7 @@
         return;
       }
 
-      let html = `<h3>Results for <strong>${data.regno}</strong> - Semester <strong>${data.semester}</strong></h3>`;
+      let html = `<h3>Results for <strong>${data.regno}</strong> - Semester <strong>${data.semester}</strong> (${data.type || "Regular"})</h3>`;
       html += `<table>
                 <tr>
                   <th>Subject Code</th>
@@ -124,9 +127,9 @@
       data.results.forEach(row => {
         html += `<tr>
                   <td>${row.subcode}</td>
-                  <td>${row.subname}</td>
+                  <td>${row.subname || "-"}</td>
                   <td>${row.grade}</td>
-                  <td>${row.credits}</td>
+                  <td>${row.credits || "-"}</td>
                 </tr>`;
       });
 
@@ -143,8 +146,10 @@
       container.innerHTML = "<p class='error'>Error fetching results. Please try again later.</p>";
     }
   }
-</script>
 
+  // Optional: call once on load if you want auto-fetch on page load
+  // fetchResults();
+</script>
 
 </body>
 </html>
