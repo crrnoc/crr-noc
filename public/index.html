@@ -349,7 +349,8 @@ body {
   });
 
   hideAll();
-async function submitLogin(event, role) {
+
+  async function submitLogin(event, role) {
     event.preventDefault();
 
     const form = event.target;
@@ -365,20 +366,24 @@ async function submitLogin(event, role) {
     const data = await response.json();
 
     if (data.success) {
-      // Store login info in localStorage
+      // ✅ Store userId and role
       localStorage.setItem("userId", data.userId);
       localStorage.setItem("role", role);
+      
+      // ✅ Specifically store regno for student login
+      if (role === "student") {
+        localStorage.setItem("regno", data.userId);
+      }
 
-Swal.fire({
-  icon: 'success',
-  title: 'Login Successful',
-  text: `Welcome ${role.toUpperCase()} - ${data.userId}`,
-  timer: 2000,
-  showConfirmButton: false
-});
+      Swal.fire({
+        icon: 'success',
+        title: 'Login Successful',
+        text: `Welcome ${role.toUpperCase()} - ${data.userId}`,
+        timer: 2000,
+        showConfirmButton: false
+      });
 
-
-      // Redirect based on role
+      // ✅ Redirect
       if (role === "admin") {
         window.location.href = "adminpanel.html";
       } else if (role === "student") {
@@ -387,36 +392,36 @@ Swal.fire({
         window.location.href = "knowaboutstd1.html";
       }
     } else {
-Swal.fire({
-  icon: 'error',
-  title: 'Login Failed',
-  text: data.message || 'Invalid credentials.',
-  confirmButtonColor: '#d33'
-});
-
+      Swal.fire({
+        icon: 'error',
+        title: 'Login Failed',
+        text: data.message || 'Invalid credentials.',
+        confirmButtonColor: '#d33'
+      });
     }
   }
-function showModal(title, message) {
-  const modal = document.createElement("div");
-  modal.style.position = "fixed";
-  modal.style.top = "50%";
-  modal.style.left = "50%";
-  modal.style.transform = "translate(-50%, -50%)";
-  modal.style.background = "#fff";
-  modal.style.padding = "20px 30px";
-  modal.style.borderRadius = "10px";
-  modal.style.boxShadow = "0 0 15px rgba(0,0,0,0.2)";
-  modal.style.zIndex = 9999;
-  modal.style.textAlign = "center";
-  modal.style.color = "#333";
-  modal.innerHTML = `
-    <h3 style="margin-bottom: 10px;">${title}</h3>
-    <p>${message}</p>
-  `;
-  document.body.appendChild(modal);
-  setTimeout(() => modal.remove(), 3000);
-}
 
+  function showModal(title, message) {
+    const modal = document.createElement("div");
+    modal.style.position = "fixed";
+    modal.style.top = "50%";
+    modal.style.left = "50%";
+    modal.style.transform = "translate(-50%, -50%)";
+    modal.style.background = "#fff";
+    modal.style.padding = "20px 30px";
+    modal.style.borderRadius = "10px";
+    modal.style.boxShadow = "0 0 15px rgba(0,0,0,0.2)";
+    modal.style.zIndex = 9999;
+    modal.style.textAlign = "center";
+    modal.style.color = "#333";
+    modal.innerHTML = `
+      <h3 style="margin-bottom: 10px;">${title}</h3>
+      <p>${message}</p>
+    `;
+    document.body.appendChild(modal);
+    setTimeout(() => modal.remove(), 3000);
+  }
 </script>
+
 </body>
 </html>
