@@ -1614,125 +1614,18 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
   try {
     const { semester } = req.body;
     if (!req.file || !semester) {
-      return res.status(400).json({ message: "❌ Semester or PDF missing." });
-    }
-
-    const fileBuffer = fs.readFileSync(req.file.path);
-    const data = await pdfParse(fileBuffer);
-    const lines = data.text.split("\n").map(line => line.trim()).filter(Boolean);
-
-    console.log("📝 Total lines parsed:", lines.length);
-
-    let startReading = false;
-    const insertPromises = [];
-
-    for (let line of lines) {
-      if (line.includes("SnoHtnoSubcodeSubnameInternalsGradeCredits")) {
-        startReading = true;
-        console.log("🔔 Found header, starting...");
-        continue;
-      }
-
-      if (!startReading || line === "") continue;
-
-      console.log("🔍 RAW LINE:", line);
-
-      // ✅ Extract regno: exactly 10 chars like 23B81A0123
-      const regnoMatch = line.match(/(\d{2}B8[A-Z0-9]{6})/);
-      if (!regnoMatch) {
-        console.log("❌ Could not find regno:", line);
-        continue;
-      }
-      const regno = regnoMatch[1];
-
-      // ✅ Extract subcode: starts with 'R' and 7 characters
-      const subcodeMatch = line.match(/(R[A-Z0-9]{6})/);
-      if (!subcodeMatch) {
-        console.log("❌ Could not find subcode:", line);
-        continue;
-      }
-      const subcode = subcodeMatch[1];
-      const subcodeIndex = line.indexOf(subcode);
-      const afterSubcode = line.slice(subcodeIndex + 7);
-
-      // ✅ Extract subname until first digit appears
-      const subnameMatch = afterSubcode.match(/^(.+?)(\d)/);
-      if (!subnameMatch) {
-        console.log("❌ Could not extract subname:", afterSubcode);
-        continue;
-      }
-      const subname = subnameMatch[1].trim();
-
-      // ✅ Extract grade and credits
-      const gradeCreditsPart = afterSubcode.slice(subname.length);
-      const gradeCreditMatch = gradeCreditsPart.match(/^(\d{1,3})(S|A|B|C|D|E|F|ABSENT)(\d+(\.\d+)?)/);
-
-      if (!gradeCreditMatch) {
-        console.log("❌ Could not extract grade/credits:", gradeCreditsPart);
-        continue;
-      }
-
-      const gradeRaw = gradeCreditMatch[2];
-      const credits = parseFloat(gradeCreditMatch[3]);
-      const grade = gradeRaw === "ABSENT" ? "Ab" : gradeRaw;
-
-      // ✅ Final INSERT using 'regno'
-      const sql = `
-        INSERT INTO results (regno, semester, subcode, subname, grade, credits)
-        VALUES (?, ?, ?, ?, ?, ?) AS new
-        ON DUPLICATE KEY UPDATE
-          semester = new.semester,
-          grade = new.grade,
-          credits = new.credits
-      `;
-
-      console.log("📌 Parsed →", { regno, subcode, subname, grade, credits });
-
-      insertPromises.push(new Promise(resolve => {
-        connection.query(sql, [regno, semester, subcode, subname, grade, credits], (err) => {
-          if (err) {
-            console.error(`❌ DB Error for ${regno}:`, err.message);
-          } else {
-            console.log(`✅ Stored: ${regno} - ${subcode} (${grade})`);
-          }
-          resolve();
-        });
-      }));
-    }
-
-    await Promise.all(insertPromises);
-    fs.unlinkSync(req.file.path);
-
-    res.json({ success: true, message: "✅ Results uploaded and stored successfully." });
-
-  } catch (err) {
-    console.error("❌ Server error:", err);
-    res.status(500).json({ message: "❌ Internal server error." });
-  }
-});
-
-// result pdf upload
-// 📥 Admin uploads result PDF
-// ✅ PDF Upload Route — Converts to .txt and Inserts into DB
-// ✅ Upload Route
-app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
-  try {
-    const { semester } = req.body;
-    if (!req.file || !semester) {
       return res.status(400).json({ success: false, message: "❌ Missing PDF or semester." });
     }
 
     const fileBuffer = fs.readFileSync(req.file.path);
     const pdfData = await pdfParse(fileBuffer);
     const lines = pdfData.text.split("\n").map(line => line.trim()).filter(Boolean);
+    const base = req.file.filename;
 
-    const baseName = req.file.filename;
-    const txtPath = path.join("uploads", `${baseName}.txt`);
-    const csvPath = path.join("uploads", `${baseName}.csv`);
-
+    const txtPath = path.join("uploads", `${base}.txt`);
     fs.writeFileSync(txtPath, lines.join("\n"));
-    console.log("📄 TXT file saved:", txtPath);
-    console.log("📝 Total lines parsed:", lines.length);
+    console.log("📄 Saved TXT:", txtPath);
+    console.log("🔍 Total Lines:", lines.length);
 
     const csvRows = [["regno", "subcode", "subname", "grade", "credits"]];
     const tasks = [];
@@ -1774,32 +1667,30 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
       `;
 
       tasks.push(new Promise(resolve => {
-        connection.query(sql, [regno, semester, subcode, subname, grade, credits], err => {
+        connection.query(sql, [regno, semester, subcode, subname, grade, credits], (err) => {
           if (!err) inserted++;
-          else console.error(`❌ DB Error [${regno} - ${subcode}]:`, err.message);
           resolve();
         });
       }));
     }
 
     await Promise.all(tasks);
+
+    const csvPath = path.join("uploads", `${base}.csv`);
     fs.writeFileSync(csvPath, csvRows.map(r => r.join(",")).join("\n"));
     fs.unlinkSync(req.file.path);
 
-    console.log(`✅ Done: ${inserted} rows inserted.`);
-    console.log("📦 CSV file saved at:", csvPath);
+    console.log(`✅ Done. Inserted: ${inserted}`);
+    console.log("📦 CSV saved at:", csvPath);
 
     res.json({
-      success: inserted > 0,
-      message: `✅ PDF processed. ${inserted} rows inserted.`,
-      files: {
-        txt: txtPath,
-        csv: csvPath
-      }
+      success: true,
+      message: `✅ Stored ${inserted} records successfully.`,
+      files: { csv: csvPath, txt: txtPath }
     });
 
   } catch (err) {
-    console.error("❌ Server Error:", err);
-    res.status(500).json({ success: false, message: "❌ Internal server error." });
+    console.error("❌ Fatal Error:", err);
+    res.status(500).json({ success: false, message: "❌ Internal Server Error" });
   }
 });
