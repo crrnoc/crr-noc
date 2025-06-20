@@ -1642,7 +1642,7 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
       const subcode = match[2];
       const after = line.slice(line.indexOf(subcode) + subcode.length);
 
-      const gradeMatch = after.match(/(.+?)(\d{1,3})(S|A|B|C|D|E|F|Ab|MP|Completed)(\d+(\.\d+)?)/i);
+      const gradeMatch = after.match(/(.+?)(\d{1,3})(S|A|B|C|D|E|F|ABSENT|COMPLETED|MP)(\d+(\.\d+)?)/i);
       if (!gradeMatch) {
         console.log("⛔ Skip (grade parse failed):", after);
         continue;
