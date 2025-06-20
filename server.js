@@ -1724,45 +1724,61 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
 
     const fileBuffer = fs.readFileSync(req.file.path);
     const pdfData = await pdfParse(fileBuffer);
-    const lines = pdfData.text.split("\n").map(line => line.trim()).filter(Boolean);
+    const rawLines = pdfData.text.split("\n").map(line => line.trim()).filter(Boolean);
 
     const txtPath = path.join("uploads", `${req.file.filename}.txt`);
-    fs.writeFileSync(txtPath, lines.join("\n"));
-    console.log("📄 Converted PDF to TXT:", txtPath);
+    let snoCounter = 1;
+    const linesWithSno = [];
 
+    // ✅ Write to .txt file with auto Sno
+    for (let line of rawLines) {
+      const regnoMatch = line.match(/\d{2}B8[A-Z0-9]{6}/);
+      const subcodeMatch = line.match(/R[A-Z0-9]{6}/);
+      if (regnoMatch && subcodeMatch) {
+        linesWithSno.push(`${snoCounter} ${line}`);
+        snoCounter++;
+      } else {
+        linesWithSno.push(line);
+      }
+    }
+
+    fs.writeFileSync(txtPath, linesWithSno.join("\n"));
+    console.log("📄 Saved .txt with Sno numbers:", txtPath);
+
+    // ✅ Parse and Insert to DB
     let insertedCount = 0;
     let startReading = false;
     const insertPromises = [];
 
-    for (let line of lines) {
-      const norm = line.replace(/\s+/g, "").toLowerCase();
+    for (let line of linesWithSno) {
+      // Remove SNO prefix for parser
+      const cleanLine = line.replace(/^\d+\s+/, "");
 
-      // ✅ Smart start: even if no header, begin on first valid result line
       if (!startReading) {
-        const regnoMatch = line.match(/\d{2}B8[A-Z0-9]{6}/);
-        const subcodeMatch = line.match(/R[A-Z0-9]{6}/);
+        const regnoMatch = cleanLine.match(/\d{2}B8[A-Z0-9]{6}/);
+        const subcodeMatch = cleanLine.match(/R[A-Z0-9]{6}/);
         if (regnoMatch && subcodeMatch) {
-          console.log("🔔 First valid result line detected:", line);
+          console.log("🔔 First valid result line detected:", cleanLine);
           startReading = true;
         } else {
-          continue; // Still not result line, skip
+          continue;
         }
       }
 
-      const regnoMatch = line.match(/\d{2}B8[A-Z0-9]{6}/);
-      const subcodeMatch = line.match(/R[A-Z0-9]{6}/);
+      const regnoMatch = cleanLine.match(/\d{2}B8[A-Z0-9]{6}/);
+      const subcodeMatch = cleanLine.match(/R[A-Z0-9]{6}/);
       if (!regnoMatch || !subcodeMatch) {
-        console.log("❌ Skipped (no regno/subcode):", line);
+        console.log("❌ Skipped (no regno/subcode):", cleanLine);
         continue;
       }
 
       const regno = regnoMatch[1];
       const subcode = subcodeMatch[1];
-      const subcodeIndex = line.indexOf(subcode);
-      const afterSubcode = line.slice(subcodeIndex + 7);
+      const subcodeIndex = cleanLine.indexOf(subcode);
+      const afterSubcode = cleanLine.slice(subcodeIndex + 7);
       const subnameWithGrade = afterSubcode;
 
-      // ✅ Extract subname, marks, grade, credits
+      // ✅ Parse: subname + marks + grade + credits
       const pattern = /(.+?)(\d{1,3})(S|A|B|C|D|E|F|ABSENT|Ab|MP|Completed)(\d+(\.\d+)?)/;
       const match = subnameWithGrade.match(pattern);
       if (!match) {
