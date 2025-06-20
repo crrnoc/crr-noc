@@ -1734,8 +1734,8 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
       const normalized = line.replace(/\s+/g, "").toLowerCase();
 
       if (
-        normalized.includes("htnosubcodesubnameinternalsgradecredits") ||
-        normalized.includes("snohtnosubcodesubnameinternalsgradecredits")
+        normalized.includes("HtnoSubcodeSubnameInternalsGradeCredits") ||
+        normalized.includes("SnoHtnoSubcodeSubnameInternalsGradeCredits")
       ) {
         startReading = true;
         console.log("🔔 Header matched:", line);
@@ -1770,7 +1770,7 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
       const subname = subnameMatch[1].trim();
 
       const gradeCreditsPart = afterSubcode.slice(subname.length);
-      const gradeCreditMatch = gradeCreditsPart.match(/^(\d{1,3})\s+(S|A|B|C|D|E|F|ABSENT)\s+(\d+(\.\d+)?)/);
+      const gradeCreditMatch = gradeCreditsPart.match(/^(\d{1,3})\s+(S|A|B|C|D|E|F|ABSENT|COMPLETED|MP)\s+(\d+(\.\d+)?)/);
 
       if (!gradeCreditMatch) {
         logStream.write(`❌ Could not extract grade/credits: ${originalLine}\n`);
