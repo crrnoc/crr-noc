@@ -1796,77 +1796,76 @@ app.post("/admin/upload-autonomous-result-pdf", upload.single("pdf"), async (req
 });
 
 // 📊 Fetch student results by regno and semester
-app.post('/student/results', (req, res) => {
-  const { regno, semester } = req.body;
+// 📊 Fetch student results by regno and semester
+app.get('/student/results/:regno', async (req, res) => {
+  const { regno } = req.params;
+  const semester = req.query.semester;
 
-  if (!regno || !semester) {
-    return res.status(400).json({ error: "Missing regno or semester" });
-  }
+  console.log("📥 Incoming Request:", { regno, semester });
 
-  console.log("📥 Incoming Result Request:", { regno, semester });
-
-  // Detect Autonomous (e.g., 24B8..., 25B8...)
-  const isAutonomous = /^\d{2}B8/.test(regno);
-  const table = isAutonomous ? "autonomous_results" : "results";
-
-  const gradePoints = {
-    S: 10, A: 9, B: 8, C: 7, D: 6, E: 5, F: 0, Ab: 0,
-    Completed: 10, Absent: 0
-  };
-
-  function calculateGPA(rows) {
-    let totalCredits = 0;
-    let weightedSum = 0;
-
-    for (const r of rows) {
-      const point = gradePoints[r.grade];
-      const credits = r.credits || 0;
-      if (point === undefined) continue;
-
-      weightedSum += point * credits;
-      totalCredits += credits;
-    }
-
-    const gpa = totalCredits > 0 ? weightedSum / totalCredits : 0;
-    return { gpa: gpa.toFixed(2), totalCredits };
-  }
-
-  // 1️⃣ Semester results
-  connection.query(
-    `SELECT * FROM ${table} WHERE regno = ? AND semester = ?`,
-    [regno, semester],
-    (err, semResults) => {
-      if (err) {
-        console.error("❌ DB Error:", err);
-        return res.status(500).json({ error: "DB error (sem)" });
-      }
-
-      // 2️⃣ All results for CGPA
-      connection.query(
-        `SELECT * FROM ${table} WHERE regno = ?`,
-        [regno],
-        (err, allResults) => {
-          if (err) {
-            console.error("❌ DB Error:", err);
-            return res.status(500).json({ error: "DB error (all)" });
-          }
-
-          const { gpa: sgpa } = calculateGPA(semResults);
-          const { gpa: cgpa } = calculateGPA(allResults);
-          const percentage = ((parseFloat(cgpa) - 0.5) * 10).toFixed(2);
-
-          return res.json({
-            regno,
-            semester,
-            type: isAutonomous ? "Autonomous" : "JNTUK",
-            results: semResults,
-            sgpa,
-            cgpa,
-            percentage
-          });
+  try {
+    // 1. Fetch semester-wise results
+    connection.query(
+      "SELECT * FROM results WHERE regno = ? AND semester = ?",
+      [regno, semester],
+      (err, semResults) => {
+        if (err) {
+          console.error("❌ Error fetching sem results:", err);
+          return res.status(500).json({ error: "DB error (semResults)" });
         }
-      );
-    }
-  );
-});
 
+        // 2. Fetch all results for CGPA
+        connection.query(
+          "SELECT * FROM results WHERE regno = ?",
+          [regno],
+          (err, allResults) => {
+            if (err) {
+              console.error("❌ Error fetching all results:", err);
+              return res.status(500).json({ error: "DB error (allResults)" });
+            }
+
+            const gradePoints = {
+              S: 10, A: 9, B: 8, C: 7, D: 6, E: 5, F: 0, Ab: 0,
+              Completed: 10, Absent: 0
+            };
+
+            function calculateGPA(results) {
+              let totalCredits = 0;
+              let weightedSum = 0;
+
+              for (const r of results) {
+                const point = gradePoints[r.grade];
+                if (point === undefined || r.credits === null) {
+                  console.warn(`⚠️ Skipping invalid grade/credit:`, r);
+                  continue;
+                }
+
+                weightedSum += point * r.credits;
+                totalCredits += r.credits;
+              }
+
+              const gpa = totalCredits > 0 ? weightedSum / totalCredits : 0;
+              return { gpa: gpa.toFixed(2), totalCredits };
+            }
+
+            const { gpa: sgpa } = calculateGPA(semResults);
+            const { gpa: cgpa } = calculateGPA(allResults);
+            const percentage = ((parseFloat(cgpa) - 0.5) * 10).toFixed(2);
+
+            res.json({
+              regno,
+              semester,
+              results: semResults,
+              sgpa,
+              cgpa,
+              percentage,
+            });
+          }
+        );
+      }
+    );
+  } catch (err) {
+    console.error("❌ Uncaught Error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
