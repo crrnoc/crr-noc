@@ -1736,18 +1736,21 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
 
     for (let line of lines) {
       const norm = line.replace(/\s+/g, "").toLowerCase();
-      if (
-        norm.includes("htnosubcodesubnameinternalsgradecredits") ||
-        norm.includes("snohtnosubcodesubnameinternalsgradecredits")
-      ) {
-        startReading = true;
-        continue;
+
+      // ✅ Smart start: even if no header, begin on first valid result line
+      if (!startReading) {
+        const regnoMatch = line.match(/\d{2}B8[A-Z0-9]{6}/);
+        const subcodeMatch = line.match(/R[A-Z0-9]{6}/);
+        if (regnoMatch && subcodeMatch) {
+          console.log("🔔 First valid result line detected:", line);
+          startReading = true;
+        } else {
+          continue; // Still not result line, skip
+        }
       }
 
-      if (!startReading || line === "") continue;
-
-      const regnoMatch = line.match(/(\d{2}B8[A-Z0-9]{6})/);
-      const subcodeMatch = line.match(/(R[A-Z0-9]{6})/);
+      const regnoMatch = line.match(/\d{2}B8[A-Z0-9]{6}/);
+      const subcodeMatch = line.match(/R[A-Z0-9]{6}/);
       if (!regnoMatch || !subcodeMatch) {
         console.log("❌ Skipped (no regno/subcode):", line);
         continue;
@@ -1757,11 +1760,10 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
       const subcode = subcodeMatch[1];
       const subcodeIndex = line.indexOf(subcode);
       const afterSubcode = line.slice(subcodeIndex + 7);
-
-      // ✅ NEW GRADE MATCH BLOCK (handles 25C3, 30S1.5 etc.)
       const subnameWithGrade = afterSubcode;
-      const pattern = /(.+?)(\d{1,3})(S|A|B|C|D|E|F|ABSENT|Ab|MP|Completed)(\d+(\.\d+)?)/;
 
+      // ✅ Extract subname, marks, grade, credits
+      const pattern = /(.+?)(\d{1,3})(S|A|B|C|D|E|F|ABSENT|Ab|MP|Completed)(\d+(\.\d+)?)/;
       const match = subnameWithGrade.match(pattern);
       if (!match) {
         console.log("❌ Skipped (grade parse failed):", subnameWithGrade);
