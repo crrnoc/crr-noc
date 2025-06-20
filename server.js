@@ -1714,94 +1714,7 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
 // result pdf upload
 // 📥 Admin uploads result PDF
 // ✅ PDF Upload Route — Converts to .txt and Inserts into DB
-
-app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
-  try {
-    const { semester } = req.body;
-    if (!req.file || !semester) {
-      return res.status(400).json({ success: false, message: "❌ Missing PDF or semester." });
-    }
-
-    const fileBuffer = fs.readFileSync(req.file.path);
-    const pdfData = await pdfParse(fileBuffer);
-    const lines = pdfData.text.split("\n").map(line => line.trim()).filter(Boolean);
-    const base = req.file.filename;
-
-    const txtPath = path.join("uploads", `${base}.txt`);
-    fs.writeFileSync(txtPath, lines.join("\n"));
-    console.log("📄 Saved TXT:", txtPath);
-    console.log("🔍 Total Lines:", lines.length);
-
-    const csvRows = [["regno", "subcode", "subname", "grade", "credits"]];
-    const tasks = [];
-    let inserted = 0;
-
-    for (const line of lines) {
-      const match = line.match(/(\d{2}B8[A-Z0-9]{6})(R\d{6}L?)/);
-      if (!match) {
-        console.log("⛔ Skip (no reg/sub):", line);
-        continue;
-      }
-
-      const regno = match[1];
-      const subcode = match[2];
-      const after = line.slice(line.indexOf(subcode) + subcode.length);
-
-      const gradeMatch = after.match(/(.+?)(\d{1,3})(S|A|B|C|D|E|F|Ab|ABSENT|MP|Completed)(\d+(\.\d+)?)/i);
-      if (!gradeMatch) {
-        console.log("⛔ Skip (grade parse failed):", after);
-        continue;
-      }
-
-      const subname = gradeMatch[1].trim();
-      const rawGrade = gradeMatch[3].toUpperCase();
-      const grade = rawGrade === "ABSENT" ? "Ab" : rawGrade;
-      const credits = parseFloat(gradeMatch[4]);
-
-      console.log(`✅ Parsed: ${regno} | ${subcode} | ${subname} | ${grade} | ${credits}`);
-      csvRows.push([regno, subcode, subname, grade, credits]);
-
-      const sql = `
-        INSERT INTO results (regno, semester, subcode, subname, grade, credits)
-        VALUES (?, ?, ?, ?, ?, ?)
-        ON DUPLICATE KEY UPDATE
-          semester = VALUES(semester),
-          grade = VALUES(grade),
-          credits = VALUES(credits),
-          subname = VALUES(subname)
-      `;
-
-      tasks.push(new Promise(resolve => {
-        connection.query(sql, [regno, semester, subcode, subname, grade, credits], (err) => {
-          if (!err) inserted++;
-          resolve();
-        });
-      }));
-    }
-
-    await Promise.all(tasks);
-
-    const csvPath = path.join("uploads", `${base}.csv`);
-    fs.writeFileSync(csvPath, csvRows.map(r => r.join(",")).join("\n"));
-    fs.unlinkSync(req.file.path);
-
-    console.log(`✅ Done. Inserted: ${inserted}`);
-    console.log("📦 CSV saved at:", csvPath);
-
-    res.json({
-      success: true,
-      message: `✅ Stored ${inserted} records successfully.`,
-      files: { csv: csvPath, txt: txtPath }
-    });
-
-  } catch (err) {
-    console.error("❌ Fatal Error:", err);
-    res.status(500).json({ success: false, message: "❌ Internal Server Error" });
-  }
-});
-//AUTONOMOUS results upload
-// Route: Upload Autonomous Student Result PDF
-
+// ✅ Upload Route
 app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
   try {
     const { semester } = req.body;
@@ -1818,7 +1731,7 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
     const csvPath = path.join("uploads", `${baseName}.csv`);
 
     fs.writeFileSync(txtPath, lines.join("\n"));
-    console.log("📄 TXT file written:", txtPath);
+    console.log("📄 TXT file saved:", txtPath);
     console.log("📝 Total lines parsed:", lines.length);
 
     const csvRows = [["regno", "subcode", "subname", "grade", "credits"]];
@@ -1863,7 +1776,7 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
       tasks.push(new Promise(resolve => {
         connection.query(sql, [regno, semester, subcode, subname, grade, credits], err => {
           if (!err) inserted++;
-          else console.error(`❌ DB Insert Error [${regno}-${subcode}]:`, err.message);
+          else console.error(`❌ DB Error [${regno} - ${subcode}]:`, err.message);
           resolve();
         });
       }));
@@ -1873,8 +1786,8 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
     fs.writeFileSync(csvPath, csvRows.map(r => r.join(",")).join("\n"));
     fs.unlinkSync(req.file.path);
 
-    console.log(`✅ Done: ${inserted} rows inserted`);
-    console.log("📦 CSV saved at:", csvPath);
+    console.log(`✅ Done: ${inserted} rows inserted.`);
+    console.log("📦 CSV file saved at:", csvPath);
 
     res.json({
       success: inserted > 0,
