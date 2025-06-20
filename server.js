@@ -1713,7 +1713,6 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
 
 // result pdf upload
 // 📥 Admin uploads result PDF
-
 app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
   try {
     const { semester } = req.body;
@@ -1747,7 +1746,6 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
 
       const originalLine = line;
 
-      // ✅ Extract regno
       const regnoMatch = line.match(/(\d{2}B8[A-Z0-9]{6})/);
       if (!regnoMatch) {
         logStream.write(`❌ Could not find regno: ${originalLine}\n`);
@@ -1755,7 +1753,6 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
       }
       const regno = regnoMatch[1];
 
-      // ✅ Extract subcode
       const subcodeMatch = line.match(/(R[A-Z0-9]{6})/);
       if (!subcodeMatch) {
         logStream.write(`❌ Could not find subcode: ${originalLine}\n`);
@@ -1765,7 +1762,6 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
       const subcodeIndex = line.indexOf(subcode);
       const afterSubcode = line.slice(subcodeIndex + 7);
 
-      // ✅ Extract subname
       const subnameMatch = afterSubcode.match(/^(.+?)(\d)/);
       if (!subnameMatch) {
         logStream.write(`❌ Could not extract subname: ${originalLine}\n`);
@@ -1773,7 +1769,6 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
       }
       const subname = subnameMatch[1].trim();
 
-      // ✅ Extract grade and credits (space-separated)
       const gradeCreditsPart = afterSubcode.slice(subname.length);
       const gradeCreditMatch = gradeCreditsPart.match(/^(\d{1,3})\s+(S|A|B|C|D|E|F|ABSENT)\s+(\d+(\.\d+)?)/);
 
@@ -1786,7 +1781,6 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
       const credits = parseFloat(gradeCreditMatch[3]);
       const grade = gradeRaw === "ABSENT" ? "Ab" : gradeRaw;
 
-      // ✅ Valid MySQL syntax — no aliasing
       const sql = `
         INSERT INTO results (regno, semester, subcode, subname, grade, credits)
         VALUES (?, ?, ?, ?, ?, ?)
