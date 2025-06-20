@@ -1802,100 +1802,91 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
 //AUTONOMOUS results upload
 // Route: Upload Autonomous Student Result PDF
 
-app.post("/admin/upload-autonomous-result-pdf", upload.single("pdf"), async (req, res) => {
+app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
   try {
     const { semester } = req.body;
     if (!req.file || !semester) {
-      return res.status(400).json({ success: false, message: "❌ PDF and semester required." });
+      return res.status(400).json({ success: false, message: "❌ Missing PDF or semester." });
     }
 
-    const buffer = fs.readFileSync(req.file.path);
-    const data = await pdfParse(buffer);
-    const lines = data.text.split("\n").map(line => line.trim()).filter(Boolean);
+    const fileBuffer = fs.readFileSync(req.file.path);
+    const pdfData = await pdfParse(fileBuffer);
+    const lines = pdfData.text.split("\n").map(line => line.trim()).filter(Boolean);
 
-    const baseName = path.basename(req.file.originalname, path.extname(req.file.originalname)).replace(/\s+/g, "_");
-    const txtPath = path.join(__dirname, "uploads", `${baseName}.txt`);
-    fs.writeFileSync(txtPath, data.text, "utf-8");
+    const baseName = req.file.filename;
+    const txtPath = path.join("uploads", `${baseName}.txt`);
+    const csvPath = path.join("uploads", `${baseName}.csv`);
 
-    // ✅ Extract subject codes from SGPA line
-    let subjectCodes = [];
-    for (const line of lines) {
-      if (line.includes("SGPA")) {
-        const subPart = line.split("SGPA")[0];
-        subjectCodes = subPart.match(/[A-Z0-9]{8}/g) || [];
-        break;
-      }
-    }
+    fs.writeFileSync(txtPath, lines.join("\n"));
+    console.log("📄 TXT file written:", txtPath);
+    console.log("📝 Total lines parsed:", lines.length);
 
-    if (subjectCodes.length !== 10) {
-      return res.status(400).json({ success: false, message: "❌ Could not extract exactly 10 subject codes." });
-    }
-
-    // ✅ Extract subcode-subname mapping
-const subjectMap = {}; // subcode → subname
-for (const line of lines) {
-  const match = line.match(/^\d+\)\s*([A-Z0-9]{8})-(.+)$/);
-  if (match) {
-    const subcode = match[1].trim();
-    const subname = match[2].trim();
-    subjectMap[subcode] = subname;
-  }
-}
-
-
-    const results = [];
+    const csvRows = [["regno", "subcode", "subname", "grade", "credits"]];
+    const tasks = [];
     let inserted = 0;
 
-    // ✅ Loop to process students
-    for (let i = 0; i < lines.length - 1; i++) {
-      const regno = lines[i];
-      if (!/^[0-9]{2}B8[0-9A-Z]{6}$/.test(regno)) continue;
-
-      const lineAfter = lines[i + 1];
-      const grades = lineAfter.slice(0, 10).split("");
-      const sgpa = parseFloat(lineAfter.slice(10));
-
-      if (grades.length !== 10 || isNaN(sgpa)) continue;
-
-      for (let j = 0; j < 10; j++) {
-        const subcode = subjectCodes[j];
-        const subname = subjectMap[subcode] || null;
-        const grade = grades[j];
-
-        results.push([regno, subcode, subname, grade, sgpa]);
-
-        const query = `
-          INSERT INTO results (regno, semester, subcode, subname, grade)
-          VALUES (?, ?, ?, ?, ?)
-          ON DUPLICATE KEY UPDATE grade = VALUES(grade), subname = VALUES(subname)
-        `;
-        connection.query(query, [regno, semester, subcode, subname, grade], (err) => {
-          if (err) console.error(`❌ DB Error [${regno} - ${subcode}]:`, err.message);
-        });
-
-        inserted++;
+    for (const line of lines) {
+      const match = line.match(/(\d{2}B8[A-Z0-9]{6})(R\d{6}L?)/);
+      if (!match) {
+        console.log("⛔ Skip (no reg/sub):", line);
+        continue;
       }
 
-      i++; // skip to next block
+      const regno = match[1];
+      const subcode = match[2];
+      const after = line.slice(line.indexOf(subcode) + subcode.length);
+
+      const gradeMatch = after.match(/(.+?)(\d{1,3})(S|A|B|C|D|E|F|Ab|ABSENT|MP|Completed)(\d+(\.\d+)?)/i);
+      if (!gradeMatch) {
+        console.log("⛔ Skip (grade parse failed):", after);
+        continue;
+      }
+
+      const subname = gradeMatch[1].trim();
+      const rawGrade = gradeMatch[3].toUpperCase();
+      const grade = rawGrade === "ABSENT" ? "Ab" : rawGrade;
+      const credits = parseFloat(gradeMatch[4]);
+
+      console.log(`✅ Parsed: ${regno} | ${subcode} | ${subname} | ${grade} | ${credits}`);
+      csvRows.push([regno, subcode, subname, grade, credits]);
+
+      const sql = `
+        INSERT INTO results (regno, semester, subcode, subname, grade, credits)
+        VALUES (?, ?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE
+          semester = VALUES(semester),
+          grade = VALUES(grade),
+          credits = VALUES(credits),
+          subname = VALUES(subname)
+      `;
+
+      tasks.push(new Promise(resolve => {
+        connection.query(sql, [regno, semester, subcode, subname, grade, credits], err => {
+          if (!err) inserted++;
+          else console.error(`❌ DB Insert Error [${regno}-${subcode}]:`, err.message);
+          resolve();
+        });
+      }));
     }
 
-    // ✅ Save .csv file
-    const csvPath = path.join(__dirname, "uploads", `${baseName}.csv`);
-    const csvHeader = "regno,subcode,subname,grade,sgpa\n";
-    const csvContent = csvHeader + results.map(r => r.join(",")).join("\n");
-    fs.writeFileSync(csvPath, csvContent, "utf-8");
+    await Promise.all(tasks);
+    fs.writeFileSync(csvPath, csvRows.map(r => r.join(",")).join("\n"));
+    fs.unlinkSync(req.file.path);
 
-    fs.unlinkSync(req.file.path); // cleanup PDF
+    console.log(`✅ Done: ${inserted} rows inserted`);
+    console.log("📦 CSV saved at:", csvPath);
 
     res.json({
-      success: true,
-      message: `✅ ${inserted} subject grades stored in database.`,
-      txtFile: `/uploads/${baseName}.txt`,
-      csvFile: `/uploads/${baseName}.csv`
+      success: inserted > 0,
+      message: `✅ PDF processed. ${inserted} rows inserted.`,
+      files: {
+        txt: txtPath,
+        csv: csvPath
+      }
     });
 
   } catch (err) {
-    console.error("❌ Fatal Error:", err);
-    res.status(500).json({ success: false, message: "❌ Server error during parsing." });
+    console.error("❌ Server Error:", err);
+    res.status(500).json({ success: false, message: "❌ Internal server error." });
   }
 });
