@@ -1697,7 +1697,7 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
 
 //AUTONOMOUS results upload
 // Route: Upload Autonomous Student Result PDF
-
+// 🧠 Autonomous PDF Upload Route
 app.post("/admin/upload-autonomous-result-pdf", upload.single("pdf"), async (req, res) => {
   try {
     const { semester } = req.body;
@@ -1713,13 +1713,11 @@ app.post("/admin/upload-autonomous-result-pdf", upload.single("pdf"), async (req
     const txtPath = path.join(__dirname, "uploads", `${baseName}.txt`);
     fs.writeFileSync(txtPath, data.text, "utf-8");
 
-    // ✅ Extract subject codes from SGPA line
+    // ✅ Step 1: Extract subject codes from SGPA line
     let subjectCodes = [];
     for (const line of lines) {
-      if (line.includes("SGPA")) {
-        const subPart = line.split("SGPA")[0];
-        subjectCodes = subPart.match(/[A-Z0-9]{8}/g) || [];
-        break;
+      if (line.includes("SGPA") && subjectCodes.length === 0) {
+        subjectCodes = line.split("SGPA")[0].match(/[A-Z0-9]{8}/g) || [];
       }
     }
 
@@ -1727,67 +1725,69 @@ app.post("/admin/upload-autonomous-result-pdf", upload.single("pdf"), async (req
       return res.status(400).json({ success: false, message: "❌ Could not extract exactly 10 subject codes." });
     }
 
-    // ✅ Extract subcode-subname mapping
-const subjectMap = {}; // subcode → subname
-for (const line of lines) {
-  const match = line.match(/^\d+\)\s*([A-Z0-9]{8})-(.+)$/);
-  if (match) {
-    const subcode = match[1].trim();
-    const subname = match[2].trim();
-    subjectMap[subcode] = subname;
-  }
-}
+    // ✅ Step 2: Extract subcode-subname map (for any year)
+    const subjectMap = {}; // subcode => subname
+    for (const line of lines) {
+      const match = line.match(/^\d+\)\s*([A-Z0-9]{8})-(.+)$/);
+      if (match) {
+        const subcode = match[1].trim();
+        const subname = match[2].trim();
+        subjectMap[subcode] = subname;
+      }
+    }
 
+    // ✅ Step 3: Parse student results (regno + grades + sgpa)
+    const studentBlocks = [];
+    for (let i = 0; i < lines.length - 1; i++) {
+      const regno = lines[i];
+      const resultLine = lines[i + 1];
 
+      if (/^\d{2}B8[0-9A-Z]{6}$/.test(regno) && /^[A-FS]{10}[0-9.]+$/.test(resultLine)) {
+        const grades = resultLine.slice(0, 10).split("");
+        const sgpa = parseFloat(resultLine.slice(10)) || 0;
+        studentBlocks.push({ regno, grades, sgpa });
+        i++; // skip next line (already processed)
+      }
+    }
+
+    // ✅ Step 4: Store results in DB and CSV
     const results = [];
     let inserted = 0;
 
-    // ✅ Loop to process students
-    for (let i = 0; i < lines.length - 1; i++) {
-      const regno = lines[i];
-      if (!/^[0-9]{2}B8[0-9A-Z]{6}$/.test(regno)) continue;
-
-      const lineAfter = lines[i + 1];
-      const grades = lineAfter.slice(0, 10).split("");
-      const sgpa = parseFloat(lineAfter.slice(10));
-
-      if (grades.length !== 10 || isNaN(sgpa)) continue;
-
+    for (const student of studentBlocks) {
       for (let j = 0; j < 10; j++) {
         const subcode = subjectCodes[j];
         const subname = subjectMap[subcode] || null;
-        const grade = grades[j];
+        const grade = student.grades[j];
 
-        results.push([regno, subcode, subname, grade, sgpa]);
+        results.push([student.regno, semester, subcode, subname, grade, student.sgpa]);
 
         const query = `
-          INSERT INTO results (regno, semester, subcode, subname, grade)
-          VALUES (?, ?, ?, ?, ?)
-          ON DUPLICATE KEY UPDATE grade = VALUES(grade), subname = VALUES(subname)
+          INSERT INTO autonomous_results (regno, semester, subcode, subname, grade, sgpa)
+          VALUES (?, ?, ?, ?, ?, ?)
+          ON DUPLICATE KEY UPDATE grade = VALUES(grade), subname = VALUES(subname), sgpa = VALUES(sgpa)
         `;
-        connection.query(query, [regno, semester, subcode, subname, grade], (err) => {
-          if (err) console.error(`❌ DB Error [${regno} - ${subcode}]:`, err.message);
+        connection.query(query, [student.regno, semester, subcode, subname, grade, student.sgpa], (err) => {
+          if (err) console.error(`❌ DB Error [${student.regno} - ${subcode}]:`, err.message);
         });
 
         inserted++;
       }
-
-      i++; // skip to next block
     }
 
-    // ✅ Save .csv file
+    // ✅ Save CSV file
     const csvPath = path.join(__dirname, "uploads", `${baseName}.csv`);
-    const csvHeader = "regno,subcode,subname,grade,sgpa\n";
+    const csvHeader = "regno,semester,subcode,subname,grade,sgpa\n";
     const csvContent = csvHeader + results.map(r => r.join(",")).join("\n");
     fs.writeFileSync(csvPath, csvContent, "utf-8");
 
-    fs.unlinkSync(req.file.path); // cleanup PDF
+    fs.unlinkSync(req.file.path); // cleanup temp PDF
 
     res.json({
       success: true,
-      message: `✅ ${inserted} subject grades stored in database.`,
-      txtFile: `/uploads/${baseName}.txt`,
-      csvFile: `/uploads/${baseName}.csv`
+      message: `✅ ${inserted} records inserted successfully.`,
+      csvFile: `/uploads/${baseName}.csv`,
+      txtFile: `/uploads/${baseName}.txt`
     });
 
   } catch (err) {
