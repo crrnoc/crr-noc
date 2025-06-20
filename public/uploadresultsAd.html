@@ -1,297 +1,161 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>📥 Upload Results (Admin)</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <title>Upload Result PDF</title>
   <link rel="icon" href="crrengglogo.png" />
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron&family=Poppins:wght@300;500;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
-    :root {
-      --main-color: #3cb6ff;
-      --accent-color: #ff3d3d;
-    }
-
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Poppins', sans-serif;
-    }
-
     body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #eef2f7;
       display: flex;
-      min-height: 100vh;
-      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
-      color: white;
-    }
-
-    .sidebar {
-      width: 260px;
-      background: rgba(60, 66, 84, 0.5);
-      backdrop-filter: blur(8px);
-      padding: 30px 20px;
-      display: flex;
-      flex-direction: column;
-      box-shadow: 4px 0 25px rgba(0, 0, 0, 0.4);
-      position: fixed;
+      justify-content: center;
+      align-items: center;
       height: 100vh;
-      left: 0;
-      top: 0;
-      z-index: 10;
-    }
-
-    .sidebar h2 {
-      text-align: center;
-      font-size: 24px;
-      color: var(--main-color);
-      margin-bottom: 30px;
-    }
-
-    .sidebar ul {
-      list-style: none;
-    }
-
-    .sidebar li {
-      padding: 12px 18px;
-      margin: 12px 0;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 10px;
-      cursor: pointer;
-      transition: 0.3s ease;
-    }
-
-    .sidebar li:hover {
-      background: var(--main-color);
-      box-shadow: 0 0 12px var(--main-color);
-    }
-
-    .sidebar button {
-      margin-top: auto;
-      padding: 10px 20px;
-      border: none;
-      background: linear-gradient(to right, #ff416c, #ff4b2b);
-      color: white;
-      border-radius: 12px;
-      cursor: pointer;
-      font-weight: bold;
-      box-shadow: 0 0 10px rgba(255, 65, 108, 0.5);
-      transition: 0.3s ease;
-    }
-
-    .sidebar button:hover {
-      transform: scale(1.05);
-    }
-
-    .mobile-toggle {
-      position: fixed;
-      top: 15px;
-      left: 15px;
-      font-size: 26px;
-      z-index: 20;
-      cursor: pointer;
-      display: none;
-      color: white;
-    }
-
-    .main {
-      margin-left: 260px;
-      padding: 70px 20px;
-      flex: 1;
-      animation: slideIn 1s ease forwards;
-    }
-
-    .banner {
-      background: rgba(255, 255, 255, 0.08);
-      border-radius: 14px;
-      padding: 16px;
-      font-size: 18px;
-      text-align: center;
-      margin-bottom: 30px;
-      box-shadow: 0 0 15px rgba(0, 191, 255, 0.3);
     }
 
     .card {
-      background: rgba(255, 255, 255, 0.08);
-      backdrop-filter: blur(6px);
+      background: white;
       padding: 30px;
-      border-radius: 16px;
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      max-width: 500px;
-      margin: auto;
-      animation: fadeUp 0.6s ease forwards;
+      border-radius: 12px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+      max-width: 400px;
+      width: 100%;
+    }
+
+    h2 {
+      text-align: center;
+      color: #2c3e50;
     }
 
     select, input[type="file"], button {
       width: 100%;
-      padding: 12px;
-      margin: 12px 0;
-      border-radius: 10px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      background: rgba(255, 255, 255, 0.1);
-      font-size: 15px;
-      color: rgb(0, 0, 0);
-      backdrop-filter: blur(4px);
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
     }
 
-    input[type="file"]::file-selector-button {
-      padding: 10px;
-      border-radius: 8px;
-      background: linear-gradient(to right, #3cb6ff, #ff3d3d);
+    button {
+      background-color: #3498db;
       color: white;
       border: none;
       font-weight: bold;
       cursor: pointer;
     }
 
-    button {
-      background: linear-gradient(135deg, var(--main-color), var(--accent-color));
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-
-    button:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 18px rgba(255, 61, 61, 0.5);
-    }
-
-    @media (max-width: 768px) {
-      .sidebar {
-        transform: translateX(-100%);
-        transition: 0.4s ease;
-      }
-
-      .sidebar.open {
-        transform: translateX(0);
-      }
-
-      .mobile-toggle {
-        display: block;
-      }
-
-      .main {
-        margin-left: 0;
-        padding-top: 90px;
-      }
-    }
-
-    @keyframes fadeUp {
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes slideIn {
-      from { opacity: 0; transform: translateX(50px); }
-      to { opacity: 1; transform: translateX(0); }
+    button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
     }
   </style>
 </head>
 <body>
 
-  <div class="sidebar">
-    <h2>Admin Panel</h2>
-    <ul>
-      <li onclick="navigateTo('uploadresultsAd.html')">📥 Upload Results</li>
-      <li onclick="navigateTo('upload-sbi.html')">📤 Upload SBI References</li>
-      <li onclick="navigateTo('du-match-status.html')">📊 DU Match Status</li>
-      <li onclick="navigateTo('noc-status.html')">📜 NOC Status</li>
-      <li onclick="navigateTo('removestudents.html')">🗑️ Delete Students</li>
-    </ul>
-    <button onclick="logout()">🚪 Logout</button>
-  </div>
+<div class="card">
+  <h2>Upload Result PDF</h2>
+  <form id="uploadForm">
+    <label for="resultType">Result Type</label>
+    <select id="resultType" required>
+      <option value="">-- Select Type --</option>
+      <option value="regular">Regular (JNTUK)</option>
+      <option value="autonomous">Autonomous</option>
+    </select>
 
-  <div class="mobile-toggle" onclick="toggleSidebar()">☰</div>
+    <label for="semester">Semester</label>
+    <select id="semester" required>
+      <option value="">-- Select Semester --</option>
+      <option>1-1</option>
+      <option>1-2</option>
+      <option>2-1</option>
+      <option>2-2</option>
+      <option>3-1</option>
+      <option>3-2</option>
+      <option>4-1</option>
+      <option>4-2</option>
+    </select>
 
-  <div class="main">
-    <div class="banner">📥 Upload Result PDF (Admin)</div>
-    <div class="card">
-      <form id="uploadForm">
-        <label for="semester">📘 Select Semester</label>
-        <select id="semester" required>
-          <option value="">-- Select Semester --</option>
-          <option>1-1</option><option>1-2</option>
-          <option>2-1</option><option>2-2</option>
-          <option>3-1</option><option>3-2</option>
-          <option>4-1</option><option>4-2</option>
-        </select>
+    <label for="pdfFile">Select PDF File</label>
+    <input type="file" id="pdfFile" accept="application/pdf" required />
 
-        <label for="pdfFile">📎 Choose PDF File</label>
-        <input type="file" id="pdfFile" accept="application/pdf" required />
+    <button type="submit" id="submitBtn">Upload PDF</button>
+  </form>
+</div>
 
-        <button type="submit" id="submitBtn">Upload PDF</button>
-      </form>
-    </div>
-  </div>
+<script>
+  const form = document.getElementById("uploadForm");
+  const submitBtn = document.getElementById("submitBtn");
 
-  <script>
-    function navigateTo(page) {
-      window.location.href = page;
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const semester = document.getElementById("semester").value;
+    const file = document.getElementById("pdfFile").files[0];
+    const resultType = document.getElementById("resultType").value;
+
+    if (!semester || !file || !resultType) {
+      Swal.fire("Missing Details", "Please select result type, semester and upload a PDF", "warning");
+      return;
     }
 
-    function logout() {
-      localStorage.removeItem("userId");
-      window.location.replace("index.html");
-    }
+    const endpoint =
+      resultType === "autonomous"
+        ? "http://localhost:3000/admin/upload-autonomous-result-pdf"
+        : "http://localhost:3000/admin/upload-result-pdf";
 
-    function toggleSidebar() {
-      document.querySelector('.sidebar').classList.toggle('open');
-    }
+    const formData = new FormData();
+    formData.append("semester", semester);
+    formData.append("pdf", file);
 
-    const form = document.getElementById("uploadForm");
-    const submitBtn = document.getElementById("submitBtn");
+    submitBtn.disabled = true;
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
+    Swal.fire({
+      title: "Uploading...",
+      html: "Processing file. Please wait...",
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: () => Swal.showLoading()
+    });
 
-      const semester = document.getElementById("semester").value;
-      const file = document.getElementById("pdfFile").files[0];
-
-      if (!semester || !file) {
-        Swal.fire("Missing Details", "Please select semester and upload a PDF", "warning");
-        return;
-      }
-
-      const formData = new FormData();
-      formData.append("semester", semester);
-      formData.append("pdf", file);
-
-      submitBtn.disabled = true;
-
-      Swal.fire({
-        title: "Uploading...",
-        html: "Processing file. Please wait...",
-        allowOutsideClick: false,
-        allowEscapeKey: false,
-        didOpen: () => Swal.showLoading()
+    try {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        body: formData
       });
 
-      try {
-        // Auto-detect local or deployed URL
-        const response = await fetch("http://localhost:3000/admin/upload-result-pdf", {
-  method: "POST",
-  body: formData
-});
-
-
-        const result = await response.json();
-
-        Swal.fire({
-          icon: result.success ? "success" : "warning",
-          title: result.success ? "Upload Successful ✅" : "Upload Failed ⚠️",
-          text: result.message || "Upload completed.",
-        });
-
-        if (result.success) form.reset();
-
-      } catch (error) {
-        console.error("❌ Upload failed:", error);
-        Swal.fire("Upload Failed ❌", error.message || "Something went wrong.", "error");
-      } finally {
-        submitBtn.disabled = false;
+      const contentType = response.headers.get("content-type") || "";
+      if (!contentType.includes("application/json")) {
+        const rawText = await response.text();
+        console.error("❌ Server returned non-JSON:", rawText.slice(0, 500));
+        throw new Error("Server returned an unexpected response (not JSON). Check console.");
       }
-    });
-  </script>
+
+      const result = await response.json();
+
+      Swal.fire({
+        icon: result.success ? "success" : "warning",
+        title: result.success ? "Upload Successful ✅" : "No Valid Records ⚠️",
+        text: result.message || "Upload completed.",
+      });
+
+      if (result.success) form.reset();
+
+    } catch (error) {
+      console.error("❌ Upload failed:", error);
+      Swal.fire("Upload Failed ❌", error.message || "Something went wrong.", "error");
+    } finally {
+      submitBtn.disabled = false;
+    }
+  });
+
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && e.target.tagName !== "TEXTAREA") {
+      e.preventDefault();
+    }
+  });
+</script>
+
 </body>
 </html>
