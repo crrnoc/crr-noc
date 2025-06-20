@@ -286,7 +286,7 @@
 
       try {
         container.innerHTML = "<p>Loading results...</p>";
-        const response = await fetch(`http://localhost:3000/student/results/${regno}?semester=${semester}`);
+        const response = await fetch(`https://crr-noc.onrender.com/student/results/${regno}?semester=${semester}`);
         const data = await response.json();
 
         if (!data.results || data.results.length === 0) {
