@@ -90,7 +90,7 @@
     container.innerHTML = "";
 
     if (!regno) {
-      container.innerHTML = "<p class='error'>Student not logged in. Please login again.</p>";
+      container.innerHTML = "<p class='error'>Student not logged in. Please login first.</p>";
       return;
     }
 
@@ -104,7 +104,9 @@
 
       const response = await fetch(`https://crr-noc.onrender.com/student/results`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json"
+        },
         body: JSON.stringify({ regno, semester })
       });
 
@@ -115,7 +117,7 @@
         return;
       }
 
-      let html = `<h3>Results for <strong>${data.regno}</strong> - Semester <strong>${data.semester}</strong> (${data.type || "Regular"})</h3>`;
+      let html = `<h3>Results for <strong>${data.regno}</strong> - Semester <strong>${data.semester}</strong></h3>`;
       html += `<table>
                 <tr>
                   <th>Subject Code</th>
@@ -127,9 +129,9 @@
       data.results.forEach(row => {
         html += `<tr>
                   <td>${row.subcode}</td>
-                  <td>${row.subname || "-"}</td>
+                  <td>${row.subname || '-'}</td>
                   <td>${row.grade}</td>
-                  <td>${row.credits || "-"}</td>
+                  <td>${row.credits || '-'}</td>
                 </tr>`;
       });
 
@@ -146,9 +148,6 @@
       container.innerHTML = "<p class='error'>Error fetching results. Please try again later.</p>";
     }
   }
-
-  // Optional: call once on load if you want auto-fetch on page load
-  // fetchResults();
 </script>
 
 </body>
