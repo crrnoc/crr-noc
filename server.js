@@ -1632,7 +1632,7 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
     let inserted = 0;
 
     for (const line of lines) {
-      const match = line.match(/(\d{2}B8[A-Z0-9]{6})(R\d{6}L?)/);
+    const match = line.match(/(\d{2}B8[A-Z0-9]{6})(R[A-Z0-9]{7})/);
       if (!match) {
         console.log("⛔ Skip (no reg/sub):", line);
         continue;
@@ -1642,7 +1642,7 @@ app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
       const subcode = match[2];
       const after = line.slice(line.indexOf(subcode) + subcode.length);
 
-      const gradeMatch = after.match(/(.+?)(\d{1,3})(S|A|B|C|D|E|F|ABSENT|COMPLETED|MP)(\d+(\.\d+)?)/i);
+      const gradeMatch = after.match(/(.+?)(\d{1,3})(S|A|B|C|D|E|F|ABSENT|COMPLE|MP)(\d+(\.\d+)?)/i);
       if (!gradeMatch) {
         console.log("⛔ Skip (grade parse failed):", after);
         continue;
