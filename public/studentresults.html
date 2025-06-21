@@ -297,64 +297,54 @@
   </div>
 
   <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
+<script>
+  function toggleMobileMenu() {
+    const sidebar = document.querySelector('.sidebar');
+    sidebar.classList.toggle('open');
+  }
 
-  <script>
-    function toggleMobileMenu() {
-      const sidebar = document.querySelector('.sidebar');
-      sidebar.classList.toggle('open');
-    }
-
-    document.querySelectorAll(".menu li a").forEach(link => {
-      link.addEventListener("click", () => {
-        if (window.innerWidth <= 768) {
-          document.querySelector('.sidebar').classList.remove('open');
-        }
-      });
-    });
-
-    document.addEventListener("DOMContentLoaded", () => {
-      const userId = localStorage.getItem("userId") || localStorage.getItem("regno");
-      if (!userId) {
-        alert("Please login first.");
-        window.location.href = "index.html";
-        return;
+  document.querySelectorAll(".menu li a").forEach(link => {
+    link.addEventListener("click", () => {
+      if (window.innerWidth <= 768) {
+        document.querySelector('.sidebar').classList.remove('open');
       }
-      document.getElementById("userId").textContent = userId;
     });
-document.addEventListener("DOMContentLoaded", async () => {
-  const userId = localStorage.getItem("userId") || localStorage.getItem("regno");
-  if (!userId) {
-    alert("Please login first.");
-    window.location.href = "index.html";
-    return;
-  }
-  document.getElementById("userId").textContent = userId;
+  });
 
-  // 🟢 Fetch overall SGPA/Percentage at top
-  try {
-    const res = await fetch(`https://crr-noc.onrender.com/student/overallResults/${userId}`);
-    const data = await res.json();
-
-    if (data && data.sgpa && data.percentage) {
-      const statsDiv = document.getElementById("overallStatsContainer");
-      statsDiv.innerHTML = `
-        <div class="circle-card" style="background: conic-gradient(#1f75cb ${data.sgpa * 10}%, #e0e0e0 0%);">
-          <span>${data.sgpa}</span>
-          <div class="circle-label">Overall SGPA</div>
-        </div>
-        <div class="circle-card" style="background: conic-gradient(#28a745 ${data.percentage}%, #e0e0e0 0%);">
-          <span>${data.percentage}%</span>
-          <div class="circle-label">Overall Percentage</div>
-        </div>
-      `;
+  document.addEventListener("DOMContentLoaded", async () => {
+    const userId = localStorage.getItem("userId") || localStorage.getItem("regno");
+    if (!userId) {
+      alert("Please login first.");
+      window.location.href = "index.html";
+      return;
     }
-  } catch (err) {
-    console.error("Error loading overall stats:", err);
-  }
-});
 
+    document.getElementById("userId").textContent = userId;
 
-      async function fetchResults() {
+    // 🟢 Fetch overall SGPA and Percentage from deployed backend
+    try {
+      const res = await fetch(`https://crr-noc.onrender.com/student/overallResults/${userId}`);
+      const data = await res.json();
+
+      if (data && data.sgpa && data.percentage) {
+        const statsDiv = document.getElementById("overallStatsContainer");
+        statsDiv.innerHTML = `
+          <div class="circle-card" style="background: conic-gradient(#1f75cb ${data.sgpa * 10}%, #e0e0e0 0%);">
+            <span>${data.sgpa}</span>
+            <div class="circle-label">Overall SGPA</div>
+          </div>
+          <div class="circle-card" style="background: conic-gradient(#28a745 ${data.percentage}%, #e0e0e0 0%);">
+            <span>${data.percentage}%</span>
+            <div class="circle-label">Overall Percentage</div>
+          </div>
+        `;
+      }
+    } catch (err) {
+      console.error("Error loading overall stats:", err);
+    }
+  });
+
+  async function fetchResults() {
     const regno = localStorage.getItem("regno") || localStorage.getItem("userId");
     const semester = document.getElementById("semester").value;
     const container = document.getElementById("resultContainer");
@@ -373,6 +363,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     try {
       container.innerHTML = "<p>Loading results...</p>";
+
       const response = await fetch(`https://crr-noc.onrender.com/student/results/${regno}?semester=${semester}`);
       const data = await response.json();
 
@@ -383,7 +374,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       let html = `<h3 style="text-align:center;">Results for <strong>${data.regno}</strong> - Semester <strong>${data.semester}</strong></h3>`;
 
-      // 🌀 Circle Cards
       html += `<div class="stats-circles">
         <div class="circle-card" style="background: conic-gradient(#1f75cb ${data.sgpa * 10}%, #e0e0e0 0%);">
           <span>${data.sgpa}</span>
@@ -395,7 +385,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         </div>
       </div>`;
 
-      // 📊 Table Results
       html += `<table>
                 <tr>
                   <th>Subject Code</th>
@@ -407,9 +396,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       data.results.forEach(row => {
         html += `<tr>
                   <td>${row.subcode}</td>
-                  <td>${row.subname}</td>
+                  <td>${row.subname || "-"}</td>
                   <td>${row.grade}</td>
-                  <td>${row.credits}</td>
+                  <td>${row.credits || "-"}</td>
                 </tr>`;
       });
 
@@ -422,14 +411,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-    function logout() {
-      localStorage.removeItem("userId");
-      localStorage.removeItem("regno");
-      if ('caches' in window) {
-        caches.keys().then(names => names.forEach(name => caches.delete(name)));
-      }
-      window.location.replace("index.html");
+  function logout() {
+    localStorage.removeItem("userId");
+    localStorage.removeItem("regno");
+    if ('caches' in window) {
+      caches.keys().then(names => names.forEach(name => caches.delete(name)));
     }
-  </script>
+    window.location.replace("index.html");
+  }
+</script>
 </body>
 </html>
