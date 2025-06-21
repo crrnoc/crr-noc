@@ -1869,3 +1869,44 @@ app.get('/student/results/:regno', async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
+const GRADE_POINTS = {
+  S: 10,
+  A: 9,
+  B: 8,
+  C: 7,
+  D: 6,
+  E: 5,
+  F: 0,
+  Ab: 0,
+};
+
+app.get("/student/overallResults/:regno", async (req, res) => {
+  const { regno } = req.params;
+
+  try {
+    const [rows] = await connection.promise().query(
+      "SELECT grade, credits FROM results WHERE regno = ?",
+      [regno]
+    );
+
+    if (!rows.length) return res.json({ sgpa: "0.00", percentage: "0.00" });
+
+    let totalGradePoints = 0;
+    let totalCredits = 0;
+
+    rows.forEach(({ grade, credits }) => {
+      const gradePoint = GRADE_POINTS[grade] || 0;
+      totalGradePoints += gradePoint * credits;
+      totalCredits += credits;
+    });
+
+    const sgpa = totalCredits > 0 ? (totalGradePoints / totalCredits).toFixed(2) : "0.00";
+    const percentage = (sgpa * 9.5).toFixed(2); // approximate conversion
+
+    res.json({ sgpa, percentage });
+
+  } catch (err) {
+    console.error("❌ Failed to fetch overall results:", err);
+    res.status(500).json({ sgpa: "0.00", percentage: "0.00" });
+  }
+});
