@@ -126,76 +126,73 @@
     </div>
   </div>
 
-  <script>
-    function navigateTo(page) {
-      window.location.href = page;
-    }
+<script>
+  const form = document.getElementById("uploadForm");
+const submitBtn = document.getElementById("submitBtn");
 
-    function logout() {
-      localStorage.removeItem("userId");
-      window.location.replace("index.html");
-    }
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-    function toggleSidebar() {
-      document.querySelector('.sidebar').classList.toggle('open');
-    }
+  const semester = document.getElementById("semester").value;
+  const file = document.getElementById("pdfFile").files[0];
+  const resultType = document.getElementById("resultType").value;
 
-    const form = document.getElementById("uploadForm");
-    const submitBtn = document.getElementById("submitBtn");
+  if (!semester || !file || !resultType) {
+    Swal.fire("Missing Details", "Please select result type, semester and upload a PDF", "warning");
+    return;
+  }
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
+  const endpoint =
+    resultType === "autonomous"
+      ? "http://crr-noc.onrender.com/admin/upload-autonomous-result-pdf"
+      : "http://crr-noc.onrender.com/upload"; 
 
-      const semester = document.getElementById("semester").value;
-      const file = document.getElementById("pdfFile").files[0];
-      const resultType = document.getElementById("resultType").value;
+  const formData = new FormData();
+  formData.append("semester", semester);
+  formData.append("pdf", file);
 
-      if (!semester || !file || !resultType) {
-        Swal.fire("Missing Details", "Please select result type, semester and upload a PDF", "warning");
-        return;
-      }
+  submitBtn.disabled = true;
 
-      const endpoint = resultType === "autonomous"
-        ? "https://crr-noc.onrender.com/admin/upload-autonomous-result-pdf"
-        : "https://crr-noc.onrender.com/admin/upload-result-pdf";
+  Swal.fire({
+    title: "Uploading...",
+    html: "Processing file. Please wait...",
+    allowOutsideClick: false,
+    allowEscapeKey: false,
+    didOpen: () => Swal.showLoading()
+  });
 
-      const formData = new FormData();
-      formData.append("semester", semester);
-      formData.append("pdf", file);
-
-      submitBtn.disabled = true;
-
-      Swal.fire({
-        title: "Uploading...",
-        html: "Processing file. Please wait...",
-        allowOutsideClick: false,
-        allowEscapeKey: false,
-        didOpen: () => Swal.showLoading()
-      });
-
-      try {
-        const response = await fetch(endpoint, {
-          method: "POST",
-          body: formData
-        });
-
-        const result = await response.json();
-
-        Swal.fire({
-          icon: result.success ? "success" : "warning",
-          title: result.success ? "Upload Successful ✅" : "Upload Failed ⚠️",
-          text: result.message || "Upload completed.",
-        });
-
-        if (result.success) form.reset();
-
-      } catch (error) {
-        console.error("❌ Upload failed:", error);
-        Swal.fire("Upload Failed ❌", error.message || "Something went wrong.", "error");
-      } finally {
-        submitBtn.disabled = false;
-      }
+  try {
+    const response = await fetch(endpoint, {
+      method: "POST",
+      body: formData
     });
-  </script>
+
+    const contentType = response.headers.get("content-type") || "";
+    if (!contentType.includes("application/json")) {
+      const rawText = await response.text();
+      console.error("❌ Server returned non-JSON:", rawText.slice(0, 500));
+      throw new Error("Server returned an unexpected response (not JSON). Check console.");
+    }
+
+    const result = await response.json();
+
+    Swal.fire({
+      icon: result.success === false || result.total === 0 ? "warning" : "success",
+      title: result.total === 0 ? "No Valid Records ⚠️" : "Upload Successful ✅",
+      text: result.message || "Upload completed.",
+    });
+
+    if (result.success !== false && result.total > 0) form.reset();
+
+  } catch (error) {
+    console.error("❌ Upload failed:", error);
+    Swal.fire("Upload Failed ❌", error.message || "Something went wrong.", "error");
+  } finally {
+    submitBtn.disabled = false;
+  }
+});
+
+</script>
+
 </body>
 </html>
