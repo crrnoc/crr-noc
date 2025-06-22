@@ -37,11 +37,27 @@ app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+const MySQLStore = require('express-mysql-session')(session);
+
+const sessionStore = new MySQLStore({
+  host: process.env.MYSQLHOST,
+  user: process.env.MYSQLUSER,
+  password: process.env.MYSQLPASSWORD,
+  database: process.env.MYSQLDATABASE,
+  port: process.env.MYSQLPORT
+});
+
 app.use(session({
+  key: 'noc_sid',
   secret: 'sircrrengg@123',
+  store: sessionStore,
   resave: false,
-  saveUninitialized: true
+  saveUninitialized: false,
+  cookie: {
+    maxAge: 1000 * 60 * 60  // 1 hour
+  }
 }));
+
 
 // ✅ Static files
 app.use(express.static(path.join(__dirname, "public")));
