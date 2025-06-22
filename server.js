@@ -1682,26 +1682,30 @@ app.post('/upload', upload.single('pdf'), (req, res) => {
       });
     }
 
-    // Insert all entries and wait for completion
+    // Insert all entries with UPSERT (ON DUPLICATE KEY UPDATE)
     let completed = 0;
-    let total = results.length;
+    const total = results.length;
 
     results.forEach(({ regno, subcode, subname, grade, credits }) => {
       connection.query(
-        'INSERT INTO results (regno, subcode, subname, grade, credits, semester) VALUES (?, ?, ?, ?, ?, ?)',
+        `INSERT INTO results (regno, subcode, subname, grade, credits, semester)
+         VALUES (?, ?, ?, ?, ?, ?)
+         ON DUPLICATE KEY UPDATE
+           grade = VALUES(grade),
+           credits = VALUES(credits),
+           semester = VALUES(semester)`,
         [regno, subcode, subname, grade, credits, semester],
         (err) => {
           if (err) {
             console.error(`❌ Insert failed: ${regno} - ${subcode} ➜`, err.message);
           } else {
-            console.log(`✅ Inserted: ${regno} - ${subcode}`);
+            console.log(`✅ Inserted/Updated: ${regno} - ${subcode}`);
           }
 
           completed++;
           if (completed === total) {
-            // All queries done
             res.status(200).json({
-              message: '✅ PDF processed and records inserted.',
+              message: '✅ PDF processed and records inserted/updated.',
               total,
               semester
             });
@@ -1711,6 +1715,7 @@ app.post('/upload', upload.single('pdf'), (req, res) => {
     });
   });
 });
+
 
 //AUTONOMOUS results upload
 // Route: Upload Autonomous Student Result PDF
