@@ -1,6 +1,16 @@
 #!/bin/bash
 
-echo "📦 Installing Python packages..."
+echo "🐍 Setting up virtual environment..."
+
+# Create venv only if it doesn't exist
+if [ ! -d ".venv" ]; then
+  python3 -m venv .venv
+fi
+
+# Activate it
+source .venv/bin/activate
+
+# Install packages only if not already installed
 pip install --no-cache-dir -r requirements.txt
 
 echo "🚀 Starting Node server..."
