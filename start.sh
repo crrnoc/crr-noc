@@ -1,14 +1,7 @@
 #!/bin/bash
 
-# Create virtual environment in .venv folder
-python3 -m venv .venv
+echo "📦 Installing Python packages..."
+pip install --no-cache-dir -r requirements.txt
 
-# Activate it
-source .venv/bin/activate
-
-# Install Python dependencies
-pip install -r requirements.txt
-
-# Run the Node server
+echo "🚀 Starting Node server..."
 node server.js
-
