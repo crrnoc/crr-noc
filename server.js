@@ -1623,7 +1623,7 @@ app.post('/upload', upload.single('pdf'), (req, res) => {
   console.log("📄 PDF File Path:", filePath);
   console.log("🐍 Running Python script...");
 
-  const python = spawn('python', ['extract_pdf.py', filePath, semester]);
+  const python = spawn('python3', ['extract_pdf.py', filePath, semester]);
 
   let output = '';
   let errorOutput = '';
@@ -1666,7 +1666,10 @@ app.post('/upload', upload.single('pdf'), (req, res) => {
       });
     }
 
-    let insertCount = 0;
+    // Insert all entries and wait for completion
+    let completed = 0;
+    let total = results.length;
+
     results.forEach(({ regno, subcode, subname, grade, credits }) => {
       connection.query(
         'INSERT INTO results (regno, subcode, subname, grade, credits, semester) VALUES (?, ?, ?, ?, ?, ?)',
@@ -1676,19 +1679,23 @@ app.post('/upload', upload.single('pdf'), (req, res) => {
             console.error(`❌ Insert failed: ${regno} - ${subcode} ➜`, err.message);
           } else {
             console.log(`✅ Inserted: ${regno} - ${subcode}`);
-            insertCount++;
+          }
+
+          completed++;
+          if (completed === total) {
+            // All queries done
+            res.status(200).json({
+              message: '✅ PDF processed and records inserted.',
+              total,
+              semester
+            });
           }
         }
       );
     });
-
-    res.status(200).json({
-      message: '✅ PDF processed and records inserted.',
-      total: results.length,
-      semester
-    });
   });
 });
+
 //AUTONOMOUS results upload
 // Route: Upload Autonomous Student Result PDF
 // 🧠 Autonomous PDF Upload Route
