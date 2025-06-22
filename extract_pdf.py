@@ -24,16 +24,12 @@ def extract_results(pdf_path, semester):
 
         parts = line.split()
 
-        if len(parts) < 6:
-            print(f"⏭️ Line {idx+1}: Too few parts — {line}", file=sys.stderr)
-            continue
-
-        # Remove S.No. if present
-        if re.match(r'^\d+$', parts[0]):
+        # ✅ Handle S.No. only if more than 6 parts exist
+        if re.match(r'^\d+$', parts[0]) and len(parts) > 6:
             parts = parts[1:]
 
         if len(parts) < 6:
-            print(f"⏭️ Line {idx+1}: Still too short after S.No. removal — {line}", file=sys.stderr)
+            print(f"⏭️ Line {idx+1}: Not enough parts — {line}", file=sys.stderr)
             continue
 
         regno = parts[0]
@@ -42,7 +38,7 @@ def extract_results(pdf_path, semester):
         credits = parts[-1]
         subname = ' '.join(parts[2:-3])
 
-        # Normalize grades
+        # ✅ Normalize grades
         if grade in ["ABSENT", "AB"]:
             grade = "Ab"
         elif grade in ["COMPLE", "COMPLETED"]:
@@ -50,7 +46,7 @@ def extract_results(pdf_path, semester):
         elif grade in ["NOTCOMPLETED", "NOT CO", "NOTCO", "NOT", "NC"]:
             grade = "Not Completed"
 
-        # Validate
+        # ✅ Validation
         if not re.match(r'^[0-9A-Z]{10}$', regno):
             print(f"⏭️ Line {idx+1}: Invalid regno — {regno}", file=sys.stderr)
             continue
@@ -74,7 +70,7 @@ def extract_results(pdf_path, semester):
 
         print(f"✅ Line {idx+1}: Stored → {regno} - {subcode} - {grade} - {credits}", file=sys.stderr)
 
-    # Save to CSV
+    # ✅ Save to CSV
     if not os.path.exists('output'):
         os.makedirs('output')
 
@@ -87,7 +83,7 @@ def extract_results(pdf_path, semester):
 
     return results
 
-# ✅ Entry point — Clean JSON output only
+# ✅ Entry point — clean stdout for Node.js
 if __name__ == "__main__":
     if len(sys.argv) < 3:
         print("[]")
@@ -96,4 +92,4 @@ if __name__ == "__main__":
     path = sys.argv[1]
     semester = sys.argv[2]
     parsed = extract_results(path, semester)
-    print(json.dumps(parsed, ensure_ascii=False))  # 👈 JSON output for Node.js
+    print(json.dumps(parsed, ensure_ascii=False))  # 👈 JSON for Node.js
