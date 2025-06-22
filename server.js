@@ -10,6 +10,7 @@ const PDFDocument = require('pdfkit');
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/' });
 const fs = require('fs');
+const { spawn } = require('child_process'); // ✅ REQUIRED for Python integration
 const router = express.Router();
 const adminRoutes = require("./admin"); 
 const app = express();
@@ -1610,91 +1611,84 @@ app.post("/delete-batch", async (req, res) => {
 
 // result pdf upload
 // 📥 Admin uploads result PDF
-app.post("/admin/upload-result-pdf", upload.single("pdf"), async (req, res) => {
-  try {
-    const { semester } = req.body;
-    if (!req.file || !semester) {
-      return res.status(400).json({ success: false, message: "❌ Missing PDF or semester." });
+app.post('/upload', upload.single('pdf'), (req, res) => {
+  const semester = req.body.semester;
+  const filePath = req.file?.path;
+
+  console.log("📥 Semester:", semester);
+  if (!semester || !filePath) {
+    return res.status(400).json({ message: '❌ Semester or PDF missing.' });
+  }
+
+  console.log("📄 PDF File Path:", filePath);
+  console.log("🐍 Running Python script...");
+
+  const python = spawn('python', ['extract_pdf.py', filePath, semester]);
+
+  let output = '';
+  let errorOutput = '';
+
+  python.stdout.on('data', (data) => {
+    output += data.toString();
+  });
+
+  python.stderr.on('data', (data) => {
+    errorOutput += data.toString();
+  });
+
+  python.on('close', (code) => {
+    console.log("🐍 Python exited with code:", code);
+    if (errorOutput) console.error("🐍 stderr:\n", errorOutput);
+
+    if (code !== 0) {
+      return res.status(500).json({
+        message: '❌ Upload failed: Python script error',
+        error: errorOutput || 'Unknown error'
+      });
     }
 
-    const fileBuffer = fs.readFileSync(req.file.path);
-    const pdfData = await pdfParse(fileBuffer);
-    const lines = pdfData.text.split("\n").map(line => line.trim()).filter(Boolean);
-    const base = req.file.filename;
-
-    const txtPath = path.join("uploads", `${base}.txt`);
-    fs.writeFileSync(txtPath, lines.join("\n"));
-    console.log("📄 Saved TXT:", txtPath);
-    console.log("🔍 Total Lines:", lines.length);
-
-    const csvRows = [["regno", "subcode", "subname", "grade", "credits"]];
-    const tasks = [];
-    let inserted = 0;
-
-    for (const line of lines) {
-    const match = line.match(/(\d{2}B8[A-Z0-9]{6})(R[A-Z0-9]{7})/);
-      if (!match) {
-        console.log("⛔ Skip (no reg/sub):", line);
-        continue;
-      }
-
-      const regno = match[1];
-      const subcode = match[2];
-      const after = line.slice(line.indexOf(subcode) + subcode.length);
-
-      const gradeMatch = after.match(/(.+?)(\d{1,3})(S|A|B|C|D|E|F|ABSENT|COMPLE|MP)(\d+(\.\d+)?)/i);
-      if (!gradeMatch) {
-        console.log("⛔ Skip (grade parse failed):", after);
-        continue;
-      }
-
-      const subname = gradeMatch[1].trim();
-      const rawGrade = gradeMatch[3].toUpperCase();
-      const grade = rawGrade === "ABSENT" ? "Ab" : rawGrade;
-      const credits = parseFloat(gradeMatch[4]);
-
-      console.log(`✅ Parsed: ${regno} | ${subcode} | ${subname} | ${grade} | ${credits}`);
-      csvRows.push([regno, subcode, subname, grade, credits]);
-
-      const sql = `
-        INSERT INTO results (regno, semester, subcode, subname, grade, credits)
-        VALUES (?, ?, ?, ?, ?, ?)
-        ON DUPLICATE KEY UPDATE
-          semester = VALUES(semester),
-          grade = VALUES(grade),
-          credits = VALUES(credits),
-          subname = VALUES(subname)
-      `;
-
-      tasks.push(new Promise(resolve => {
-        connection.query(sql, [regno, semester, subcode, subname, grade, credits], (err) => {
-          if (!err) inserted++;
-          resolve();
-        });
-      }));
+    let results;
+    try {
+      results = JSON.parse(output);
+    } catch (jsonErr) {
+      console.error("❌ JSON Parse Error:", jsonErr.message);
+      console.error("📦 Raw output:\n", output);
+      return res.status(500).json({
+        message: '❌ Invalid JSON from Python',
+        error: jsonErr.message
+      });
     }
 
-    await Promise.all(tasks);
+    if (!results.length) {
+      return res.status(200).json({
+        message: '✅ PDF processed but no records found.',
+        total: 0
+      });
+    }
 
-    const csvPath = path.join("uploads", `${base}.csv`);
-    fs.writeFileSync(csvPath, csvRows.map(r => r.join(",")).join("\n"));
-    fs.unlinkSync(req.file.path);
-
-    console.log(`✅ Done. Inserted: ${inserted}`);
-    console.log("📦 CSV saved at:", csvPath);
-
-    res.json({
-      success: true,
-      message: `✅ Stored ${inserted} records successfully.`,
-      files: { csv: csvPath, txt: txtPath }
+    let insertCount = 0;
+    results.forEach(({ regno, subcode, subname, grade, credits }) => {
+      connection.query(
+        'INSERT INTO results (regno, subcode, subname, grade, credits, semester) VALUES (?, ?, ?, ?, ?, ?)',
+        [regno, subcode, subname, grade, credits, semester],
+        (err) => {
+          if (err) {
+            console.error(`❌ Insert failed: ${regno} - ${subcode} ➜`, err.message);
+          } else {
+            console.log(`✅ Inserted: ${regno} - ${subcode}`);
+            insertCount++;
+          }
+        }
+      );
     });
 
-  } catch (err) {
-    console.error("❌ Fatal Error:", err);
-    res.status(500).json({ success: false, message: "❌ Internal Server Error" });
-  }
+    res.status(200).json({
+      message: '✅ PDF processed and records inserted.',
+      total: results.length,
+      semester
+    });
+  });
 });
-
 //AUTONOMOUS results upload
 // Route: Upload Autonomous Student Result PDF
 // 🧠 Autonomous PDF Upload Route
