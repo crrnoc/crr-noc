@@ -144,71 +144,52 @@
       color: white;
     }
 
-    .stats {
-      margin-top: 20px;
-      font-size: 18px;
-      background: #e9f5ff;
-      padding: 15px;
-      border-left: 5px solid #007BFF;
-    }
-
-    .error {
-      color: red;
-      text-align: center;
-      margin-top: 20px;
-    }
-
-    .stats-circles {
-  display: flex;
-  justify-content: space-around;
-  margin-top: 30px;
-  flex-wrap: wrap;
-}
-
-.circle-card {
-  width: 160px;
-  height: 160px;
-  border-radius: 50%;
-  background: conic-gradient(#1f75cb 0% 0%, #e0e0e0 0% 100%);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  position: relative;
-  font-weight: bold;
-  font-size: 20px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+.bar-card {
+  width: 90%;
+  max-width: 400px;
+  margin: 20px auto;
+  background: #f0f4f8;
+  padding: 15px 20px;
+  border-radius: 12px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
   transition: transform 0.3s ease;
-  margin: 15px;
 }
 
-.circle-card:hover {
-  transform: scale(1.05);
+.bar-card:hover {
+  transform: scale(1.02);
 }
 
-.circle-card::after {
-  content: '';
-  width: 130px;
-  height: 130px;
-  background: white;
-  border-radius: 50%;
-  position: absolute;
+.bar-label {
+  font-size: 16px;
+  margin-bottom: 8px;
+  font-weight: bold;
+  color: #333;
 }
 
-.circle-card span {
-  position: relative;
-  z-index: 1;
-  font-size: 22px;
-  color: #1f75cb;
+.bar-outer {
+  background: #e0e0e0;
+  border-radius: 30px;
+  overflow: hidden;
+  height: 25px;
 }
 
-.circle-label {
-  font-size: 14px;
-  color: #444;
-  margin-top: 5px;
-  position: relative;
-  z-index: 1;
-  text-align: center;
+.bar-inner {
+  height: 100%;
+  line-height: 25px;
+  text-align: right;
+  padding-right: 10px;
+  color: white;
+  font-weight: bold;
+  border-radius: 30px;
+  transition: width 1s ease-in-out;
+}
+
+.sgpa-bar {
+  background: linear-gradient(to right, #1f75cb, #4facfe);
+}
+
+.percent-bar {
+  background: linear-gradient(to right, #28a745, #a2e35d);
 }
 
 
@@ -326,19 +307,36 @@
       const res = await fetch(`https://crr-noc.onrender.com/student/overallResults/${userId}`);
       const data = await res.json();
 
-      if (data && data.sgpa && data.percentage) {
-        const statsDiv = document.getElementById("overallStatsContainer");
-        statsDiv.innerHTML = `
-          <div class="circle-card" style="background: conic-gradient(#1f75cb ${data.sgpa * 10}%, #e0e0e0 0%);">
-            <span>${data.sgpa}</span>
-            <div class="circle-label">Overall SGPA</div>
-          </div>
-          <div class="circle-card" style="background: conic-gradient(#28a745 ${data.percentage}%, #e0e0e0 0%);">
-            <span>${data.percentage}%</span>
-            <div class="circle-label">Overall Percentage</div>
-          </div>
-        `;
-      }
+if (data && data.sgpa && data.percentage) {
+  const statsDiv = document.getElementById("overallStatsContainer");
+  statsDiv.innerHTML = `
+    <div class="bar-card">
+      <div class="bar-label">Overall SGPA</div>
+      <div class="bar-outer">
+        <div class="bar-inner sgpa-bar" style="width: 0%">0</div>
+      </div>
+    </div>
+    <div class="bar-card">
+      <div class="bar-label">Overall Percentage</div>
+      <div class="bar-outer">
+        <div class="bar-inner percent-bar" style="width: 0%">0%</div>
+      </div>
+    </div>
+  `;
+
+  // Animate the bars
+  setTimeout(() => {
+    const sgpa = parseFloat(data.sgpa).toFixed(2);
+    const percent = parseFloat(data.percentage).toFixed(2);
+
+    document.querySelector(".sgpa-bar").style.width = (sgpa * 10) + "%";
+    document.querySelector(".sgpa-bar").textContent = sgpa;
+
+    document.querySelector(".percent-bar").style.width = percent + "%";
+    document.querySelector(".percent-bar").textContent = percent + "%";
+  }, 100);
+}
+
     } catch (err) {
       console.error("Error loading overall stats:", err);
     }
