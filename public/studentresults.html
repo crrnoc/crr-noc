@@ -211,53 +211,6 @@
   text-align: center;
 }
 
-    .water-container {
-  width: 160px;
-  height: 160px;
-  margin: 15px;
-  border-radius: 20px;
-  background: #f0f0f0;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-  overflow: hidden;
-  position: relative;
-  display: inline-block;
-}
-
-.water-fill {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  height: var(--fill);
-  background: linear-gradient(145deg, #1f75cb 40%, #007BFF 60%);
-  animation: wave 3s infinite linear;
-  transform-origin: center;
-}
-
-.water-fill.green {
-  background: linear-gradient(145deg, #28a745 40%, #5adf6e 60%);
-}
-
-.water-label {
-  position: absolute;
-  top: 50%;
-  width: 100%;
-  text-align: center;
-  transform: translateY(-50%);
-  font-weight: bold;
-  font-size: 20px;
-  color: #1f1f1f;
-}
-
-.water-label span {
-  font-size: 14px;
-  color: #555;
-}
-
-@keyframes wave {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
 
     .mobile-toggle {
       display: none;
@@ -345,23 +298,6 @@
 
   <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
 <script>
-  if (window.DeviceOrientationEvent) {
-  window.addEventListener('deviceorientation', function(event) {
-    const gamma = event.gamma || 0; // left-right tilt
-    const beta = event.beta || 0;   // front-back tilt
-
-    const percentFill = document.getElementById('waterFillPercent');
-    const sgpaFill = document.getElementById('waterFillSGPA');
-
-    // Simple 3D tilt effect
-    const rotateX = beta / 10;  // Forward/backward
-    const rotateY = gamma / 10; // Left/right
-
-    percentFill.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-    sgpaFill.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-  });
-}
-
   function toggleMobileMenu() {
     const sidebar = document.querySelector('.sidebar');
     sidebar.classList.toggle('open');
@@ -391,18 +327,17 @@
       const data = await res.json();
 
       if (data && data.sgpa && data.percentage) {
-const statsDiv = document.getElementById("overallStatsContainer");
-statsDiv.innerHTML = `
-  <div class="water-container">
-    <div class="water-fill" id="waterFillPercent" style="--fill: ${data.percentage}%;"></div>
-    <div class="water-label">${data.percentage}%<br><span>Overall Percentage</span></div>
-  </div>
-  <div class="water-container">
-    <div class="water-fill green" id="waterFillSGPA" style="--fill: ${data.sgpa * 10}%;"></div>
-    <div class="water-label">${data.sgpa}<br><span>Overall SGPA</span></div>
-  </div>
-`;
-
+        const statsDiv = document.getElementById("overallStatsContainer");
+        statsDiv.innerHTML = `
+          <div class="circle-card" style="background: conic-gradient(#1f75cb ${data.sgpa * 10}%, #e0e0e0 0%);">
+            <span>${data.sgpa}</span>
+            <div class="circle-label">Overall SGPA</div>
+          </div>
+          <div class="circle-card" style="background: conic-gradient(#28a745 ${data.percentage}%, #e0e0e0 0%);">
+            <span>${data.percentage}%</span>
+            <div class="circle-label">Overall Percentage</div>
+          </div>
+        `;
       }
     } catch (err) {
       console.error("Error loading overall stats:", err);
