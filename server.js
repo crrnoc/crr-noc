@@ -20,6 +20,9 @@ const QRCode = require('qrcode');
 const PDFParser = require("pdf2json");
 const pdfParse = require("pdf-parse"); 
 require('dotenv').config();
+const axios = require("axios");
+const cloudinary = require("cloudinary").v2;
+
 
 const logoBase64 = fs.readFileSync('./public/crrengglogo.png', { encoding: 'base64' }); // rename your image to logo.png in public
 // Configure the email transporter (use your App Password here)
@@ -58,6 +61,11 @@ app.use(session({
   }
 }));
 
+cloudinary.config({
+  cloud_name: "dn1c2f2bg",
+  api_key: "284748761934616",
+  api_secret: "SJufb0jcVKNb3rAaTecC2aQPCH0"
+});
 
 // ✅ Static files
 app.use(express.static(path.join(__dirname, "public")));
@@ -1930,5 +1938,150 @@ app.get("/student/overallResults/:regno", async (req, res) => {
   } catch (err) {
     console.error("❌ Failed to fetch overall results:", err);
     res.status(500).json({ sgpa: "0.00", percentage: "0.00" });
+  }
+});
+
+app.get("/generate-certificate/:userId", async (req, res) => {
+  const { userId } = req.params;
+  const semester = req.query.semester;
+  if (!semester) return res.status(400).send("Semester is required");
+
+  const doc = new PDFDocument({ size: "A4", margin: 40 });
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", `attachment; filename=Result_${userId}_${semester}.pdf`);
+  doc.pipe(res);
+
+  function queryAsync(sql, values) {
+    return new Promise((resolve, reject) => {
+      connection.query(sql, values, (err, result) => {
+        if (err) reject(err);
+        else resolve(result);
+      });
+    });
+  }
+
+  // ✅ Grade point map
+  const gradePointMap = {
+    S: 10, A: 9, B: 8, C: 7, D: 6, E: 5, F: 0, Ab: 0, ABSENT: 0, Completed: 0
+  };
+
+  try {
+    // ✅ 1. Get results
+    const results = await queryAsync(
+      "SELECT regno, subcode, subname, grade, credits FROM results WHERE regno = ? AND semester = ?",
+      [userId, semester]
+    );
+    if (!results.length) {
+      doc.fontSize(14).text("❌ No results found", 100, 100);
+      doc.end();
+      return;
+    }
+
+    // ✅ 2. Get student info
+    const studentRows = await queryAsync(
+      "SELECT name, reg_no, course, father_name, photo_url FROM students WHERE userId = ?",
+      [userId]
+    );
+    const student = studentRows[0] || {};
+
+    // ✅ 3. Header
+    const headerPath = path.join(__dirname, "public", "noc_header.jpg");
+    if (fs.existsSync(headerPath)) {
+      doc.image(headerPath, { fit: [520, 120], align: "center" });
+    }
+
+    doc.moveDown(1);
+    const startY = doc.y;
+    let lineY = startY;
+    const labelX = 40;
+    const valueX = 180;
+
+    doc.font("Helvetica").fontSize(10);
+    doc.text("STUDENT NAME    :", labelX, lineY);
+    doc.text(student.name || "N/A", valueX, lineY); lineY += 26;
+    doc.text("FATHER'S NAME   :", labelX, lineY);
+    doc.text(student.father_name || "N/A", valueX, lineY); lineY += 26;
+    doc.text("REGISTRATION NO :", labelX, lineY);
+    doc.text(student.reg_no || "N/A", valueX, lineY); lineY += 26;
+    doc.text("COURSE          :", labelX, lineY);
+    doc.text(`B.TECH - ${student.course || "N/A"}`, valueX, lineY); lineY += 26;
+    doc.text("YEAR - SEMESTER :", labelX, lineY);
+    doc.text(semester.toUpperCase(), valueX, lineY);
+
+    // ✅ 4. Student photo
+    const photo_url = student.photo_url;
+    if (photo_url) {
+      try {
+        const photoRes = await axios.get(photo_url, { responseType: "arraybuffer" });
+        doc.image(photoRes.data, 400, startY, { fit: [100, 120] });
+      } catch {
+        doc.rect(400, startY, 100, 120).stroke();
+      }
+    } else {
+      doc.rect(400, startY, 100, 120).stroke();
+    }
+
+    // ✅ 5. Results Table
+    doc.y = lineY + 60;
+    const tableTop = doc.y;
+    const rowHeight = 30;
+    const colX = [40, 80, 180, 400, 460];
+    const colWidths = [40, 100, 220, 60, 60];
+
+    doc.font("Helvetica-Bold").fontSize(9);
+    ["S.No", "Sub Code", "Subject Name", "Grade", "Credits"].forEach((text, i) => {
+      doc.rect(colX[i], tableTop, colWidths[i], rowHeight).stroke();
+      doc.text(text, colX[i] + 2, tableTop + 8, { width: colWidths[i] - 4, align: "center" });
+    });
+
+    // ✅ Loop and draw rows
+    doc.font("Helvetica").fontSize(9);
+    let totalCredits = 0, weightedSum = 0;
+    results.forEach((row, i) => {
+      const y = tableTop + rowHeight * (i + 1);
+      const gradePoint = gradePointMap[row.grade?.toUpperCase()?.trim()] ?? 0;
+      const credits = parseFloat(row.credits || 0);
+      weightedSum += gradePoint * credits;
+      totalCredits += credits;
+
+      const data = [i + 1, row.subcode, row.subname, row.grade, row.credits];
+      data.forEach((text, j) => {
+        doc.rect(colX[j], y, colWidths[j], rowHeight).stroke();
+        doc.text(String(text), colX[j] + 2, y + 8, {
+          width: colWidths[j] - 4,
+          align: "center"
+        });
+      });
+    });
+
+    // ✅ SGPA Calculation
+    const calculatedSGPA = totalCredits > 0 ? (weightedSum / totalCredits).toFixed(2) : "N/A";
+    const finalTableY = tableTop + rowHeight * (results.length + 1);
+    doc.font("Helvetica-Bold").fontSize(10);
+    doc.text(`SEMESTER GRADE POINT AVERAGE (SGPA): ${calculatedSGPA}`, 100, finalTableY + 25, {
+      width: 250,
+      align: "center"
+    });
+
+    // ✅ 6. QR Code
+    const qrText = `https://yourdomain.com/verify-result?regno=${userId}&sem=${semester}`;
+    const qrDataURL = await QRCode.toDataURL(qrText);
+    const qrBuffer = Buffer.from(qrDataURL.split(",")[1], "base64");
+    doc.image(qrBuffer, 440, 670, { width: 80 });
+
+    // ✅ 7. Signature and Date
+    doc.font("Helvetica").fontSize(10);
+    doc.text("Controller of Examinations", 40, 740);
+    doc.text("Principal", 320, 740);
+
+    const date = new Date().toLocaleDateString("en-GB").replace(/\//g, "-");
+    doc.fontSize(6).text(`ISSUED DATE: ${date}`, 440, 790, { align: "right", width: 100 });
+
+    doc.end();
+
+  } catch (err) {
+    console.error("❌ PDF generation error:", err);
+    doc.fontSize(12).text("Something went wrong while generating the result.");
+    doc.end();
   }
 });
