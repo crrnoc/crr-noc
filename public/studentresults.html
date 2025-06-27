@@ -380,101 +380,98 @@ if (data && data.sgpa && data.percentage) {
     }
   });
 
-  async function fetchResults() {
-    const regno = localStorage.getItem("regno") || localStorage.getItem("userId");
-    const semester = document.getElementById("semester").value;
-    const container = document.getElementById("resultContainer");
+ async function fetchResults() {
+  const regno = localStorage.getItem("regno") || localStorage.getItem("userId");
+  const semester = document.getElementById("semester").value;
+  const container = document.getElementById("resultContainer");
 
-    container.innerHTML = "";
+  container.innerHTML = "";
 
-    if (!regno) {
-      container.innerHTML = "<p class='error'>Student not logged in. Please login first.</p>";
-      return;
-    }
-
-    if (!semester) {
-      container.innerHTML = "<p class='error'>Please select a semester.</p>";
-      return;
-    }
-
-    try {
-      container.innerHTML = "<p>Loading results...</p>";
-      const response = await fetch(`https://crr-noc.onrender.com/student/results/${regno}?semester=${semester}`);
-      const data = await response.json();
-
-      if (!data.results || data.results.length === 0) {
-        container.innerHTML = "<p class='error'>No results found for this semester.</p>";
-        return;
-      }
-
-      let html = `
-      <div style="display: flex; justify-content: center; margin-top: 20px;">
-        <div style="
-          background: white;
-          border-radius: 20px;
-          padding: 20px;
-          width: 90%;
-          max-width: 800px;
-          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-        ">
-          <h3 style="text-align:center; color:#1f75cb; margin-bottom: 20px;">Results for <strong>${data.regno}</strong> - Semester <strong>${data.semester}</strong></h3>
-
-          <div style="
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: linear-gradient(to right, #1f75cb, #28a745);
-            border-radius: 15px;
-            padding: 15px;
-            color: white;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-          ">
-            <div style="text-align:center; flex: 1; min-width: 120px;">
-              <div style="font-size: 22px; font-weight: bold;">${data.sgpa}</div>
-              <div style="font-size: 14px;">SGPA</div>
-            </div>
-            <div style="width: 2px; height: 40px; background: rgba(255,255,255,0.5);"></div>
-            <div style="text-align:center; flex: 1; min-width: 120px;">
-              <div style="font-size: 22px; font-weight: bold;">${data.percentage}%</div>
-              <div style="font-size: 14px;">Percentage</div>
-            </div>
-          </div>
-
-          <div style="overflow-x: auto;">
-            <table style="width: 100%; border-collapse: collapse;">
-              <tr style="background: #1f75cb; color: white;">
-                <th style="padding: 10px;">Subject Code</th>
-                <th style="padding: 10px;">Subject Name</th>
-                <th style="padding: 10px;">Grade</th>
-                <th style="padding: 10px;">Credits</th>
-              </tr>
-      `;
-
-      data.results.forEach(row => {
-        html += `
-              <tr style="text-align: center;">
-                <td style="padding: 8px;">${row.subcode}</td>
-                <td style="padding: 8px;">${row.subname || '-'}</td>
-                <td style="padding: 8px;">${row.grade}</td>
-                <td style="padding: 8px;">${row.credits}</td>
-              </tr>`;
-      });
-
-      html += `
-            </table>
-          </div>
-        </div>
-      </div>
-      `;
-
-      container.innerHTML = html;
-
-    } catch (err) {
-      console.error("Error fetching results:", err);
-      container.innerHTML = "<p class='error'>Error fetching results. Please try again later.</p>";
-    }
+  if (!regno) {
+    container.innerHTML = "<p class='error'>Student not logged in. Please login first.</p>";
+    return;
   }
+
+  if (!semester) {
+    container.innerHTML = "<p class='error'>Please select a semester.</p>";
+    return;
+  }
+
+  try {
+    container.innerHTML = "<p>Loading results...</p>";
+    const response = await fetch(`https://crr-noc.onrender.com/student/results/${regno}?semester=${semester}`);
+    const data = await response.json();
+
+    if (!data.results || data.results.length === 0) {
+      container.innerHTML = "<p class='error'>No results found for this semester.</p>";
+      return;
+    }
+
+    let html = `
+    <div style="display: flex; justify-content: center; margin-top: 20px;">
+      <div style="
+        background: white;
+        border-radius: 20px;
+        padding: 20px;
+        width: 90%;
+        max-width: 800px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      ">
+        <h3 style="text-align:center; color:#1f75cb; margin-bottom: 20px;">Results for <strong>${data.regno}</strong> - Semester <strong>${data.semester}</strong></h3>
+
+        <div style="display:flex; justify-content:center; gap:20px; flex-wrap:wrap; margin-bottom:20px;">
+          <div><strong>SGPA:</strong> ${data.sgpa}</div>
+          <div><strong>Percentage:</strong> ${data.percentage}%</div>
+        </div>
+
+        <div style="overflow-x: auto;">
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr style="background: #1f75cb; color: white;">
+              <th style="padding: 10px;">Subject Code</th>
+              <th style="padding: 10px;">Subject Name</th>
+              <th style="padding: 10px;">Grade</th>
+              <th style="padding: 10px;">Credits</th>
+            </tr>
+    `;
+
+    data.results.forEach(row => {
+      html += `
+            <tr style="text-align: center;">
+              <td style="padding: 8px;">${row.subcode}</td>
+              <td style="padding: 8px;">${row.subname || '-'}</td>
+              <td style="padding: 8px;">${row.grade}</td>
+              <td style="padding: 8px;">${row.credits}</td>
+            </tr>`;
+    });
+
+    html += `</table>
+      <div style="text-align: center; margin-top: 25px;">
+        <button onclick="window.print()" style="padding:10px 20px; margin:5px; background-color:#007BFF; color:white; border:none; border-radius:6px; cursor:pointer;">🖨️ Print</button>
+        <button onclick="downloadFormattedResult('${regno}', '${semester}')" style="padding:10px 20px; margin:5px; background-color:#28a745; color:white; border:none; border-radius:6px; cursor:pointer;">🏆 Generate Certificate</button>
+      </div>
+    `;
+
+    container.innerHTML = html;
+
+  } catch (err) {
+    console.error("Error fetching results:", err);
+    container.innerHTML = "<p class='error'>Error fetching results. Please try again later.</p>";
+  }
+}
+
+function downloadFormattedResult(regno, semester) {
+  if (!regno || !semester) {
+    alert("Student ID or semester missing!");
+    return;
+  }
+
+  const link = document.createElement("a");
+  link.href = `https://crr-noc.onrender.com/generate-certificate/${regno}?semester=${semester}`;
+  link.download = `Result_${regno}_${semester}.pdf`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
 
   function logout() {
     localStorage.removeItem("userId");
