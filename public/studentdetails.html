@@ -231,60 +231,60 @@
   <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
   <script>
      // Toggle open on small screens
-  function toggleMobileMenu() {
-    document.querySelector('.sidebar').classList.toggle('open');
+function toggleMobileMenu() {
+    const sidebar = document.querySelector('.sidebar');
+    sidebar.classList.toggle('open');
   }
 
-  // Drag feature
-  const sidebar = document.querySelector('.sidebar');
-  let isDragging = false;
-  let offsetX, offsetY;
+  // 💡 Make only the toggle button draggable
+  const toggleButton = document.querySelector('.mobile-toggle');
+  let isDragging = false, offsetX = 0, offsetY = 0;
 
-  sidebar.style.position = 'absolute'; // Make it draggable
-  sidebar.style.top = '0px';
-  sidebar.style.left = '0px';
-
-  sidebar.addEventListener('mousedown', (e) => {
+  toggleButton.addEventListener('mousedown', (e) => {
     isDragging = true;
-    offsetX = e.clientX - sidebar.getBoundingClientRect().left;
-    offsetY = e.clientY - sidebar.getBoundingClientRect().top;
-    sidebar.style.transition = 'none';
+    offsetX = e.clientX - toggleButton.getBoundingClientRect().left;
+    offsetY = e.clientY - toggleButton.getBoundingClientRect().top;
+    toggleButton.style.transition = "none";
   });
 
   document.addEventListener('mousemove', (e) => {
     if (isDragging) {
-      sidebar.style.left = `${e.clientX - offsetX}px`;
-      sidebar.style.top = `${e.clientY - offsetY}px`;
+      toggleButton.style.left = `${e.clientX - offsetX}px`;
+      toggleButton.style.top = `${e.clientY - offsetY}px`;
     }
   });
 
   document.addEventListener('mouseup', () => {
     isDragging = false;
-    sidebar.style.transition = 'top 0.3s ease-in-out, left 0.3s ease-in-out';
+    toggleButton.style.transition = "all 0.2s ease";
   });
 
-  // Touch support
-  sidebar.addEventListener('touchstart', (e) => {
+  // 💡 Touch support for mobile
+  toggleButton.addEventListener('touchstart', (e) => {
     isDragging = true;
     const touch = e.touches[0];
-    offsetX = touch.clientX - sidebar.getBoundingClientRect().left;
-    offsetY = touch.clientY - sidebar.getBoundingClientRect().top;
-    sidebar.style.transition = 'none';
+    offsetX = touch.clientX - toggleButton.getBoundingClientRect().left;
+    offsetY = touch.clientY - toggleButton.getBoundingClientRect().top;
+    toggleButton.style.transition = "none";
   });
 
   document.addEventListener('touchmove', (e) => {
     if (isDragging) {
       const touch = e.touches[0];
-      sidebar.style.left = `${touch.clientX - offsetX}px`;
-      sidebar.style.top = `${touch.clientY - offsetY}px`;
+      toggleButton.style.left = `${touch.clientX - offsetX}px`;
+      toggleButton.style.top = `${touch.clientY - offsetY}px`;
     }
   });
 
   document.addEventListener('touchend', () => {
     isDragging = false;
-    sidebar.style.transition = 'top 0.3s ease-in-out, left 0.3s ease-in-out';
+    toggleButton.style.transition = "all 0.2s ease";
   });
 
+  // Set initial position and style
+  toggleButton.style.position = "fixed";
+  toggleButton.style.left = "calc(50% - 35px)";
+  toggleButton.style.top = "calc(100% - 80px)";
     document.querySelectorAll(".menu li a").forEach(link => {
       link.addEventListener("click", () => {
         if (window.innerWidth <= 768) {
