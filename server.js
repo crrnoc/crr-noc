@@ -22,7 +22,7 @@ const pdfParse = require("pdf-parse");
 require('dotenv').config();
 const axios = require("axios");
 const cloudinary = require("cloudinary").v2;
-
+const crypto = require('crypto');
 
 const logoBase64 = fs.readFileSync('./public/crrengglogo.png', { encoding: 'base64' }); // rename your image to logo.png in public
 // Configure the email transporter (use your App Password here)
@@ -49,6 +49,7 @@ const sessionStore = new MySQLStore({
   database: process.env.MYSQLDATABASE,
   port: process.env.MYSQLPORT
 });
+
 
 app.use(session({
   key: 'noc_sid',
@@ -2084,4 +2085,131 @@ app.get("/generate-certificate/:userId", async (req, res) => {
     doc.fontSize(12).text("Something went wrong while generating the result.");
     doc.end();
   }
+});
+
+
+//admin create noc 
+app.post('/admin/manual-create-noc', (req, res) => {
+  const { regno, year, feeStatus } = req.body;
+
+  if (!regno || !year || !feeStatus) {
+    return res.status(400).json({ success: false, message: "Missing required fields." });
+  }
+
+  const fileName = `manual_noc_${regno}_year${year}.pdf`;
+  const filePath = path.join(__dirname, 'uploads', fileName);
+
+  const doc = new PDFDocument({ margin: 50 });
+  const stream = fs.createWriteStream(filePath);
+  doc.pipe(stream);
+
+  // Header
+  const headerPath = path.join(__dirname, 'public', 'noc_header.jpg');
+  if (fs.existsSync(headerPath)) {
+    doc.image(headerPath, { fit: [500, 150], align: 'center' });
+    doc.moveDown(3);
+  }
+
+  doc.font('Times-Bold').fontSize(18).text('NO OBJECTION CERTIFICATE', {
+    align: 'center',
+    underline: true
+  });
+  doc.moveDown();
+
+  doc.font('Times-Roman').fontSize(12).text(`Reg No: ${regno}`);
+  doc.text(`Academic Year: ${year}`);
+  doc.moveDown();
+  doc.text(`This is to certify that the student has the following fee details:`);
+  doc.moveDown();
+
+  const readableMap = {
+    tuition: "TUTION FEE",
+    hostel: "HOSTEL FEE",
+    bus: "BUS FEE",
+    university: "UNIVERSITY FEE",
+    semester: "EXAMINATION CELL",
+    library: "LIBRARY FEE",
+    fines: "FINE"
+  };
+
+  const leftX = 70, rightX = 350, rowHeight = 20;
+  let y = doc.y;
+
+  // Prepare plain string for QR
+  let qrString = `Reg No: ${regno}\nYear: ${year}\n`;
+
+  for (const key in feeStatus) {
+    const label = readableMap[key] || key.toUpperCase();
+    const status = feeStatus[key]?.status || "Not Specified";
+    const amount = feeStatus[key]?.amount || "-";
+    doc.text(label, leftX, y);
+    doc.text(`${status.toUpperCase()} ${amount !== "-" ? `(₹${amount})` : ""}`, rightX, y);
+    y += rowHeight;
+
+    qrString += `${label}: ${status} ₹${amount}\n`;
+  }
+
+  doc.moveDown();
+  doc.text(`This is a system-generated certificate and does not require a manual signature.`, {
+    align: 'center'
+  });
+  doc.moveDown();
+  doc.font('Times-Bold').text("COLLEGE STAMP", { align: 'center' });
+
+  QRCode.toDataURL(qrString, (err, qrUrl) => {
+    if (err) {
+      console.error("QR code generation failed", err);
+      doc.end();
+      return res.status(500).json({ success: false, message: "QR generation failed." });
+    }
+
+    const qrSize = 50;
+    doc.image(qrUrl, 150, doc.y, { width: qrSize });
+    doc.fontSize(10).text("Scan to view details", 145, doc.y + qrSize + 5, {
+      width: 100,
+      align: 'center'
+    });
+
+    const footerPath = path.join(__dirname, 'public', 'noc_footer.jpg');
+    if (fs.existsSync(footerPath)) {
+      doc.image(footerPath, (doc.page.width - 500) / 2, doc.page.height - 100, { width: 500 });
+    }
+
+    doc.end();
+
+    stream.on("finish", () => {
+      // 🔁 Send the PDF file as a download
+      res.download(filePath, fileName, (err) => {
+        if (err) {
+          console.error("Download error:", err);
+          res.status(500).json({ success: false, message: "Download failed." });
+        }
+      });
+    });
+  });
+});
+ENC_KEY=12345678901234567890123456789012
+ENC_IV=1234567890123456
+//verify manual noc by qr
+// ✅ Manual NOC QR Verification Page
+app.get("/verify-noc/manual", (req, res) => {
+  const { regno, year, ...rest } = req.query;
+  if (!regno || !year) return res.send("❌ Invalid QR code.");
+
+  let html = `
+    <h2>✅ Manual NOC Verified</h2>
+    <p><strong>Reg No:</strong> ${regno}</p>
+    <p><strong>Academic Year:</strong> ${year}</p>
+    <h3>Fee Status:</h3>
+    <ul>`;
+
+  const feeTypes = ["tuition", "hostel", "bus", "university", "semester", "library", "fines"];
+  feeTypes.forEach(type => {
+    const status = rest[`${type}Status`] || "-";
+    const amount = rest[`${type}Amount`] || "-";
+    html += `<li>${type.toUpperCase()}: ${status} - ₹${amount}</li>`;
+  });
+
+  html += `</ul><p>This NOC is verified by the system.</p>`;
+  res.send(html);
 });
