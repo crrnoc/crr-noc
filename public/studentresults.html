@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Student Results</title>
+  <title>Student Details</title>
   <link rel="icon" href="crrengglogo.png" type="image/png" />
   <style>
     * {
@@ -56,6 +57,7 @@
     }
 
     .menu li {
+      list-style: none;
       margin-bottom: 15px;
     }
 
@@ -76,6 +78,15 @@
       font-weight: bold;
       transform: translateX(5px);
       box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .menu li a span {
+      font-size: 18px;
+      transition: transform 0.3s ease;
+    }
+
+    .menu li a:hover span {
+      transform: scale(1.2);
     }
 
     .logout {
