@@ -315,7 +315,7 @@
 
     try {
       // 🛰️ Send POST request
-      const response = await fetch("http://localhost:3000/admin/manual-create-noc", {
+      const response = await fetch("https://crr-noc.onrender.com//admin/manual-create-noc", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ regno, year, feeStatus })
