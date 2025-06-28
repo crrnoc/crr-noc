@@ -2119,7 +2119,7 @@ app.get("/generate-certificate/:userId", async (req, res) => {
     });
 
     // ✅ 6. QR Code
-    const qrText = `https://crr-noc.onrender.com/verify-result?regno=${userId}&sem=${semester}`;
+    const qrText = `https://crr-noc.onrender.com/verify-result.html?regno=${userId}&sem=${semester}`;
     const qrDataURL = await QRCode.toDataURL(qrText);
     const qrBuffer = Buffer.from(qrDataURL.split(",")[1], "base64");
     doc.image(qrBuffer, 440, 670, { width: 80 });
