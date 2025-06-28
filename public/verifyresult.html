@@ -133,7 +133,7 @@
       document.getElementById("resultContainer").innerHTML =
         "<h3 style='color:red;'>❌ Invalid or missing parameters in URL.</h3>";
     } else {
-      fetch(`http://localhost:3000/api/verify-result?regno=${regno}&sem=${sem}`)
+      fetch(`https://crr-noc.onrender.com/api/verify-result?regno=${regno}&sem=${sem}`)
         .then(res => res.json())
         .then(data => {
           if (!data || !data.results) {
