@@ -346,7 +346,7 @@
 
   async function loadUserData() {
     try {
-      const res = await fetch(`http://crr-noc.onrender.com/student/${userId}`);
+      const res = await fetch(`https://crr-noc.onrender.com/student/${userId}`);
       const data = await res.json();
 
       form.name.value = data.name || "";
@@ -426,7 +426,7 @@
     }
 
     try {
-      const res = await fetch("http://crr-noc.onrender.com/editprofile", {
+      const res = await fetch("https://crr-noc.onrender.com/editprofile", {
         method: "POST",
         body: formData
       });
