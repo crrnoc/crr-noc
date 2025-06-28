@@ -229,25 +229,79 @@ app.get('/student/:userId', (req, res) => {
 });
 
 // ✏️ Update student profile
-app.post('/editprofile', (req, res) => {
-  const { userId, name, dob, year, course, semester, unique_id, aadhar, mobile, email } = req.body;
 
-  console.log("Received Update Data:", req.body); // 👀 Log incoming data
+app.post("/editprofile", upload.single("photo"), async (req, res) => {
+  const { userId, name, dob, year, course, semester, aadhar, mobile, email } = req.body;
+  const file = req.file;
 
-  const sql = `
-    UPDATE students 
-   SET name=?, dob=?, year=?, course=?, semester=?, unique_id=?, aadhar_no=?, mobile_no=?, email=?
-    WHERE userId=?
-  `;
+  console.log("📥 Incoming profile update for userId:", userId);
+  console.log("📦 Form Data:", req.body);
+  if (file) console.log("🖼️ Photo file received:", file.originalname);
 
-  connection.query(sql, [name, dob, year, course, semester, unique_id, aadhar, mobile, email, userId], (err, result) => {
-    if (err) {
-      console.error("❌ SQL Update Error:", err.message);
-      return res.status(500).json({ message: "Failed to update profile", error: err.message });
+  try {
+    let photo_url = null;
+    let public_id = null;
+
+    if (file) {
+      const student = await new Promise((resolve, reject) => {
+        connection.query("SELECT reg_no FROM students WHERE userId = ?", [userId], (err, result) => {
+          if (err || !result.length) return reject("Student not found");
+          resolve(result[0]);
+        });
+      });
+
+      const regno = student.reg_no;
+      console.log("📛 Uploading image for regno:", regno);
+
+      const result = await cloudinary.uploader.upload(file.path, {
+        public_id: `students/${regno}`,
+        overwrite: true,
+        resource_type: "image"
+      });
+
+      photo_url = result.secure_url;
+      public_id = result.public_id;
+      console.log("✅ Uploaded to Cloudinary:", photo_url);
+
+      fs.unlinkSync(file.path); // cleanup
     }
 
-    res.json({ message: "Profile updated successfully" });
-  });
+    const safeDOB = dob && dob.trim() !== "" ? dob : null;
+    console.log("🗓️ Processed DOB:", safeDOB);
+
+    const fields = [name, safeDOB, year, course, semester, aadhar, mobile, email];
+    let query = `
+      UPDATE students 
+      SET name=?, dob=?, year=?, course=?, semester=?, aadhar_no=?, mobile_no=?, email=?`;
+
+    if (photo_url) {
+      query += `, photo_url=?, photo_public_id=?`;
+      fields.push(photo_url, public_id);
+    }
+
+    query += ` WHERE userId=?`;
+    fields.push(userId);
+
+    console.log("📄 Final SQL Query:", query);
+    console.log("📋 Query Values:", fields);
+
+    res.setHeader("Content-Type", "application/json");
+
+    connection.query(query, fields, (err, result) => {
+      if (err) {
+        console.error("❌ SQL error:", err);
+        return res.status(500).json({ message: "Failed to update profile" });
+      }
+
+      console.log("✅ Profile update successful for", userId);
+      return res.status(200).json({ message: " Profile updated successfully!" });
+    });
+  } catch (err) {
+    console.error("❌ Server error:", err);
+    if (file && fs.existsSync(file.path)) fs.unlinkSync(file.path);
+    res.setHeader("Content-Type", "application/json");
+    return res.status(500).json({ message: "Internal error occurred" });
+  }
 });
 
 // 🚀 Start server (only once!)
