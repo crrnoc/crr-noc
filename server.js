@@ -2119,7 +2119,7 @@ app.get("/generate-certificate/:userId", async (req, res) => {
     });
 
     // ✅ 6. QR Code
-    const qrText = `https://yourdomain.com/verify-result?regno=${userId}&sem=${semester}`;
+    const qrText = `https://crr-noc.onrender.com/verify-result?regno=${userId}&sem=${semester}`;
     const qrDataURL = await QRCode.toDataURL(qrText);
     const qrBuffer = Buffer.from(qrDataURL.split(",")[1], "base64");
     doc.image(qrBuffer, 440, 670, { width: 80 });
@@ -2140,7 +2140,56 @@ app.get("/generate-certificate/:userId", async (req, res) => {
     doc.end();
   }
 });
+// result verification
+//verify result
+app.get("/api/verify-result", async (req, res) => {
+  const { regno, sem } = req.query;
+  if (!regno || !sem) return res.status(400).json({ error: "Missing regno or sem" });
 
+  function queryAsync(sql, values) {
+    return new Promise((resolve, reject) => {
+      connection.query(sql, values, (err, result) => {
+        if (err) reject(err);
+        else resolve(result);
+      });
+    });
+  }
+
+  try {
+    const results = await queryAsync(
+      "SELECT subcode, subname, grade, credits FROM results WHERE regno = ? AND semester = ?",
+      [regno, sem]
+    );
+    const studentRows = await queryAsync(
+      "SELECT name, reg_no, course, photo_url FROM students WHERE reg_no = ?",
+      [regno]
+    );
+    const student = studentRows[0] || {};
+
+    const gradeMap = { S: 10, A: 9, B: 8, C: 7, D: 6, E: 5, F: 0, Ab: 0 };
+    let totalCredits = 0, totalPoints = 0;
+    results.forEach(r => {
+      const gp = gradeMap[r.grade] ?? 0;
+      totalCredits += r.credits;
+      totalPoints += gp * r.credits;
+    });
+
+    const sgpa = totalCredits ? (totalPoints / totalCredits).toFixed(2) : "N/A";
+
+    res.json({
+      name: student.name || "N/A",
+      regno: student.reg_no || regno,
+      course: student.course || "N/A",
+      semester: sem,
+      photo_url: student.photo_url || null,
+      sgpa,
+      results
+    });
+  } catch (err) {
+    console.error("❌ Verification error:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 //admin create noc 
 app.post('/admin/manual-create-noc', (req, res) => {
