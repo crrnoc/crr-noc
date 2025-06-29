@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>📥 Upload Attendance</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet" />
+  <link rel="icon" href="crrengglogo.png" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    :root {
+      --main-color: #3cb6ff;
+      --accent-color: #ff3d3d;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      display: flex;
+      min-height: 100vh;
+      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+      color: white;
+    }
+
+    .sidebar {
+      width: 260px;
+      background: rgba(60, 66, 84, 0.5);
+      backdrop-filter: blur(8px);
+      padding: 30px 20px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 4px 0 25px rgba(0, 0, 0, 0.4);
+      position: fixed;
+      height: 100vh;
+      z-index: 10;
+    }
+
+    .sidebar h2 {
+      text-align: center;
+      font-size: 24px;
+      color: var(--main-color);
+      margin-bottom: 30px;
+    }
+
+    .sidebar ul {
+      list-style: none;
+    }
+
+    .sidebar li {
+      padding: 12px 18px;
+      margin: 12px 0;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: 0.3s ease;
+    }
+
+    .sidebar li:hover {
+      background: var(--main-color);
+      box-shadow: 0 0 12px var(--main-color);
+    }
+
+    .sidebar button {
+      margin-top: auto;
+      padding: 10px 20px;
+      border: none;
+      background: linear-gradient(to right, #ff416c, #ff4b2b);
+      color: white;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: bold;
+      box-shadow: 0 0 10px rgba(255, 65, 108, 0.5);
+      transition: 0.3s ease;
+    }
+
+    .sidebar button:hover {
+      transform: scale(1.05);
+    }
+
+    .main {
+      margin-left: 260px;
+      padding: 70px;
+      flex: 1;
+    }
+
+    .banner {
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 16px;
+      font-size: 18px;
+      text-align: center;
+      margin-bottom: 30px;
+      box-shadow: 0 0 15px rgba(0, 191, 255, 0.3);
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(6px);
+      padding: 30px;
+      border-radius: 16px;
+      max-width: 500px;
+      margin: auto;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    label, select, input[type="file"], button {
+      display: block;
+      width: 100%;
+      margin: 12px 0;
+      padding: 12px;
+      font-size: 15px;
+      border-radius: 10px;
+    }
+
+    select, input[type="file"] {
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.1);
+      color: black;
+      backdrop-filter: blur(4px);
+    }
+
+    input[type="file"]::file-selector-button {
+      padding: 10px;
+      border-radius: 8px;
+      background: linear-gradient(to right, #3cb6ff, #ff3d3d);
+      color: white;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button {
+      background: linear-gradient(135deg, var(--main-color), var(--accent-color));
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      border: none;
+      transition: all 0.3s ease;
+      box-shadow: 0 0 12px rgba(60, 182, 255, 0.3);
+    }
+
+    button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 18px rgba(255, 61, 61, 0.5);
+    }
+
+    .mobile-toggle {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      font-size: 26px;
+      z-index: 20;
+      cursor: pointer;
+      display: none;
+      color: white;
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        transform: translateX(-100%);
+        transition: 0.4s ease;
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .mobile-toggle {
+        display: block;
+      }
+
+      .main {
+        margin-left: 0;
+        padding: 80px 20px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="sidebar">
+    <h2>Admin Panel</h2>
+    <ul>
+      <li onclick="navigateTo('uploadresultsAd.html')">📥 Upload Results</li>
+      <li onclick="navigateTo('uploadattendanceAd.html')">🗓 Upload Attendance</li>
+      <li onclick="navigateTo('createnocAd.html')">📝 Create NOC</li>
+    </ul>
+    <button onclick="logout()">🚪 Logout</button>
+  </div>
+
+  <div class="mobile-toggle" onclick="toggleSidebar()">☰</div>
+
+  <div class="main">
+    <div class="banner">🗓 Upload Attendance PDF</div>
+    <div class="card">
+      <form id="attendanceForm">
+        <label for="semester">📘 Select Semester</label>
+        <select id="semester" required>
+          <option value="">-- Select Semester --</option>
+          <option>1-1</option><option>1-2</option>
+          <option>2-1</option><option>2-2</option>
+          <option>3-1</option><option>3-2</option>
+          <option>4-1</option><option>4-2</option>
+        </select>
+
+        <label for="pdf">📎 Choose Attendance PDF</label>
+        <input type="file" id="pdf" accept=".pdf" required />
+
+        <button type="submit" id="submitBtn">Upload PDF</button>
+      </form>
+    </div>
+  </div>
+
+<script>
+  function navigateTo(page) {
+    window.location.href = page;
+  }
+
+  function logout() {
+    localStorage.removeItem("userId");
+    if ('caches' in window) {
+      caches.keys().then(names => names.forEach(name => caches.delete(name)));
+    }
+    window.location.replace("index.html");
+  }
+
+  function toggleSidebar() {
+    document.querySelector(".sidebar").classList.toggle("open");
+  }
+
+  const form = document.getElementById("attendanceForm");
+  const submitBtn = document.getElementById("submitBtn");
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const semester = document.getElementById("semester").value;
+    const file = document.getElementById("pdf").files[0];
+
+    if (!semester || !file) {
+      Swal.fire("Missing Fields", "Please select semester and upload a file.", "warning");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("semester", semester);
+    formData.append("pdf", file);
+
+    submitBtn.disabled = true;
+
+    Swal.fire({
+      title: "Uploading...",
+      html: "Processing attendance PDF...",
+      allowOutsideClick: false,
+      didOpen: () => Swal.showLoading()
+    });
+
+    try {
+      const response = await fetch("http://localhost:3000/upload-attendance", {
+        method: "POST",
+        body: formData
+      });
+
+      const contentType = response.headers.get("content-type");
+      if (!contentType.includes("application/json")) {
+        const raw = await response.text();
+        console.error("❌ Raw response:", raw.slice(0, 300));
+        throw new Error("Server returned non-JSON response.");
+      }
+
+      const result = await response.json();
+
+      Swal.fire({
+        icon: result.total === 0 ? "warning" : "success",
+        title: result.total === 0 ? "No Records Found" : "Upload Successful ✅",
+        html: `
+          <b>${result.message}</b><br>
+          Total Records: <strong>${result.total}</strong><br>
+          <a href="${result.csv_file}" target="_blank">📥 Download CSV</a>
+        `
+      });
+
+      if (result.total > 0) form.reset();
+
+    } catch (err) {
+      console.error("❌ Upload error:", err);
+      Swal.fire("Upload Failed ❌", err.message || "Something went wrong.", "error");
+    } finally {
+      submitBtn.disabled = false;
+    }
+  });
+</script>
+
+</body>
+</html>
