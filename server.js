@@ -1629,23 +1629,34 @@ app.post("/get-student-details", async (req, res) => {
   }
 });
 // ✅ Delete Student
+// ✅ Delete Student with Photo Removal
 app.post("/delete-student", async (req, res) => {
   const { reg_no } = req.body;
 
   try {
+    // Step 1: Delete student-related records from MySQL
     await connection.promise().query("DELETE FROM users WHERE userid = ?", [reg_no]);
-    await connection.promise().query("DELETE FROM students WHERE userId = ?", [reg_no]); // ✅ FIXED
+    await connection.promise().query("DELETE FROM students WHERE userId = ?", [reg_no]);
     await connection.promise().query("DELETE FROM student_fee_structure WHERE reg_no = ?", [reg_no]);
     await connection.promise().query("DELETE FROM student_fee_payments WHERE userId = ?", [reg_no]);
     await connection.promise().query("DELETE FROM notifications WHERE userId = ?", [reg_no]);
     await connection.promise().query("DELETE FROM fines WHERE userId = ?", [reg_no]);
 
-    res.json({ success: true, message: "Student deleted successfully" });
+    // Step 2: Delete Cloudinary photo(s)
+    try {
+      const result = await cloudinary.api.delete_resources_by_prefix(`students/${reg_no}`);
+      console.log(`🧹 Cloudinary photo(s) deleted for ${reg_no}`, result);
+    } catch (err) {
+      console.error(`❌ Failed to delete Cloudinary photo for ${reg_no}:`, err.message);
+    }
+
+    res.json({ success: true, message: "Student deleted successfully (including photo)" });
   } catch (err) {
-    console.error("Delete error:", err);
+    console.error("❌ Student deletion error:", err);
     res.status(500).json({ success: false, message: "Error deleting student" });
   }
 });
+
 
 // ✅ Filter Batch
 app.post("/filter-batch", async (req, res) => {
@@ -1663,8 +1674,10 @@ app.post("/filter-batch", async (req, res) => {
 });
 
 // ✅ Delete Batch
+// ✅ Delete Batch with Photos
 app.post("/delete-batch", async (req, res) => {
   const { batchPrefix, branch } = req.body;
+
   try {
     const [students] = await connection.promise().query(
       "SELECT reg_no FROM students WHERE reg_no LIKE ? AND course = ?",
@@ -1673,17 +1686,30 @@ app.post("/delete-batch", async (req, res) => {
 
     for (const student of students) {
       const reg_no = student.reg_no;
-      await connection.promise().query("DELETE FROM users WHERE userid = ?", [reg_no]);
-      await connection.promise().query("DELETE FROM students WHERE userId = ?", [reg_no]);
-      await connection.promise().query("DELETE FROM student_fee_structure WHERE reg_no = ?", [reg_no]);
-      await connection.promise().query("DELETE FROM student_fee_payments WHERE userId = ?", [reg_no]);
-      await connection.promise().query("DELETE FROM notifications WHERE userId = ?", [reg_no]);
-      await connection.promise().query("DELETE FROM fines WHERE userId = ?", [reg_no]);
+
+      try {
+        await connection.promise().query("DELETE FROM users WHERE userid = ?", [reg_no]);
+        await connection.promise().query("DELETE FROM students WHERE userId = ?", [reg_no]);
+        await connection.promise().query("DELETE FROM student_fee_structure WHERE reg_no = ?", [reg_no]);
+        await connection.promise().query("DELETE FROM student_fee_payments WHERE userId = ?", [reg_no]);
+        await connection.promise().query("DELETE FROM notifications WHERE userId = ?", [reg_no]);
+        await connection.promise().query("DELETE FROM fines WHERE userId = ?", [reg_no]);
+
+        // 👇 Delete Cloudinary photo(s) for each student
+        try {
+          const result = await cloudinary.api.delete_resources_by_prefix(`students/${reg_no}`);
+          console.log(`🧹 Deleted photo(s) for ${reg_no}`, result);
+        } catch (err) {
+          console.error(`❌ Failed to delete photo for ${reg_no}:`, err.message);
+        }
+      } catch (err) {
+        console.error(`❌ Error deleting records for ${reg_no}:`, err.message);
+      }
     }
 
-    res.json({ success: true, message: "Batch deleted successfully" });
+    res.json({ success: true, message: "Batch deleted successfully (including photos)" });
   } catch (err) {
-    console.error("Batch delete error:", err);
+    console.error("❌ Batch delete error:", err);
     res.status(500).json({ success: false, message: "Error deleting batch" });
   }
 });
