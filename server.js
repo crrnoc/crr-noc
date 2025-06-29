@@ -1880,6 +1880,78 @@ app.post("/admin/upload-autonomous-result-pdf", upload.single("pdf"), async (req
   }
 });
 
+// Route: Upload attendance PDF
+// ✅ Attendance upload route
+app.post("/upload-attendance", upload.single("pdf"), (req, res) => {
+  const semester = req.body.semester;
+  const filePath = req.file?.path;
+
+  if (!semester || !filePath) {
+    return res.status(400).json({ message: "❌ Semester or PDF missing." });
+  }
+
+  console.log("📄 Attendance PDF File Path:", filePath);
+  console.log("🐍 Running Python attendance script...");
+
+  const python = spawn("python", ["extract_attendance.py", filePath, semester]);
+
+  let output = "";
+  let errorOutput = "";
+
+  python.stdout.on("data", (data) => output += data.toString());
+  python.stderr.on("data", (data) => errorOutput += data.toString());
+
+  python.on("close", (code) => {
+    console.log("🐍 Python exited with code:", code);
+    if (errorOutput) console.error("🐍 stderr:\n", errorOutput);
+
+    if (code !== 0) {
+      return res.status(500).json({
+        message: "❌ Python error",
+        error: errorOutput || "Unknown error"
+      });
+    }
+
+    let records;
+    try {
+      records = JSON.parse(output);
+    } catch (err) {
+      return res.status(500).json({ message: "❌ Invalid JSON", error: err.message });
+    }
+
+    let inserted = 0;
+    const insertPromises = records.map(([regno, sem, total, present, percent]) => {
+      return new Promise((resolve) => {
+        connection.query(
+          `INSERT INTO attendance 
+           (regno, semester, total_classes, attended_classes, percentage) 
+           VALUES (?, ?, ?, ?, ?) 
+           ON DUPLICATE KEY UPDATE 
+           total_classes=?, attended_classes=?, percentage=?`,
+          [regno, sem, total, present, percent, total, present, percent],
+          (err) => {
+            if (err) {
+              console.error(`❌ DB Error for ${regno}:`, err.message);
+            } else {
+              inserted++;
+            }
+            resolve();
+          }
+        );
+      });
+    });
+
+    Promise.all(insertPromises).then(() => {
+      const csvFileName = path.basename(filePath).replace(".pdf", ".csv");
+      res.status(200).json({
+        message: "✅ Attendance extracted and stored.",
+        total: inserted,
+        csv_file: `/uploads/${csvFileName}`
+      });
+    });
+  });
+});
+
 // 📊 Fetch student results by regno and semester
 // 📊 Fetch student results by regno and semester
 app.get('/student/results/:regno', async (req, res) => {
