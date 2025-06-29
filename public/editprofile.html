@@ -27,6 +27,15 @@
       display: flex;
       height: 100vh;
     }
+     .sidebar-photo {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 50%;
+  margin: 0 auto 10px;
+  border: 3px solid #333;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
 
     .sidebar {
       width: 270px;
@@ -260,6 +269,8 @@
   <div class="container">
     <!-- Sidebar -->
     <div class="sidebar">
+      <img id="sidebarPhoto" class="sidebar-photo" style="display: none;" />
+
       <h2><strong>ID:</strong> <span id="userId">Loading...</span></h2>
       <ul class="menu">
         <li><a href="studentdetails.html"><span>📄</span> Student details</a></li>
@@ -357,6 +368,10 @@
       form.aadhar.value = data.aadhar_no || "";
       form.mobile.value = data.mobile_no || "";
       form.email.value = data.email || "";
+
+// Set sidebar photo
+document.getElementById("sidebarPhoto").src = data.photo_url || "";
+document.getElementById("sidebarPhoto").style.display = data.photo_url ? "block" : "none";
 
       photoPreview.src = "";
       photoPreview.style.display = "none";
