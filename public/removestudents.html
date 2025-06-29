@@ -240,7 +240,16 @@ function confirmDelete() {
         body: JSON.stringify({ reg_no: fetchedReg })
       })
       .then(res => res.json())
-      .then(data => Swal.fire("Done", data.message, "success"))
+      .then(data => {
+        // After student deletion, now delete photo too
+        fetch("/admin/delete-photos", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prefix: fetchedReg })
+        }).then(() => {
+          Swal.fire("Deleted", data.message + " and photo removed!", "success");
+        });
+      })
       .catch(() => Swal.fire("Error", "Failed to delete student", "error"));
     }
   });
@@ -291,11 +300,21 @@ function confirmBatchDelete() {
         body: JSON.stringify({ batchPrefix: prefix, branch })
       })
       .then(res => res.json())
-      .then(data => Swal.fire("Deleted", data.message, "success"))
+      .then(data => {
+        // Also delete all matching photos by prefix
+        fetch("/admin/delete-photos", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prefix })
+        }).then(() => {
+          Swal.fire("Deleted", data.message + " and photos removed!", "success");
+        });
+      })
       .catch(() => Swal.fire("Error", "Failed to delete batch", "error"));
     }
   });
 }
+
 </script>
 
 </body>
