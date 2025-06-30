@@ -348,7 +348,7 @@
                     <tr>
                       <td>${total_classes}</td>
                       <td>${attended_classes}</td>
-                      <td>${percentage.toFixed(2)}%</td>
+                      <td>${parseFloat(percentage || 0).toFixed(2)}%</td>
                     </tr>
                   </tbody>
                 </table>
