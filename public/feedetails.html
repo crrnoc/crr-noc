@@ -61,7 +61,15 @@
       font-size: 18px;
       font-weight: bold;
     }
-
+    .sidebar-photo {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 50%;
+  margin: 0 auto 10px;
+  border: 3px solid #333;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
     .menu {
       list-style-type: none;
       padding: 0;
@@ -290,7 +298,8 @@
   <div class="container">
     <!-- Sidebar -->
     <div class="sidebar">
-      <h2><strong>ID:</strong> <span id="userId">Loading...</span></h2>
+      <img id="sidebarPhoto" class="sidebar-photo" style="display: none;" />
+<h2>ID: <span id="userId">Loading...</span></h2>
       <ul class="menu">
         <li><a href="studentdetails.html"><span>📄</span> Student details</a></li>
         <li><a href="editprofile.html"><span>✏️</span> Edit profile</a></li>
@@ -314,110 +323,117 @@
 <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
 <script>
   const userId = localStorage.getItem("userId");
-document.getElementById("userId").textContent = userId || "Unknown";
+  document.getElementById("userId").textContent = userId || "Unknown";
 
-fetch(`https://crr-noc.onrender.com/yearwise-fee/${userId}`)
-  .then(res => res.json())
-  .then(res => {
-    if (!res.success) throw new Error("Fee data not found.");
-
-    const data = res.data;
-    const container = document.querySelector(".fee-details");
-    container.innerHTML = `<h2>📘 Year-wise Fee Details</h2>`;
-
-    data.forEach(({ year, structure, paid, fines }, index) => {
-      const items = [
-        { label: "Tuition Fee", key: "tuition" },
-        { label: "Hostel Fee", key: "hostel" },
-        { label: "Bus Fee", key: "bus" },
-        { label: "University Fee", key: "university" },
-        { label: "Semester Fee", key: "semester" },
-        { label: "Library Dues", key: "library" },
-        { label: "Fines", key: "fines" }
-      ];
-
-      let paidTotal = 0, remainingTotal = 0, actualTotal = 0;
-      let rowsHTML = "";
-
-      items.forEach(({ label, key }) => {
-        const total = key === "fines" ? fines : parseFloat(structure[key]) || 0;
-        const paidAmt = parseFloat(paid[key]) || 0;
-        const remain = Math.max(0, total - paidAmt);
-
-        paidTotal += paidAmt;
-        remainingTotal += remain;
-        actualTotal += total;
-
-        rowsHTML += `
-          <tr>
-            <td>${label}</td>
-            <td>₹${paidAmt.toFixed(2)}</td>
-            <td>₹${remain.toFixed(2)}</td>
-            <td>₹${total.toFixed(2)}</td>
-          </tr>`;
-      });
-
-      container.innerHTML += `
-        <div class="accordion-card" style="margin-top: 20px;">
-          <button class="accordion-toggle" data-index="${index}">📅 Academic Year ${year}</button>
-          <div class="accordion-content" style="display: none;">
-            <table>
-              <thead>
-                <tr>
-                  <th>Fee Type</th>
-                  <th>Paid (₹)</th>
-                  <th>Remaining (₹)</th>
-                  <th>Total (₹)</th>
-                </tr>
-              </thead>
-              <tbody>${rowsHTML}</tbody>
-              <tfoot>
-                <tr>
-                  <td><strong>Total</strong></td>
-                  <td><strong>₹${paidTotal.toFixed(2)}</strong></td>
-                  <td><strong>₹${remainingTotal.toFixed(2)}</strong></td>
-                  <td><strong>₹${actualTotal.toFixed(2)}</strong></td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-        </div>`;
+  // ✅ Load profile photo from backend
+  fetch(`https://crr-noc.onrender.com/student/${userId}`)
+    .then(r => r.json())
+    .then(data => {
+      const photo = document.getElementById("sidebarPhoto");
+      if (photo && data.photo_url) {
+        photo.src = data.photo_url;
+        photo.style.display = "block";
+      }
     });
 
-    // Accordion behavior
-    const toggles = document.querySelectorAll(".accordion-toggle");
-    const contents = document.querySelectorAll(".accordion-content");
+  fetch(`https://crr-noc.onrender.com/yearwise-fee/${userId}`)
+    .then(res => res.json())
+    .then(res => {
+      if (!res.success) throw new Error("Fee data not found.");
 
-    toggles.forEach((btn, i) => {
-      btn.addEventListener("click", () => {
-        contents.forEach((content, j) => {
-          if (i === j) {
-            content.style.display = content.style.display === "block" ? "none" : "block";
-          } else {
-            content.style.display = "none";
-          }
+      const data = res.data;
+      const container = document.querySelector(".fee-details");
+      container.innerHTML = `<h2>📘 Year-wise Fee Details</h2>`;
+
+      data.forEach(({ year, structure, paid, fines }, index) => {
+        const items = [
+          { label: "Tuition Fee", key: "tuition" },
+          { label: "Hostel Fee", key: "hostel" },
+          { label: "Bus Fee", key: "bus" },
+          { label: "University Fee", key: "university" },
+          { label: "Semester Fee", key: "semester" },
+          { label: "Library Dues", key: "library" },
+          { label: "Fines", key: "fines" }
+        ];
+
+        let paidTotal = 0, remainingTotal = 0, actualTotal = 0;
+        let rowsHTML = "";
+
+        items.forEach(({ label, key }) => {
+          const total = key === "fines" ? fines : parseFloat(structure[key]) || 0;
+          const paidAmt = parseFloat(paid[key]) || 0;
+          const remain = Math.max(0, total - paidAmt);
+
+          paidTotal += paidAmt;
+          remainingTotal += remain;
+          actualTotal += total;
+
+          rowsHTML += `
+            <tr>
+              <td>${label}</td>
+              <td>₹${paidAmt.toFixed(2)}</td>
+              <td>₹${remain.toFixed(2)}</td>
+              <td>₹${total.toFixed(2)}</td>
+            </tr>`;
+        });
+
+        container.innerHTML += `
+          <div class="accordion-card" style="margin-top: 20px;">
+            <button class="accordion-toggle" data-index="${index}">📅 Academic Year ${year}</button>
+            <div class="accordion-content" style="display: none;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Fee Type</th>
+                    <th>Paid (₹)</th>
+                    <th>Remaining (₹)</th>
+                    <th>Total (₹)</th>
+                  </tr>
+                </thead>
+                <tbody>${rowsHTML}</tbody>
+                <tfoot>
+                  <tr>
+                    <td><strong>Total</strong></td>
+                    <td><strong>₹${paidTotal.toFixed(2)}</strong></td>
+                    <td><strong>₹${remainingTotal.toFixed(2)}</strong></td>
+                    <td><strong>₹${actualTotal.toFixed(2)}</strong></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>`;
+      });
+
+      const toggles = document.querySelectorAll(".accordion-toggle");
+      const contents = document.querySelectorAll(".accordion-content");
+
+      toggles.forEach((btn, i) => {
+        btn.addEventListener("click", () => {
+          contents.forEach((content, j) => {
+            content.style.display = i === j
+              ? content.style.display === "block" ? "none" : "block"
+              : "none";
+          });
         });
       });
+    })
+    .catch(err => {
+      console.error("❌ Error loading fee data:", err);
+      alert("Failed to load year-wise fee details.");
     });
-  })
-  .catch(err => {
-    console.error("❌ Error loading fee data:", err);
-    alert("Failed to load year-wise fee details.");
-  });
 
-    function toggleMobileMenu() {
-  const sidebar = document.querySelector('.sidebar');
-  sidebar.classList.toggle('open');
-}
+  function toggleMobileMenu() {
+    const sidebar = document.querySelector('.sidebar');
+    sidebar.classList.toggle('open');
+  }
 
-// Close mobile sidebar on menu click (only on mobile)
-document.querySelectorAll(".menu li a").forEach(link => {
-  link.addEventListener("click", () => {
-    if (window.innerWidth <= 768) {
-      document.querySelector('.sidebar').classList.remove('open');
-    }
+  document.querySelectorAll(".menu li a").forEach(link => {
+    link.addEventListener("click", () => {
+      if (window.innerWidth <= 768) {
+        document.querySelector('.sidebar').classList.remove('open');
+      }
+    });
   });
-});
 
   function logout() {
     localStorage.removeItem("userId");
@@ -427,6 +443,8 @@ document.querySelectorAll(".menu li a").forEach(link => {
     window.location.replace("index.html");
   }
 </script>
+
+
 
 </body>
 </html>
