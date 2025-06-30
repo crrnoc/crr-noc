@@ -140,21 +140,25 @@
       padding-bottom: 6px;
     }
 
-    .mobile-toggle {
-      display: none;
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background-color: #1f75cb;
-      color: white;
-      font-size: 24px;
-      padding: 12px 18px;
-      border-radius: 50px;
-      z-index: 9999;
-      cursor: pointer;
-      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-    }
+   .mobile-toggle {
+  position: fixed;
+  width: 55px;
+  height: 55px;
+  background-color: #1f75cb;
+  color: white;
+  font-size: 26px;
+  border-radius: 50%;
+  bottom: 20px;
+  left: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  cursor: grab;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+}
+
 
     @media (max-width: 768px) {
       .container {
@@ -230,16 +234,12 @@
   </div>
   <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
   <script>
-     // Toggle open on small screens
-function toggleMobileMenu() {
-    const sidebar = document.querySelector('.sidebar');
-    sidebar.classList.toggle('open');
-  }
-
   // 💡 Make only the toggle button draggable
-  const toggleButton = document.querySelector('.mobile-toggle');
-  let isDragging = false, offsetX = 0, offsetY = 0;
+ const toggleButton = document.querySelector('.mobile-toggle');
+  let isDragging = false;
+  let offsetX, offsetY;
 
+  // Make it draggable on desktop
   toggleButton.addEventListener('mousedown', (e) => {
     isDragging = true;
     offsetX = e.clientX - toggleButton.getBoundingClientRect().left;
@@ -259,7 +259,7 @@ function toggleMobileMenu() {
     toggleButton.style.transition = "all 0.2s ease";
   });
 
-  // 💡 Touch support for mobile
+  // Mobile touch support
   toggleButton.addEventListener('touchstart', (e) => {
     isDragging = true;
     const touch = e.touches[0];
@@ -281,17 +281,14 @@ function toggleMobileMenu() {
     toggleButton.style.transition = "all 0.2s ease";
   });
 
-  // Set initial position and style
-  toggleButton.style.position = "fixed";
-  toggleButton.style.left = "calc(50% - 35px)";
-  toggleButton.style.top = "calc(100% - 80px)";
-    document.querySelectorAll(".menu li a").forEach(link => {
-      link.addEventListener("click", () => {
-        if (window.innerWidth <= 768) {
-          document.querySelector('.sidebar').classList.remove('open');
-        }
-      });
-    });
+  // Initial position
+  toggleButton.style.top = "80%";
+  toggleButton.style.left = "20px";
+
+  // Toggle sidebar on click
+  function toggleMobileMenu() {
+    document.querySelector('.sidebar').classList.toggle('open');
+  }
     // Handle browser back/forward navigation to prevent cache issues
     window.onpageshow = function(event) {
       if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
