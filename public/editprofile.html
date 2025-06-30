@@ -344,6 +344,10 @@
       input.disabled = input.id === "course" ? true : state;
     });
   }
+    function toggleMobileMenu() {
+  const sidebar = document.querySelector('.sidebar');
+  sidebar.classList.toggle('open');
+}
 
   function formatDateToInput(dateStr) {
     if (!dateStr) return "";
