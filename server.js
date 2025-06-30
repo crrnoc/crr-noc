@@ -1978,6 +1978,23 @@ app.post("/upload-attendance", upload.single("pdf"), (req, res) => {
   });
 });
 
+app.get("/student-attendance/:regno", (req, res) => {
+  const regno = req.params.regno;
+
+  connection.query(
+    "SELECT semester, total_classes, attended_classes, percentage FROM attendance WHERE regno = ? ORDER BY semester",
+    [regno],
+    (err, results) => {
+      if (err) {
+        console.error("DB error:", err);
+        return res.status(500).json({ success: false, message: "Database error." });
+      }
+
+      res.json({ success: true, data: results });
+    }
+  );
+});
+
 // 📊 Fetch student results by regno and semester
 // 📊 Fetch student results by regno and semester
 app.get('/student/results/:regno', async (req, res) => {
