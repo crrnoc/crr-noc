@@ -43,7 +43,8 @@
       transition: top 0.3s ease-in-out;
       z-index: 999;
     }
-     .sidebar-photo {
+
+    .sidebar-photo {
   width: 100px;
   height: 100px;
   object-fit: cover;
@@ -208,17 +209,18 @@
   <div class="container">
     <div class="sidebar">
       <img id="sidebarPhoto" class="sidebar-photo" style="display: none;" />
+
       <h2>ID: <span id="userId">Loading...</span></h2>
       <ul class="menu">
         <li class="active"><a href="#"><span>📄</span> Student details</a></li>
         <li><a href="editprofile.html"><span>✏️</span> Edit profile</a></li>
         <li><a href="feedetails.html"><span>🎓</span> Fee details</a></li>
         <li><a href="updaterefno.html"><span>🔄</span> Update fee payment</a></li>
-        <li><a href="attendence.html"><span>📅</span> View Attendance</a></li>
         <li><a href="studentresults.html"><span>📊</span> Student Results</a></li>
         <li><a href="generatenoc.html"><span>➕</span> Generate NOC</a></li>
         <li><a href="settings.html"><span>⚙️</span> Settings</a></li>
         <li><a href="notifications.html"><span>🔔</span> Notifications</a></li>
+        <li><a href="privacypolicy.html"><span>📜</span> Privacy policy</a></li>
       </ul>
       <button class="logout" onclick="logout()">Logout</button>
     </div>
@@ -260,32 +262,34 @@
 
       document.getElementById("userId").textContent = studentId;
 
-      fetch(`https://crr-noc.onrender.com/student/${studentId}`)
+      fetch(`httpS://crr-noc.onrender.com/student/${studentId}`)
         .then(response => response.json())
         .then(data => {
-  if (data) {
-    // 🌟 Set sidebar photo if data exists
-    const photo = document.getElementById("sidebarPhoto");
-    photo.src = data.photo_url || "";
-    photo.style.display = data.photo_url ? "block" : "none";
+          if (data) {
+            document.getElementById("sidebarPhoto").src = data.photo_url || "";
+document.getElementById("sidebarPhoto").style.display = data.photo_url ? "block" : "none";
 
-    document.querySelector('.details-card').innerHTML = `
-      <p><strong>Name</strong>: ${data.name}</p>
-      <p><strong>DOB</strong>: ${data.dob ? new Date(data.dob).toLocaleDateString('CA-en') : 'N/A'}</p>
-      <p><strong>Reg. no</strong>: ${data.reg_no}</p>
-      <p><strong>Unique id</strong>: ${data.unique_id}</p>
-      <p><strong>Year</strong>: ${data.year}</p>
-      <p><strong>Course</strong>: ${data.course}</p>
-      <p><strong>Semester</strong>: ${data.semester}</p>
-      <p><strong>Aadhar no</strong>: ${data.aadhar_no}</p>
-      <p><strong>Mobile no</strong>: ${data.mobile_no}</p>
-      <p><strong>Email Id</strong>: ${data.email}</p>
-    `;
-  } else {
-    document.querySelector('.details-card').innerHTML = '<p>No data found!</p>';
-  }
-})
-
+            document.querySelector('.details-card').innerHTML = `
+              <p><strong>Name</strong>: ${data.name}</p>
+              <p><strong>DOB</strong>: ${data.dob ? new Date(data.dob).toLocaleDateString('CA-en') : 'N/A'}</p>
+              <p><strong>Reg. no</strong>: ${data.reg_no}</p>
+              <p><strong>Unique id</strong>: ${data.unique_id}</p>
+              <p><strong>Year</strong>: ${data.year}</p>
+              <p><strong>Course</strong>: ${data.course}</p>
+              <p><strong>Semester</strong>: ${data.semester}</p>
+              <p><strong>Aadhar no</strong>: ${data.aadhar_no}</p>
+              <p><strong>Mobile no</strong>: ${data.mobile_no}</p>
+              <p><strong>Email Id</strong>: ${data.email}</p>
+            `;
+          } else {
+            document.querySelector('.details-card').innerHTML = '<p>No data found!</p>';
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching data:', error);
+          document.querySelector('.details-card').innerHTML = '<p>Something went wrong. Please try again later.</p>';
+        });
+    });
 
     function logout() {
       localStorage.removeItem("userId");
