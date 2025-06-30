@@ -42,6 +42,15 @@
       transition: top 0.3s ease-in-out;
       z-index: 999;
     }
+     .sidebar-photo {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 50%;
+  margin: 0 auto 10px;
+  border: 3px solid #333;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
 
     .sidebar h2 {
       margin: 40px 20px 20px 20px;
@@ -202,6 +211,7 @@
   <div class="container">
     <!-- Sidebar -->
     <div class="sidebar">
+      <img id="sidebarPhoto" class="sidebar-photo" style="display: none;" />
       <h2>ID: <span id="userId">Loading...</span></h2>
       <ul class="menu">
         <li class="active"><a href="#"><span>📄</span> Student details</a></li>
@@ -233,114 +243,74 @@
     </div>
   </div>
   <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
-  <script>
-  // 💡 Make only the toggle button draggable
- const toggleButton = document.querySelector('.mobile-toggle');
-  let isDragging = false;
-  let offsetX, offsetY;
-
-  // Make it draggable on desktop
-  toggleButton.addEventListener('mousedown', (e) => {
-    isDragging = true;
-    offsetX = e.clientX - toggleButton.getBoundingClientRect().left;
-    offsetY = e.clientY - toggleButton.getBoundingClientRect().top;
-    toggleButton.style.transition = "none";
-  });
-
-  document.addEventListener('mousemove', (e) => {
-    if (isDragging) {
-      toggleButton.style.left = `${e.clientX - offsetX}px`;
-      toggleButton.style.top = `${e.clientY - offsetY}px`;
+<script>
+    function toggleMobileMenu() {
+      const sidebar = document.querySelector('.sidebar');
+      sidebar.classList.toggle('open');
     }
-  });
 
-  document.addEventListener('mouseup', () => {
-    isDragging = false;
-    toggleButton.style.transition = "all 0.2s ease";
-  });
+    document.querySelectorAll(".menu li a").forEach(link => {
+      link.addEventListener("click", () => {
+        if (window.innerWidth <= 768) {
+          document.querySelector('.sidebar').classList.remove('open');
+        }
+      });
+    });
 
-  // Mobile touch support
-  toggleButton.addEventListener('touchstart', (e) => {
-    isDragging = true;
-    const touch = e.touches[0];
-    offsetX = touch.clientX - toggleButton.getBoundingClientRect().left;
-    offsetY = touch.clientY - toggleButton.getBoundingClientRect().top;
-    toggleButton.style.transition = "none";
-  });
-
-  document.addEventListener('touchmove', (e) => {
-    if (isDragging) {
-      const touch = e.touches[0];
-      toggleButton.style.left = `${touch.clientX - offsetX}px`;
-      toggleButton.style.top = `${touch.clientY - offsetY}px`;
-    }
-  });
-
-  document.addEventListener('touchend', () => {
-    isDragging = false;
-    toggleButton.style.transition = "all 0.2s ease";
-  });
-
-  // Initial position
-  toggleButton.style.top = "80%";
-  toggleButton.style.left = "20px";
-
-  // Toggle sidebar on click
-  function toggleMobileMenu() {
-    document.querySelector('.sidebar').classList.toggle('open');
-  }
-    // Handle browser back/forward navigation to prevent cache issues
     window.onpageshow = function(event) {
       if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
         window.location.reload();
       }
     };
 
-    // On page load
     document.addEventListener("DOMContentLoaded", () => {
       const studentId = localStorage.getItem('userId');
-
       if (!studentId) {
         alert("Please login first.");
         window.location.href = "index.html";
         return;
       }
 
-      document.getElementById("userId").textContent = studentId;
+document.getElementById("userId").textContent = studentId;
 
-      fetch(`https://crr-noc.onrender.com/student/${studentId}`)
-        .then(response => response.json())
-        .then(data => {
-          if (data) {
-            document.querySelector('.details-card').innerHTML = `
-              <p><strong>Name</strong>: ${data.name}</p>
-              <p><strong>DOB</strong>: ${data.dob ? new Date(data.dob).toLocaleDateString('CA-en') : 'N/A'}</p>
-              <p><strong>Reg. no</strong>: ${data.reg_no}</p>
-              <p><strong>Unique id</strong>: ${data.unique_id}</p>
-              <p><strong>Year</strong>: ${data.year}</p>
-              <p><strong>Course</strong>: ${data.course}</p>
-              <p><strong>Semester</strong>: ${data.semester}</p>
-              <p><strong>Aadhar no</strong>: ${data.aadhar_no}</p>
-              <p><strong>Mobile no</strong>: ${data.mobile_no}</p>
-              <p><strong>Email Id</strong>: ${data.email}</p>
-            `;
-          } else {
-            document.querySelector('.details-card').innerHTML = '<p>No data found!</p>';
-          }
-        })
-        .catch(error => {
-          console.error('Error fetching data:', error);
-          document.querySelector('.details-card').innerHTML = '<p>Something went wrong. Please try again later.</p>';
-        });
-    });
+fetch(`https://crr-noc.onrender.com/student/${studentId}`)
+  .then(response => response.json())
+  .then(data => {
+    if (data) {
+      // 🌟 Set profile photo in sidebar
+      const photoElement = document.getElementById("sidebarPhoto");
+      if (photoElement) {
+        photoElement.src = data.photo_url || "";
+        photoElement.style.display = data.photo_url ? "block" : "none";
+      }
 
-function logout() {
-    localStorage.removeItem("userId");
-    if ("caches" in window) {
-      caches.keys().then((names) => names.forEach((name) => caches.delete(name)));
+      // 📋 Fill student details card
+      document.querySelector('.details-card').innerHTML = `
+        <p><strong>Name</strong>: ${data.name}</p>
+        <p><strong>DOB</strong>: ${data.dob ? new Date(data.dob).toLocaleDateString('CA-en') : 'N/A'}</p>
+        <p><strong>Reg. no</strong>: ${data.reg_no}</p>
+        <p><strong>Unique id</strong>: ${data.unique_id}</p>
+        <p><strong>Year</strong>: ${data.year}</p>
+        <p><strong>Course</strong>: ${data.course}</p>
+        <p><strong>Semester</strong>: ${data.semester}</p>
+        <p><strong>Aadhar no</strong>: ${data.aadhar_no}</p>
+        <p><strong>Mobile no</strong>: ${data.mobile_no}</p>
+        <p><strong>Email Id</strong>: ${data.email}</p>
+      `;
+    } else {
+      document.querySelector('.details-card').innerHTML = '<p>No data found!</p>';
     }
-    window.location.replace("index.html");
-  }
+  })
+
+
+    function logout() {
+      localStorage.removeItem("userId");
+      if ("caches" in window) {
+        caches.keys().then((names) => names.forEach((name) => caches.delete(name)));
+      }
+      window.location.replace("index.html");
+    }
   </script>
 </body>
 </html>
+
