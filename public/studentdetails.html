@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -149,25 +150,21 @@
       padding-bottom: 6px;
     }
 
-   .mobile-toggle {
-  position: fixed;
-  width: 55px;
-  height: 55px;
-  background-color: #1f75cb;
-  color: white;
-  font-size: 26px;
-  border-radius: 50%;
-  bottom: 20px;
-  left: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-  cursor: grab;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-  transition: all 0.2s ease;
-}
-
+    .mobile-toggle {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #1f75cb;
+      color: white;
+      font-size: 24px;
+      padding: 12px 18px;
+      border-radius: 50px;
+      z-index: 9999;
+      cursor: pointer;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
 
     @media (max-width: 768px) {
       .container {
@@ -209,7 +206,6 @@
 </head>
 <body>
   <div class="container">
-    <!-- Sidebar -->
     <div class="sidebar">
       <img id="sidebarPhoto" class="sidebar-photo" style="display: none;" />
       <h2>ID: <span id="userId">Loading...</span></h2>
@@ -226,24 +222,14 @@
       <button class="logout" onclick="logout()">Logout</button>
     </div>
 
-    <!-- Details Section -->
     <div class="details-section">
-      <div class="details-card">
-        <p><strong>Name</strong>: </p>
-        <p><strong>DOB</strong>: ${data.dob ? data.dob.split('T')[0] : 'N/A'}</p>
-        <p><strong>Reg. no</strong>: </p>
-        <p><strong>Unique id</strong>: </p>
-        <p><strong>Year</strong>: </p>
-        <p><strong>Course</strong>: </p>
-        <p><strong>Semester</strong>: </p>
-        <p><strong>Aadhar no</strong>: </p>
-        <p><strong>Mobile no</strong>: </p>
-        <p><strong>Email Id</strong>: </p>
-      </div>
+      <div class="details-card"></div>
     </div>
   </div>
+
   <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
-<script>
+
+  <script>
     function toggleMobileMenu() {
       const sidebar = document.querySelector('.sidebar');
       sidebar.classList.toggle('open');
@@ -271,36 +257,33 @@
         return;
       }
 
-document.getElementById("userId").textContent = studentId;
+      document.getElementById("userId").textContent = studentId;
 
-fetch(`https://crr-noc.onrender.com/student/${studentId}`)
-  .then(response => response.json())
-  .then(data => {
-    if (data) {
-      // 🌟 Set profile photo in sidebar
-      const photoElement = document.getElementById("sidebarPhoto");
-      if (photoElement) {
-        photoElement.src = data.photo_url || "";
-        photoElement.style.display = data.photo_url ? "block" : "none";
-      }
+      fetch(`http://localhost:3000/student/${studentId}`)
+        .then(response => response.json())
+        .then(data => {
+  if (data) {
+    // 🌟 Set sidebar photo if data exists
+    const photo = document.getElementById("sidebarPhoto");
+    photo.src = data.photo_url || "";
+    photo.style.display = data.photo_url ? "block" : "none";
 
-      // 📋 Fill student details card
-      document.querySelector('.details-card').innerHTML = `
-        <p><strong>Name</strong>: ${data.name}</p>
-        <p><strong>DOB</strong>: ${data.dob ? new Date(data.dob).toLocaleDateString('CA-en') : 'N/A'}</p>
-        <p><strong>Reg. no</strong>: ${data.reg_no}</p>
-        <p><strong>Unique id</strong>: ${data.unique_id}</p>
-        <p><strong>Year</strong>: ${data.year}</p>
-        <p><strong>Course</strong>: ${data.course}</p>
-        <p><strong>Semester</strong>: ${data.semester}</p>
-        <p><strong>Aadhar no</strong>: ${data.aadhar_no}</p>
-        <p><strong>Mobile no</strong>: ${data.mobile_no}</p>
-        <p><strong>Email Id</strong>: ${data.email}</p>
-      `;
-    } else {
-      document.querySelector('.details-card').innerHTML = '<p>No data found!</p>';
-    }
-  })
+    document.querySelector('.details-card').innerHTML = `
+      <p><strong>Name</strong>: ${data.name}</p>
+      <p><strong>DOB</strong>: ${data.dob ? new Date(data.dob).toLocaleDateString('CA-en') : 'N/A'}</p>
+      <p><strong>Reg. no</strong>: ${data.reg_no}</p>
+      <p><strong>Unique id</strong>: ${data.unique_id}</p>
+      <p><strong>Year</strong>: ${data.year}</p>
+      <p><strong>Course</strong>: ${data.course}</p>
+      <p><strong>Semester</strong>: ${data.semester}</p>
+      <p><strong>Aadhar no</strong>: ${data.aadhar_no}</p>
+      <p><strong>Mobile no</strong>: ${data.mobile_no}</p>
+      <p><strong>Email Id</strong>: ${data.email}</p>
+    `;
+  } else {
+    document.querySelector('.details-card').innerHTML = '<p>No data found!</p>';
+  }
+})
 
 
     function logout() {
@@ -313,4 +296,3 @@ fetch(`https://crr-noc.onrender.com/student/${studentId}`)
   </script>
 </body>
 </html>
-
