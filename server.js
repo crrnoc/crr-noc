@@ -42,12 +42,12 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 const MySQLStore = require('express-mysql-session')(session);
 
-const sessionStore = new MySQLStore({
+const connection = mysql.createConnection({
   host: process.env.MYSQLHOST,
+  port: process.env.MYSQLPORT,
   user: process.env.MYSQLUSER,
   password: process.env.MYSQLPASSWORD,
   database: process.env.MYSQLDATABASE,
-  port: process.env.MYSQLPORT,
   ssl: {
     rejectUnauthorized: false
   }
