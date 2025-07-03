@@ -50,7 +50,15 @@
     font-size: 18px;
     font-weight: bold;
   }
-
+  .sidebar-photo {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 50%;
+  margin: 0 auto 10px;
+  border: 3px solid #333;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
   .menu {
     list-style-type: none;
     padding: 0;
@@ -247,7 +255,8 @@
   <div class="container">
     <!-- Sidebar -->
     <div class="sidebar">
-      <h2><strong>ID:</strong> <span id="userId">Loading...</span></h2>
+    <img id="sidebarPhoto" class="sidebar-photo" style="display: none;" />
+    <h2>ID: <span id="userId">Loading...</span></h2>
       <ul class="menu">
         <li><a href="studentdetails.html"><span>📄</span> Student details</a></li>
         <li><a href="editprofile.html"><span>✏️</span> Edit profile</a></li>
@@ -288,6 +297,20 @@
   const userId = localStorage.getItem("userId");
   document.getElementById("userId").textContent = userId;
 
+  // ✅ Load sidebar photo
+  fetch(`https://crr-noc.onrender.com/student/${userId}`)
+    .then(res => res.json())
+    .then(data => {
+      const photo = document.getElementById("sidebarPhoto");
+      if (photo && data.photo_url) {
+        photo.src = data.photo_url;
+        photo.style.display = "block";
+      }
+    })
+    .catch(err => {
+      console.warn("⚠️ Failed to load photo:", err.message);
+    });
+
   function downloadNOC() {
     const year = document.getElementById("nocYear").value;
     if (!year) {
@@ -302,7 +325,7 @@
     const userId = localStorage.getItem("userId");
     const url = `https://crr-noc.onrender.com/generate-noc/${userId}?year=${year}`;
     window.open(url, '_blank');
-    
+
     Swal.fire({
       icon: 'success',
       title: 'NOC Downloaded',
@@ -375,6 +398,7 @@
     window.location.replace("index.html");
   }
 </script>
+
 
 </body>
 </html>
