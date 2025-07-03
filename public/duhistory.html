@@ -306,7 +306,21 @@
   <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
 <script>
   const userId = localStorage.getItem("userId");
-  document.getElementById("userId").textContent = userId;
+  document.getElementById("userId").textContent = userId || "Unknown";
+
+  // ✅ Load sidebar photo
+  fetch(`https://crr-noc.onrender.com/student/${userId}`)
+    .then(res => res.json())
+    .then(data => {
+      const photo = document.getElementById("sidebarPhoto");
+      if (photo && data.photo_url) {
+        photo.src = data.photo_url;
+        photo.style.display = "block";
+      }
+    })
+    .catch(err => {
+      console.warn("⚠️ Failed to load photo:", err.message);
+    });
 
   function loadPayments() {
     const tbody = document.querySelector("#feeTable tbody");
@@ -406,6 +420,7 @@
 
   loadPayments();
 </script>
+
 
 </body>
 </html>
