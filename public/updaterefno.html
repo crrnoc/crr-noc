@@ -50,7 +50,15 @@
       font-size: 18px;
       font-weight: bold;
     }
-
+    .sidebar-photo {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 50%;
+  margin: 0 auto 10px;
+  border: 3px solid #333;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
     .menu {
       list-style: none;
       padding: 0;
@@ -240,7 +248,8 @@
   <div class="container">
     <!-- Sidebar -->
     <div class="sidebar">
-      <h2><strong>ID:</strong> <span id="userId">Loading...</span></h2>
+     <img id="sidebarPhoto" class="sidebar-photo" style="display: none;" />
+     <h2>ID: <span id="userId">Loading...</span></h2>
       <ul class="menu">
         <li><a href="studentdetails.html"><span>📄</span> Student details</a></li>
         <li><a href="editprofile.html"><span>✏️</span> Edit profile</a></li>
@@ -313,6 +322,23 @@
   const userId = localStorage.getItem("userId");
   document.getElementById("userId").textContent = userId;
 
+  // ✅ Load photo
+  if (userId) {
+    fetch(`https://crr-noc.onrender.com/student/${userId}`)
+      .then(res => res.json())
+      .then(data => {
+        const photo = document.getElementById("sidebarPhoto");
+        if (photo && data.photo_url) {
+          photo.src = data.photo_url;
+          photo.style.display = "block";
+        }
+      })
+      .catch(err => {
+        console.warn("⚠️ Failed to load sidebar photo:", err.message);
+      });
+  }
+
+  // ✅ Submit DU Numbers
   document.querySelector(".update").addEventListener("click", () => {
     const paymentData = [
       { type: "tuition", du: tuition.value, amount: tuitionAmount.value },
@@ -325,22 +351,20 @@
     ].filter(entry => entry.du.trim() !== "" && entry.amount.trim() !== "");
 
     if (paymentData.length === 0) {
-      Swal.fire({
+      return Swal.fire({
         icon: "warning",
         title: "Missing DU Number",
         text: "Please enter at least one DU number."
       });
-      return;
     }
 
     const academicYear = parseInt(document.getElementById("academicYear").value);
     if (!academicYear) {
-      Swal.fire({
+      return Swal.fire({
         icon: "info",
         title: "Academic Year Required",
         text: "Please select academic year."
       });
-      return;
     }
 
     fetch("https://crr-noc.onrender.com/submit-du", {
@@ -366,13 +390,14 @@
       });
   });
 
+  // Only allow numeric input
   document.querySelectorAll('.form input[type="number"]').forEach(input => {
     input.addEventListener('input', () => {
       input.value = input.value.replace(/[^\d]/g, '');
     });
   });
 
-  // ⏎ Enter key moves cursor to next field
+  // Enter key = move to next field
   document.querySelectorAll('.form input').forEach((input, index, inputs) => {
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
@@ -383,6 +408,7 @@
     });
   });
 
+  // Toggle sidebar on mobile
   function toggleMobileMenu() {
     document.querySelector('.sidebar').classList.toggle('open');
   }
@@ -395,7 +421,6 @@
     });
   });
 
-  // Logout handler
   function logout() {
     localStorage.removeItem("userId");
     if ("caches" in window) {
@@ -404,7 +429,6 @@
     window.location.replace("index.html");
   }
 
-  // 🔐 Prevent back/forward after logout
   window.addEventListener("pageshow", function (event) {
     const userId = localStorage.getItem("userId");
     if (!userId) {
@@ -418,6 +442,5 @@
     }
   });
 </script>
-
 </body>
 </html>
