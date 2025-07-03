@@ -270,25 +270,7 @@
   <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
 <script>
   const userId = localStorage.getItem("userId");
-  document.getElementById("userId").textContent = userId || "Unknown";
-
-  // ✅ Fetch and display student photo in sidebar
-  if (userId) {
-    fetch(`https://crr-noc.onrender.com/student/${userId}`)
-      .then(res => res.json())
-      .then(data => {
-        const photo = document.getElementById("sidebarPhoto");
-        if (photo && data.photo_url) {
-          photo.src = data.photo_url;
-          photo.style.display = "block";
-        } else {
-          console.warn("⚠️ Photo not available");
-        }
-      })
-      .catch(err => {
-        console.warn("⚠️ Failed to load photo:", err.message);
-      });
-  }
+  document.getElementById("userId").textContent = userId;
 
   function updateFee() {
     const data = {
@@ -322,13 +304,13 @@
         Swal.fire({
           icon: "success",
           title: "Fee Updated",
-          text: `Fee updated successfully for Year ${data.academic_year}`
+          text: Fee updated successfully for Year ${data.academic_year}
         });
       } else {
         Swal.fire({
           icon: "error",
           title: "Update Failed",
-          text: `Error updating fee: ${response.message}`
+          text: Error updating fee: ${response.message}
         });
       }
     })
@@ -355,8 +337,5 @@
     window.location.replace("index.html");
   }
 </script>
-
-
-
 </body>
 </html>
