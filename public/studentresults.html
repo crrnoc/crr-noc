@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -50,7 +49,15 @@
       font-size: 18px;
       font-weight: bold;
     }
-
+    .sidebar-photo {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 50%;
+  margin: 0 auto 10px;
+  border: 3px solid #333;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
     .menu {
       list-style: none;
       padding: 0;
@@ -269,6 +276,7 @@ select#semester:hover {
   <div class="container">
     <!-- Sidebar -->
     <div class="sidebar">
+      <img id="sidebarPhoto" class="sidebar-photo" style="display: none;" />
       <h2>ID: <span id="userId">Loading...</span></h2>
       <ul class="menu">
         <li><a href="studentdetails.html"><span>📄</span> Student details</a></li>
@@ -340,149 +348,160 @@ select#semester:hover {
 
     document.getElementById("userId").textContent = userId;
 
+    // ✅ Sidebar Photo Load
+    fetch(`https://crr-noc.onrender.com/student/${userId}`)
+      .then(res => res.json())
+      .then(data => {
+        const photo = document.getElementById("sidebarPhoto");
+        if (photo && data.photo_url) {
+          photo.src = data.photo_url;
+          photo.style.display = "block";
+        }
+      })
+      .catch(err => {
+        console.warn("⚠️ Failed to load sidebar photo:", err.message);
+      });
+
     // 🟢 Overall stats (top circles)
     try {
       const res = await fetch(`https://crr-noc.onrender.com/student/overallResults/${userId}`);
       const data = await res.json();
-if (data && data.sgpa && data.percentage) {
-  const leftDiv = document.getElementById("overallStatsContainerLeft");
-  const rightDiv = document.getElementById("overallStatsContainerRight");
+      if (data && data.sgpa && data.percentage) {
+        const leftDiv = document.getElementById("overallStatsContainerLeft");
+        const rightDiv = document.getElementById("overallStatsContainerRight");
 
-  const cgpa = parseFloat(data.sgpa).toFixed(2);
-  const percent = parseFloat(data.percentage).toFixed(2);
+        const cgpa = parseFloat(data.sgpa).toFixed(2);
+        const percent = parseFloat(data.percentage).toFixed(2);
 
-  // 🎯 Decide CGPA bar color class
-  let cgpaColor = "gray";
-  if (cgpa >= 7.5) cgpaColor = "green";
-  else if (cgpa >= 6.5) cgpaColor = "blue";
-  else if (cgpa >= 5.5) cgpaColor = "orange";
-  else if (cgpa >= 5.0) cgpaColor = "red";
+        let cgpaColor = "gray";
+        if (cgpa >= 7.5) cgpaColor = "green";
+        else if (cgpa >= 6.5) cgpaColor = "blue";
+        else if (cgpa >= 5.5) cgpaColor = "orange";
+        else if (cgpa >= 5.0) cgpaColor = "red";
 
-  leftDiv.innerHTML = `
-    <div class="bar-card">
-      <div class="bar-label">Overall CGPA</div>
-      <div class="bar-outer">
-        <div class="bar-inner cgpa-bar ${cgpaColor}" style="width: 0%">0</div>
-      </div>
-    </div>
-  `;
-  
+        leftDiv.innerHTML = `
+          <div class="bar-card">
+            <div class="bar-label">Overall CGPA</div>
+            <div class="bar-outer">
+              <div class="bar-inner cgpa-bar ${cgpaColor}" style="width: 0%">0</div>
+            </div>
+          </div>
+        `;
 
-  rightDiv.innerHTML = `
-    <div class="bar-card">
-      <div class="bar-label">Overall Percentage</div>
-      <div class="bar-outer">
-        <div class="bar-inner percent-bar" style="width: 0%">0%</div>
-      </div>
-    </div>
-  `;
+        rightDiv.innerHTML = `
+          <div class="bar-card">
+            <div class="bar-label">Overall Percentage</div>
+            <div class="bar-outer">
+              <div class="bar-inner percent-bar" style="width: 0%">0%</div>
+            </div>
+          </div>
+        `;
 
-  setTimeout(() => {
-    document.querySelector(".cgpa-bar").style.width = (cgpa * 10) + "%";
-    document.querySelector(".cgpa-bar").textContent = cgpa;
+        setTimeout(() => {
+          document.querySelector(".cgpa-bar").style.width = (cgpa * 10) + "%";
+          document.querySelector(".cgpa-bar").textContent = cgpa;
 
-    document.querySelector(".percent-bar").style.width = percent + "%";
-    document.querySelector(".percent-bar").textContent = percent + "%";
-  }, 100);
-}
-
+          document.querySelector(".percent-bar").style.width = percent + "%";
+          document.querySelector(".percent-bar").textContent = percent + "%";
+        }, 100);
+      }
     } catch (err) {
       console.error("Error loading overall stats:", err);
     }
   });
 
- async function fetchResults() {
-  const regno = localStorage.getItem("regno") || localStorage.getItem("userId");
-  const semester = document.getElementById("semester").value;
-  const container = document.getElementById("resultContainer");
+  async function fetchResults() {
+    const regno = localStorage.getItem("regno") || localStorage.getItem("userId");
+    const semester = document.getElementById("semester").value;
+    const container = document.getElementById("resultContainer");
 
-  container.innerHTML = "";
+    container.innerHTML = "";
 
-  if (!regno) {
-    container.innerHTML = "<p class='error'>Student not logged in. Please login first.</p>";
-    return;
-  }
-
-  if (!semester) {
-    container.innerHTML = "<p class='error'>Please select a semester.</p>";
-    return;
-  }
-
-  try {
-    container.innerHTML = "<p>Loading results...</p>";
-    const response = await fetch(`https://crr-noc.onrender.com/student/results/${regno}?semester=${semester}`);
-    const data = await response.json();
-
-    if (!data.results || data.results.length === 0) {
-      container.innerHTML = "<p class='error'>No results found for this semester.</p>";
+    if (!regno) {
+      container.innerHTML = "<p class='error'>Student not logged in. Please login first.</p>";
       return;
     }
 
-    let html = `
-    <div style="display: flex; justify-content: center; margin-top: 20px;">
-      <div style="
-        background: white;
-        border-radius: 20px;
-        padding: 20px;
-        width: 90%;
-        max-width: 800px;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-      ">
-        <h3 style="text-align:center; color:#1f75cb; margin-bottom: 20px;">Results for <strong>${data.regno}</strong> - Semester <strong>${data.semester}</strong></h3>
+    if (!semester) {
+      container.innerHTML = "<p class='error'>Please select a semester.</p>";
+      return;
+    }
 
-        <div style="display:flex; justify-content:center; gap:20px; flex-wrap:wrap; margin-bottom:20px;">
-          <div><strong>SGPA:</strong> ${data.sgpa}</div>
-          <div><strong>Percentage:</strong> ${data.percentage}%</div>
+    try {
+      container.innerHTML = "<p>Loading results...</p>";
+      const response = await fetch(`https://crr-noc.onrender.com/student/results/${regno}?semester=${semester}`);
+      const data = await response.json();
+
+      if (!data.results || data.results.length === 0) {
+        container.innerHTML = "<p class='error'>No results found for this semester.</p>";
+        return;
+      }
+
+      let html = `
+      <div style="display: flex; justify-content: center; margin-top: 20px;">
+        <div style="
+          background: white;
+          border-radius: 20px;
+          padding: 20px;
+          width: 90%;
+          max-width: 800px;
+          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        ">
+          <h3 style="text-align:center; color:#1f75cb; margin-bottom: 20px;">Results for <strong>${data.regno}</strong> - Semester <strong>${data.semester}</strong></h3>
+
+          <div style="display:flex; justify-content:center; gap:20px; flex-wrap:wrap; margin-bottom:20px;">
+            <div><strong>SGPA:</strong> ${data.sgpa}</div>
+            <div><strong>Percentage:</strong> ${data.percentage}%</div>
+          </div>
+
+          <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr style="background: #1f75cb; color: white;">
+                <th style="padding: 10px;">Subject Code</th>
+                <th style="padding: 10px;">Subject Name</th>
+                <th style="padding: 10px;">Grade</th>
+                <th style="padding: 10px;">Credits</th>
+              </tr>
+      `;
+
+      data.results.forEach(row => {
+        html += `
+              <tr style="text-align: center;">
+                <td style="padding: 8px;">${row.subcode}</td>
+                <td style="padding: 8px;">${row.subname || '-'}</td>
+                <td style="padding: 8px;">${row.grade}</td>
+                <td style="padding: 8px;">${row.credits}</td>
+              </tr>`;
+      });
+
+      html += `</table>
+        <div style="text-align: center; margin-top: 25px;">
+          <button onclick="window.print()" style="padding:10px 20px; margin:5px; background-color:#007BFF; color:white; border:none; border-radius:6px; cursor:pointer;">🖨️ Print</button>
+          <button onclick="downloadFormattedResult('${regno}', '${semester}')" style="padding:10px 20px; margin:5px; background-color:#28a745; color:white; border:none; border-radius:6px; cursor:pointer;">🏆 Generate Certificate</button>
         </div>
+      `;
 
-        <div style="overflow-x: auto;">
-          <table style="width: 100%; border-collapse: collapse;">
-            <tr style="background: #1f75cb; color: white;">
-              <th style="padding: 10px;">Subject Code</th>
-              <th style="padding: 10px;">Subject Name</th>
-              <th style="padding: 10px;">Grade</th>
-              <th style="padding: 10px;">Credits</th>
-            </tr>
-    `;
+      container.innerHTML = html;
 
-    data.results.forEach(row => {
-      html += `
-            <tr style="text-align: center;">
-              <td style="padding: 8px;">${row.subcode}</td>
-              <td style="padding: 8px;">${row.subname || '-'}</td>
-              <td style="padding: 8px;">${row.grade}</td>
-              <td style="padding: 8px;">${row.credits}</td>
-            </tr>`;
-    });
-
-    html += `</table>
-      <div style="text-align: center; margin-top: 25px;">
-        <button onclick="window.print()" style="padding:10px 20px; margin:5px; background-color:#007BFF; color:white; border:none; border-radius:6px; cursor:pointer;">🖨️ Print</button>
-        <button onclick="downloadFormattedResult('${regno}', '${semester}')" style="padding:10px 20px; margin:5px; background-color:#28a745; color:white; border:none; border-radius:6px; cursor:pointer;">🏆 Generate Certificate</button>
-      </div>
-    `;
-
-    container.innerHTML = html;
-
-  } catch (err) {
-    console.error("Error fetching results:", err);
-    container.innerHTML = "<p class='error'>Error fetching results. Please try again later.</p>";
-  }
-}
-
-function downloadFormattedResult(regno, semester) {
-  if (!regno || !semester) {
-    alert("Student ID or semester missing!");
-    return;
+    } catch (err) {
+      console.error("Error fetching results:", err);
+      container.innerHTML = "<p class='error'>Error fetching results. Please try again later.</p>";
+    }
   }
 
-  const link = document.createElement("a");
-  link.href = `https://crr-noc.onrender.com/generate-certificate/${regno}?semester=${semester}`;
-  link.download = `Result_${regno}_${semester}.pdf`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-}
+  function downloadFormattedResult(regno, semester) {
+    if (!regno || !semester) {
+      alert("Student ID or semester missing!");
+      return;
+    }
+
+    const link = document.createElement("a");
+    link.href = `https://crr-noc.onrender.com/generate-certificate/${regno}?semester=${semester}`;
+    link.download = `Result_${regno}_${semester}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
 
   function logout() {
     localStorage.removeItem("userId");
@@ -493,6 +512,7 @@ function downloadFormattedResult(regno, semester) {
     window.location.replace("index.html");
   }
 </script>
+
 
 </body>
 </html>
