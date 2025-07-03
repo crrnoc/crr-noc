@@ -46,6 +46,15 @@
     color: black;
     font-size: 18px;
   }
+   .sidebar-photo {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 50%;
+  margin: 0 auto 10px;
+  border: 3px solid #333;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
 
   .menu {
     list-style-type: none;
@@ -217,7 +226,8 @@
   <div class="container">
     <!-- Sidebar -->
     <div class="sidebar">
-      <h2><strong>ID:</strong> <span id="userId">Loading...</span></h2>
+      <img id="sidebarPhoto" class="sidebar-photo" style="display: none;" />
+      <h2>ID: <span id="userId">Loading...</span></h2>
       <ul class="menu">
         <li><a href="knowaboutstd1.html"><span>👤</span> Know about Student</a></li>
         <li><a href="sendnotification.html"><span>📨</span> Send Notification</a></li>
@@ -260,7 +270,21 @@
   <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
 <script>
   const userId = localStorage.getItem("userId");
-  document.getElementById("userId").textContent = userId;
+  document.getElementById("userId").textContent = userId || "Unknown";
+
+  // ✅ Load sidebar photo
+  fetch(`https://crr-noc.onrender.com/student/${userId}`)
+    .then(res => res.json())
+    .then(data => {
+      const photo = document.getElementById("sidebarPhoto");
+      if (photo && data.photo_url) {
+        photo.src = data.photo_url;
+        photo.style.display = "block";
+      }
+    })
+    .catch(err => {
+      console.warn("⚠️ Failed to load photo:", err.message);
+    });
 
   function updateFee() {
     const data = {
@@ -327,6 +351,7 @@
     window.location.replace("index.html");
   }
 </script>
+
 
 </body>
 </html>
