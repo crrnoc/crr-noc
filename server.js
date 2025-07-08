@@ -853,38 +853,38 @@ app.post('/add-student', async (req, res) => {
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 1. Insert into students table
-    const studentSql = `
-      INSERT INTO students
-      (userId, name, dob, reg_no, unique_id, year, course, semester, aadhar_no, mobile_no, email, section)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
-
-    connection.query(studentSql, [
-      userId, name, dob, reg_no, unique_id, year, course, semester, aadhar_no, mobile_no, email, section
-    ], (err1) => {
-      if (err1) {
-        console.error("Student Insert Error:", err1);
-        return res.status(500).json({ success: false, message: "Failed to add student" });
+    // STEP 1: Insert into users table first
+    const userSql = `INSERT INTO users (userid, password, role) VALUES (?, ?, 'student')`;
+    connection.query(userSql, [userId, hashedPassword], (errUser) => {
+      if (errUser) {
+        console.error("User Insert Error:", errUser);
+        return res.status(500).json({ success: false, message: "Failed to create login (maybe user already exists)" });
       }
 
-      // 2. Insert into users table
-      const userSql = `INSERT INTO users (userid, password, role) VALUES (?, ?, 'student')`;
-
-      connection.query(userSql, [userId, hashedPassword], (err2) => {
-        if (err2) {
-          console.error("User Insert Error:", err2);
-          return res.status(500).json({ success: false, message: "Failed to create login" });
+      // STEP 2: Insert into students table after user is created
+      const studentSql = `
+        INSERT INTO students
+        (userId, name, dob, reg_no, unique_id, year, course, semester, aadhar_no, mobile_no, email, section)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `;
+      connection.query(studentSql, [
+        userId, name, dob, reg_no, unique_id, year, course, semester, aadhar_no, mobile_no, email, section
+      ], (errStudent) => {
+        if (errStudent) {
+          console.error("Student Insert Error:", errStudent);
+          return res.status(500).json({ success: false, message: "User created, but failed to add student." });
         }
 
         return res.json({ success: true, message: "✅ Student added successfully!" });
       });
     });
+
   } catch (err) {
     console.error("Hashing error:", err);
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
+
 
 //logic for the fee upadate by staff
 // ✅ Staff updates fee structure for a student by reg_no
