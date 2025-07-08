@@ -325,80 +325,91 @@
   </div>
 
   <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
+<script>
+  const userId = localStorage.getItem("userId");
+  document.getElementById("userId").textContent = userId || "Unknown";
 
-  <script>
-    const userId = localStorage.getItem("userId");
-    document.getElementById("userId").textContent = userId || "Unknown";
-
-    fetch(`https://crr-noc.onrender.com/student-attendance/${userId}`)
-      .then(res => res.json())
-      .then(res => {
-        if (!res.success) throw new Error("Attendance data not found.");
-
-        const data = res.data; // should be [{ semester, total, attended, percentage }, ...]
-        const container = document.getElementById("attendance-container");
-
-        data.forEach((record, index) => {
-          const { semester, total_classes, attended_classes, percentage } = record;
-
-          container.innerHTML += `
-            <div class="accordion-card" style="margin-top: 20px;">
-              <button class="accordion-toggle" data-index="${index}">📘 Semester ${semester}</button>
-              <div class="accordion-content" style="display: none;">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Total Classes</th>
-                      <th>Attended</th>
-                      <th>Percentage</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>${total_classes}</td>
-                      <td>${attended_classes}</td>
-                      <td>${parseFloat(percentage || 0).toFixed(2)}%</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>`;
-        });
-
-        const toggles = document.querySelectorAll(".accordion-toggle");
-        const contents = document.querySelectorAll(".accordion-content");
-        toggles.forEach((btn, i) => {
-          btn.addEventListener("click", () => {
-            contents.forEach((content, j) => {
-              content.style.display = i === j && content.style.display !== "block" ? "block" : "none";
-            });
-          });
-        });
-      })
-      .catch(err => {
-        console.error("❌ Error loading attendance:", err);
-        alert("Failed to load attendance data.");
-      });
-
-    function toggleMobileMenu() {
-      document.querySelector('.sidebar').classList.toggle('open');
-    }
-
-    document.querySelectorAll(".menu li a").forEach(link => {
-      link.addEventListener("click", () => {
-        if (window.innerWidth <= 768) {
-          document.querySelector('.sidebar').classList.remove('open');
-        }
-      });
+  // ✅ Load profile photo from backend
+  fetch(`https://crr-noc.onrender.com/student/${userId}`)
+    .then(r => r.json())
+    .then(data => {
+      const photo = document.getElementById("sidebarPhoto");
+      if (photo && data.photo_url) {
+        photo.src = data.photo_url;
+        photo.style.display = "block";
+      }
     });
 
-    function logout() {
-      localStorage.removeItem("userId");
-      if ("caches" in window) {
-        caches.keys().then((names) => names.forEach((name) => caches.delete(name)));
+  // ✅ Load attendance data
+  fetch(`https://crr-noc.onrender.com/student-attendance/${userId}`)
+    .then(res => res.json())
+    .then(res => {
+      if (!res.success) throw new Error("Attendance data not found.");
+
+      const data = res.data; // [{ semester, total, attended, percentage }]
+      const container = document.getElementById("attendance-container");
+
+      data.forEach((record, index) => {
+        const { semester, total_classes, attended_classes, percentage } = record;
+
+        container.innerHTML += `
+          <div class="accordion-card" style="margin-top: 20px;">
+            <button class="accordion-toggle" data-index="${index}">📘 Semester ${semester}</button>
+            <div class="accordion-content" style="display: none;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Total Classes</th>
+                    <th>Attended</th>
+                    <th>Percentage</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>${total_classes}</td>
+                    <td>${attended_classes}</td>
+                    <td>${parseFloat(percentage || 0).toFixed(2)}%</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>`;
+      });
+
+      const toggles = document.querySelectorAll(".accordion-toggle");
+      const contents = document.querySelectorAll(".accordion-content");
+      toggles.forEach((btn, i) => {
+        btn.addEventListener("click", () => {
+          contents.forEach((content, j) => {
+            content.style.display = i === j && content.style.display !== "block" ? "block" : "none";
+          });
+        });
+      });
+    })
+    .catch(err => {
+      console.error("❌ Error loading attendance:", err);
+      alert("Failed to load attendance data.");
+    });
+
+  function toggleMobileMenu() {
+    document.querySelector('.sidebar').classList.toggle('open');
+  }
+
+  document.querySelectorAll(".menu li a").forEach(link => {
+    link.addEventListener("click", () => {
+      if (window.innerWidth <= 768) {
+        document.querySelector('.sidebar').classList.remove('open');
       }
-      window.location.replace("index.html");
+    });
+  });
+
+  function logout() {
+    localStorage.removeItem("userId");
+    if ("caches" in window) {
+      caches.keys().then((names) => names.forEach((name) => caches.delete(name)));
     }
-  </script>
+    window.location.replace("index.html");
+  }
+</script>
 </body>
 </html>
