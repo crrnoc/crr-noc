@@ -133,7 +133,7 @@
       document.getElementById("resultContainer").innerHTML =
         "<h3 style='color:red;'>❌ Invalid or missing parameters in URL.</h3>";
     } else {
-      fetch(https://crr-noc.onrender.com/api/verify-result?regno=${regno}&sem=${sem})
+      fetch(`https://crr-noc.onrender.com/api/verify-result?regno=${regno}&sem=${sem}`)
         .then(res => res.json())
         .then(data => {
           if (!data || !data.results) {
@@ -141,12 +141,12 @@
           }
 
           // Fill Student Info
-          const infoHTML = 
+          const infoHTML = `
             <p><strong>Name:</strong> ${data.name}</p>
             <p><strong>Reg. No:</strong> ${data.regno}</p>
             <p><strong>Course:</strong> ${data.course}</p>
             <p><strong>Semester:</strong> ${data.semester}</p>
-          ;
+          `;
           document.getElementById("studentInfo").innerHTML = infoHTML;
 
           // Set Photo if available
@@ -160,19 +160,19 @@
           const tbody = document.querySelector("#resultTable tbody");
           data.results.forEach((row, i) => {
             const tr = document.createElement("tr");
-            tr.innerHTML = 
+            tr.innerHTML = `
               <td>${i + 1}</td>
               <td>${row.subcode}</td>
               <td>${row.subname}</td>
               <td>${row.grade}</td>
               <td>${row.credits}</td>
-            ;
+            `;
             tbody.appendChild(tr);
           });
 
           // SGPA
           document.getElementById("sgpaSection").textContent =
-            SEMESTER GRADE POINT AVERAGE (SGPA): ${data.sgpa};
+            `SEMESTER GRADE POINT AVERAGE (SGPA): ${data.sgpa}`;
 
           // Date
           document.getElementById("date").textContent =
