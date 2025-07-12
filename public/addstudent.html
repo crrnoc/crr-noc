@@ -100,30 +100,28 @@
     .logout:hover {
       background-color: #d07900;
     }
-    .main {
-      flex-grow: 1;
-      background-color: white;
-      padding: 40px;
-      overflow-y: auto;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin-left: 270px;
-      transition: margin-left 0.3s ease;
-    }
+.main {
+  flex-grow: 1;
+  background-color: white;
+  padding: 40px;
+  overflow-y: auto; /* allow full scroll */
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  margin-left: 270px;
+}
 
-    .form-box {
-      background: linear-gradient(135deg, rgba(54, 169, 225, 0.85), rgba(30, 130, 190, 0.85));
-      padding: 35px 30px;
-      border-radius: 20px;
-      max-width: 600px;
-      width: 100%;
-      backdrop-filter: blur(8px);
-      color: white;
-      box-shadow: 0 12px 20px rgba(0, 0, 0, 0.3), 0 6px 8px rgba(0, 0, 0, 0.22);
-      max-height: 90vh;
-      overflow-y: auto;
-    }
+.form-box {
+  background: linear-gradient(135deg, rgba(54, 169, 225, 0.85), rgba(30, 130, 190, 0.85));
+  padding: 35px 30px;
+  border-radius: 20px;
+  max-width: 600px;
+  width: 100%;
+  color: white;
+  box-shadow: 0 12px 20px rgba(0, 0, 0, 0.3), 0 6px 8px rgba(0, 0, 0, 0.22);
+  /* REMOVE height & overflow */
+}
 
     .form-box h2 {
       text-align: center;
@@ -169,6 +167,38 @@
       margin-top: 10px;
       font-weight: bold;
     }
+    .tab-toggle {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 25px;
+  gap: 15px;
+}
+
+.tab-button {
+  background: linear-gradient(145deg,  #1D73D2, #2596be);
+  border: 2px solid #888;
+  border-radius: 30px;
+  padding: 10px 25px;
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+  box-shadow: 0 5px 12px rgba(0,0,0,0.1);
+}
+
+.tab-button:hover {
+  background: #f0f0f0;
+  transform: translateY(-2px);
+}
+
+.tab-button.active {
+  background: linear-gradient(to right, #1D73D2, #2596be);
+  color: white;
+  border-color: #1D73D2;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
 
     .mobile-toggle {
       display: none;
@@ -240,11 +270,12 @@
     <div class="main">
       <div class="form-box">
         <h2>Add New Student</h2>
-        <!-- 🔘 Toggle Buttons -->
-        <div style="text-align:center; margin-bottom: 20px;">
-          <button type="button" onclick="showSingle()" style="margin-right: 10px;">👤 Single Student</button>
-          <button type="button" onclick="showBulk()">📋 Bulk Add</button>
-        </div>
+<!-- 🔘 Stylish Tab Switch -->
+<div class="tab-toggle">
+  <button id="tabSingle" class="tab-button active" onclick="showSingle()">👤 Add Student</button>
+  <button id="tabBulk" class="tab-button" onclick="showBulk()">📋 Bulk Add</button>
+</div>
+
 
         <!-- 🎯 Single Student Form -->
         <form id="singleForm" class="student-form">
@@ -326,9 +357,6 @@
           <label>Section</label>
           <input type="text" name="section" required />
 
-          <label>Mobile No</label>
-          <input type="text" name="mobile_no" required />
-
           <button type="submit">Add Bulk Students</button>
         </form>
 
@@ -344,16 +372,22 @@
   const userId = localStorage.getItem("userId");
   document.getElementById("userId").textContent = userId || "Admin";
 
-  // 🎛️ Toggle between forms
-  function showSingle() {
-    document.getElementById("singleForm").style.display = "block";
-    document.getElementById("bulkForm").style.display = "none";
-  }
+ function showSingle() {
+  document.getElementById("singleForm").style.display = "block";
+  document.getElementById("bulkForm").style.display = "none";
 
-  function showBulk() {
-    document.getElementById("singleForm").style.display = "none";
-    document.getElementById("bulkForm").style.display = "block";
-  }
+  document.getElementById("tabSingle").classList.add("active");
+  document.getElementById("tabBulk").classList.remove("active");
+}
+
+function showBulk() {
+  document.getElementById("singleForm").style.display = "none";
+  document.getElementById("bulkForm").style.display = "block";
+
+  document.getElementById("tabBulk").classList.add("active");
+  document.getElementById("tabSingle").classList.remove("active");
+}
+
 
   // 📤 Submit Single Form
   document.getElementById("singleForm").addEventListener("submit", async function (e) {
