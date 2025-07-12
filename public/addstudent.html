@@ -330,35 +330,41 @@
 
           <button type="submit">Add Student</button>
         </form>
-        <!-- 🔄 Bulk Add Form -->
-        <form id="bulkForm" class="student-form" style="display:none;">
-          <label>Roll Number Range (Ex: 23B81A4601-66)</label>
-          <input type="text" name="roll_range" required />
+<!-- 🔄 Bulk Add Form (Updated) -->
+<form id="bulkForm" class="student-form" style="display:none;">
+  <label>Roll Number Range (Ex: 23B81A4601-66)</label>
+  <input type="text" name="roll_range" required />
 
-          <label>Year</label>
-          <select name="year" required>
-            <option value="">Select</option>
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-          </select>
+  <label>Year</label>
+  <select name="year" required>
+    <option value="">Select</option>
+    <option value="1">1</option>
+    <option value="2">2</option>
+    <option value="3">3</option>
+    <option value="4">4</option>
+  </select>
 
-          <label>Course</label>
-          <input type="text" name="course" required />
+  <label>Course</label>
+  <input type="text" name="course" required />
 
-          <label>Semester</label>
-          <select name="semester" required>
-            <option value="">Select</option>
-            <option value="1">1</option>
-            <option value="2">2</option>
-          </select>
+  <label>Semester</label>
+  <select name="semester" required>
+    <option value="">Select</option>
+    <option value="1">1</option>
+    <option value="2">2</option>
+  </select>
 
-          <label>Section</label>
-          <input type="text" name="section" required />
+  <label>Section</label>
+  <input type="text" name="section" required />
 
-          <button type="submit">Add Bulk Students</button>
-        </form>
+  <label>Counsellor Name</label>
+  <input type="text" name="counsellor_name" required />
+
+  <label>Counsellor Mobile</label>
+  <input type="text" name="counsellor_mobile" required />
+
+  <button type="submit">Add Bulk Students</button>
+</form>
 
         <p id="response" class="message"></p>
       </div> <!-- .form-box -->
@@ -416,62 +422,66 @@ function showBulk() {
   });
 
   // 📤 Submit Bulk Form
-  document.getElementById("bulkForm").addEventListener("submit", async function (e) {
-    e.preventDefault();
-    const formData = new FormData(this);
-    const data = Object.fromEntries(formData.entries());
+document.getElementById("bulkForm").addEventListener("submit", async function (e) {
+  e.preventDefault();
+  const formData = new FormData(this);
+  const data = Object.fromEntries(formData.entries());
 
-    const [prefix, end] = data.roll_range.split("-");
-    const startRoll = parseInt(prefix.match(/\d+$/)[0]);
-    const rollPrefix = prefix.slice(0, -String(startRoll).length);
-    const endRoll = parseInt(end);
+  const [prefix, end] = data.roll_range.split("-");
+  const startRoll = parseInt(prefix.match(/\d+$/)[0]);
+  const rollPrefix = prefix.slice(0, -String(startRoll).length);
+  const endRoll = parseInt(end);
 
-    const students = [];
-    for (let i = startRoll; i <= endRoll; i++) {
-      const roll = rollPrefix + i.toString().padStart(3, "0");
-      students.push({
-        userId: roll,
-        name: "Unknown",
-        dob: "2000-01-01",
-        reg_no: roll,
-        unique_id: roll,
-        year: data.year,
-        course: data.course,
-        semester: data.semester,
-        aadhar_no: "",
-        mobile_no: data.mobile_no,
-        email: `${roll}@crr.edu.in`,
-        password: roll,
-        section: data.section
-      });
-    }
+  const students = [];
 
-    let success = 0;
-    let fail = [];
+  for (let i = startRoll; i <= endRoll; i++) {
+    const roll = rollPrefix + i.toString().padStart(3, "0");
 
-    for (const student of students) {
-      try {
-        const res = await fetch("https://crr-noc.onrender.com/add-student", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(student)
-        });
-        const result = await res.json();
-        if (result.success) success++;
-        else fail.push(student.userId);
-      } catch {
-        fail.push(student.userId);
-      }
-    }
-
-    Swal.fire({
-      icon: "info",
-      title: "Bulk Add Completed",
-      html: `✅ Success: ${success}<br>❌ Failed: ${fail.length}`
+    students.push({
+      userId: roll,
+      name: "Unknown",
+      dob: "2000-01-01",
+      reg_no: roll,
+      unique_id: roll,
+      year: data.year,
+      course: data.course,
+      semester: data.semester,
+      aadhar_no: "",
+      mobile_no: "", // removed from form
+      email: `${roll}@crr.edu.in`,
+      password: roll, // ✅ required for user login
+      section: data.section,
+      counsellor_name: data.counsellor_name,
+      counsellor_mobile: data.counsellor_mobile
     });
+  }
 
-    this.reset();
+  let success = 0;
+  let fail = [];
+
+  for (const student of students) {
+    try {
+      const res = await fetch("https://crr-noc.onrender.com/add-student", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(student)
+      });
+      const result = await res.json();
+      if (result.success) success++;
+      else fail.push(student.userId);
+    } catch {
+      fail.push(student.userId);
+    }
+  }
+
+  Swal.fire({
+    icon: "info",
+    title: "Bulk Add Completed",
+    html: `✅ Success: ${success}<br>❌ Failed: ${fail.length}`
   });
+
+  this.reset();
+});
 
   // 📲 Mobile Sidebar Toggle
   function toggleMobileMenu() {
