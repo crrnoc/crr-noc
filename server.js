@@ -830,61 +830,83 @@ app.get("/fee-status/:userId", (req, res) => {
   });
 });
 
+const bcrypt = require('bcrypt');
 
-
-
-
-//logic for add student in staff page
 app.post('/add-student', async (req, res) => {
   const {
     userId, name, dob, reg_no, unique_id,
     year, course, semester, aadhar_no, mobile_no,
-    email, password, section
+    email, password, section,
+    counsellor_name, counsellor_mobile
   } = req.body;
 
-  if (
-    !userId || !name || !dob || !reg_no || !unique_id ||
-    !year || !course || !semester || !mobile_no ||
-    !email || !password
-  ) {
-    return res.status(400).json({ success: false, message: "Please fill all required fields" });
+  // Check required fields
+  if (!userId || !name || !dob || !reg_no || !unique_id || !year ||
+      !course || !semester || !email || !password || !section ||
+      !counsellor_name || !counsellor_mobile) {
+    return res.status(400).json({ success: false, message: "Missing required fields." });
   }
 
   try {
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // STEP 1: Insert into users table first
-    const userSql = `INSERT INTO users (userid, password, role) VALUES (?, ?, 'student')`;
-    connection.query(userSql, [userId, hashedPassword], (errUser) => {
-      if (errUser) {
-        console.error("User Insert Error:", errUser);
-        return res.status(500).json({ success: false, message: "Failed to create login (maybe user already exists)" });
+    // Check if user already exists
+    const checkUserSql = `SELECT * FROM users WHERE userid = ?`;
+    connection.query(checkUserSql, [userId], async (err, results) => {
+      if (err) {
+        console.error("User Check Error:", err);
+        return res.status(500).json({ success: false, message: "Server error checking existing user." });
       }
 
-      // STEP 2: Insert into students table after user is created
-      const studentSql = `
-        INSERT INTO students
-        (userId, name, dob, reg_no, unique_id, year, course, semester, aadhar_no, mobile_no, email, section)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `;
-      connection.query(studentSql, [
-        userId, name, dob, reg_no, unique_id, year, course, semester, aadhar_no, mobile_no, email, section
-      ], (errStudent) => {
-        if (errStudent) {
-          console.error("Student Insert Error:", errStudent);
-          return res.status(500).json({ success: false, message: "User created, but failed to add student." });
+      if (results.length > 0) {
+        return res.status(400).json({ success: false, message: "User already exists." });
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Insert into users table
+      const userSql = `INSERT INTO users (userid, password, role) VALUES (?, ?, 'student')`;
+      connection.query(userSql, [userId, hashedPassword], (errUser) => {
+        if (errUser) {
+          console.error("User Insert Error:", errUser);
+          return res.status(500).json({ success: false, message: "Failed to create login." });
         }
 
-        return res.json({ success: true, message: "✅ Student added successfully!" });
+        // Insert into students table
+        const studentSql = `
+          INSERT INTO students
+          (userId, name, dob, reg_no, unique_id, year, course, semester,
+           aadhar_no, mobile_no, email, section, counsellor_name, counsellor_mobile)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `;
+        connection.query(studentSql, [
+          userId,
+          name,
+          dob,
+          reg_no,
+          unique_id,
+          year,
+          course,
+          semester,
+          aadhar_no || "",        // support empty aadhar/mobile for bulk
+          mobile_no || "",
+          email,
+          section,
+          counsellor_name,
+          counsellor_mobile
+        ], (errStudent) => {
+          if (errStudent) {
+            console.error("Student Insert Error:", errStudent);
+            return res.status(500).json({ success: false, message: "User created, but student insert failed." });
+          }
+
+          return res.json({ success: true, message: "✅ Student added successfully!" });
+        });
       });
     });
-
   } catch (err) {
     console.error("Hashing error:", err);
-    res.status(500).json({ success: false, message: "Server error" });
+    res.status(500).json({ success: false, message: "Internal server error." });
   }
 });
-
 
 //logic for the fee upadate by staff
 // ✅ Staff updates fee structure for a student by reg_no
