@@ -394,142 +394,103 @@
   <!-- 📱 Mobile Sidebar Toggle -->
   <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
 <script>
-  const userId = localStorage.getItem("userId");
-  document.getElementById("userId").textContent = userId || "Admin";
+/* ---------- shared helpers ---------- */
+const userId = localStorage.getItem("userId");
+document.getElementById("userId").textContent = userId || "Admin";
 
-  function showSingle() {
-    document.getElementById("singleForm").style.display = "block";
-    document.getElementById("bulkForm").style.display = "none";
-    document.getElementById("tabSingle").classList.add("active");
-    document.getElementById("tabBulk").classList.remove("active");
-  }
+function showSingle() {
+  document.getElementById("singleForm").style.display = "block";
+  document.getElementById("bulkForm").style.display = "none";
+  document.getElementById("tabSingle").classList.add("active");
+  document.getElementById("tabBulk").classList.remove("active");
+}
+function showBulk()  {
+  document.getElementById("singleForm").style.display = "none";
+  document.getElementById("bulkForm").style.display = "block";
+  document.getElementById("tabBulk").classList.add("active");
+  document.getElementById("tabSingle").classList.remove("active");
+}
+function toggleMobileMenu() {
+  document.querySelector(".sidebar").classList.toggle("open");
+}
+function logout() {
+  localStorage.removeItem("userId");
+  location.href = "index.html";
+}
 
-  function showBulk() {
-    document.getElementById("singleForm").style.display = "none";
-    document.getElementById("bulkForm").style.display = "block";
-    document.getElementById("tabBulk").classList.add("active");
-    document.getElementById("tabSingle").classList.remove("active");
-  }
+/* ---------- 1️⃣ single‑student ---------- */
+document.getElementById("singleForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(e.target).entries());
 
-  // ✅ Add Single Student
-  document.getElementById("singleForm").addEventListener("submit", async function (e) {
-    e.preventDefault();
-    const formData = new FormData(this);
-    const data = Object.fromEntries(formData.entries());
+  const res  = await fetch("https://crr-noc.onrender.com/add-student", {
+    method : "POST",
+    headers: { "Content-Type": "application/json" },
+    body   : JSON.stringify(data)
+  }).catch(() => null);
 
-    try {
-      const res = await fetch("https://crr-noc.onrender.com/add-student", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
+  const out = await (res?.json() ?? { success:false, message:"Server error" });
+  Swal.fire(out.success ? "✅ Added" : "❌ Failed", out.message, out.success?"success":"error");
+  if (out.success) e.target.reset();
+});
+
+/* ---------- 2️⃣ bulk‑add ---------- */
+document.getElementById("bulkForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const data   = Object.fromEntries(new FormData(e.target).entries());
+  const ranges = data.roll_range.split(",").map(r => r.trim());
+  const students = [];
+
+  for (const text of ranges) {
+    const [startFull,endRaw] = text.split("-");
+    const startMatch = startFull.match(/(\D+)(\d+)$/);
+    if (!startMatch) continue;
+
+    const prefix   = startMatch[1];
+    const startNum = +startMatch[2];
+    const endNum   = /^\d+$/.test(endRaw)
+                     ? +endRaw
+                     : +(endRaw.match(/\d+$/) || [])[0];
+
+    if (Number.isNaN(startNum) || Number.isNaN(endNum)) continue;
+
+    for (let i = startNum; i <= endNum; i++) {
+      const roll = prefix + String(i).padStart(3,"0");
+      students.push({
+        userId            : roll,
+        reg_no            : roll,
+        unique_id         : roll,
+        year              : data.year,
+        course            : data.course,
+        semester          : data.semester,
+        section           : data.section,
+        counsellor_name   : data.counsellor_name,
+        counsellor_mobile : data.counsellor_mobile,
+        password          : roll,      // backend will hash
+        email             : ""         // kept blank, but sent so backend field exists
       });
-      const result = await res.json();
-
-      Swal.fire({
-        icon: result.success ? "success" : "error",
-        title: result.success ? "✅ Student Added!" : "❌ Failed",
-        text: result.message
-      });
-
-      if (result.success) this.reset();
-    } catch (err) {
-      Swal.fire("Error", "Something went wrong!", "error");
     }
-  });
-
-  // ✅ Bulk Add Students
-  document.getElementById("bulkForm").addEventListener("submit", async function (e) {
-    e.preventDefault();
-    const formData = new FormData(this);
-    const data = Object.fromEntries(formData.entries());
-
-    const ranges = data.roll_range.split(",").map(r => r.trim());
-    const students = [];
-
-    for (const range of ranges) {
-      const [startFull, endRaw] = range.split("-");
-
-      const startMatch = startFull.match(/(\D+)(\d+)$/);
-      if (!startMatch) continue;
-
-      const prefix = startMatch[1];
-      const startNum = parseInt(startMatch[2]);
-      const endNum = /^\d+$/.test(endRaw) ? parseInt(endRaw) : parseInt(endRaw.match(/\d+$/)?.[0]);
-
-      if (isNaN(startNum) || isNaN(endNum)) continue;
-
-      for (let i = startNum; i <= endNum; i++) {
-        const fullRoll = prefix + i.toString().padStart(3, "0");
-
-        students.push({
-          userId: fullRoll,
-          reg_no: fullRoll,
-          unique_id: fullRoll,
-          year: data.year,
-          course: data.course,
-          semester: data.semester,
-          section: data.section,
-          counsellor_name: data.counsellor_name,
-          counsellor_mobile: data.counsellor_mobile,
-          email: "",
-          password: fullRoll,  // Will be hashed in backend
-          name: "",
-          dob: "",
-          aadhar_no: "",
-          mobile_no: "",
-          father_name: "",
-          father_mobile_no: ""
-        });
-      }
-    }
-
-    if (students.length === 0) {
-      Swal.fire("⚠️ No Students", "Invalid roll number range format", "warning");
-      return;
-    }
-
-    let success = 0, fail = [];
-
-    for (const student of students) {
-      try {
-        const res = await fetch("https://crr-noc.onrender.com/add-student", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(student)
-        });
-        const result = await res.json();
-        if (result.success) success++;
-        else fail.push(student.userId);
-      } catch {
-        fail.push(student.userId);
-      }
-    }
-
-    Swal.fire({
-      icon: "info",
-      title: "Bulk Add Completed",
-      html: `✅ Success: ${success}<br>❌ Failed: ${fail.length}`
-    });
-
-    this.reset();
-  });
-
-  function toggleMobileMenu() {
-    document.querySelector('.sidebar').classList.toggle('open');
   }
 
-  document.querySelectorAll(".menu li a").forEach(link => {
-    link.addEventListener("click", () => {
-      if (window.innerWidth <= 768) {
-        document.querySelector('.sidebar').classList.remove('open');
-      }
-    });
-  });
-
-  function logout() {
-    localStorage.removeItem("userId");
-    window.location.replace("index.html");
+  if (!students.length) {
+    Swal.fire("⚠️ Invalid range","No students generated. Check roll‑range format.","warning");
+    return;
   }
+
+  let ok = 0, fail = [];
+  for (const s of students) {
+    const r  = await fetch("https://crr-noc.onrender.com/add-student", {
+      method : "POST",
+      headers: { "Content-Type":"application/json" },
+      body   : JSON.stringify(s)
+    }).catch(()=>null);
+    const j = await (r?.json() ?? {success:false});
+    j.success ? ok++ : fail.push(s.userId);
+  }
+
+  Swal.fire("Bulk Add Done",`✅ Success: ${ok}<br>❌ Failed: ${fail.length}`,"info");
+  e.target.reset();
+});
 </script>
   
 </body>
