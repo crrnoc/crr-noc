@@ -128,6 +128,37 @@ body {
       background: rgba(60, 182, 255, 0.2);
       box-shadow: 0 0 12px var(--main-color);
     }
+  #mission-vision {
+  max-width: 700px;
+  max-height: 180px;
+  margin-top: 20px;
+  text-align: center;
+  color: white;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 20px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 15px rgba(0, 191, 255, 0.2);
+  overflow-y: auto;
+  scrollbar-width: none;        /* Firefox */
+  -ms-overflow-style: none;     /* IE and Edge */
+}
+
+#mission-vision::-webkit-scrollbar {
+  display: none;                /* Chrome, Safari, Edge */
+}
+
+#mission-vision h2 {
+  color: #00eaff;
+  margin-top: 20px;
+}
+
+#mission-vision p {
+  margin-top: 10px;
+  font-size: 14.5px;
+  line-height: 1.6;
+}
+
 
     .login-container {
       display: none;
@@ -263,15 +294,18 @@ body {
     <div class="role-button" data-role="staff">👨‍🏫 Staff</div>
     <div class="role-button" data-role="admin">🛡️ Admin</div>
   </div>
-<div id="mission-vision" style="max-width: 700px; margin-top: 20px; text-align: center; color: white; background: rgba(255,255,255,0.05); padding: 20px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 0 15px rgba(0,191,255,0.2);">
-  <h2 style="color: #00eaff;">Our Vision</h2>
-  <p>To emerge as a premier institution in the field of technical education and research in the state and as a home for holistic development of the students and contribute to the advancement of society and the region.</p>
-<h2 style="margin-top: 20px; color: #00eaff;"> Our Mission</h2>
-<p style="margin-top: 10px;">
- The mission is to deliver quality technical education by blending academic learning with industry relevance. It aims to promote research, innovation, and a disciplined learning environment. The institution also focuses on nurturing ethical and moral values to support students' career growth and contribute to societal development
-</p>
+<div id="mission-vision">
+  <h2>Our Vision</h2>
+  <p>
+    To emerge as a premier institution in the field of technical education and research in the state and as a home for holistic development of the students and contribute to the advancement of society and the region.
+  </p>
 
+  <h2>Our Mission</h2>
+  <p>
+    The mission is to deliver quality technical education by blending academic learning with industry relevance. It aims to promote research, innovation, and a disciplined learning environment. The institution also focuses on nurturing ethical and moral values to support students' career growth and contribute to societal development.
+  </p>
 </div>
+
   <!-- Student Login -->
   <div class="login-container hidden" id="student-login">
     <h2>Student Login</h2>
