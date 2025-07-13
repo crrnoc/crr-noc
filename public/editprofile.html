@@ -399,13 +399,21 @@
     updateBtn.style.display = "none";
   });
 
-  photoInput.addEventListener("click", () => {
-    Swal.fire({
-      icon: "info",
-      title: "Please upload a neat photo",
-      text: "Make sure the image is professional and will appear on the result certificate.",
-      confirmButtonText: "OK"
-    });
+  // 👇 Custom photo tip alert with automatic file open
+  let photoTipShown = false;
+  photoInput.addEventListener("click", function (e) {
+    if (!photoTipShown) {
+      e.preventDefault();
+      Swal.fire({
+        icon: "info",
+        title: "Please upload a neat photo",
+        text: "Make sure the image is professional and will appear on the result certificate.",
+        confirmButtonText: "OK"
+      }).then(() => {
+        photoTipShown = true;
+        photoInput.click(); // Trigger native file picker
+      });
+    }
   });
 
   photoInput.addEventListener("change", function () {
