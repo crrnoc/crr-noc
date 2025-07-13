@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Add My Counselling Students</title>
+  <link rel="icon" href="crrengglogo.png" type="image/png" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+ * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  background-color: #1d1d1d;
+  color: #000;
+}
+
+.main-container {
+  display: flex;
+  height: 100vh;
+  flex-direction: row;
+}
+
+.sidebar {
+  width: 270px;
+  background-color: rgb(247, 201, 155);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 20px;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 100;
+  overflow-y: auto;
+  transition: top 0.4s ease, opacity 0.4s ease;
+}
+
+.sidebar h2 {
+  margin: 40px 20px 20px 20px;
+  color: black;
+  font-size: 18px;
+}
+
+.menu {
+  list-style-type: none;
+  padding: 0;
+}
+
+.menu li {
+  margin-bottom: 15px;
+}
+
+.menu li a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  color: black;
+  padding: 12px 20px;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  background: none;
+  text-decoration: none;
+  border: none;
+  box-shadow: none;
+}
+
+.menu li a:hover,
+.menu li.active a {
+  background: rgba(255, 255, 255, 0.6);
+  font-weight: 600;
+  transform: translateX(5px);
+  box-shadow: none;
+}
+
+.menu li a span {
+  font-size: 18px;
+  transition: transform 0.3s ease;
+}
+
+.menu li a:hover span {
+  transform: scale(1.2);
+}
+
+.logout {
+  background-color: #f09000;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 16px;
+  width: 50%;
+  margin: 20px auto;
+  transition: background 0.3s ease;
+}
+
+.logout:hover {
+  background-color: #d07900;
+}
+
+.content {
+  flex-grow: 1;
+  background-color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  margin-left: 270px;
+  padding: 20px;
+}
+
+.student-info {
+  background: linear-gradient(145deg, rgba(255, 153, 102, 0.9), rgba(255, 94, 98, 0.9));
+  border-radius: 25px;
+  padding: 40px 35px;
+  text-align: center;
+  width: 450px;
+  color: white;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 18px 30px rgba(0, 0, 0, 0.25);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  animation: popIn 0.6s ease;
+  margin-bottom: 20px;
+}
+
+.student-info:hover {
+  transform: scale(1.01);
+  box-shadow: 0 20px 32px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes popIn {
+  0% {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.student-info h3 {
+  font-size: 18px;
+  color: black;
+  margin-bottom: 25px;
+}
+
+.student-info input {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 18px;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  background-color: rgba(255, 255, 255, 0.9);
+  color: #000;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.3s ease;
+}
+
+.student-info input:focus {
+  outline: none;
+  box-shadow: 0 0 6px rgba(255, 94, 98, 0.8);
+}
+
+.know-btn {
+  background-color: #ff5555;
+  color: white;
+  border: none;
+  padding: 12px 26px;
+  font-size: 15px;
+  font-weight: bold;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.know-btn:hover {
+  background-color: #e84141;
+  transform: scale(1.05);
+}
+
+.student-details {
+  background-color: rgba(255, 255, 255, 0.95);
+  color: #1d1d1d;
+  border-radius: 15px;
+  padding: 25px 30px;
+  width: 450px;
+  text-align: left;
+  font-size: 15px;
+  box-shadow: 0 12px 20px rgba(0, 0, 0, 0.2);
+  transition: box-shadow 0.3s ease;
+}
+
+.student-details:hover {
+  box-shadow: 0 16px 28px rgba(0, 0, 0, 0.25);
+}
+
+.mobile-toggle {
+  display: none;
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #1f75cb;
+  color: white;
+  font-size: 24px;
+  padding: 12px 18px;
+  border-radius: 50px;
+  z-index: 9999;
+  cursor: pointer;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* RESPONSIVE FIXES */
+@media (max-width: 768px) {
+  .main-container {
+    flex-direction: column;
+    height: auto;
+  }
+body{
+  background-color: white;
+}
+  .sidebar {
+    width: 100%;
+    top: -100%;
+    position: fixed;
+    max-height: 90vh;
+    z-index: 999;
+  }
+
+  .sidebar.open {
+    top: 0;
+  }
+
+  .content {
+    margin-left: 0;
+    padding: 30px 15px;
+    margin-top: 100px;
+  }
+
+  .student-info,
+  .student-details {
+    width: 100%;
+    max-width: 400px;
+  }
+
+  .mobile-toggle {
+    display: block;
+  }
+}
+
+  </style>
+</head>
+<body>
+  <div class="main-container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <h2><strong>ID:</strong> <span id="userId">Loading...</span></h2>
+      <ul class="menu">
+        <li><a href="knowaboutstd1.html"><span>👤</span> Know about Student</a></li>
+        <li><a href="sendnotification.html"><span>📨</span> Send Notification</a></li>
+        <li><a href="updatefee.html"><span>💵</span> Update Fee</a></li>
+        <li><a href="addstudent.html"><span>➕</span> Add Student</a></li>
+        <li class="active"><a href="#"><span>👥</span> Add Counselling</a></li>
+        <li><a href="staffsettings.html"><span>⚙️</span> Settings</a></li>
+      </ul>
+      <button class="logout" onclick="logout()">Logout</button>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content">
+      <div class="student-info">
+        <h3>Assign Counselling to Students</h3>
+        <form id="counsellingForm">
+          <input type="text" id="fromReg" placeholder="From RegNo (e.g., 23B81A4601)" required />
+          <input type="text" id="toReg" placeholder="To RegNo (e.g., 23B81A4666)" required />
+          <input type="text" id="counsellorName" placeholder="Counsellor Name" required />
+          <input type="text" id="counsellorMobile" placeholder="Counsellor Mobile" required />
+          <button class="know-btn" type="submit">Assign Counselling</button>
+        </form>
+      </div>
+
+      <div id="studentDetails" class="student-details" style="display: none;"></div>
+    </div>
+  </div>
+
+  <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
+
+  <script>
+    const userId = localStorage.getItem("userId");
+    document.getElementById("userId").textContent = userId || "Unknown";
+
+    const form = document.getElementById("counsellingForm");
+    const studentDetailsDiv = document.getElementById("studentDetails");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const fromReg = document.getElementById("fromReg").value.trim();
+      const toReg = document.getElementById("toReg").value.trim();
+      const counsellorName = document.getElementById("counsellorName").value.trim();
+      const counsellorMobile = document.getElementById("counsellorMobile").value.trim();
+
+      if (!fromReg || !toReg || !counsellorName || !counsellorMobile) {
+        Swal.fire({
+          icon: "warning",
+          title: "All fields required",
+          text: "Please fill in all the fields.",
+        });
+        return;
+      }
+
+      try {
+        const res = await fetch("https://crr-noc.onrender.com/assign-counselling", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ fromReg, toReg, counsellorName, counsellorMobile }),
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          Swal.fire({
+            icon: "success",
+            title: "Assigned!",
+            text: data.message || "Students assigned successfully!",
+          });
+
+          studentDetailsDiv.style.display = "block";
+          studentDetailsDiv.innerHTML = `
+            <h3>Assignment Summary</h3>
+            <p><strong>From RegNo:</strong> ${fromReg}</p>
+            <p><strong>To RegNo:</strong> ${toReg}</p>
+            <p><strong>Counsellor Name:</strong> ${counsellorName}</p>
+            <p><strong>Counsellor Mobile:</strong> ${counsellorMobile}</p>
+          `;
+          form.reset();
+        } else {
+          throw new Error(data.message || "Failed to assign.");
+        }
+      } catch (err) {
+        Swal.fire({
+          icon: "error",
+          title: "Error!",
+          text: err.message,
+        });
+      }
+    });
+
+    function logout() {
+      localStorage.removeItem("userId");
+      if ("caches" in window) {
+        caches.keys().then((names) => names.forEach((name) => caches.delete(name)));
+      }
+      window.location.replace("index.html");
+    }
+
+    function toggleMobileMenu() {
+      const sidebar = document.querySelector(".sidebar");
+      sidebar.classList.toggle("open");
+    }
+
+    document.querySelectorAll(".menu li a").forEach(link => {
+      link.addEventListener("click", () => {
+        if (window.innerWidth <= 768) {
+          document.querySelector('.sidebar').classList.remove('open');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
