@@ -250,52 +250,72 @@
   const userId = localStorage.getItem("userId");
   document.getElementById("userId").textContent = userId;
 
+  // Expand reg.no ranges like 23B81A4601-10 into list of userIds
+  function expandRegNos(input) {
+    const parts = input.split(',');
+    const finalList = [];
+
+    parts.forEach(part => {
+      part = part.trim();
+      if (part.includes('-')) {
+        const [start, end] = part.split('-');
+        const prefix = start.slice(0, -2);
+        const startNum = parseInt(start.slice(-2));
+        const endNum = parseInt(end);
+
+        for (let i = startNum; i <= endNum; i++) {
+          const suffix = i.toString().padStart(2, '0');
+          finalList.push(`${prefix}${suffix}`);
+        }
+      } else {
+        finalList.push(part);
+      }
+    });
+
+    return finalList;
+  }
+
   function sendNotification() {
-    const studentId = document.getElementById("studentId").value.trim();
+    const studentIdInput = document.getElementById("studentId").value.trim();
     const message = document.getElementById("message").value.trim();
     const btn = document.querySelector(".form button");
 
-    if (!studentId || !message) {
+    if (!studentIdInput || !message) {
       Swal.fire({
         icon: "warning",
         title: "Missing Information",
-        text: "Please enter both User ID and message."
+        text: "Please enter reg. nos and message."
       });
       return;
     }
 
-    // Show sending status
-    btn.disabled = true;
-    btn.textContent = "Sending Notification...";
+    const userIds = expandRegNos(studentIdInput);
 
-    fetch("https://crr-noc.onrender.com/send-notification", {
+    btn.disabled = true;
+    btn.textContent = "Sending...";
+
+    fetch("https://crr-noc.onrender.com/send-bulk-notification", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId: studentId, message })
+      body: JSON.stringify({ userIds, message })
     })
     .then(res => res.json())
     .then(data => {
-      btn.textContent = "Sent ✅";
+      btn.disabled = false;
+      btn.textContent = "Send Notification";
       document.getElementById("studentId").value = "";
       document.getElementById("message").value = "";
 
       Swal.fire({
-        icon: "success",
-        title: "Notification Sent!",
-        text: "The notification was sent successfully."
+        icon: data.success ? "success" : "error",
+        title: "Notification Status",
+        html: `✅ Sent: ${data.sent}<br>❌ Failed: ${data.failed}`
       });
-
-      // Reset back after 2 seconds
-      setTimeout(() => {
-        btn.disabled = false;
-        btn.textContent = "Send Notification";
-      }, 2000);
     })
     .catch(error => {
       console.error("Error sending notification:", error);
       btn.disabled = false;
       btn.textContent = "Send Notification";
-
       Swal.fire({
         icon: "error",
         title: "Failed!",
