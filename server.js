@@ -2488,29 +2488,39 @@ app.get("/verify-noc/manual", (req, res) => {
   res.send(html);
 });
 
-// add councelling students
+// Add counselling students and store staff ID
 app.post("/assign-counselling", async (req, res) => {
-  const { fromReg, toReg, counsellorName, counsellorMobile } = req.body;
+  const {
+    fromReg,
+    toReg,
+    counsellorName,
+    counsellorMobile,
+    staffId
+  } = req.body;
 
-  if (!fromReg || !toReg || !counsellorName || !counsellorMobile)
+  // Check if all required fields are present
+  if (!fromReg || !toReg || !counsellorName || !counsellorMobile || !staffId) {
     return res.status(400).json({ message: "Missing required fields" });
+  }
 
   const query = `
     UPDATE students
-    SET counsellor_name = ?, counsellor_mobile = ?
+    SET counsellor_name = ?, counsellor_mobile = ?, staff_id = ?
     WHERE reg_no BETWEEN ? AND ?;
   `;
 
   connection.query(
     query,
-    [counsellorName, counsellorMobile, fromReg, toReg],
+    [counsellorName, counsellorMobile, staffId, fromReg, toReg],
     (err, result) => {
       if (err) {
-        console.error("Error updating students:", err);
+        console.error("❌ Error updating students:", err);
         return res.status(500).json({ message: "Internal server error" });
       }
 
-      return res.status(200).json({ message: `Updated ${result.affectedRows} students.` });
+      return res.status(200).json({
+        message: `✅ Successfully assigned counsellor to ${result.affectedRows} students.`
+      });
     }
   );
 });
