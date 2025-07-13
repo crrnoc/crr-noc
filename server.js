@@ -872,7 +872,6 @@ app.get("/fee-status/:userId", (req, res) => {
     });
   });
 });
-
 app.post('/add-student', async (req, res) => {
   const {
     userId, name, dob, reg_no, unique_id,
@@ -1694,13 +1693,16 @@ app.post("/delete-student", async (req, res) => {
 
   try {
     // Step 1: Delete student-related records from MySQL
-    await connection.promise().query("DELETE FROM users WHERE userid = ?", [reg_no]);
-    await connection.promise().query("DELETE FROM students WHERE userId = ?", [reg_no]);
-    await connection.promise().query("DELETE FROM student_fee_structure WHERE reg_no = ?", [reg_no]);
-    await connection.promise().query("DELETE FROM student_fee_payments WHERE userId = ?", [reg_no]);
-    await connection.promise().query("DELETE FROM notifications WHERE userId = ?", [reg_no]);
-    await connection.promise().query("DELETE FROM fines WHERE userId = ?", [reg_no]);
-
+        await connection.promise().query("DELETE FROM users WHERE userid = ?", [userid]);
+        await connection.promise().query("DELETE FROM students WHERE userId = ?", [reg_no]);
+        await connection.promise().query("DELETE FROM student_fee_structure WHERE reg_no = ?", [reg_no]);
+        await connection.promise().query("DELETE FROM student_fee_payments WHERE userId = ?", [reg_no]);
+        await connection.promise().query("DELETE FROM notifications WHERE userId = ?", [reg_no]);
+        await connection.promise().query("DELETE FROM fines WHERE userId = ?", [reg_no]);
+        await connection.promise().query("DELETE FROM autonomous_results WHERE userId = ?", [regno]);
+        await connection.promise().query("DELETE FROM attendance WHERE userId = ?", [regno]);
+        await connection.promise().query("DELETE FROM results WHERE userId = ?", [regno]);
+        
     // Step 2: Delete Cloudinary photo(s)
     try {
       const result = await cloudinary.api.delete_resources_by_prefix(`students/${reg_no}`);
@@ -1747,13 +1749,16 @@ app.post("/delete-batch", async (req, res) => {
       const reg_no = student.reg_no;
 
       try {
-        await connection.promise().query("DELETE FROM users WHERE userid = ?", [reg_no]);
+        await connection.promise().query("DELETE FROM users WHERE userid = ?", [userid]);
         await connection.promise().query("DELETE FROM students WHERE userId = ?", [reg_no]);
         await connection.promise().query("DELETE FROM student_fee_structure WHERE reg_no = ?", [reg_no]);
         await connection.promise().query("DELETE FROM student_fee_payments WHERE userId = ?", [reg_no]);
         await connection.promise().query("DELETE FROM notifications WHERE userId = ?", [reg_no]);
         await connection.promise().query("DELETE FROM fines WHERE userId = ?", [reg_no]);
-
+        await connection.promise().query("DELETE FROM autonomous_results WHERE userId = ?", [regno]);
+        await connection.promise().query("DELETE FROM attendance WHERE userId = ?", [regno]);
+        await connection.promise().query("DELETE FROM results WHERE userId = ?", [regno]);
+        
         // 👇 Delete Cloudinary photo(s) for each student
         try {
           const result = await cloudinary.api.delete_resources_by_prefix(`students/${reg_no}`);
