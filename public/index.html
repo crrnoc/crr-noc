@@ -22,7 +22,7 @@
     }
 
 body {
-  background: url('https://i.ytimg.com/vi/zKGq-sYdaw8/maxresdefault.jpg') no-repeat center center/cover;
+  background: url('https://upload.wikimedia.org/wikipedia/commons/9/92/C.R.Reddy_College_Aerial_View.jpg') no-repeat center center/cover;
   height: 100dvh; /* Use dynamic viewport height (mobile safe) */
   overflow: hidden; 
   position: relative;
@@ -253,7 +253,6 @@ body {
     <span>🏛️ Autonomous Institution</span> |
     <span>🎓 Affiliated to JNTU-Kakinada</span> |
     <span>🏅Accredited by NBA</span>
-      
   </div>
 </div>
   </div>
@@ -264,7 +263,15 @@ body {
     <div class="role-button" data-role="staff">👨‍🏫 Staff</div>
     <div class="role-button" data-role="admin">🛡️ Admin</div>
   </div>
+<div id="mission-vision" style="max-width: 700px; margin-top: 20px; text-align: center; color: white; background: rgba(255,255,255,0.05); padding: 20px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 0 15px rgba(0,191,255,0.2);">
+  <h2 style="color: #00eaff;">Our Vision</h2>
+  <p>To emerge as a premier institution in the field of technical education and research in the state and as a home for holistic development of the students and contribute to the advancement of society and the region.</p>
+<h2 style="margin-top: 20px; color: #00eaff;"> Our Mission</h2>
+<p style="margin-top: 10px;">
+ The mission is to deliver quality technical education by blending academic learning with industry relevance. It aims to promote research, innovation, and a disciplined learning environment. The institution also focuses on nurturing ethical and moral values to support students' career growth and contribute to societal development
+</p>
 
+</div>
   <!-- Student Login -->
   <div class="login-container hidden" id="student-login">
     <h2>Student Login</h2>
@@ -336,19 +343,23 @@ body {
     });
   }
 
-  buttons.forEach(btn => {
-    btn.addEventListener("click", () => {
-      buttons.forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      const role = btn.dataset.role;
-      hideAll();
-      wrapper.classList.add('shift-up');
-      setTimeout(() => {
-        containers[role].classList.remove("hidden");
-        containers[role].classList.add("show");
-      }, 400);
-    });
+buttons.forEach(btn => {
+  btn.addEventListener("click", () => {
+    buttons.forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    const role = btn.dataset.role;
+    hideAll();
+    wrapper.classList.add('shift-up');
+
+    // 🔻 Hide Mission/Vision on login click
+    document.getElementById("mission-vision").style.display = "none";
+
+    setTimeout(() => {
+      containers[role].classList.remove("hidden");
+      containers[role].classList.add("show");
+    }, 400);
   });
+});
 
   hideAll();
 
