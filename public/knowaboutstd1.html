@@ -269,7 +269,6 @@
 
   const fetchBtn = document.getElementById("fetchStudentBtn");
   const studentIdInput = document.getElementById("studentIdInput");
-  const studentDetailsDiv = document.getElementById("studentDetails");
 
   fetchBtn.addEventListener("click", () => {
     const studentId = studentIdInput.value.trim();
@@ -284,66 +283,41 @@
 
     fetch(`https://crr-noc.onrender.com/student/${studentId}`)
       .then(res => {
-        if (!res.ok) {
-          throw new Error("Student not found.");
-        }
+        if (!res.ok) throw new Error("Student not found.");
         return res.json();
       })
       .then(data => {
-        studentDetailsDiv.style.display = "block";
-        studentDetailsDiv.innerHTML = `
-          <h3>Student Details</h3>
-          <p><strong>Name:</strong> ${data.name}</p>
-          <p><strong>DOB:</strong> ${new Date(data.dob).toLocaleDateString('en-GB')}</p>
-          <p><strong>Year:</strong> ${data.year}</p>
-          <p><strong>Course:</strong> ${data.course}</p>
-          <p><strong>Semester:</strong> ${data.semester}</p>
-          <p><strong>Aadhar No:</strong> ${data.aadhar_no}</p>
-          <p><strong>Mobile No:</strong> ${data.mobile_no}</p>
-          <p><strong>Email:</strong> ${data.email}</p>
-          <p><strong>Father Name:</strong> ${data.father_name || 'N/A'}</p>
-          <p><strong>Father Mobile:</strong> ${data.father_mobile || 'N/A'}</p>
-          <p><strong>Counsellor Name:</strong> ${data.counsellor_name || 'N/A'}</p>
-          <p><strong>Counsellor Mobile:</strong> ${data.counsellor_mobile || 'N/A'}</p>
-        `;
-
         Swal.fire({
-          icon: "success",
-          title: "Student Found",
-          text: "Student details loaded successfully."
+          title: `${data.name}'s Profile`,
+          html: `
+            <div style="text-align:left">
+              <p><strong>Reg No:</strong> ${data.reg_no}</p>
+              <p><strong>DOB:</strong> ${new Date(data.dob).toLocaleDateString('en-GB')}</p>
+              <p><strong>Year:</strong> ${data.year}</p>
+              <p><strong>Course:</strong> ${data.course}</p>
+              <p><strong>Semester:</strong> ${data.semester}</p>
+              <p><strong>Mobile:</strong> ${data.mobile_no}</p>
+              <p><strong>Email:</strong> ${data.email}</p>
+              <p><strong>Aadhar:</strong> ${data.aadhar_no}</p>
+              <p><strong>Type Of admission:</strong> ${data.admission_type || 'N/A'}</p>
+              <p><strong>Father Name:</strong> ${data.father_name || 'N/A'}</p>
+              <p><strong>Father Mobile:</strong> ${data.father_mobile || 'N/A'}</p>
+              <p><strong>Counsellor Name:</strong> ${data.counsellor_name || 'N/A'}</p>
+              <p><strong>Counsellor Mobile:</strong> ${data.counsellor_mobile || 'N/A'}</p>
+            </div>`,
+          showCloseButton: true,
+          showConfirmButton: false,
+          width: 600
         });
       })
       .catch(err => {
-        studentDetailsDiv.style.display = "none";
         Swal.fire({
           icon: "error",
-          title: "Error",
+          title: "Fetch Failed",
           text: err.message
         });
       });
   });
-
-  function toggleMobileMenu() {
-    const sidebar = document.querySelector('.sidebar');
-    sidebar.classList.toggle('open');
-  }
-
-  document.querySelectorAll(".menu li a").forEach(link => {
-    link.addEventListener("click", () => {
-      if (window.innerWidth <= 768) {
-        document.querySelector('.sidebar').classList.remove('open');
-      }
-    });
-  });
-
-  function logout() {
-    localStorage.removeItem("userId");
-    if ("caches" in window) {
-      caches.keys().then((names) => names.forEach((name) => caches.delete(name)));
-    }
-    window.location.replace("index.html");
-  }
 </script>
-
 </body>
 </html>
