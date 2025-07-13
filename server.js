@@ -391,11 +391,7 @@ app.post('/send-notification', (req, res) => {
 app.post('/send-bulk-notification', async (req, res) => {
   let { userIds, message } = req.body;
 
-  // If userIds is string (single user), convert to array
-  if (typeof userIds === 'string') {
-    userIds = [userIds];
-  }
-
+  if (typeof userIds === 'string') userIds = [userIds];
   if (!Array.isArray(userIds) || userIds.length === 0 || !message) {
     return res.status(400).json({ success: false, message: "Invalid input" });
   }
@@ -416,7 +412,7 @@ app.post('/send-bulk-notification', async (req, res) => {
         const mailOptions = {
           from: '"CRR NOC Team" <crrenoccertificate@gmail.com>',
           to: student.email,
-          subject: "📢 Important Notification from CRR NOC Team",
+          subject: "📢 Important Notification from CRRE STAFF",
           html: `
             <div style="font-family: Arial, sans-serif; padding: 20px;">
               <h2 style="color: #003366;">Sir C R Reddy College of Engineering</h2>
@@ -428,23 +424,16 @@ app.post('/send-bulk-notification', async (req, res) => {
           `
         };
 
-        // Send email
         transporter.sendMail(mailOptions, (err2) => {
-          if (err2) {
-            failed++;
-            return resolve();
-          }
-
-          // Save in DB after email success
-          connection.query(
-            'INSERT INTO notifications (userId, message) VALUES (?, ?)',
-            [userId, message],
-            (err3) => {
-              if (err3) failed++;
-              else sent++;
-              resolve();
+          // Always insert into DB regardless of email success
+          connection.query('INSERT INTO notifications (userId, message) VALUES (?, ?)', [userId, message], (err3) => {
+            if (err2 || err3) {
+              failed++;
+            } else {
+              sent++;
             }
-          );
+            resolve();
+          });
         });
       });
     });
@@ -452,7 +441,6 @@ app.post('/send-bulk-notification', async (req, res) => {
 
   res.json({ success: true, sent, failed });
 });
-
 
 // Get notifications for a specific user
 app.get('/notifications/:userId', (req, res) => {
