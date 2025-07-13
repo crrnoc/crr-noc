@@ -281,11 +281,7 @@
     const btn = document.querySelector(".form button");
 
     if (!studentIdInput || !message) {
-      Swal.fire({
-        icon: "warning",
-        title: "Missing Information",
-        text: "Please enter reg. nos and message."
-      });
+      Swal.fire({ icon: "warning", title: "Missing Information", text: "Enter reg. nos and message." });
       return;
     }
 
@@ -316,11 +312,7 @@
       console.error("Error sending notification:", error);
       btn.disabled = false;
       btn.textContent = "Send Notification";
-      Swal.fire({
-        icon: "error",
-        title: "Failed!",
-        text: "Something went wrong. Please try again."
-      });
+      Swal.fire({ icon: "error", title: "Failed!", text: "Something went wrong. Please try again." });
     });
   }
 
