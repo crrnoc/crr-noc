@@ -839,7 +839,6 @@ app.post('/add-student', async (req, res) => {
     counsellor_name, counsellor_mobile
   } = req.body;
 
-  // Check required fields
   if (!userId || !name || !dob || !reg_no || !unique_id || !year ||
       !course || !semester || !email || !password || !section ||
       !counsellor_name || !counsellor_mobile) {
@@ -847,13 +846,9 @@ app.post('/add-student', async (req, res) => {
   }
 
   try {
-    // Check if user already exists
     const checkUserSql = `SELECT * FROM users WHERE userid = ?`;
     connection.query(checkUserSql, [userId], async (err, results) => {
-      if (err) {
-        console.error("User Check Error:", err);
-        return res.status(500).json({ success: false, message: "Server error checking existing user." });
-      }
+      if (err) return res.status(500).json({ success: false, message: "Server error during user check." });
 
       if (results.length > 0) {
         return res.status(400).json({ success: false, message: "User already exists." });
@@ -861,40 +856,26 @@ app.post('/add-student', async (req, res) => {
 
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      // Insert into users table
       const userSql = `INSERT INTO users (userid, password, role) VALUES (?, ?, 'student')`;
       connection.query(userSql, [userId, hashedPassword], (errUser) => {
         if (errUser) {
-          console.error("User Insert Error:", errUser);
-          return res.status(500).json({ success: false, message: "Failed to create login." });
+          return res.status(500).json({ success: false, message: "Failed to insert into users table." });
         }
 
-        // Insert into students table
         const studentSql = `
           INSERT INTO students
           (userId, name, dob, reg_no, unique_id, year, course, semester,
            aadhar_no, mobile_no, email, section, counsellor_name, counsellor_mobile)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
+
         connection.query(studentSql, [
-          userId,
-          name,
-          dob,
-          reg_no,
-          unique_id,
-          year,
-          course,
-          semester,
-          aadhar_no || "",        // support empty aadhar/mobile for bulk
-          mobile_no || "",
-          email,
-          section,
-          counsellor_name,
-          counsellor_mobile
+          userId, name, dob, reg_no, unique_id, year, course, semester,
+          aadhar_no || "", mobile_no || "", email, section,
+          counsellor_name, counsellor_mobile
         ], (errStudent) => {
           if (errStudent) {
-            console.error("Student Insert Error:", errStudent);
-            return res.status(500).json({ success: false, message: "User created, but student insert failed." });
+            return res.status(500).json({ success: false, message: "Failed to insert into students table." });
           }
 
           return res.json({ success: true, message: "✅ Student added successfully!" });
@@ -902,8 +883,8 @@ app.post('/add-student', async (req, res) => {
       });
     });
   } catch (err) {
-    console.error("Hashing error:", err);
-    res.status(500).json({ success: false, message: "Internal server error." });
+    console.error(err);
+    return res.status(500).json({ success: false, message: "Internal server error." });
   }
 });
 
