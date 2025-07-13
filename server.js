@@ -312,7 +312,7 @@ app.listen(PORT, () => {
 });
 
 //message route for staff
-
+/*
 app.post('/send-notification', (req, res) => {
   const { userId, message } = req.body;
 
@@ -366,10 +366,16 @@ app.post('/send-notification', (req, res) => {
     });
   });
 });
-
+*/
 app.post('/send-bulk-notification', async (req, res) => {
-  const { userIds, message } = req.body;
-  if (!Array.isArray(userIds) || !message) {
+  let { userIds, message } = req.body;
+
+  // If userIds is string (single user), convert to array
+  if (typeof userIds === 'string') {
+    userIds = [userIds];
+  }
+
+  if (!Array.isArray(userIds) || userIds.length === 0 || !message) {
     return res.status(400).json({ success: false, message: "Invalid input" });
   }
 
@@ -401,16 +407,23 @@ app.post('/send-bulk-notification', async (req, res) => {
           `
         };
 
+        // Send email
         transporter.sendMail(mailOptions, (err2) => {
           if (err2) {
             failed++;
             return resolve();
           }
 
-          connection.query('INSERT INTO notifications (userId, message) VALUES (?, ?)', [userId, message], () => {
-            sent++;
-            resolve();
-          });
+          // Save in DB after email success
+          connection.query(
+            'INSERT INTO notifications (userId, message) VALUES (?, ?)',
+            [userId, message],
+            (err3) => {
+              if (err3) failed++;
+              else sent++;
+              resolve();
+            }
+          );
         });
       });
     });
