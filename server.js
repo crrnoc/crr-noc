@@ -1,4 +1,3 @@
-
 require('dotenv').config();
 const express = require('express');
 const mysql = require('mysql2');
@@ -233,7 +232,18 @@ app.get('/student/:userId', (req, res) => {
 // ✏️ Update student profile
 
 app.post("/editprofile", upload.single("photo"), async (req, res) => {
-  const { userId, name, dob, year, course, semester, aadhar, mobile, email } = req.body;
+  const {
+    userId,
+    uniqueId, // ✅ NEW FIELD
+    name,
+    dob,
+    year,
+    course,
+    semester,
+    aadhar,
+    mobile,
+    email
+  } = req.body;
   const file = req.file;
 
   console.log("📥 Incoming profile update for userId:", userId);
@@ -271,10 +281,21 @@ app.post("/editprofile", upload.single("photo"), async (req, res) => {
     const safeDOB = dob && dob.trim() !== "" ? dob : null;
     console.log("🗓️ Processed DOB:", safeDOB);
 
-    const fields = [name, safeDOB, year, course, semester, aadhar, mobile, email];
+    const fields = [
+      uniqueId,  // ✅ Add first
+      name,
+      safeDOB,
+      year,
+      course,
+      semester,
+      aadhar,
+      mobile,
+      email
+    ];
+
     let query = `
       UPDATE students 
-      SET name=?, dob=?, year=?, course=?, semester=?, aadhar_no=?, mobile_no=?, email=?`;
+      SET uniqueId=?, name=?, dob=?, year=?, course=?, semester=?, aadhar_no=?, mobile_no=?, email=?`;
 
     if (photo_url) {
       query += `, photo_url=?, photo_public_id=?`;
