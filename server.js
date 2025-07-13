@@ -367,6 +367,59 @@ app.post('/send-notification', (req, res) => {
   });
 });
 
+app.post('/send-bulk-notification', async (req, res) => {
+  const { userIds, message } = req.body;
+  if (!Array.isArray(userIds) || !message) {
+    return res.status(400).json({ success: false, message: "Invalid input" });
+  }
+
+  let sent = 0;
+  let failed = 0;
+
+  for (const userId of userIds) {
+    await new Promise(resolve => {
+      const query = 'SELECT email, name FROM students WHERE userId = ?';
+      connection.query(query, [userId], (err, results) => {
+        if (err || results.length === 0) {
+          failed++;
+          return resolve();
+        }
+
+        const student = results[0];
+        const mailOptions = {
+          from: '"CRR NOC Team" <crrenoccertificate@gmail.com>',
+          to: student.email,
+          subject: "📢 Important Notification from CRR NOC Team",
+          html: `
+            <div style="font-family: Arial, sans-serif; padding: 20px;">
+              <h2 style="color: #003366;">Sir C R Reddy College of Engineering</h2>
+              <p>Dear <strong>${student.name}</strong>,</p>
+              <p>${message}</p>
+              <br>
+              <p style="color: #555;">Best regards,<br><strong>CRR NOC Team</strong></p>
+            </div>
+          `
+        };
+
+        transporter.sendMail(mailOptions, (err2) => {
+          if (err2) {
+            failed++;
+            return resolve();
+          }
+
+          connection.query('INSERT INTO notifications (userId, message) VALUES (?, ?)', [userId, message], () => {
+            sent++;
+            resolve();
+          });
+        });
+      });
+    });
+  }
+
+  res.json({ success: true, sent, failed });
+});
+
+
 // Get notifications for a specific user
 app.get('/notifications/:userId', (req, res) => {
   const { userId } = req.params;
