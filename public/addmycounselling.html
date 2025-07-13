@@ -286,6 +286,7 @@ body{
         <form id="counsellingForm">
           <input type="text" id="fromReg" placeholder="From RegNo (e.g., 23B81A0501)" required />
           <input type="text" id="toReg" placeholder="To RegNo (e.g., 23B81A0510)" required />
+          <input type="text" id="staffId" placeholder="Staff ID (e.g., CRR1001)" required /> <!-- New field -->
           <input type="text" id="counsellorName" placeholder="Counsellor Name" required />
           <input type="text" id="counsellorMobile" placeholder="Counsellor Mobile" required />
           <button class="know-btn" type="submit">Assign Counselling</button>
@@ -298,87 +299,89 @@ body{
 
   <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
 
-  <script>
-    const userId = localStorage.getItem("userId");
-    document.getElementById("userId").textContent = userId || "Unknown";
+<script>
+  const userId = localStorage.getItem("userId");
+  document.getElementById("userId").textContent = userId || "Unknown";
 
-    const form = document.getElementById("counsellingForm");
-    const studentDetailsDiv = document.getElementById("studentDetails");
+  const form = document.getElementById("counsellingForm");
+  const studentDetailsDiv = document.getElementById("studentDetails");
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-      const fromReg = document.getElementById("fromReg").value.trim();
-      const toReg = document.getElementById("toReg").value.trim();
-      const counsellorName = document.getElementById("counsellorName").value.trim();
-      const counsellorMobile = document.getElementById("counsellorMobile").value.trim();
+    const fromReg = document.getElementById("fromReg").value.trim();
+    const toReg = document.getElementById("toReg").value.trim();
+    const counsellorName = document.getElementById("counsellorName").value.trim();
+    const counsellorMobile = document.getElementById("counsellorMobile").value.trim();
+    const staffId = document.getElementById("staffId").value.trim(); // newly added
 
-      if (!fromReg || !toReg || !counsellorName || !counsellorMobile) {
-        Swal.fire({
-          icon: "warning",
-          title: "All fields required",
-          text: "Please fill in all the fields.",
-        });
-        return;
-      }
-
-      try {
-        const res = await fetch("https://crr-noc.onrender.com/assign-counselling", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ fromReg, toReg, counsellorName, counsellorMobile }),
-        });
-
-        const data = await res.json();
-
-        if (res.ok) {
-          Swal.fire({
-            icon: "success",
-            title: "Assigned!",
-            text: data.message || "Students assigned successfully!",
-          });
-
-          studentDetailsDiv.style.display = "block";
-          studentDetailsDiv.innerHTML = `
-            <h3>Assignment Summary</h3>
-            <p><strong>From RegNo:</strong> ${fromReg}</p>
-            <p><strong>To RegNo:</strong> ${toReg}</p>
-            <p><strong>Counsellor Name:</strong> ${counsellorName}</p>
-            <p><strong>Counsellor Mobile:</strong> ${counsellorMobile}</p>
-          `;
-          form.reset();
-        } else {
-          throw new Error(data.message || "Failed to assign.");
-        }
-      } catch (err) {
-        Swal.fire({
-          icon: "error",
-          title: "Error!",
-          text: err.message,
-        });
-      }
-    });
-
-    function logout() {
-      localStorage.removeItem("userId");
-      if ("caches" in window) {
-        caches.keys().then((names) => names.forEach((name) => caches.delete(name)));
-      }
-      window.location.replace("index.html");
-    }
-
-    function toggleMobileMenu() {
-      const sidebar = document.querySelector(".sidebar");
-      sidebar.classList.toggle("open");
-    }
-
-    document.querySelectorAll(".menu li a").forEach(link => {
-      link.addEventListener("click", () => {
-        if (window.innerWidth <= 768) {
-          document.querySelector('.sidebar').classList.remove('open');
-        }
+    if (!fromReg || !toReg || !counsellorName || !counsellorMobile || !staffId) {
+      Swal.fire({
+        icon: "warning",
+        title: "All fields required",
+        text: "Please fill in all the fields.",
       });
+      return;
+    }
+
+    try {
+      const res = await fetch("https://crr-noc.onrender.com/assign-counselling", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fromReg, toReg, counsellorName, counsellorMobile, staffId }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        Swal.fire({
+          icon: "success",
+          title: "Assigned!",
+          text: data.message || "Students assigned successfully!",
+        });
+
+        studentDetailsDiv.style.display = "block";
+        studentDetailsDiv.innerHTML = `
+          <h3>Assignment Summary</h3>
+          <p><strong>From RegNo:</strong> ${fromReg}</p>
+          <p><strong>To RegNo:</strong> ${toReg}</p>
+          <p><strong>Counsellor Name:</strong> ${counsellorName}</p>
+          <p><strong>Counsellor Mobile:</strong> ${counsellorMobile}</p>
+          <p><strong>Staff ID:</strong> ${staffId}</p>
+        `;
+        form.reset();
+      } else {
+        throw new Error(data.message || "Failed to assign.");
+      }
+    } catch (err) {
+      Swal.fire({
+        icon: "error",
+        title: "Error!",
+        text: err.message,
+      });
+    }
+  });
+
+  function logout() {
+    localStorage.removeItem("userId");
+    if ("caches" in window) {
+      caches.keys().then((names) => names.forEach((name) => caches.delete(name)));
+    }
+    window.location.replace("index.html");
+  }
+
+  function toggleMobileMenu() {
+    const sidebar = document.querySelector(".sidebar");
+    sidebar.classList.toggle("open");
+  }
+
+  document.querySelectorAll(".menu li a").forEach(link => {
+    link.addEventListener("click", () => {
+      if (window.innerWidth <= 768) {
+        document.querySelector('.sidebar').classList.remove('open');
+      }
     });
-  </script>
+  });
+</script>
 </body>
 </html>
