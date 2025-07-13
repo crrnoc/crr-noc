@@ -334,8 +334,6 @@ app.listen(PORT, () => {
 
 //message route for staff
 app.post('/add-student', async (req, res) => {
-  console.log("📥 Add Student Request Body:", req.body);
-
   const {
     userId, name, dob, reg_no, unique_id,
     year, course, semester, aadhar_no, mobile_no,
@@ -344,7 +342,7 @@ app.post('/add-student', async (req, res) => {
     counsellor_name, counsellor_mobile
   } = req.body;
 
-  // Check for missing fields
+  // ✅ Check for required fields
   const required = {
     userId, name, dob, reg_no, unique_id, year,
     course, semester, email, password, section,
@@ -353,40 +351,40 @@ app.post('/add-student', async (req, res) => {
 
   for (let key in required) {
     if (!required[key]) {
-      console.log(`❌ Missing: ${key}`);
       return res.status(400).json({ success: false, message: `Missing: ${key}` });
     }
   }
 
   try {
+    // 🔎 Check if user already exists
     const checkSql = `SELECT * FROM users WHERE userid = ?`;
     connection.query(checkSql, [userId], async (err, result) => {
       if (err) {
-        console.error("❌ DB Error:", err);
+        console.error("❌ DB error:", err);
         return res.status(500).json({ success: false, message: "DB error" });
       }
 
       if (result.length > 0) {
-        console.log("⚠️ User already exists:", userId);
         return res.status(400).json({ success: false, message: "User already exists" });
       }
 
+      // 🔐 Hash password
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      // Insert into users
+      // 📥 Insert into users table
       const userSql = `INSERT INTO users (userid, password, role) VALUES (?, ?, 'student')`;
       connection.query(userSql, [userId, hashedPassword], (userErr) => {
         if (userErr) {
-          console.error("❌ User Insert Error:", userErr);
+          console.error("❌ User insert error:", userErr);
           return res.status(500).json({ success: false, message: "User insert failed" });
         }
 
-        // Now insert into students
+        // 📥 Insert into students table (correct column names)
         const studentSql = `
           INSERT INTO students (
-            userId, name, dob, reg_no, unique_id,
+            userId, name, dob, reg_no, uniqueId,
             year, course, semester, aadhar_no, mobile_no, email, section,
-            father_name, father_mobile_no,
+            father_name, father_mobile,
             counsellor_name, counsellor_mobile
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
@@ -400,96 +398,21 @@ app.post('/add-student', async (req, res) => {
 
         connection.query(studentSql, values, (studentErr) => {
           if (studentErr) {
-            console.error("❌ Student Insert Error:", studentErr);
+            console.error("❌ Student insert error:", studentErr);
             return res.status(500).json({ success: false, message: "Student insert failed" });
           }
 
           console.log("✅ Student added:", userId);
-          return res.json({ success: true, message: "Student added to both tables" });
+          return res.json({ success: true, message: "Student added to both tables." });
         });
       });
     });
   } catch (e) {
-    console.error("❌ Server Error:", e);
-    res.status(500).json({ success: false, message: "Unexpected error" });
+    console.error("❌ Unexpected error:", e);
+    return res.status(500).json({ success: false, message: "Unexpected server error" });
   }
 });
 
-/*
-app.post('/send-bulk-notification', async (req, res) => {
-  let { userIds, message } = req.body;
-
-  console.log("🔥 HIT /send-bulk-notification");
-  console.log("👉 Request Body:", req.body);
-
-  if (typeof userIds === 'string') userIds = [userIds];
-  if (!Array.isArray(userIds) || userIds.length === 0 || !message) {
-    console.log("❌ Invalid input");
-    return res.status(400).json({ success: false, message: "Invalid input" });
-  }
-
-  let sent = 0;
-  let failed = 0;
-
-  for (const userId of userIds) {
-    console.log("📦 Processing userId:", userId);
-    await new Promise(resolve => {
-      const query = 'SELECT email, name FROM students WHERE userId = ?';
-      connection.query(query, [userId], (err, results) => {
-        if (err || results.length === 0) {
-          console.log("❌ Student not found or DB error for:", userId, err);
-          failed++;
-          return resolve();
-        }
-
-        const student = results[0];
-        console.log("✅ Found student:", student.name, "📧", student.email);
-
-        const mailOptions = {
-          from: '"CRR NOC Team" <crrenoccertificate@gmail.com>',
-          to: student.email,
-          subject: "📢 Important Notification from CRR NOC Team",
-          html: `
-            <div style="font-family: Arial, sans-serif; padding: 20px;">
-              <h2 style="color: #003366;">Sir C R Reddy College of Engineering</h2>
-              <p>Dear <strong>${student.name}</strong>,</p>
-              <p>${message}</p>
-              <br>
-              <p style="color: #555;">Best regards,<br><strong>CRR NOC Team</strong></p>
-            </div>
-          `
-        };
-
-        transporter.sendMail(mailOptions, (err2) => {
-          if (err2) {
-            console.log("❌ Email sending failed to:", student.email, "Error:", err2.message);
-          } else {
-            console.log("📧 Email sent to:", student.email);
-          }
-
-          connection.query(
-            'INSERT INTO notifications (userId, message) VALUES (?, ?)',
-            [userId, message],
-            (err3) => {
-              if (err3) {
-                console.log("❌ Notification insert failed for:", userId, err3.message);
-                failed++;
-              } else {
-                console.log("✅ Notification saved for:", userId);
-                sent++;
-              }
-              resolve();
-            }
-          );
-        });
-      });
-    });
-  }
-
-  console.log("✅ Summary: Sent =", sent, "Failed =", failed);
-  res.json({ success: true, sent, failed });
-});
-*/
 // Get notifications for a specific user
 app.get('/notifications/:userId', (req, res) => {
   const { userId } = req.params;
