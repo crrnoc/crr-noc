@@ -438,83 +438,85 @@
   });
 
   // ✅ Bulk Student Submit with range handling
-  document.getElementById("bulkForm").addEventListener("submit", async function (e) {
-    e.preventDefault();
-    const formData = new FormData(this);
-    const data = Object.fromEntries(formData.entries());
+document.getElementById("bulkForm").addEventListener("submit", async function (e) {
+  e.preventDefault();
+  const formData = new FormData(this);
+  const data = Object.fromEntries(formData.entries());
 
-    const ranges = data.roll_range.split(",").map(r => r.trim());
-    const students = [];
+  const ranges = data.roll_range.split(",").map(r => r.trim());
+  const students = [];
 
-    for (const range of ranges) {
-      const [startFull, endFull] = range.split("-");
+  for (const range of ranges) {
+    const [startFull, endRaw] = range.split("-");
 
-      const startMatch = startFull.match(/(\D+)(\d+)$/);
-      const endMatch = endFull.match(/(\D+)?(\d+)$/);
+    const startMatch = startFull.match(/(\D+)(\d+)$/);
+    if (!startMatch) continue;
 
-      if (!startMatch || !endMatch) continue;
+    const prefix = startMatch[1];
+    const startNum = parseInt(startMatch[2]);
+    const endNum = /^\d+$/.test(endRaw) ? parseInt(endRaw) : parseInt(endRaw.match(/\d+$/)?.[0]);
 
-      const prefix = startMatch[1];
-      const startNum = parseInt(startMatch[2]);
-      const endNum = parseInt(endMatch[2]);
+    if (isNaN(startNum) || isNaN(endNum)) continue;
 
-      for (let i = startNum; i <= endNum; i++) {
-        const roll = prefix + i.toString().padStart(3, "0");
+    for (let i = startNum; i <= endNum; i++) {
+      const fullRoll = prefix + i.toString().padStart(3, "0");
 
-        students.push({
-          userId: roll,
-          name: "Unknown",
-          dob: "2000-01-01",
-          reg_no: roll,
-          unique_id: roll,
-          year: data.year,
-          course: data.course,
-          semester: data.semester,
-          aadhar_no: "",
-          mobile_no: "",
-          email: `${roll}@crr.edu.in`,
-          password: roll,
-          section: data.section,
-          father_name: "",
-          father_mobile_no: "",
-          counsellor_name: data.counsellor_name,
-          counsellor_mobile: data.counsellor_mobile
-        });
-      }
+      students.push({
+        userId: fullRoll,
+        name: "",               // Not storing Unknown
+        dob: "",                // Leave blank
+        reg_no: fullRoll,
+        unique_id: fullRoll,
+        year: data.year,
+        course: data.course,
+        semester: data.semester,
+        aadhar_no: "",
+        mobile_no: "",
+        email: "",              // Leave email blank
+        password: fullRoll,
+        section: data.section,
+        father_name: "",
+        father_mobile_no: "",
+        counsellor_name: data.counsellor_name,
+        counsellor_mobile: data.counsellor_mobile
+      });
     }
+  }
 
-    console.log("🔁 Students Generated:", students.length);
-    if (students.length === 0) {
-      Swal.fire("⚠️ Error", "No students generated. Check roll number format.", "warning");
-      return;
+  console.log("🧾 Students to insert:", students);
+
+  if (students.length === 0) {
+    Swal.fire("⚠️ Error", "No students generated. Please check input format.", "warning");
+    return;
+  }
+
+  let success = 0;
+  let fail = [];
+
+  for (const student of students) {
+    try {
+      const res = await fetch("https://crr-noc.onrender.com/add-student", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(student)
+      });
+      const result = await res.json();
+      if (result.success) success++;
+      else fail.push(student.userId);
+    } catch {
+      fail.push(student.userId);
     }
+  }
 
-    let success = 0;
-    let fail = [];
-
-    for (const student of students) {
-      try {
-        const res = await fetch("https://crr-noc.onrender.com/add-student", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(student)
-        });
-        const result = await res.json();
-        if (result.success) success++;
-        else fail.push(student.userId);
-      } catch {
-        fail.push(student.userId);
-      }
-    }
-
-    Swal.fire({
-      icon: "info",
-      title: "Bulk Add Completed",
-      html: `✅ Success: ${success}<br>❌ Failed: ${fail.length}`
-    });
-
-    this.reset();
+  Swal.fire({
+    icon: "info",
+    title: "Bulk Add Completed",
+    html: `✅ Success: ${success}<br>❌ Failed: ${fail.length}`
   });
+
+  this.reset();
+});
+
 
   function toggleMobileMenu() {
     document.querySelector('.sidebar').classList.toggle('open');
