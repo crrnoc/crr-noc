@@ -332,85 +332,60 @@ app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
 
+
 //message route for staff
-app.post('/add-student', async (req, res) => {
-  const {
-    userId, name, dob, reg_no, unique_id,
-    year, course, semester, aadhar_no, mobile_no,
-    email, password, section,
-    father_name, father_mobile_no,
-    counsellor_name, counsellor_mobile
-  } = req.body;
+app.post('/send-notification', (req, res) => {
+  const { userId, message } = req.body;
 
-  // ✅ Check for required fields
-  const required = {
-    userId, name, dob, reg_no, unique_id, year,
-    course, semester, email, password, section,
-    counsellor_name, counsellor_mobile
-  };
-
-  for (let key in required) {
-    if (!required[key]) {
-      return res.status(400).json({ success: false, message: `Missing: ${key}` });
-    }
+  if (!userId || !message) {
+    return res.status(400).json({ success: false, message: "Missing userId or message" });
   }
 
-  try {
-    // 🔎 Check if user already exists
-    const checkSql = `SELECT * FROM users WHERE userid = ?`;
-    connection.query(checkSql, [userId], async (err, result) => {
-      if (err) {
-        console.error("❌ DB error:", err);
-        return res.status(500).json({ success: false, message: "DB error" });
+  // 1️⃣ Get the email from students table
+  const studentQuery = 'SELECT email, name FROM students WHERE userId = ?';
+  connection.query(studentQuery, [userId], (err, studentResults) => {
+    if (err || studentResults.length === 0) {
+      return res.status(404).json({ success: false, message: "Student not found" });
+    }
+
+    const student = studentResults[0];
+    const studentEmail = student.email;
+    const studentName = student.name;
+
+    // 2️⃣ Send email
+    const mailOptions = {
+      from: '"CRR NOC Team" <crrenoccertificate@gmail.com>',
+      to: studentEmail,
+      subject: "📢 Important Notification from CRR NOC Team",
+      html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px;">
+          <h2 style="color: #003366;">Sir C R Reddy College of Engineering</h2>
+          <p>Dear <strong>${studentName}</strong>,</p>
+          <p>${message}</p>
+          <br>
+          <p style="color: #555;">Best regards,<br><strong>CRR NOC Team</strong></p>
+        </div>
+      `
+    };
+
+    transporter.sendMail(mailOptions, (err2) => {
+      if (err2) {
+        console.error("Email sending failed:", err2);
+        return res.status(500).json({ success: false, message: "Failed to send email" });
       }
 
-      if (result.length > 0) {
-        return res.status(400).json({ success: false, message: "User already exists" });
-      }
-
-      // 🔐 Hash password
-      const hashedPassword = await bcrypt.hash(password, 10);
-
-      // 📥 Insert into users table
-      const userSql = `INSERT INTO users (userid, password, role) VALUES (?, ?, 'student')`;
-      connection.query(userSql, [userId, hashedPassword], (userErr) => {
-        if (userErr) {
-          console.error("❌ User insert error:", userErr);
-          return res.status(500).json({ success: false, message: "User insert failed" });
+      // 3️⃣ Save in notifications table
+      const query = 'INSERT INTO notifications (userId, message) VALUES (?, ?)';
+      connection.query(query, [userId, message], (err3) => {
+        if (err3) {
+          console.error("Notification DB Error:", err3);
+          return res.status(500).json({ success: false, message: "Notification sent but DB error" });
         }
 
-        // 📥 Insert into students table (correct column names)
-        const studentSql = `
-          INSERT INTO students (
-            userId, name, dob, reg_no, uniqueId,
-            year, course, semester, aadhar_no, mobile_no, email, section,
-            father_name, father_mobile,
-            counsellor_name, counsellor_mobile
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `;
-
-        const values = [
-          userId, name, dob, reg_no, unique_id,
-          year, course, semester, aadhar_no || "", mobile_no || "", email, section,
-          father_name || "", father_mobile_no || "",
-          counsellor_name, counsellor_mobile
-        ];
-
-        connection.query(studentSql, values, (studentErr) => {
-          if (studentErr) {
-            console.error("❌ Student insert error:", studentErr);
-            return res.status(500).json({ success: false, message: "Student insert failed" });
-          }
-
-          console.log("✅ Student added:", userId);
-          return res.json({ success: true, message: "Student added to both tables." });
-        });
+        res.json({ success: true, message: "✅ Notification sent and email delivered!" });
       });
     });
-  } catch (e) {
-    console.error("❌ Unexpected error:", e);
-    return res.status(500).json({ success: false, message: "Unexpected server error" });
-  }
+  });
 });
 
 // Get notifications for a specific user
@@ -882,57 +857,71 @@ app.post('/add-student', async (req, res) => {
     userId, name, dob, reg_no, unique_id,
     year, course, semester, aadhar_no, mobile_no,
     email, password, section,
+    father_name, father_mobile_no,
     counsellor_name, counsellor_mobile
   } = req.body;
 
-  if (!userId || !name || !dob || !reg_no || !unique_id || !year ||
-      !course || !semester || !email || !password || !section ||
-      !counsellor_name || !counsellor_mobile) {
-    return res.status(400).json({ success: false, message: "Missing required fields." });
+  // Required field check
+  const required = {
+    userId, reg_no, unique_id,
+    year, course, semester, email, password,
+    section, counsellor_name, counsellor_mobile
+  };
+
+  for (let key in required) {
+    if (!required[key]) {
+      return res.status(400).json({ success: false, message: `Missing: ${key}` });
+    }
   }
 
   try {
-    const checkUserSql = `SELECT * FROM users WHERE userid = ?`;
-    connection.query(checkUserSql, [userId], async (err, results) => {
-      if (err) return res.status(500).json({ success: false, message: "Server error during user check." });
+    const checkSql = `SELECT * FROM users WHERE userid = ?`;
+    connection.query(checkSql, [userId], async (err, result) => {
+      if (err) return res.status(500).json({ success: false });
 
-      if (results.length > 0) {
-        return res.status(400).json({ success: false, message: "User already exists." });
+      if (result.length > 0) {
+        return res.status(400).json({ success: false, message: "User already exists" });
       }
 
       const hashedPassword = await bcrypt.hash(password, 10);
 
       const userSql = `INSERT INTO users (userid, password, role) VALUES (?, ?, 'student')`;
-      connection.query(userSql, [userId, hashedPassword], (errUser) => {
-        if (errUser) {
-          return res.status(500).json({ success: false, message: "Failed to insert into users table." });
-        }
+      connection.query(userSql, [userId, hashedPassword], (userErr) => {
+        if (userErr) return res.status(500).json({ success: false });
 
         const studentSql = `
-          INSERT INTO students
-          (userId, name, dob, reg_no, unique_id, year, course, semester,
-           aadhar_no, mobile_no, email, section, counsellor_name, counsellor_mobile)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          INSERT INTO students (
+            userId, name, dob, reg_no, uniqueId,
+            year, course, semester, aadhar_no, mobile_no, email, section,
+            father_name, father_mobile,
+            counsellor_name, counsellor_mobile
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
 
-        connection.query(studentSql, [
-          userId, name, dob, reg_no, unique_id, year, course, semester,
-          aadhar_no || "", mobile_no || "", email, section,
+        const values = [
+          userId, name || "", dob || "", reg_no, unique_id,
+          year, course, semester, aadhar_no || "", mobile_no || "",
+          email, section,
+          father_name || "", father_mobile_no || "",
           counsellor_name, counsellor_mobile
-        ], (errStudent) => {
-          if (errStudent) {
-            return res.status(500).json({ success: false, message: "Failed to insert into students table." });
+        ];
+
+        connection.query(studentSql, values, (studentErr) => {
+          if (studentErr) {
+            console.error("❌ Student insert failed:", studentErr);
+            return res.status(500).json({ success: false, message: "Student insert failed" });
           }
 
-          return res.json({ success: true, message: "✅ Student added successfully!" });
+          return res.json({ success: true, message: "Student added to both tables." });
         });
       });
     });
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ success: false, message: "Internal server error." });
+  } catch (e) {
+    console.error("❌ Unexpected error:", e);
+    res.status(500).json({ success: false });
   }
 });
+
 
 //logic for the fee upadate by staff
 // ✅ Staff updates fee structure for a student by reg_no
