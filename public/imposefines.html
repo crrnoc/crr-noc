@@ -136,7 +136,8 @@
     }
 
     .fine-box input,
-    .fine-box textarea {
+    .fine-box textarea,
+    .fine-box select {
       width: 100%;
       padding: 12px;
       margin-bottom: 15px;
@@ -149,9 +150,10 @@
     }
 
     .fine-box input:focus,
-    .fine-box textarea:focus {
-      outline: none;
-      box-shadow: 0 0 5px rgba(30, 161, 242, 0.8);
+    .fine-box textarea:focus,
+    .fine-box select:focus {
+    outline: none;
+    box-shadow: 0 0 5px rgba(30, 161, 242, 0.8);
     }
 
     .fine-box button {
@@ -241,10 +243,20 @@
     <!-- Main Content -->
     <div class="content">
       <div class="fine-box">
-        <h2>Impose Fine</h2>
-        <input type="text" id="studentId" placeholder="Student User ID" required />
-        <textarea id="reason" rows="3" placeholder="Reason"></textarea>
-        <input type="number" id="amount" placeholder="Amount (₹)" required />
+      <h2>Impose Fine</h2>
+<input type="text" id="studentId" placeholder="Student User ID" required />
+
+<select id="fineYear" required>
+  <option value="" disabled selected>Select Academic Year</option>
+  <option value="1">1st Year</option>
+  <option value="2">2nd Year</option>
+  <option value="3">3rd Year</option>
+  <option value="4">4th Year</option>
+</select>
+
+<textarea id="reason" rows="3" placeholder="Reason"></textarea>
+<input type="number" id="amount" placeholder="Amount (₹)" required />
+
         <button onclick="imposeFine()">Impose Fine</button>
       </div>
     </div>
@@ -259,6 +271,8 @@
     const studentId = document.getElementById("studentId").value.trim();
     const reason = document.getElementById("reason").value.trim();
     const amount = parseInt(document.getElementById("amount").value.trim());
+    const year = document.getElementById("fineYear").value;
+
     const staffId = localStorage.getItem("userId");
 
     if (!studentId || isNaN(amount)) {
@@ -282,7 +296,7 @@
     fetch("https://crr-noc.onrender.com/impose-fine", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId: studentId, reason, amount, staffId })
+      body: JSON.stringify({ userId: studentId, reason, amount, year, staffId })
     })
     .then(res => res.json())
     .then(data => {
