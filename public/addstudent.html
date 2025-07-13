@@ -411,7 +411,7 @@
     document.getElementById("tabSingle").classList.remove("active");
   }
 
-  // ✅ Single Student Submit
+  // ✅ Add Single Student
   document.getElementById("singleForm").addEventListener("submit", async function (e) {
     e.preventDefault();
     const formData = new FormData(this);
@@ -437,86 +437,82 @@
     }
   });
 
-  // ✅ Bulk Student Submit with range handling
-document.getElementById("bulkForm").addEventListener("submit", async function (e) {
-  e.preventDefault();
-  const formData = new FormData(this);
-  const data = Object.fromEntries(formData.entries());
+  // ✅ Bulk Add Students
+  document.getElementById("bulkForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    const data = Object.fromEntries(formData.entries());
 
-  const ranges = data.roll_range.split(",").map(r => r.trim());
-  const students = [];
+    const ranges = data.roll_range.split(",").map(r => r.trim());
+    const students = [];
 
-  for (const range of ranges) {
-    const [startFull, endRaw] = range.split("-");
+    for (const range of ranges) {
+      const [startFull, endRaw] = range.split("-");
 
-    const startMatch = startFull.match(/(\D+)(\d+)$/);
-    if (!startMatch) continue;
+      const startMatch = startFull.match(/(\D+)(\d+)$/);
+      if (!startMatch) continue;
 
-    const prefix = startMatch[1];
-    const startNum = parseInt(startMatch[2]);
-    const endNum = /^\d+$/.test(endRaw) ? parseInt(endRaw) : parseInt(endRaw.match(/\d+$/)?.[0]);
+      const prefix = startMatch[1];
+      const startNum = parseInt(startMatch[2]);
+      const endNum = /^\d+$/.test(endRaw) ? parseInt(endRaw) : parseInt(endRaw.match(/\d+$/)?.[0]);
 
-    if (isNaN(startNum) || isNaN(endNum)) continue;
+      if (isNaN(startNum) || isNaN(endNum)) continue;
 
-    for (let i = startNum; i <= endNum; i++) {
-      const fullRoll = prefix + i.toString().padStart(3, "0");
+      for (let i = startNum; i <= endNum; i++) {
+        const fullRoll = prefix + i.toString().padStart(3, "0");
 
-      students.push({
-        userId: fullRoll,
-        name: "",               // Not storing Unknown
-        dob: "",                // Leave blank
-        reg_no: fullRoll,
-        unique_id: fullRoll,
-        year: data.year,
-        course: data.course,
-        semester: data.semester,
-        aadhar_no: "",
-        mobile_no: "",
-        email: "",              // Leave email blank
-        password: fullRoll,
-        section: data.section,
-        father_name: "",
-        father_mobile_no: "",
-        counsellor_name: data.counsellor_name,
-        counsellor_mobile: data.counsellor_mobile
-      });
+        students.push({
+          userId: fullRoll,
+          reg_no: fullRoll,
+          unique_id: fullRoll,
+          year: data.year,
+          course: data.course,
+          semester: data.semester,
+          section: data.section,
+          counsellor_name: data.counsellor_name,
+          counsellor_mobile: data.counsellor_mobile,
+          email: "",
+          password: fullRoll,  // Will be hashed in backend
+          name: "",
+          dob: "",
+          aadhar_no: "",
+          mobile_no: "",
+          father_name: "",
+          father_mobile_no: ""
+        });
+      }
     }
-  }
 
-  console.log("🧾 Students to insert:", students);
-
-  if (students.length === 0) {
-    Swal.fire("⚠️ Error", "No students generated. Please check input format.", "warning");
-    return;
-  }
-
-  let success = 0;
-  let fail = [];
-
-  for (const student of students) {
-    try {
-      const res = await fetch("https://crr-noc.onrender.com/add-student", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(student)
-      });
-      const result = await res.json();
-      if (result.success) success++;
-      else fail.push(student.userId);
-    } catch {
-      fail.push(student.userId);
+    if (students.length === 0) {
+      Swal.fire("⚠️ No Students", "Invalid roll number range format", "warning");
+      return;
     }
-  }
 
-  Swal.fire({
-    icon: "info",
-    title: "Bulk Add Completed",
-    html: `✅ Success: ${success}<br>❌ Failed: ${fail.length}`
+    let success = 0, fail = [];
+
+    for (const student of students) {
+      try {
+        const res = await fetch("https://crr-noc.onrender.com/add-student", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(student)
+        });
+        const result = await res.json();
+        if (result.success) success++;
+        else fail.push(student.userId);
+      } catch {
+        fail.push(student.userId);
+      }
+    }
+
+    Swal.fire({
+      icon: "info",
+      title: "Bulk Add Completed",
+      html: `✅ Success: ${success}<br>❌ Failed: ${fail.length}`
+    });
+
+    this.reset();
   });
-
-  this.reset();
-});
-
 
   function toggleMobileMenu() {
     document.querySelector('.sidebar').classList.toggle('open');
