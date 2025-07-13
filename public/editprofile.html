@@ -295,6 +295,7 @@
           <div><label>Course</label><input type="text" id="course" disabled></div>
         </div>
         <div class="form-row"><label>Semester</label><input type="text" id="semester" disabled></div>
+        <div class="form-row"><label>Unique ID</label><input type="text" id="uniqueId" disabled></div>
         <div class="form-row"><label>Aadhar No</label><input type="text" id="aadhar" disabled></div>
         <div class="form-row"><label>Mobile No</label><input type="text" id="mobile" disabled></div>
         <div class="form-row"><label>Email</label><input type="email" id="email" disabled></div>
@@ -344,10 +345,11 @@
       input.disabled = input.id === "course" ? true : state;
     });
   }
-    function toggleMobileMenu() {
-  const sidebar = document.querySelector('.sidebar');
-  sidebar.classList.toggle('open');
-}
+
+  function toggleMobileMenu() {
+    const sidebar = document.querySelector('.sidebar');
+    sidebar.classList.toggle('open');
+  }
 
   function formatDateToInput(dateStr) {
     if (!dateStr) return "";
@@ -364,6 +366,7 @@
       const res = await fetch(`https://crr-noc.onrender.com/student/${userId}`);
       const data = await res.json();
 
+      form.uniqueId.value = data.uniqueId || "";
       form.name.value = data.name || "";
       form.dob.value = formatDateToInput(data.dob);
       form.year.value = data.year || "";
@@ -373,9 +376,8 @@
       form.mobile.value = data.mobile_no || "";
       form.email.value = data.email || "";
 
-// Set sidebar photo
-document.getElementById("sidebarPhoto").src = data.photo_url || "";
-document.getElementById("sidebarPhoto").style.display = data.photo_url ? "block" : "none";
+      document.getElementById("sidebarPhoto").src = data.photo_url || "";
+      document.getElementById("sidebarPhoto").style.display = data.photo_url ? "block" : "none";
 
       photoPreview.src = "";
       photoPreview.style.display = "none";
@@ -395,6 +397,15 @@ document.getElementById("sidebarPhoto").style.display = data.photo_url ? "block"
     setInputsDisabled(false);
     formActions.style.display = "flex";
     updateBtn.style.display = "none";
+  });
+
+  photoInput.addEventListener("click", () => {
+    Swal.fire({
+      icon: "info",
+      title: "Please upload a neat photo",
+      text: "Make sure the image is professional and will appear on the result certificate.",
+      confirmButtonText: "OK"
+    });
   });
 
   photoInput.addEventListener("change", function () {
@@ -427,6 +438,7 @@ document.getElementById("sidebarPhoto").style.display = data.photo_url ? "block"
     const formData = new FormData();
 
     formData.append("userId", userId);
+    formData.append("uniqueId", form.uniqueId.value); // send uniqueId
     formData.append("name", form.name.value);
     formData.append("dob", form.dob.value);
     formData.append("year", form.year.value);
@@ -463,7 +475,7 @@ document.getElementById("sidebarPhoto").style.display = data.photo_url ? "block"
 
       Swal.fire({
         icon: "success",
-        title: " Profile Updated",
+        title: "Profile Updated",
         text: data.message || "Your profile was successfully updated.",
         timer: 2000,
         showConfirmButton: false
