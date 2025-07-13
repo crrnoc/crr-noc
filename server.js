@@ -872,73 +872,65 @@ app.get("/fee-status/:userId", (req, res) => {
     });
   });
 });
-app.post('/add-student', async (req, res) => {
+
+app.post("/add-student", async (req, res) => {
+  /* pull only the fields we may receive */
   const {
     userId, name, dob, reg_no, unique_id,
     year, course, semester, aadhar_no, mobile_no,
-    email, password, section,
+    email = "", password, section,
     father_name, father_mobile_no,
     counsellor_name, counsellor_mobile
   } = req.body;
 
-  // Required field check
-  const required = {
-    userId, reg_no, unique_id,
-    year, course, semester, email, password,
-    section, counsellor_name, counsellor_mobile
-  };
-
-  for (let key in required) {
-    if (!required[key]) {
-      return res.status(400).json({ success: false, message: `Missing: ${key}` });
-    }
-  }
+  /* ✅ minimal required for BOTH single and bulk */
+  const must = { userId, reg_no, unique_id, year, course,
+                 semester, section, password,
+                 counsellor_name, counsellor_mobile };
+  for (const k in must)
+    if (!must[k] && must[k] !== "")      // allow blank email
+      return res.status(400).json({success:false, message:`Missing: ${k}`});
 
   try {
-    const checkSql = `SELECT * FROM users WHERE userid = ?`;
-    connection.query(checkSql, [userId], async (err, result) => {
-      if (err) return res.status(500).json({ success: false });
+    /* already a user? */
+    connection.query("SELECT 1 FROM users WHERE userid = ?", [userId], async (e,r)=>{
+      if (e)  return res.status(500).json({success:false});
+      if (r.length) return res.status(400).json({success:false, message:"User exists"});
 
-      if (result.length > 0) {
-        return res.status(400).json({ success: false, message: "User already exists" });
-      }
+      const hashed = await bcrypt.hash(password,10);
+      connection.query(
+        "INSERT INTO users (userid,password,role) VALUES (?,?, 'student')",
+        [userId, hashed],
+        (e1)=>{
+          if (e1) return res.status(500).json({success:false, message:"User insert failed"});
 
-      const hashedPassword = await bcrypt.hash(password, 10);
-
-      const userSql = `INSERT INTO users (userid, password, role) VALUES (?, ?, 'student')`;
-      connection.query(userSql, [userId, hashedPassword], (userErr) => {
-        if (userErr) return res.status(500).json({ success: false });
-
-        const studentSql = `
-          INSERT INTO students (
-            userId, name, dob, reg_no, uniqueId,
-            year, course, semester, aadhar_no, mobile_no, email, section,
-            father_name, father_mobile,
-            counsellor_name, counsellor_mobile
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `;
-
-        const values = [
-          userId, name || "", dob || "", reg_no, unique_id,
-          year, course, semester, aadhar_no || "", mobile_no || "",
-          email, section,
-          father_name || "", father_mobile_no || "",
-          counsellor_name, counsellor_mobile
-        ];
-
-        connection.query(studentSql, values, (studentErr) => {
-          if (studentErr) {
-            console.error("❌ Student insert failed:", studentErr);
-            return res.status(500).json({ success: false, message: "Student insert failed" });
-          }
-
-          return res.json({ success: true, message: "Student added to both tables." });
+          /* insert ONLY the columns we actually have values for */
+          const studentSql = `
+            INSERT INTO students
+              (userId, reg_no, uniqueId, year, course, semester, section,
+               counsellor_name, counsellor_mobile,
+               name, dob, aadhar_no, mobile_no, email,
+               father_name, father_mobile)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+          `;
+          const vals = [
+            userId, reg_no, unique_id, year, course, semester, section,
+            counsellor_name, counsellor_mobile,
+            name || null, dob || null, aadhar_no || null, mobile_no || null, email,
+            father_name || null, father_mobile_no || null
+          ];
+          connection.query(studentSql, vals, (e2)=>{
+            if (e2){
+              console.error("Student insert error:",e2);
+              return res.status(500).json({success:false});
+            }
+            res.json({success:true});
+          });
         });
-      });
     });
-  } catch (e) {
-    console.error("❌ Unexpected error:", e);
-    res.status(500).json({ success: false });
+  } catch(err){
+    console.error(err);
+    res.status(500).json({success:false});
   }
 });
 
