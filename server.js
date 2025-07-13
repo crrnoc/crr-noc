@@ -334,6 +334,9 @@ app.listen(PORT, () => {
 
 //message route for staff
 app.post('/add-student', async (req, res) => {
+  console.log("🔔 Incoming /add-student request");
+  console.log("📥 Received body:", req.body);
+
   const {
     userId, name, dob, reg_no, unique_id,
     year, course, semester, aadhar_no, mobile_no,
@@ -342,27 +345,40 @@ app.post('/add-student', async (req, res) => {
     counsellor_name, counsellor_mobile
   } = req.body;
 
-  if (!userId || !name || !dob || !reg_no || !unique_id || !year ||
-      !course || !semester || !email || !password || !section ||
-      !counsellor_name || !counsellor_mobile) {
-    return res.status(400).json({ success: false, message: "Missing required fields." });
+  // 🔍 Check missing required fields
+  const requiredFields = {
+    userId, name, dob, reg_no, unique_id,
+    year, course, semester, email, password, section,
+    counsellor_name, counsellor_mobile
+  };
+
+  for (let key in requiredFields) {
+    if (!requiredFields[key]) {
+      console.log(`❌ Missing field: ${key}`);
+      return res.status(400).json({ success: false, message: `Missing field: ${key}` });
+    }
   }
 
   try {
     const checkUserSql = `SELECT * FROM users WHERE userid = ?`;
     connection.query(checkUserSql, [userId], async (err, results) => {
-      if (err) return res.status(500).json({ success: false });
+      if (err) {
+        console.error("❌ DB error during user check:", err);
+        return res.status(500).json({ success: false, message: "DB error" });
+      }
 
       if (results.length > 0) {
+        console.log("⚠️ User already exists:", userId);
         return res.status(400).json({ success: false, message: "User already exists." });
       }
 
       const hashedPassword = await bcrypt.hash(password, 10);
-
       const userSql = `INSERT INTO users (userid, password, role) VALUES (?, ?, 'student')`;
+
       connection.query(userSql, [userId, hashedPassword], (errUser) => {
         if (errUser) {
-          return res.status(500).json({ success: false });
+          console.error("❌ Failed to insert user:", errUser);
+          return res.status(500).json({ success: false, message: "Insert into users failed" });
         }
 
         const studentSql = `
@@ -374,22 +390,27 @@ app.post('/add-student', async (req, res) => {
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
 
-        connection.query(studentSql, [
+        const values = [
           userId, name, dob, reg_no, unique_id, year, course, semester,
           aadhar_no || "", mobile_no || "", email, section,
           father_name || "", father_mobile_no || "",
           counsellor_name, counsellor_mobile
-        ], (errStudent) => {
+        ];
+
+        connection.query(studentSql, values, (errStudent) => {
           if (errStudent) {
-            return res.status(500).json({ success: false });
+            console.error("❌ Failed to insert student:", errStudent);
+            return res.status(500).json({ success: false, message: "Insert into students failed" });
           }
 
-          return res.json({ success: true, message: "✅ Student added successfully!" });
+          console.log("✅ Student added:", userId);
+          return res.json({ success: true, message: "Student added successfully." });
         });
       });
     });
   } catch (err) {
-    return res.status(500).json({ success: false });
+    console.error("❌ Uncaught error:", err);
+    return res.status(500).json({ success: false, message: "Unexpected server error" });
   }
 });
 
