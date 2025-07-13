@@ -334,58 +334,79 @@ app.listen(PORT, () => {
 
 
 //message route for staff
-app.post('/send-notification', (req, res) => {
-  const { userId, message } = req.body;
 
-  if (!userId || !message) {
-    return res.status(400).json({ success: false, message: "Missing userId or message" });
+app.post('/send-bulk-notification', async (req, res) => {
+  let { userIds, message } = req.body;
+
+  console.log("🔥 HIT /send-bulk-notification");
+  console.log("👉 Request Body:", req.body);
+
+  if (typeof userIds === 'string') userIds = [userIds];
+  if (!Array.isArray(userIds) || userIds.length === 0 || !message) {
+    console.log("❌ Invalid input");
+    return res.status(400).json({ success: false, message: "Invalid input" });
   }
 
-  // 1️⃣ Get the email from students table
-  const studentQuery = 'SELECT email, name FROM students WHERE userId = ?';
-  connection.query(studentQuery, [userId], (err, studentResults) => {
-    if (err || studentResults.length === 0) {
-      return res.status(404).json({ success: false, message: "Student not found" });
-    }
+  let sent = 0;
+  let failed = 0;
 
-    const student = studentResults[0];
-    const studentEmail = student.email;
-    const studentName = student.name;
-
-    // 2️⃣ Send email
-    const mailOptions = {
-      from: '"CRR NOC Team" <crrenoccertificate@gmail.com>',
-      to: studentEmail,
-      subject: "📢 Important Notification from CRR NOC Team",
-      html: `
-        <div style="font-family: Arial, sans-serif; padding: 20px;">
-          <h2 style="color: #003366;">Sir C R Reddy College of Engineering</h2>
-          <p>Dear <strong>${studentName}</strong>,</p>
-          <p>${message}</p>
-          <br>
-          <p style="color: #555;">Best regards,<br><strong>CRR NOC Team</strong></p>
-        </div>
-      `
-    };
-
-    transporter.sendMail(mailOptions, (err2) => {
-      if (err2) {
-        console.error("Email sending failed:", err2);
-        return res.status(500).json({ success: false, message: "Failed to send email" });
-      }
-
-      // 3️⃣ Save in notifications table
-      const query = 'INSERT INTO notifications (userId, message) VALUES (?, ?)';
-      connection.query(query, [userId, message], (err3) => {
-        if (err3) {
-          console.error("Notification DB Error:", err3);
-          return res.status(500).json({ success: false, message: "Notification sent but DB error" });
+  for (const userId of userIds) {
+    console.log("📦 Processing userId:", userId);
+    await new Promise(resolve => {
+      const query = 'SELECT email, name FROM students WHERE userId = ?';
+      connection.query(query, [userId], (err, results) => {
+        if (err || results.length === 0) {
+          console.log("❌ Student not found or DB error for:", userId, err);
+          failed++;
+          return resolve();
         }
 
-        res.json({ success: true, message: "✅ Notification sent and email delivered!" });
+        const student = results[0];
+        console.log("✅ Found student:", student.name, "📧", student.email);
+
+        const mailOptions = {
+          from: '"CRR NOC Team" <crrenoccertificate@gmail.com>',
+          to: student.email,
+          subject: "📢 Important Notification from CRR NOC Team",
+          html: `
+            <div style="font-family: Arial, sans-serif; padding: 20px;">
+              <h2 style="color: #003366;">Sir C R Reddy College of Engineering</h2>
+              <p>Dear <strong>${student.name}</strong>,</p>
+              <p>${message}</p>
+              <br>
+              <p style="color: #555;">Best regards,<br><strong>CRR NOC Team</strong></p>
+            </div>
+          `
+        };
+
+        transporter.sendMail(mailOptions, (err2) => {
+          if (err2) {
+            console.log("❌ Email sending failed to:", student.email, "Error:", err2.message);
+          } else {
+            console.log("📧 Email sent to:", student.email);
+          }
+
+          connection.query(
+            'INSERT INTO notifications (userId, message) VALUES (?, ?)',
+            [userId, message],
+            (err3) => {
+              if (err3) {
+                console.log("❌ Notification insert failed for:", userId, err3.message);
+                failed++;
+              } else {
+                console.log("✅ Notification saved for:", userId);
+                sent++;
+              }
+              resolve();
+            }
+          );
+        });
       });
     });
-  });
+  }
+
+  console.log("✅ Summary: Sent =", sent, "Failed =", failed);
+  res.json({ success: true, sent, failed });
 });
 
 // Get notifications for a specific user
