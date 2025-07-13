@@ -1,3 +1,4 @@
+
 require('dotenv').config();
 const express = require('express');
 const mysql = require('mysql2');
@@ -829,8 +830,6 @@ app.get("/fee-status/:userId", (req, res) => {
     });
   });
 });
-
-const bcrypt = require('bcrypt');
 
 app.post('/add-student', async (req, res) => {
   const {
