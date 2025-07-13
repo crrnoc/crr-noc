@@ -333,61 +333,67 @@ app.listen(PORT, () => {
 });
 
 //message route for staff
-/*
-app.post('/send-notification', (req, res) => {
-  const { userId, message } = req.body;
+app.post('/add-student', async (req, res) => {
+  const {
+    userId, name, dob, reg_no, unique_id,
+    year, course, semester, aadhar_no, mobile_no,
+    email, password, section,
+    father_name, father_mobile_no,
+    counsellor_name, counsellor_mobile
+  } = req.body;
 
-  if (!userId || !message) {
-    return res.status(400).json({ success: false, message: "Missing userId or message" });
+  if (!userId || !name || !dob || !reg_no || !unique_id || !year ||
+      !course || !semester || !email || !password || !section ||
+      !counsellor_name || !counsellor_mobile) {
+    return res.status(400).json({ success: false, message: "Missing required fields." });
   }
 
-  // 1️⃣ Get the email from students table
-  const studentQuery = 'SELECT email, name FROM students WHERE userId = ?';
-  connection.query(studentQuery, [userId], (err, studentResults) => {
-    if (err || studentResults.length === 0) {
-      return res.status(404).json({ success: false, message: "Student not found" });
-    }
+  try {
+    const checkUserSql = `SELECT * FROM users WHERE userid = ?`;
+    connection.query(checkUserSql, [userId], async (err, results) => {
+      if (err) return res.status(500).json({ success: false });
 
-    const student = studentResults[0];
-    const studentEmail = student.email;
-    const studentName = student.name;
-
-    // 2️⃣ Send email
-    const mailOptions = {
-      from: '"CRR NOC Team" <crrenoccertificate@gmail.com>',
-      to: studentEmail,
-      subject: "📢 Important Notification from CRR NOC Team",
-      html: `
-        <div style="font-family: Arial, sans-serif; padding: 20px;">
-          <h2 style="color: #003366;">Sir C R Reddy College of Engineering</h2>
-          <p>Dear <strong>${studentName}</strong>,</p>
-          <p>${message}</p>
-          <br>
-          <p style="color: #555;">Best regards,<br><strong>CRR NOC Team</strong></p>
-        </div>
-      `
-    };
-
-    transporter.sendMail(mailOptions, (err2) => {
-      if (err2) {
-        console.error("Email sending failed:", err2);
-        return res.status(500).json({ success: false, message: "Failed to send email" });
+      if (results.length > 0) {
+        return res.status(400).json({ success: false, message: "User already exists." });
       }
 
-      // 3️⃣ Save in notifications table
-      const query = 'INSERT INTO notifications (userId, message) VALUES (?, ?)';
-      connection.query(query, [userId, message], (err3) => {
-        if (err3) {
-          console.error("Notification DB Error:", err3);
-          return res.status(500).json({ success: false, message: "Notification sent but DB error" });
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      const userSql = `INSERT INTO users (userid, password, role) VALUES (?, ?, 'student')`;
+      connection.query(userSql, [userId, hashedPassword], (errUser) => {
+        if (errUser) {
+          return res.status(500).json({ success: false });
         }
 
-        res.json({ success: true, message: "✅ Notification sent and email delivered!" });
+        const studentSql = `
+          INSERT INTO students
+          (userId, name, dob, reg_no, unique_id, year, course, semester,
+           aadhar_no, mobile_no, email, section,
+           father_name, father_mobile_no,
+           counsellor_name, counsellor_mobile)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `;
+
+        connection.query(studentSql, [
+          userId, name, dob, reg_no, unique_id, year, course, semester,
+          aadhar_no || "", mobile_no || "", email, section,
+          father_name || "", father_mobile_no || "",
+          counsellor_name, counsellor_mobile
+        ], (errStudent) => {
+          if (errStudent) {
+            return res.status(500).json({ success: false });
+          }
+
+          return res.json({ success: true, message: "✅ Student added successfully!" });
+        });
       });
     });
-  });
+  } catch (err) {
+    return res.status(500).json({ success: false });
+  }
 });
-*/
+
+/*
 app.post('/send-bulk-notification', async (req, res) => {
   let { userIds, message } = req.body;
 
@@ -461,7 +467,7 @@ app.post('/send-bulk-notification', async (req, res) => {
   console.log("✅ Summary: Sent =", sent, "Failed =", failed);
   res.json({ success: true, sent, failed });
 });
-
+*/
 // Get notifications for a specific user
 app.get('/notifications/:userId', (req, res) => {
   const { userId } = req.params;
