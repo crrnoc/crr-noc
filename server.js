@@ -2487,3 +2487,30 @@ app.get("/verify-noc/manual", (req, res) => {
   html += `</ul><p>This NOC is verified by the system.</p>`;
   res.send(html);
 });
+
+// add councelling students
+app.post("/assign-counselling", async (req, res) => {
+  const { fromReg, toReg, counsellorName, counsellorMobile } = req.body;
+
+  if (!fromReg || !toReg || !counsellorName || !counsellorMobile)
+    return res.status(400).json({ message: "Missing required fields" });
+
+  const query = `
+    UPDATE students
+    SET counsellor_name = ?, counsellor_mobile = ?
+    WHERE reg_no BETWEEN ? AND ?;
+  `;
+
+  connection.query(
+    query,
+    [counsellorName, counsellorMobile, fromReg, toReg],
+    (err, result) => {
+      if (err) {
+        console.error("Error updating students:", err);
+        return res.status(500).json({ message: "Internal server error" });
+      }
+
+      return res.status(200).json({ message: `Updated ${result.affectedRows} students.` });
+    }
+  );
+});
