@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
   <url><loc>https://crr-noc.onrender.com/</loc></url>
   <url><loc>https://crr-noc.onrender.com/addstudent.html</loc></url>
   <url><loc>https://crr-noc.onrender.com/adminpanel.html</loc></url>
@@ -15,7 +16,7 @@
   <url><loc>https://crr-noc.onrender.com/forgotpassword.html</loc></url>
   <url><loc>https://crr-noc.onrender.com/generatenoc.html</loc></url>
   <url><loc>https://crr-noc.onrender.com/google03b82e228dfc6c5e.html</loc></url>
- <url><loc>https://crr-noc.onrender.com/help&amp;feedback.html</loc></url>
+  <url><loc>https://crr-noc.onrender.com/help&amp;feedback.html</loc></url>
   <url><loc>https://crr-noc.onrender.com/imposefines.html</loc></url>
   <url><loc>https://crr-noc.onrender.com/index.html</loc></url>
   <url><loc>https://crr-noc.onrender.com/knowaboutstd1.html</loc></url>
@@ -37,4 +38,5 @@
   <url><loc>https://crr-noc.onrender.com/uploadresultsAd.html</loc></url>
   <url><loc>https://crr-noc.onrender.com/verifybyqr.html</loc></url>
   <url><loc>https://crr-noc.onrender.com/verifyresult.html</loc></url>
+
 </urlset>
