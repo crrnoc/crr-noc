@@ -2258,7 +2258,7 @@ app.get("/student/overallResults/:regno", async (req, res) => {
     res.status(500).json({ sgpa: "0.00", percentage: "0.00" });
   }
 });
-
+//generate results certificate
 app.get("/generate-certificate/:userId", async (req, res) => {
   const { userId } = req.params;
   const semester = req.query.semester;
@@ -2300,7 +2300,7 @@ app.get("/generate-certificate/:userId", async (req, res) => {
     const student = studentRows[0] || {};
 
     const reg = student.reg_no || "";
-    const isJNTUK = /^([0-1][0-9]|23)B8/.test(reg); // ✅ JNTUK only up to 23B8
+    const isJNTUK = /^([0-1][0-9]|23)B8/.test(reg);
 
     if (isJNTUK) {
       const logoPath = path.join(__dirname, "public", "jntuk_logo.png");
@@ -2315,7 +2315,6 @@ app.get("/generate-certificate/:userId", async (req, res) => {
         .text("JAWAHARLAL NEHRU TECHNOLOGICAL UNIVERSITY KAKINADA", 110, 45)
         .text("KAKINADA - 533003, ANDHRA PRADESH, INDIA", 110, 65);
 
-      // 🔲 Decorative black line below header
       doc.moveTo(40, 100).lineTo(555, 100).stroke("#000");
     } else {
       const headerPath = path.join(__dirname, "public", "noc_header.jpg");
@@ -2342,30 +2341,33 @@ app.get("/generate-certificate/:userId", async (req, res) => {
     doc.text("YEAR - SEMESTER :", labelX, lineY);
     doc.text(semester.toUpperCase(), valueX, lineY);
 
+    // ✅ Cloudinary photo fix
     const photo_url = student.photo_url;
     if (photo_url) {
       try {
-        const photoRes = await axios.get(photo_url, { responseType: "arraybuffer" });
+        const photoRes = await axios.get(photo_url, {
+          responseType: "arraybuffer",
+          headers: { "User-Agent": "Mozilla/5.0" } // important for Render + Cloudinary
+        });
         doc.image(photoRes.data, 400, startY, { fit: [100, 120] });
-      } catch {
+      } catch (err) {
+        console.error("⚠️ Photo fetch failed:", err.message);
         doc.rect(400, startY, 100, 120).stroke();
       }
     } else {
       doc.rect(400, startY, 100, 120).stroke();
     }
 
-    // 👉 Results Table
     doc.y = lineY + 60;
     const tableTop = doc.y;
     const rowHeight = 30;
     const colX = [40, 80, 180, 400, 460];
     const colWidths = [40, 100, 220, 60, 60];
 
-    // 🖼️ Watermark Logo
     const watermarkPath = path.join(__dirname, "public", "jntuk_logo.png");
     if (fs.existsSync(watermarkPath)) {
       doc.opacity(0.1).image(watermarkPath, 160, tableTop + 60, { width: 250 });
-      doc.opacity(1); // Reset opacity
+      doc.opacity(1);
     }
 
     doc.font("Helvetica-Bold").fontSize(9);
@@ -2374,7 +2376,6 @@ app.get("/generate-certificate/:userId", async (req, res) => {
       doc.text(text, colX[i] + 2, tableTop + 8, { width: colWidths[i] - 4, align: "center" });
     });
 
-    // Rows
     doc.font("Helvetica").fontSize(9);
     let totalCredits = 0, weightedSum = 0;
     results.forEach((row, i) => {
@@ -2394,7 +2395,6 @@ app.get("/generate-certificate/:userId", async (req, res) => {
       });
     });
 
-    // ✅ SGPA
     const calculatedSGPA = totalCredits > 0 ? (weightedSum / totalCredits).toFixed(2) : "N/A";
     const finalTableY = tableTop + rowHeight * (results.length + 1);
     doc.font("Helvetica-Bold").fontSize(10);
@@ -2403,22 +2403,18 @@ app.get("/generate-certificate/:userId", async (req, res) => {
       align: "center"
     });
 
-    // ✅ Grading Legend
     doc.font("Helvetica").fontSize(7).fillColor("black");
     doc.text("> CP: COMPLETED   NCP: NOT-COMPLETED   MP: Malpractice   WH: Withheld   P: Pass   F: Fail   AB: Absent", 40, finalTableY + 50);
 
-    // ✅ QR Code
     const qrText = `https://crr-noc.onrender.com/verify-result?regno=${userId}&sem=${semester}`;
     const qrDataURL = await QRCode.toDataURL(qrText);
     const qrBuffer = Buffer.from(qrDataURL.split(",")[1], "base64");
     doc.image(qrBuffer, 440, 670, { width: 80 });
 
-    // ✅ Signatures
     doc.font("Helvetica").fontSize(10);
     doc.text("Controller of Examinations", 40, 740);
     doc.text("Principal", 320, 740);
 
-    // ✅ Date
     const date = new Date().toLocaleDateString("en-GB").replace(/\//g, "-");
     doc.fontSize(6).text(`ISSUED DATE: ${date}`, 440, 790, { align: "right", width: 100 });
 
@@ -2430,7 +2426,6 @@ app.get("/generate-certificate/:userId", async (req, res) => {
     doc.end();
   }
 });
-
 
 //admin create noc 
 app.post('/admin/manual-create-noc', (req, res) => {
