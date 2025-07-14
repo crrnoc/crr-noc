@@ -247,7 +247,7 @@
       <input type="text" id="modalMobileInput" style="width:100%; margin-bottom: 20px;" maxlength="10" pattern="\d{10}" />
 
       <!-- ✅ Save button -->
-      <button onclick="saveFatherDetails()" style="background: #28a745; color: white; border: none; padding: 8px 16px; border-radius: 5px; margin-bottom: 20px; cursor: pointer;">💾 Save Changes</button>
+      <button onclick="saveFatherDetails()" style="background: #28a745; color: white; border: none; padding: 8px 16px; border-radius: 5px; margin-bottom: 20px; cursor: pointer;"> Save Changes</button>
 
       <div style="margin: 20px 0;">
         <button onclick="showTab('attendance')" id="btnAttendance"
@@ -289,7 +289,7 @@
   const role = localStorage.getItem("role");
   document.getElementById("userId").textContent = userId || "Unknown";
 
-  let currentStudent = null; // 🆕 for tracking selected student
+  let currentStudent = null; // 🆕 For tracking current modal student
 
   if (!userId || role !== "staff") {
     Swal.fire({
@@ -333,10 +333,10 @@
   }
 
   function openModal(student) {
-    currentStudent = student; // 🆕 set current student
+    currentStudent = student; // 🆕 Set current student
     document.getElementById("modalName").textContent = student.name;
 
-    // 🆕 Set input values instead of plain text
+    // 🆕 Set editable input values
     document.getElementById("modalFatherInput").value = student.father_name || "";
     document.getElementById("modalMobileInput").value = student.father_mobile || "";
 
@@ -458,12 +458,12 @@
     const out = await (res?.json() ?? { success: false, message: "Server error" });
 
     Swal.fire(out.success ? "✅ Updated" : "❌ Failed", out.message, out.success ? "success" : "error");
+
     if (out.success) {
       currentStudent.father_name = father_name;
       currentStudent.father_mobile = father_mobile;
     }
   }
 </script>
-
 </body>
 </html>
