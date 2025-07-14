@@ -1642,19 +1642,34 @@ app.post('/admin/search-student-sbi', (req, res) => {
 
 app.post('/admin/search-noc-status', (req, res) => {
   const { query } = req.body;
-  if (!query) return res.status(400).json({ success: false, message: "No query provided" });
+
+  if (!query) {
+    return res.status(400).json({ success: false, message: "No query provided" });
+  }
 
   const searchTerm = `%${query}%`;
 
   const sql = `
-    SELECT userId, eligible
-    FROM students
-    WHERE userId LIKE ? OR name LIKE ?
+    SELECT s.userId, s.name,
+      CASE
+        WHEN (
+          SELECT COUNT(*) FROM student_fee_structure fs
+          WHERE fs.reg_no = s.userId
+          AND fs.total_fee > (
+            SELECT COALESCE(SUM(p.amount_paid), 0)
+            FROM student_fee_payments p
+            WHERE p.userId = s.userId AND p.matched = 1
+          )
+        ) = 0
+        THEN 1 ELSE 0
+      END AS eligible
+    FROM students s
+    WHERE s.userId LIKE ? OR s.name LIKE ?
   `;
 
   db.query(sql, [searchTerm, searchTerm], (err, results) => {
     if (err) {
-      console.error("NOC Search Error:", err);
+      console.error("❌ Error in NOC search route:", err);
       return res.status(500).json({ success: false, message: "Internal server error" });
     }
 
