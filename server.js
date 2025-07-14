@@ -432,16 +432,6 @@ app.get('/notifications/:userId', (req, res) => {
   });
 });
 
-cron.schedule('0 2 */3 * *', () => {
-  const query = 'DELETE FROM notifications WHERE date_sent < NOW() - INTERVAL 3 DAY';
-  connection.query(query, (err, result) => {
-    if (err) {
-      console.error('❌ Failed to delete old notifications:', err);
-    } else {
-      console.log(`✅ Deleted ${result.affectedRows} old notifications.`);
-    }
-  });
-});
 //fine impose
 // POST: Impose Fine and send notification
 app.post('/impose-fine', (req, res) => {
