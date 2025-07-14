@@ -357,6 +357,14 @@
 
       <label>Email</label>
       <input type="email" name="email" required />
+      <label>Admission Type</label>
+     <select name="admission_type" required>
+     <option value="">Select</option>
+     <option value="Counselling">Counselling</option>
+     <option value="Management">Management</option>
+     <option value="Spot">Spot</option>
+     </select>
+
 
       <label>Password</label>
       <input type="password" name="password" required />
@@ -406,6 +414,13 @@
 
       <label>Counsellor Mobile</label>
       <input type="text" name="counsellor_mobile" maxlength="10" pattern="\d{10}" required />
+    <label>Admission Type</label>
+<select name="admission_type" required>
+  <option value="">Select</option>
+  <option value="Counselling">Counselling</option>
+  <option value="Management">Management</option>
+  <option value="Spot">Spot</option>
+</select>
 
       <button type="submit">Add Bulk Students</button>
     </form>
@@ -521,19 +536,21 @@ document.getElementById("bulkForm").addEventListener("submit", async e => {
 
     for (let i = startNum; i <= endNum; i++) {
       const roll = prefix + String(i).padStart(3, "0");
-      students.push({
-        userId: roll,
-        reg_no: roll,
-        unique_id: roll,
-        year: data.year,
-        course: course,
-        semester: data.semester,
-        section: section,
-        counsellor_name: counsellor_name,
-        counsellor_mobile: counsellor_mobile,
-        password: roll,
-        email: ""
-      });
+students.push({
+  userId: roll,
+  reg_no: roll,
+  unique_id: roll,
+  year: data.year,
+  course: course,
+  semester: data.semester,
+  section: section,
+  counsellor_name: counsellor_name,
+  counsellor_mobile: counsellor_mobile,
+  admission_type: data.admission_type, // ✅ ADD THIS LINE
+  password: roll,
+  email: ""
+});
+
     }
   }
 
