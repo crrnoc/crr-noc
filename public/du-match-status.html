@@ -167,22 +167,22 @@ function searchDU() {
     body: JSON.stringify({ query })
   })
     .then(res => res.json())
-    .then(data => {
-      const tbody = document.querySelector("#matchTable tbody");
-      if (data.success && data.data.length) {
-        tbody.innerHTML = data.data.map(row => `
-          <tr>
-            <td>${row.userId}</td>
-            <td>${row.fee_type || '-'}</td>
-            <td>${row.reference_no || '-'}</td>
-            <td>${row.matched ? '✅' : '❌'}</td>
-            <td>${row.date || '-'}</td>
-          </tr>
-        `).join("");
-      } else {
-        tbody.innerHTML = `<tr><td colspan="5">No matching records found.</td></tr>`;
-      }
-    })
+  .then(data => {
+  const tbody = document.querySelector("#matchTable tbody");
+  if (data.success && data.data.length) {
+    tbody.innerHTML = data.data.map(row => `
+      <tr>
+        <td>${row.userId}</td>
+        <td>${row.fee_type || '-'}</td>
+        <td>${row.sbi_ref_no || '-'}</td>
+        <td>${row.matched ? '✅' : '❌'}</td>
+        <td>${row.matched_on || '-'}</td>
+      </tr>
+    `).join("");
+  } else {
+    tbody.innerHTML = `<tr><td colspan="5">No matching records found.</td></tr>`;
+  }
+})
     .catch(() => alert("Search failed."));
 }
 
