@@ -209,6 +209,60 @@
     </div>
   </div>
 
+  <!-- 📦 Student Detail Modal -->
+<div id="studentModal" style="display: none;">
+  <div id="modalOverlay" style="
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.6); z-index: 1000;
+    display: flex; justify-content: center; align-items: center;
+  ">
+    <div style="
+      background: white; border-radius: 15px; padding: 30px;
+      width: 90%; max-width: 700px; max-height: 90vh;
+      overflow-y: auto; position: relative;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+      animation: fadeIn 0.3s ease;
+    ">
+
+      <!-- ✨ Modal Header -->
+      <h2 id="modalName" style="margin-bottom: 10px;">Student Name</h2>
+      <p id="modalFather">Father: </p>
+      <p id="modalMobile">Mobile: </p>
+
+      <!-- 🧭 Tabs -->
+      <div style="margin: 20px 0;">
+        <button onclick="showTab('attendance')" id="btnAttendance"
+          style="margin-right:10px; padding: 8px 16px; border-radius: 8px; border: none; background-color: #f0f0f0; cursor: pointer;">
+          📊 Attendance
+        </button>
+        <button onclick="showTab('results')" id="btnResults"
+          style="padding: 8px 16px; border-radius: 8px; border: none; background-color: #f0f0f0; cursor: pointer;">
+          📚 Results
+        </button>
+      </div>
+
+      <!-- 📊 Attendance Tab -->
+      <div id="attendanceTab" style="display: none;">
+        <h3>Attendance Details</h3>
+        <div id="attendanceContent"></div>
+      </div>
+
+      <!-- 📚 Results Tab -->
+      <div id="resultsTab" style="display: none;">
+        <h3>Results Overview</h3>
+        <div id="resultsContent"></div>
+      </div>
+
+      <!-- ❌ Close Button -->
+      <button onclick="closeModal()" style="
+        position: absolute; top: 10px; right: 20px;
+        background: #f00; color: #fff;
+        border: none; padding: 6px 10px;
+        border-radius: 5px; font-weight: bold; cursor: pointer;">✖</button>
+    </div>
+  </div>
+</div>
+
   <!-- 📱 Mobile Toggle -->
   <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
 
@@ -240,6 +294,7 @@
               const card = document.createElement("div");
               card.className = "student-card";
               card.innerHTML = `
+              
                 <h3>${std.name}</h3>
                 <p><strong>Reg No:</strong> ${std.reg_no}</p>
                 <p><strong>Course:</strong> ${std.course}</p>
@@ -248,6 +303,7 @@
                 <p><strong>Email:</strong> ${std.email}</p>
                 <p><strong>Mobile:</strong> ${std.mobile_no}</p>
               `;
+               card.onclick = () => openModal(std); // ✅ This line should be outside the innerHTML
               container.appendChild(card);
             });
           } else {
@@ -259,6 +315,93 @@
           Swal.fire("Error", "Failed to fetch student data.", "error");
         });
     }
+     function openModal(student) {
+  // Set name, father info
+  document.getElementById("modalName").textContent = student.name;
+  document.getElementById("modalFather").textContent = `Father: ${student.father_name || "N/A"}`;
+  document.getElementById("modalMobile").textContent = `Father Mobile: ${student.father_mobile || "N/A"}`;
+
+  // Show modal
+  document.getElementById("studentModal").style.display = "block";
+
+  // Default to attendance tab
+  showTab("attendance");
+
+  // 📊 Fetch Attendance
+  fetch(`/student-attendance/${student.reg_no}`)
+    .then(res => res.json())
+    .then(data => {
+      if (data.success && data.data.length > 0) {
+        const rows = data.data.map(row => `
+          <tr>
+            <td>${row.semester}</td>
+            <td>${row.total_classes}</td>
+            <td>${row.attended_classes}</td>
+            <td>${row.percentage}%</td>
+          </tr>`).join("");
+        document.getElementById("attendanceContent").innerHTML = `
+          <table style="width:100%; border-collapse: collapse; margin-top: 10px;">
+            <tr style="background:#eee;">
+              <th>Semester</th>
+              <th>Total</th>
+              <th>Attended</th>
+              <th>%</th>
+            </tr>
+            ${rows}
+          </table>
+        `;
+      } else {
+        document.getElementById("attendanceContent").innerHTML = "No attendance data available.";
+      }
+    });
+
+  // 📚 Fetch Results (all sems)
+  fetch(`/student/results/${student.reg_no}`)
+    .then(res => res.json())
+    .then(data => {
+      if (data.results && data.results.length > 0) {
+        const subjectRows = data.results.map(r => `
+          <tr>
+            <td>${r.subcode}</td>
+            <td>${r.subname}</td>
+            <td>${r.grade}</td>
+            <td>${r.credits}</td>
+          </tr>`).join("");
+
+        document.getElementById("resultsContent").innerHTML = `
+          <table style="width:100%; border-collapse: collapse; margin-top: 10px;">
+            <tr style="background:#eee;">
+              <th>Sub Code</th>
+              <th>Subject</th>
+              <th>Grade</th>
+              <th>Credits</th>
+            </tr>
+            ${subjectRows}
+          </table>
+          <div style="margin-top: 10px;">
+            <p><strong>SGPA:</strong> ${data.sgpa}</p>
+            <p><strong>CGPA:</strong> ${data.cgpa}</p>
+            <p><strong>Percentage:</strong> ${data.percentage}%</p>
+          </div>
+        `;
+      } else {
+        document.getElementById("resultsContent").innerHTML = "No result data available.";
+      }
+    });
+}
+
+function closeModal() {
+  document.getElementById("studentModal").style.display = "none";
+}
+
+function showTab(tabName) {
+  document.getElementById("attendanceTab").style.display = tabName === "attendance" ? "block" : "none";
+  document.getElementById("resultsTab").style.display = tabName === "results" ? "block" : "none";
+
+  // optional: highlight active button
+  document.getElementById("btnAttendance").style.backgroundColor = tabName === "attendance" ? "#ddd" : "#f0f0f0";
+  document.getElementById("btnResults").style.backgroundColor = tabName === "results" ? "#ddd" : "#f0f0f0";
+}
 
     function logout() {
       localStorage.clear();
