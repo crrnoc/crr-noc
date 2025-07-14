@@ -716,6 +716,8 @@ app.get('/noc-eligibility/:userId', (req, res) => {
     });
   });
 });
+
+
 app.post('/admin/upload-sbi', upload.single('sbiFile'), (req, res) => {
   const filePath = path.join(__dirname, req.file.path);
   const csv = require('csv-parser');
@@ -741,10 +743,11 @@ app.post('/admin/upload-sbi', upload.single('sbiFile'), (req, res) => {
         return res.status(400).json({ success: false, message: '❌ No valid COMPLETED entries found.' });
       }
 
-      // Step 1: Insert into sbi_uploaded_references
+      // STEP 1: Insert or update (if already exists) — prevents duplicate insert crash
       const insertQuery = `
         INSERT INTO sbi_uploaded_references (sbi_ref_no, amount, unique_id)
         VALUES ?
+        ON DUPLICATE KEY UPDATE amount = VALUES(amount), unique_id = VALUES(unique_id)
       `;
 
       connection.query(insertQuery, [results], (err) => {
@@ -753,7 +756,7 @@ app.post('/admin/upload-sbi', upload.single('sbiFile'), (req, res) => {
           return res.status(500).json({ success: false, message: 'Upload failed.' });
         }
 
-        // Step 2: Match with student_fee_payments + uniqueId from students table
+        // STEP 2: Match both new & existing SBI entries with student_fee_payments
         const matchQuery = `
           UPDATE student_fee_payments p
           JOIN students s ON p.userId = s.userId
@@ -771,11 +774,12 @@ app.post('/admin/upload-sbi', upload.single('sbiFile'), (req, res) => {
             return res.status(500).json({ success: false, message: 'Matching failed.' });
           }
 
-          res.json({ success: true, message: `✅ SBI file uploaded. ${result.affectedRows} entries matched successfully.` });
+          res.json({ success: true, message: `✅ SBI file uploaded. ${result.affectedRows} entries matched.` });
         });
       });
     });
 });
+
 
 
 app.get('/admin/matches', (req, res) => {
