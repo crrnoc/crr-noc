@@ -938,7 +938,7 @@ app.post("/add-student", async (req, res) => {
     email = "", password, section,
     father_name, father_mobile_no,
     counsellor_name, counsellor_mobile,
-    admission_type                    // ✅ new field
+    admission_type // ✅ already added
   } = req.body;
 
   // ✅ Required fields for validation
@@ -955,6 +955,15 @@ app.post("/add-student", async (req, res) => {
   }
 
   try {
+    // ✅ Capitalize helper
+    const capitalize = (s) =>
+      (s || "").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+
+    const studentName = capitalize(name);
+    const fatherName = capitalize(father_name);
+    const counsellorName = capitalize(counsellor_name);
+    const sectionUpper = (section || "").toUpperCase();
+
     // ✅ Check if user already exists
     connection.query("SELECT 1 FROM users WHERE userid = ?", [userId], async (e, r) => {
       if (e) return res.status(500).json({ success: false });
@@ -980,11 +989,11 @@ app.post("/add-student", async (req, res) => {
           `;
 
           const vals = [
-            userId, reg_no, unique_id, year, course, semester, section,
-            counsellor_name, counsellor_mobile,
-            name || null, dob || null, aadhar_no || null, mobile_no || null, email,
-            father_name || null, father_mobile_no || null,
-            admission_type || null    // ✅ included
+            userId, reg_no, unique_id, year, course, semester, sectionUpper,
+            counsellorName, counsellor_mobile,
+            studentName || null, dob || null, aadhar_no || null, mobile_no || null, email,
+            fatherName || null, father_mobile_no || null,
+            admission_type || null
           ];
 
           connection.query(studentSql, vals, (e2) => {
@@ -1002,8 +1011,6 @@ app.post("/add-student", async (req, res) => {
     res.status(500).json({ success: false });
   }
 });
-
-
 
 //logic for the fee upadate by staff
 // ✅ Staff updates fee structure for a student by reg_no
