@@ -1640,6 +1640,28 @@ app.post('/admin/search-student-sbi', (req, res) => {
   });
 });
 
+app.post('/admin/search-noc-status', (req, res) => {
+  const { query } = req.body;
+  if (!query) return res.status(400).json({ success: false, message: "No query provided" });
+
+  const searchTerm = `%${query}%`;
+
+  const sql = `
+    SELECT userId, eligible
+    FROM students
+    WHERE userId LIKE ? OR name LIKE ?
+  `;
+
+  db.query(sql, [searchTerm, searchTerm], (err, results) => {
+    if (err) {
+      console.error("NOC Search Error:", err);
+      return res.status(500).json({ success: false, message: "Internal server error" });
+    }
+
+    return res.json({ success: true, data: results });
+  });
+});
+
 
 // ✅ Year-wise full fee breakdown (structure + paid + fines)
 app.get('/yearwise-fee/:userId', (req, res) => {
