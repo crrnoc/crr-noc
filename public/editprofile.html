@@ -291,37 +291,10 @@
         <div class="form-row"><label>Name</label><input type="text" id="name" disabled></div>
         <div class="form-row"><label>DOB</label><input type="date" id="dob" disabled></div>
         <div class="form-row half">
-<div class="form-row half">
-  <div>
-    <label>Year</label>
-    <select id="year" disabled>
-      <option value="">Select Year</option>
-      <option value="1">1</option>
-      <option value="2">2</option>
-      <option value="3">3</option>
-      <option value="4">4</option>
-    </select>
-  </div>
-  <div>
-    <label>Course</label>
-    <input type="text" id="course" disabled>
-  </div>
-</div>
-
-<div class="form-row">
-  <label>Semester</label>
-  <select id="semester" disabled>
-    <option value="">Select Semester</option>
-    <option value="1-1">1-1</option>
-    <option value="1-2">1-2</option>
-    <option value="2-1">2-1</option>
-    <option value="2-2">2-2</option>
-    <option value="3-1">3-1</option>
-    <option value="3-2">3-2</option>
-    <option value="4-1">4-1</option>
-    <option value="4-2">4-2</option>
-  </select>
-</div>
+          <div><label>Year</label><input type="text" id="year" disabled></div>
+          <div><label>Course</label><input type="text" id="course" disabled></div>
+        </div>
+        <div class="form-row"><label>Semester</label><input type="text" id="semester" disabled></div>
         <div class="form-row"><label>Unique ID</label><input type="text" id="uniqueId" disabled></div>
         <div class="form-row"><label>Aadhar No</label><input type="text" id="aadhar" disabled></div>
         <div class="form-row"><label>Mobile No</label><input type="text" id="mobile" disabled></div>
@@ -369,8 +342,9 @@
 
   function setInputsDisabled(state) {
     inputs.forEach(input => {
-      if (["course", "uniqueId"].includes(input.id)) return;
-      input.disabled = state;
+      if (input.id !== "uniqueId" && input.id !== "course") {
+        input.disabled = state;
+      }
     });
   }
 
@@ -382,7 +356,10 @@
     if (!dateStr) return "";
     const date = new Date(dateStr);
     if (isNaN(date)) return "";
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
   }
 
   async function loadUserData() {
@@ -391,11 +368,11 @@
       const data = await res.json();
 
       form.uniqueId.value = data.uniqueId || "";
-      form.name.value = data.name || "";
+      form.name.value = (data.name || "").toUpperCase();
       form.dob.value = formatDateToInput(data.dob);
-      form.year.value = data.year || "1";
+      form.year.value = data.year || "";
       form.course.value = data.course || "";
-      form.semester.value = data.semester || "1-1";
+      form.semester.value = data.semester || "";
       form.aadhar.value = data.aadhar_no || "";
       form.mobile.value = data.mobile_no || "";
       form.email.value = data.email || "";
@@ -415,30 +392,7 @@
     }
   }
 
-  window.onload = () => {
-    // Replace year and semester inputs with dropdowns
-    form.year.outerHTML = `
-      <select id="year" disabled>
-        <option value="1">1</option>
-        <option value="2">2</option>
-        <option value="3">3</option>
-        <option value="4">4</option>
-      </select>`;
-    
-    form.semester.outerHTML = `
-      <select id="semester" disabled>
-        <option value="1-1">1-1</option>
-        <option value="1-2">1-2</option>
-        <option value="2-1">2-1</option>
-        <option value="2-2">2-2</option>
-        <option value="3-1">3-1</option>
-        <option value="3-2">3-2</option>
-        <option value="4-1">4-1</option>
-        <option value="4-2">4-2</option>
-      </select>`;
-    
-    loadUserData();
-  };
+  window.onload = loadUserData;
 
   updateBtn.addEventListener("click", () => {
     setInputsDisabled(false);
@@ -466,7 +420,7 @@
     const file = this.files[0];
     if (file) {
       if (file.size < 50 * 1024 || file.size > 90 * 1024) {
-        Swal.fire("⚠️ Image size error", "Upload an image between 50KB and 90KB.", "warning");
+        Swal.fire("⚠️ Image size error", "Please upload an image between 50KB and 90KB.", "warning");
         this.value = "";
         photoPreview.style.display = "none";
         return;
@@ -483,88 +437,81 @@
     }
   });
 
-  form.addEventListener("submit", async e => {
+  form.name.addEventListener("input", () => {
+    form.name.value = form.name.value.replace(/[^a-zA-Z ]/g, "").toUpperCase();
+  });
+
+  form.aadhar.addEventListener("input", () => {
+    form.aadhar.value = form.aadhar.value.replace(/\D/g, "").slice(0, 12);
+  });
+
+  form.mobile.addEventListener("input", () => {
+    form.mobile.value = form.mobile.value.replace(/\D/g, "").slice(0, 10);
+  });
+
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    // Fetch values
-    const name = form.name.value.trim().toUpperCase();
-    const dob = form.dob.value;
-    const year = document.getElementById("year").value;
-    const semester = document.getElementById("semester").value;
-    const aadhar = form.aadhar.value.trim();
-    const mobile = form.mobile.value.trim();
-    const email = form.email.value.trim();
-    const uniqueId = form.uniqueId.value.trim();
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    // Validations
-    if (!/^[A-Z ]+$/.test(name)) {
-      Swal.fire("Invalid Name", "Only uppercase alphabets and spaces allowed.", "error");
-      return;
+    if (!form.name.value || !form.dob.value || !form.year.value || !form.semester.value || !form.aadhar.value || !form.mobile.value || !form.email.value) {
+      return Swal.fire("❗ Fill all fields", "All fields are required.", "warning");
     }
 
-    if (!dob || isNaN(new Date(dob))) {
-      Swal.fire("Invalid DOB", "Please enter a valid date of birth.", "error");
-      return;
+    if (form.uniqueId.value.length !== 16) {
+      return Swal.fire("❗ Invalid Unique ID", "Unique ID must be 16 characters.", "error");
     }
 
-    if (!["1", "2", "3", "4"].includes(year)) {
-      Swal.fire("Invalid Year", "Please select a valid year.", "error");
-      return;
+    if (form.aadhar.value.length !== 12) {
+      return Swal.fire("❗ Invalid Aadhar", "Aadhar number must be 12 digits.", "error");
     }
 
-    if (!/^[1-4]-[1-2]$/.test(semester)) {
-      Swal.fire("Invalid Semester", "Please select a valid semester like 1-1, 2-2 etc.", "error");
-      return;
+    if (form.mobile.value.length !== 10) {
+      return Swal.fire("❗ Invalid Mobile", "Mobile number must be 10 digits.", "error");
     }
 
-    if (!/^\d{16}$/.test(uniqueId)) {
-      Swal.fire("Invalid Unique ID", "Must be exactly 16 digits.", "error");
-      return;
-    }
-
-    if (!/^\d{12}$/.test(aadhar)) {
-      Swal.fire("Invalid Aadhar", "Aadhar must be exactly 12 digits.", "error");
-      return;
-    }
-
-    if (!/^\d{10}$/.test(mobile)) {
-      Swal.fire("Invalid Mobile Number", "Must be 10 digits only.", "error");
-      return;
-    }
-
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      Swal.fire("Invalid Email", "Please enter a valid email address.", "error");
-      return;
-    }
+const email = form.email.value.trim();
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+if (!emailPattern.test(email) || !email.includes("@") || !email.endsWith(".com")) {
+  return Swal.fire("❗ Invalid Email", "Please enter a valid email ending with .com", "error");
+}
 
     const file = photoInput.files[0];
     const formData = new FormData();
+
     formData.append("userId", userId);
-    formData.append("uniqueId", uniqueId);
-    formData.append("name", name);
-    formData.append("dob", dob);
-    formData.append("year", year);
+    formData.append("uniqueId", form.uniqueId.value);
+    formData.append("name", form.name.value);
+    formData.append("dob", form.dob.value);
+    formData.append("year", form.year.value);
     formData.append("course", form.course.value);
-    formData.append("semester", semester);
-    formData.append("aadhar", aadhar);
-    formData.append("mobile", mobile);
-    formData.append("email", email);
-    if (file) formData.append("photo", file);
+    formData.append("semester", form.semester.value);
+    formData.append("aadhar", form.aadhar.value);
+    formData.append("mobile", form.mobile.value);
+    formData.append("email", form.email.value);
+
+    if (file) {
+      formData.append("photo", file);
+    }
 
     try {
       const res = await fetch("https://crr-noc.onrender.com/editprofile", {
         method: "POST",
         body: formData
       });
+
       const contentType = res.headers.get("content-type");
-      const data = contentType && contentType.includes("application/json") ? await res.json() : { message: "Updated!" };
+      let data = { message: "Profile updated!" };
+      if (contentType && contentType.includes("application/json")) {
+        data = await res.json();
+      }
 
       if (!res.ok) throw new Error(data.message || "Update failed");
 
       Swal.fire({
         icon: "success",
         title: "Profile Updated",
-        text: data.message,
+        text: data.message || "Your profile was successfully updated.",
         timer: 2000,
         showConfirmButton: false
       });
@@ -573,14 +520,15 @@
       photoPreview.src = "";
       photoPreview.style.display = "none";
       await loadUserData();
-
     } catch (err) {
       console.error("❌ Upload failed:", err);
-      Swal.fire("⚠️ Warning", err.message || "Something went wrong.", "warning");
+      Swal.fire("⚠️ Warning", err.message || "Something went wrong while updating.", "warning");
     }
   });
 
-  document.querySelector(".cancel-btn").addEventListener("click", loadUserData);
+  document.querySelector(".cancel-btn").addEventListener("click", () => {
+    loadUserData();
+  });
 
   function logout() {
     localStorage.removeItem("userId");
@@ -589,7 +537,6 @@
     }
     window.location.replace("index.html");
   }
-  
-</script>
+</script>  
 </body>
-</html>
+</html> 
