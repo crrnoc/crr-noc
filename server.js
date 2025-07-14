@@ -2705,3 +2705,30 @@ app.get("/my-counselling-students/:staffId", (req, res) => {
     res.json({ success: true, students: results });
   });
 });
+//update father details
+app.post("/update-father-details", (req, res) => {
+  const { reg_no, father_name, father_mobile } = req.body;
+
+  if (!reg_no || !father_name || !father_mobile) {
+    return res.status(400).json({ success: false, message: "Missing required fields" });
+  }
+
+  const query = `
+    UPDATE students
+    SET father_name = ?, father_mobile = ?
+    WHERE reg_no = ?
+  `;
+
+  connection.query(query, [father_name, father_mobile, reg_no], (err, result) => {
+    if (err) {
+      console.error("❌ Error updating father details:", err);
+      return res.status(500).json({ success: false, message: "Database error" });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, message: "Student not found" });
+    }
+
+    res.json({ success: true, message: "Father details updated successfully" });
+  });
+});
