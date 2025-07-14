@@ -551,56 +551,71 @@ app.get('/paid-amounts/:userId', (req, res) => {
 });
 
 //reference number submission
-app.post("/submit-du", (req, res) => {
+app.post("/submit-du", async (req, res) => {
   const { userId, payments, academic_year } = req.body;
 
   if (!userId || !Array.isArray(payments) || !academic_year) {
     return res.status(400).json({ success: false, message: "Invalid data" });
   }
 
-  const values = [];
-  const checkMatches = [];
-
-  for (const p of payments) {
-    const du = p.du?.trim();
-    const amt = parseFloat(p.amount);
-    const feeType = p.type;
-
-    // 🧠 Push with academic_year & dummy matched (0 by default)
-    values.push([userId, feeType, du, amt, academic_year, 0]);
-
-    // Check match against SBI data
-    checkMatches.push(
-      new Promise(resolve => {
-        connection.query(
-          "SELECT * FROM sbi_uploaded_references WHERE sbi_ref_no = ? AND amount = ?",
-          [du, amt],
-          (err, results) => {
-            if (err) return resolve([du, false]);
-            resolve([du, results.length > 0]);
-          }
-        );
-      })
+  try {
+    // 🔎 Fetch unique_id using userId
+    const [studentRows] = await connection.promise().query(
+      "SELECT unique_id FROM students WHERE userId = ?",
+      [userId]
     );
-  }
 
-  Promise.all(checkMatches).then(matchResults => {
+    if (studentRows.length === 0) {
+      return res.status(404).json({ success: false, message: "Student not found" });
+    }
+
+    const unique_id = studentRows[0].unique_id;
+
+    const values = [];
+    const checkMatches = [];
+
+    for (const p of payments) {
+      const du = p.du?.trim();
+      const amt = parseFloat(p.amount);
+      const feeType = p.type;
+
+      // Prepare values (now includes unique_id)
+      values.push([userId, unique_id, feeType, du, amt, academic_year, 0]);
+
+      // Check match against SBI uploaded refs
+      checkMatches.push(
+        new Promise(resolve => {
+          connection.query(
+            "SELECT * FROM sbi_uploaded_references WHERE sbi_ref_no = ? AND amount = ?",
+            [du, amt],
+            (err, results) => {
+              if (err) return resolve([du, false]);
+              resolve([du, results.length > 0]);
+            }
+          );
+        })
+      );
+    }
+
+    const matchResults = await Promise.all(checkMatches);
     const matchMap = Object.fromEntries(matchResults);
 
-    // ✅ Replace matched=0 with actual match result
-    const finalValues = values.map(([userId, type, du, amt, year, matched]) => {
+    // Final values with matched status
+    const finalValues = values.map(([userId, unique_id, type, du, amt, year, matched]) => {
       const isMatched = matchMap[du] ? 1 : 0;
-      return [userId, type, du, amt, year, isMatched];
+      return [userId, unique_id, type, du, amt, year, isMatched];
     });
 
+    // 💾 Insert into DB including unique_id
     const sql = `
-      INSERT INTO student_fee_payments (userId, fee_type, sbi_ref_no, amount_paid, academic_year, matched)
+      INSERT INTO student_fee_payments (userId, unique_id, fee_type, sbi_ref_no, amount_paid, academic_year, matched)
       VALUES ?
       ON DUPLICATE KEY UPDATE
         sbi_ref_no = VALUES(sbi_ref_no),
         amount_paid = VALUES(amount_paid),
         matched = VALUES(matched),
         academic_year = VALUES(academic_year),
+        unique_id = VALUES(unique_id),
         matched_on = IF(matched = 0 AND VALUES(matched) = 1, NOW(), matched_on)
     `;
 
@@ -612,8 +627,13 @@ app.post("/submit-du", (req, res) => {
 
       res.json({ success: true, message: "✅ DU entries verified and stored successfully." });
     });
-  });
+
+  } catch (err) {
+    console.error("❌ Error in submit-du:", err);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
 });
+
 //fee structure
 app.get("/fee-structure/:reg_no", (req, res) => {
   const reg_no = req.params.reg_no;
