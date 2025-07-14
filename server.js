@@ -2550,14 +2550,22 @@ app.post("/assign-counselling", async (req, res) => {
 app.get("/my-counselling-students/:staffId", (req, res) => {
   const { staffId } = req.params;
 
-  const sql = `
-    SELECT name, reg_no, course, year, section, email, mobile_no
+  const query = `
+    SELECT 
+      name,
+      reg_no,
+      email,
+      course,
+      year,
+      mobile_no,
+      section,
+      father_name,
+      father_mobile
     FROM students
     WHERE counsellor_id = ?
-    ORDER BY year, section, reg_no
   `;
 
-  connection.query(sql, [staffId], (err, results) => {
+  connection.query(query, [staffId], (err, results) => {
     if (err) {
       console.error("❌ Error fetching counselling students:", err);
       return res.status(500).json({ success: false, message: "Database error" });
