@@ -802,7 +802,81 @@ app.get('/admin/matches', (req, res) => {
     res.json(results);
   });
 });
-  
+
+app.post('/admin/search-noc-status', (req, res) => {
+  const { query } = req.body;
+  if (!query) return res.status(400).json({ success: false, message: "No query provided" });
+
+  const searchTerm = `%${query}%`;
+  const sql = `SELECT userId, reg_no, name FROM students WHERE userId LIKE ? OR name LIKE ?`;
+
+  connection.query(sql, [searchTerm, searchTerm], (err, results) => {
+    if (err) {
+      console.error("❌ Search error:", err);
+      return res.status(500).json({ success: false });
+    }
+
+    const checks = results.map(student => {
+      const { userId, reg_no, name } = student;
+
+      return new Promise(resolve => {
+        connection.query(
+          'SELECT * FROM student_fee_structure WHERE reg_no = ? ORDER BY updated_at DESC LIMIT 1',
+          [reg_no],
+          (err2, feeRows) => {
+            if (err2 || feeRows.length === 0) return resolve({ userId, name, eligible: false });
+
+            const fees = feeRows[0];
+
+            connection.query(
+              `SELECT fee_type, SUM(amount_paid) AS totalPaid 
+               FROM student_fee_payments 
+               WHERE userId = ? AND matched = 1 
+               GROUP BY fee_type`,
+              [userId],
+              (err3, paidRows) => {
+                if (err3) return resolve({ userId, name, eligible: false });
+
+                const paidMap = {};
+                paidRows.forEach(r => paidMap[r.fee_type] = parseFloat(r.totalPaid));
+
+                connection.query(
+                  'SELECT SUM(amount) AS fine FROM fines WHERE userId = ?',
+                  [userId],
+                  (err4, fineRes) => {
+                    const fine = err4 ? 0 : (fineRes[0]?.fine || 0);
+
+                    const expected = {
+                      tuition: parseFloat(fees.tuition) || 0,
+                      hostel: parseFloat(fees.hostel) || 0,
+                      bus: parseFloat(fees.bus) || 0,
+                      university: parseFloat(fees.university) || 0,
+                      semester: parseFloat(fees.semester) || 0,
+                      library: parseFloat(fees.library) || 0,
+                      fines: parseFloat(fine)
+                    };
+
+                    for (let key in expected) {
+                      const remaining = expected[key] - (paidMap[key] || 0);
+                      if (remaining > 0) return resolve({ userId, name, eligible: false });
+                    }
+
+                    resolve({ userId, name, eligible: true });
+                  }
+                );
+              }
+            );
+          }
+        );
+      });
+    });
+
+    Promise.all(checks).then(data => {
+      res.json({ success: true, data });
+    });
+  });
+});
+
 app.get('/admin/noc-status', (req, res) => {
   connection.query('SELECT userId, reg_no FROM students', (err, students) => {
     if (err) return res.status(500).json([]);
