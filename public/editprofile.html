@@ -374,13 +374,24 @@
   const photoInput = document.getElementById("photoInput");
   const photoPreview = document.getElementById("photoPreview");
 
-  function setInputsDisabled(state) {
-    inputs.forEach(input => {
-      if (input.id !== "uniqueId" && input.id !== "course") {
-        input.disabled = state;
-      }
-    });
-  }
+ function setInputsDisabled(state) {
+  // Enable/disable input fields
+  inputs.forEach(input => {
+    if (input.id !== "uniqueId" && input.id !== "course") {
+      input.disabled = state;
+    }
+  });
+
+  // Enable/disable dropdowns (select elements)
+  const selects = form.querySelectorAll("select");
+  selects.forEach(select => {
+    select.disabled = state;
+  });
+
+  // Disable photo input only if state is true
+  photoInput.disabled = state;
+}
+
 
   function toggleMobileMenu() {
     document.querySelector('.sidebar').classList.toggle('open');
