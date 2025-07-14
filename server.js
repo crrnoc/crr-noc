@@ -1799,7 +1799,7 @@ app.post("/get-student-details", async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
-// ✅ Delete Student
+
 // ✅ Delete Student with Photo Removal
 // 🗑️ Delete a single student and all their data
 app.post('/delete-student', (req, res) => {
@@ -1807,7 +1807,7 @@ app.post('/delete-student', (req, res) => {
 
   if (!reg_no) return res.status(400).json({ success: false, message: "Registration number required." });
 
-  // First get userId from students table using reg_no
+  // Step 1: get the matching userId from students
   connection.query('SELECT userId FROM students WHERE reg_no = ?', [reg_no], (err, results) => {
     if (err || results.length === 0) {
       return res.status(404).json({ success: false, message: "Student not found." });
@@ -1815,13 +1815,14 @@ app.post('/delete-student', (req, res) => {
 
     const userId = results[0].userId;
 
+    // Step 2: delete from all relevant tables using correct keys
     const queries = [
-      ['DELETE FROM users WHERE userid = ?', [reg_no]],
       ['DELETE FROM students WHERE reg_no = ?', [reg_no]],
+      ['DELETE FROM users WHERE userid = ?', [userId]], // ✅ fixed
       ['DELETE FROM student_fee_structure WHERE reg_no = ?', [reg_no]],
-      ['DELETE FROM student_fee_payments WHERE userId = ?', [reg_no]],
-      ['DELETE FROM notifications WHERE userId = ?', [reg_no]],
-      ['DELETE FROM fines WHERE userId = ?', [reg_no]],
+      ['DELETE FROM student_fee_payments WHERE userId = ?', [userId]],
+      ['DELETE FROM notifications WHERE userId = ?', [userId]],
+      ['DELETE FROM fines WHERE userId = ?', [userId]],
     ];
 
     let completed = 0;
@@ -1854,63 +1855,48 @@ app.post("/filter-batch", async (req, res) => {
 });
 
 // ✅ Delete Batch
-// ✅ Delete Batch with Photos
 app.post('/delete-batch', (req, res) => {
   const { batchPrefix, branch } = req.body;
 
   if (!batchPrefix || !branch) {
-    return res.status(400).json({ success: false, message: "Batch prefix and branch required." });
+    return res.status(400).json({ success: false, message: "Batch prefix and branch are required." });
   }
 
-  const pattern = `${batchPrefix}%`;
+  const sql = `SELECT reg_no, userId FROM students WHERE reg_no LIKE ? AND branch = ?`;
+  const likePrefix = `${batchPrefix}%`;
 
-  connection.query('SELECT reg_no FROM students WHERE reg_no LIKE ? AND course = ?', [pattern, branch], (err, results) => {
-    if (err) return res.status(500).json({ success: false, message: "DB Error" });
-
-    if (results.length === 0) {
-      return res.json({ success: false, message: "No students found for given batch." });
+  connection.query(sql, [likePrefix, branch], (err, students) => {
+    if (err || students.length === 0) {
+      return res.status(404).json({ success: false, message: "No matching students found." });
     }
 
-    const regnos = results.map(r => r.reg_no);
-    let deletedCount = 0;
+    let completed = 0;
+    const total = students.length;
 
-    const deleteNext = () => {
-      if (deletedCount >= regnos.length) {
-        return res.json({ success: true, message: `Batch ${batchPrefix} - ${branch} deleted successfully.` });
-      }
+    students.forEach(({ reg_no, userId }) => {
+      const queries = [
+        ['DELETE FROM students WHERE reg_no = ?', [reg_no]],
+        ['DELETE FROM users WHERE userid = ?', [userId]],
+        ['DELETE FROM student_fee_structure WHERE reg_no = ?', [reg_no]],
+        ['DELETE FROM student_fee_payments WHERE userId = ?', [userId]],
+        ['DELETE FROM notifications WHERE userId = ?', [userId]],
+        ['DELETE FROM fines WHERE userId = ?', [userId]],
+      ];
 
-      const reg = regnos[deletedCount];
-      connection.query('SELECT userId FROM students WHERE reg_no = ?', [reg], (err2, result2) => {
-        if (err2 || result2.length === 0) {
-          deletedCount++;
-          return deleteNext();
-        }
-
-        const userId = result2[0].userId;
-
-        const queries = [
-          ['DELETE FROM users WHERE userid = ?', [reg]],
-          ['DELETE FROM students WHERE reg_no = ?', [reg]],
-          ['DELETE FROM student_fee_structure WHERE reg_no = ?', [reg]],
-          ['DELETE FROM student_fee_payments WHERE userId = ?', [reg]],
-          ['DELETE FROM notifications WHERE userId = ?', [reg]],
-          ['DELETE FROM fines WHERE userId = ?', [reg]],
-        ];
-
-        let step = 0;
-        queries.forEach(([sql, values]) => {
-          connection.query(sql, values, () => {
-            step++;
-            if (step === queries.length) {
-              deletedCount++;
-              deleteNext();
+      let subCompleted = 0;
+      queries.forEach(([q, p]) => {
+        connection.query(q, p, (err2) => {
+          if (err2) console.error(`Error deleting: ${q}`, err2);
+          subCompleted++;
+          if (subCompleted === queries.length) {
+            completed++;
+            if (completed === total) {
+              return res.json({ success: true, message: `Batch ${batchPrefix} - ${branch} students deleted.` });
             }
-          });
+          }
         });
       });
-    };
-
-    deleteNext();
+    });
   });
 });
 
