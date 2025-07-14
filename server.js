@@ -1621,6 +1621,8 @@ app.post('/admin/noc-filter', (req, res) => {
 app.post('/admin/search-student-sbi', (req, res) => {
   const { query } = req.body;
 
+  if (!query) return res.status(400).json({ success: false, message: "Query is required" });
+
   const sql = `
     SELECT s.reg_no AS userId, s.name, f.fee_type, f.reference_no, f.date, f.matched
     FROM students s
@@ -1630,7 +1632,10 @@ app.post('/admin/search-student-sbi', (req, res) => {
 
   const likeQuery = `%${query}%`;
   connection.query(sql, [likeQuery, likeQuery], (err, results) => {
-    if (err) return res.status(500).json({ success: false });
+    if (err) {
+      console.error("SQL Error:", err); // log the error
+      return res.status(500).json({ success: false, message: "Database error" });
+    }
     res.json({ success: true, data: results });
   });
 });
