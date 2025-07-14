@@ -101,26 +101,16 @@
   <div class="main">
     <div class="banner">📊 DU Match Status</div>
     <div class="card">
-      <div style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;">
-        <select id="duCourse">
-          <option value="">-- Course --</option>
-          <option>CIVIL</option><option>MECH</option><option>EEE</option>
-          <option>ECE</option><option>CSE</option><option>CSD</option>
-          <option>CSM</option><option>CSC</option><option>IT</option>
-        </select>
-        <select id="duYear">
-          <option value="">-- Year --</option>
-          <option value="1">1st Year</option><option value="2">2nd Year</option>
-          <option value="3">3rd Year</option><option value="4">4th Year</option>
-        </select>
-        <select id="duSection">
-          <option value="">-- Section --</option>
-          <option>A</option><option>B</option><option>C</option>
-          <option>D</option><option>E</option><option>F</option>
-        </select>
-        <button onclick="applyDUFilter()">Filter</button>
-        <button onclick="loadMatches()">Reset</button>
-      </div>
+      <div style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center;">
+  <input type="text" id="searchInput" placeholder="Search by Reg No or Name" 
+    style="padding: 10px 14px; border-radius: 10px; width: 100%; max-width: 350px;
+           background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+           color: white; box-shadow: inset 0 0 8px rgba(111,180,218,0.708); outline: none;" 
+    oninput="searchDU()"
+  />
+  <button onclick="loadMatches()">Reset</button>
+</div>
+
       <div style="overflow-x: auto;">
         <table id="matchTable">
           <thead>
@@ -163,35 +153,38 @@
         });
     }
 
-    function applyDUFilter() {
-      const course = document.getElementById("duCourse").value.trim();
-      const year = document.getElementById("duYear").value.trim();
-      const section = document.getElementById("duSection").value.trim();
+function searchDU() {
+  const query = document.getElementById("searchInput").value.trim();
 
-      fetch("https://crr-noc.onrender.com/admin/match-filter", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ course, year, section })
-      })
-        .then(res => res.json())
-        .then(data => {
-          const tbody = document.querySelector("#matchTable tbody");
-          if (data.length) {
-            tbody.innerHTML = data.map(row => `
-              <tr>
-                <td>${row.userId}</td>
-                <td>${row.fee_type}</td>
-                <td>${row.sbi_ref_no}</td>
-                <td>${row.matched ? '✅' : '❌'}</td>
-                <td>${row.matched_on || '-'}</td>
-              </tr>
-            `).join("");
-          } else {
-            tbody.innerHTML = `<tr><td colspan="5">No records found.</td></tr>`;
-          }
-        })
-        .catch(() => alert("Failed to apply filter."));
-    }
+  if (!query) {
+    loadMatches(); // Show all if search is cleared
+    return;
+  }
+
+  fetch("https://crr-noc.onrender.com/admin/search-student-sbi", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ query })
+  })
+    .then(res => res.json())
+    .then(data => {
+      const tbody = document.querySelector("#matchTable tbody");
+      if (data.success && data.data.length) {
+        tbody.innerHTML = data.data.map(row => `
+          <tr>
+            <td>${row.userId}</td>
+            <td>${row.fee_type || '-'}</td>
+            <td>${row.reference_no || '-'}</td>
+            <td>${row.matched ? '✅' : '❌'}</td>
+            <td>${row.date || '-'}</td>
+          </tr>
+        `).join("");
+      } else {
+        tbody.innerHTML = `<tr><td colspan="5">No matching records found.</td></tr>`;
+      }
+    })
+    .catch(() => alert("Search failed."));
+}
 
     // Initial load
     loadMatches();
