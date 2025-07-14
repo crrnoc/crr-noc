@@ -712,7 +712,7 @@ app.post('/admin/upload-sbi', upload.single('sbiFile'), (req, res) => {
     .map(row => row.split(','))
     .filter(cols =>
       cols.length >= 4 &&
-      cols[3].toLowerCase().includes("completed") &&
+      cols[3].toLowerCase().includes("Completed Successfully") &&
       cols[0].trim() !== "" && // ref
       cols[1].trim() !== "" && // amount
       cols[2].trim() !== ""    // uniqueId
