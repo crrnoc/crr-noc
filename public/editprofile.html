@@ -470,11 +470,9 @@
       return Swal.fire("❗ Invalid Mobile", "Mobile number must be 10 digits.", "error");
     }
 
-const email = form.email.value.trim();
-const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-if (!emailPattern.test(email) || !email.includes("@") || !email.endsWith(".com")) {
-  return Swal.fire("❗ Invalid Email", "Please enter a valid email ending with .com", "error");
-}
+    if (!emailPattern.test(form.email.value)) {
+      return Swal.fire("❗ Invalid Email", "Please enter a valid email address.", "error");
+    }
 
     const file = photoInput.files[0];
     const formData = new FormData();
@@ -537,6 +535,6 @@ if (!emailPattern.test(email) || !email.includes("@") || !email.endsWith(".com")
     }
     window.location.replace("index.html");
   }
-</script>  
+</script> 
 </body>
 </html> 
