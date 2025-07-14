@@ -932,65 +932,77 @@ app.get("/fee-status/:userId", (req, res) => {
 });
 
 app.post("/add-student", async (req, res) => {
-  /* pull only the fields we may receive */
   const {
     userId, name, dob, reg_no, unique_id,
     year, course, semester, aadhar_no, mobile_no,
     email = "", password, section,
     father_name, father_mobile_no,
-    counsellor_name, counsellor_mobile
+    counsellor_name, counsellor_mobile,
+    admission_type                    // ✅ new field
   } = req.body;
 
-  /* ✅ minimal required for BOTH single and bulk */
-  const must = { userId, reg_no, unique_id, year, course,
-                 semester, section, password,
-                 counsellor_name, counsellor_mobile };
-  for (const k in must)
-    if (!must[k] && must[k] !== "")      // allow blank email
-      return res.status(400).json({success:false, message:`Missing: ${k}`});
+  // ✅ Required fields for validation
+  const must = {
+    userId, reg_no, unique_id, year, course,
+    semester, section, password,
+    counsellor_name, counsellor_mobile
+  };
+
+  for (const k in must) {
+    if (!must[k] && must[k] !== "") {
+      return res.status(400).json({ success: false, message: `Missing: ${k}` });
+    }
+  }
 
   try {
-    /* already a user? */
-    connection.query("SELECT 1 FROM users WHERE userid = ?", [userId], async (e,r)=>{
-      if (e)  return res.status(500).json({success:false});
-      if (r.length) return res.status(400).json({success:false, message:"User exists"});
+    // ✅ Check if user already exists
+    connection.query("SELECT 1 FROM users WHERE userid = ?", [userId], async (e, r) => {
+      if (e) return res.status(500).json({ success: false });
+      if (r.length) return res.status(400).json({ success: false, message: "User exists" });
 
-      const hashed = await bcrypt.hash(password,10);
+      const hashed = await bcrypt.hash(password, 10);
+
+      // ✅ Insert into users table
       connection.query(
-        "INSERT INTO users (userid,password,role) VALUES (?,?, 'student')",
+        "INSERT INTO users (userid, password, role) VALUES (?, ?, 'student')",
         [userId, hashed],
-        (e1)=>{
-          if (e1) return res.status(500).json({success:false, message:"User insert failed"});
+        (e1) => {
+          if (e1) return res.status(500).json({ success: false, message: "User insert failed" });
 
-          /* insert ONLY the columns we actually have values for */
+          // ✅ Insert into students table with admission_type
           const studentSql = `
             INSERT INTO students
               (userId, reg_no, uniqueId, year, course, semester, section,
                counsellor_name, counsellor_mobile,
                name, dob, aadhar_no, mobile_no, email,
-               father_name, father_mobile)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+               father_name, father_mobile, admission_type)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
           `;
+
           const vals = [
             userId, reg_no, unique_id, year, course, semester, section,
             counsellor_name, counsellor_mobile,
             name || null, dob || null, aadhar_no || null, mobile_no || null, email,
-            father_name || null, father_mobile_no || null
+            father_name || null, father_mobile_no || null,
+            admission_type || null    // ✅ included
           ];
-          connection.query(studentSql, vals, (e2)=>{
-            if (e2){
-              console.error("Student insert error:",e2);
-              return res.status(500).json({success:false});
+
+          connection.query(studentSql, vals, (e2) => {
+            if (e2) {
+              console.error("Student insert error:", e2);
+              return res.status(500).json({ success: false });
             }
-            res.json({success:true});
+            res.json({ success: true });
           });
-        });
+        }
+      );
     });
-  } catch(err){
+  } catch (err) {
     console.error(err);
-    res.status(500).json({success:false});
+    res.status(500).json({ success: false });
   }
 });
+
 
 
 //logic for the fee upadate by staff
