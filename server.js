@@ -2566,39 +2566,3 @@ app.get("/my-counselling-students/:staffId", (req, res) => {
     res.json({ success: true, students: results });
   });
 });
-
-app.get("/student/results-all/:regno", async (req, res) => {
-  const { regno } = req.params;
-
-  try {
-    const [results] = await connection.promise().query(
-      "SELECT semester, subcode, subname, grade, credits FROM results WHERE regno = ? ORDER BY semester",
-      [regno]
-    );
-
-    if (!results.length) {
-      return res.json({ success: true, results: [], sgpa: "0.00", cgpa: "0.00", percentage: "0.00" });
-    }
-
-    const GRADE_POINTS = {
-      S: 10, A: 9, B: 8, C: 7, D: 6, E: 5, F: 0, Ab: 0, COMPLETED: 10, NOT_COMPLETED: 0, MP: 0
-    };
-
-    let totalCredits = 0, totalGradePoints = 0;
-
-    results.forEach(({ grade, credits }) => {
-      const point = GRADE_POINTS[grade] || 0;
-      totalGradePoints += point * credits;
-      totalCredits += credits;
-    });
-
-    const cgpa = totalCredits ? (totalGradePoints / totalCredits).toFixed(2) : "0.00";
-    const percentage = (cgpa * 9.5).toFixed(2);
-
-    res.json({ success: true, results, cgpa, sgpa: cgpa, percentage });
-  } catch (err) {
-    console.error("❌ Error fetching all results:", err);
-    res.status(500).json({ success: false });
-  }
-});
-
