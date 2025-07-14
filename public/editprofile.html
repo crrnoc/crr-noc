@@ -145,7 +145,7 @@
       transform: scale(1.01);
       box-shadow: 0 16px 28px rgba(0, 0, 0, 0.35);
     }
-
+  
     .form-row {
       margin-bottom: 15px;
       display: flex;
@@ -170,6 +170,14 @@
       border-radius: 5px;
       width: 100%;
     }
+      .form-row select {
+  padding: 10px;
+  font-size: 14px;
+  border: none;
+  border-radius: 5px;
+  width: 100%;
+  background-color: white;
+}
 
     input:disabled {
       background-color: #f0f0f0;
@@ -290,11 +298,37 @@
       <form class="edit-profile-form">
         <div class="form-row"><label>Name</label><input type="text" id="name" disabled></div>
         <div class="form-row"><label>DOB</label><input type="date" id="dob" disabled></div>
-        <div class="form-row half">
-          <div><label>Year</label><input type="text" id="year" disabled></div>
-          <div><label>Course</label><input type="text" id="course" disabled></div>
-        </div>
-        <div class="form-row"><label>Semester</label><input type="text" id="semester" disabled></div>
+<div class="form-row half">
+  <div>
+    <label>Year</label>
+    <select id="year" disabled>
+      <option value="">-- Select Year --</option>
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+    </select>
+  </div>
+  <div>
+    <label>Course</label>
+    <input type="text" id="course" disabled>
+  </div>
+</div>
+
+<div class="form-row">
+  <label>Semester</label>
+  <select id="semester" disabled>
+    <option value="">-- Select Semester --</option>
+    <option value="1-1">1-1</option>
+    <option value="1-2">1-2</option>
+    <option value="2-1">2-1</option>
+    <option value="2-2">2-2</option>
+    <option value="3-1">3-1</option>
+    <option value="3-2">3-2</option>
+    <option value="4-1">4-1</option>
+    <option value="4-2">4-2</option>
+  </select>
+</div>
         <div class="form-row"><label>Unique ID</label><input type="text" id="uniqueId" disabled></div>
         <div class="form-row"><label>Aadhar No</label><input type="text" id="aadhar" disabled></div>
         <div class="form-row"><label>Mobile No</label><input type="text" id="mobile" disabled></div>
