@@ -2546,3 +2546,24 @@ app.post("/assign-counselling", async (req, res) => {
     }
   );
 });
+
+app.get("/my-counselling-students/:staffId", (req, res) => {
+  const { staffId } = req.params;
+
+  const sql = `
+    SELECT name, reg_no, course, year, section, email, mobile_no
+    FROM students
+    WHERE counsellor_id = ?
+    ORDER BY year, section, reg_no
+  `;
+
+  connection.query(sql, [staffId], (err, results) => {
+    if (err) {
+      console.error("❌ Error fetching counselling students:", err);
+      return res.status(500).json({ success: false, message: "Database error" });
+    }
+
+    res.json({ success: true, students: results });
+  });
+});
+
