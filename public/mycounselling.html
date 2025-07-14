@@ -15,7 +15,7 @@
     }
 
     body {
-      background-color: #ffffff;
+      background-color: #1d1d1d;
       color: #000;
     }
 
@@ -63,8 +63,7 @@
       font-size: 16px;
       color: black;
       padding: 12px 20px;
-      border-radius: 10px;
-      text-decoration: none;
+      border-radius: 8px;
       transition: all 0.3s ease;
     }
 
@@ -74,6 +73,15 @@
       font-weight: bold;
       transform: translateX(5px);
       box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .menu li a span {
+      font-size: 18px;
+      transition: transform 0.3s ease;
+    }
+
+    .menu li a:hover span {
+      transform: scale(1.2);
     }
 
     .logout {
@@ -92,7 +100,7 @@
     .logout:hover {
       background-color: #d07900;
     }
-
+    
     .content {
       flex-grow: 1;
       margin-left: 270px;
