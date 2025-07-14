@@ -707,47 +707,54 @@ app.post('/admin/upload-sbi', upload.single('sbiFile'), (req, res) => {
     .map(line => line.trim())
     .filter(line => line !== '');
 
- const formatted = lines
-  .map(row => row.split(','))
-  .filter(cols =>
-    cols.length >= 4 &&
-    cols[3].toLowerCase().includes("completed") &&
-    cols[0].trim() !== "" &&
-    cols[1].trim() !== "" &&
-    cols[2].trim() !== ""
-  )
-  .map(([ref, amount, uniqueId]) => [ref.trim(), parseFloat(amount.trim()), uniqueId.trim()]);
+  // ✅ Extract and filter only valid completed entries with 4 fields
+  const formatted = lines
+    .map(row => row.split(','))
+    .filter(cols =>
+      cols.length >= 4 &&
+      cols[3].toLowerCase().includes("completed") &&
+      cols[0].trim() !== "" && // ref
+      cols[1].trim() !== "" && // amount
+      cols[2].trim() !== ""    // uniqueId
+    )
+    .map(([ref, amount, uniqueId]) => [ref.trim(), parseFloat(amount.trim()), uniqueId.trim()]);
 
-const insertQuery = `
-  INSERT INTO sbi_uploaded_references (sbi_ref_no, amount, unique_id)
-  VALUES ?
-`;
-
-connection.query(insertQuery, [formatted], (err) => {
-  if (err) {
-    console.error('Upload error:', err);
-    return res.status(500).json({ success: false, message: 'Upload failed.' });
+  if (formatted.length === 0) {
+    return res.status(400).json({ success: false, message: '❌ No valid COMPLETED entries found in file.' });
   }
 
-  // 🧠 Match logic includes unique_id too
-  const matchQuery = `
-    UPDATE student_fee_payments p
-    JOIN students s ON p.userId = s.userId
-    JOIN sbi_uploaded_references r 
-      ON p.sbi_ref_no = r.sbi_ref_no 
-      AND p.amount_paid = r.amount 
-      AND s.uniqueId = r.unique_id
-    SET p.matched = 1, p.matched_on = NOW()
-    WHERE p.matched = 0
+  // ✅ Step 1: Insert into sbi_uploaded_references
+  const insertQuery = `
+    INSERT INTO sbi_uploaded_references (sbi_ref_no, amount, unique_id)
+    VALUES ?
   `;
 
-  connection.query(matchQuery, (err2) => {
-    if (err2) {
-      console.error('Match error:', err2);
-      return res.status(500).json({ success: false, message: 'Matching failed.' });
+  connection.query(insertQuery, [formatted], (err) => {
+    if (err) {
+      console.error('❌ Upload error:', err);
+      return res.status(500).json({ success: false, message: 'Upload failed.' });
     }
 
-    res.json({ success: true, message: '✅ SBI file uploaded and matched with DU + Amount + UniqueID + Status.' });
+    // ✅ Step 2: Match entries where DU, amount, and unique ID match
+    const matchQuery = `
+      UPDATE student_fee_payments p
+      JOIN students s ON p.userId = s.userId
+      JOIN sbi_uploaded_references r 
+        ON p.sbi_ref_no = r.sbi_ref_no 
+        AND p.amount_paid = r.amount 
+        AND s.uniqueId = r.unique_id
+      SET p.matched = 1, p.matched_on = NOW()
+      WHERE p.matched = 0
+    `;
+
+    connection.query(matchQuery, (err2, result) => {
+      if (err2) {
+        console.error('❌ Match error:', err2);
+        return res.status(500).json({ success: false, message: 'Matching failed.' });
+      }
+
+      res.json({ success: true, message: `✅ SBI file uploaded and ${result.affectedRows} entries matched successfully.` });
+    });
   });
 });
 
