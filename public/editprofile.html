@@ -342,13 +342,14 @@
 
   function setInputsDisabled(state) {
     inputs.forEach(input => {
-      input.disabled = input.id === "course" ? true : state;
+      if (input.id !== "uniqueId" && input.id !== "course") {
+        input.disabled = state;
+      }
     });
   }
 
   function toggleMobileMenu() {
-    const sidebar = document.querySelector('.sidebar');
-    sidebar.classList.toggle('open');
+    document.querySelector('.sidebar').classList.toggle('open');
   }
 
   function formatDateToInput(dateStr) {
@@ -367,7 +368,7 @@
       const data = await res.json();
 
       form.uniqueId.value = data.uniqueId || "";
-      form.name.value = data.name || "";
+      form.name.value = (data.name || "").toUpperCase();
       form.dob.value = formatDateToInput(data.dob);
       form.year.value = data.year || "";
       form.course.value = data.course || "";
@@ -399,7 +400,6 @@
     updateBtn.style.display = "none";
   });
 
-  // 👇 Custom photo tip alert with automatic file open
   let photoTipShown = false;
   photoInput.addEventListener("click", function (e) {
     if (!photoTipShown) {
@@ -411,14 +411,13 @@
         confirmButtonText: "OK"
       }).then(() => {
         photoTipShown = true;
-        photoInput.click(); // Trigger native file picker
+        photoInput.click();
       });
     }
   });
 
   photoInput.addEventListener("change", function () {
     const file = this.files[0];
-
     if (file) {
       if (file.size < 50 * 1024 || file.size > 90 * 1024) {
         Swal.fire("⚠️ Image size error", "Please upload an image between 50KB and 90KB.", "warning");
@@ -426,9 +425,8 @@
         photoPreview.style.display = "none";
         return;
       }
-
       const reader = new FileReader();
-      reader.onload = function (e) {
+      reader.onload = e => {
         photoPreview.src = e.target.result;
         photoPreview.style.display = "block";
       };
@@ -439,14 +437,48 @@
     }
   });
 
+  form.name.addEventListener("input", () => {
+    form.name.value = form.name.value.replace(/[^a-zA-Z ]/g, "").toUpperCase();
+  });
+
+  form.aadhar.addEventListener("input", () => {
+    form.aadhar.value = form.aadhar.value.replace(/\D/g, "").slice(0, 12);
+  });
+
+  form.mobile.addEventListener("input", () => {
+    form.mobile.value = form.mobile.value.replace(/\D/g, "").slice(0, 10);
+  });
+
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
+
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!form.name.value || !form.dob.value || !form.year.value || !form.semester.value || !form.aadhar.value || !form.mobile.value || !form.email.value) {
+      return Swal.fire("❗ Fill all fields", "All fields are required.", "warning");
+    }
+
+    if (form.uniqueId.value.length !== 16) {
+      return Swal.fire("❗ Invalid Unique ID", "Unique ID must be 16 characters.", "error");
+    }
+
+    if (form.aadhar.value.length !== 12) {
+      return Swal.fire("❗ Invalid Aadhar", "Aadhar number must be 12 digits.", "error");
+    }
+
+    if (form.mobile.value.length !== 10) {
+      return Swal.fire("❗ Invalid Mobile", "Mobile number must be 10 digits.", "error");
+    }
+
+    if (!emailPattern.test(form.email.value)) {
+      return Swal.fire("❗ Invalid Email", "Please enter a valid email address.", "error");
+    }
 
     const file = photoInput.files[0];
     const formData = new FormData();
 
     formData.append("userId", userId);
-    formData.append("uniqueId", form.uniqueId.value); // send uniqueId
+    formData.append("uniqueId", form.uniqueId.value);
     formData.append("name", form.name.value);
     formData.append("dob", form.dob.value);
     formData.append("year", form.year.value);
@@ -457,10 +489,6 @@
     formData.append("email", form.email.value);
 
     if (file) {
-      if (file.size < 50 * 1024 || file.size > 90 * 1024) {
-        Swal.fire("⚠️ Image size error", "Please upload an image between 50KB and 90KB.", "warning");
-        return;
-      }
       formData.append("photo", file);
     }
 
@@ -472,14 +500,11 @@
 
       const contentType = res.headers.get("content-type");
       let data = { message: "Profile updated!" };
-
       if (contentType && contentType.includes("application/json")) {
         data = await res.json();
       }
 
-      if (!res.ok) {
-        throw new Error(data.message || "Update failed");
-      }
+      if (!res.ok) throw new Error(data.message || "Update failed");
 
       Swal.fire({
         icon: "success",
@@ -493,7 +518,6 @@
       photoPreview.src = "";
       photoPreview.style.display = "none";
       await loadUserData();
-
     } catch (err) {
       console.error("❌ Upload failed:", err);
       Swal.fire("⚠️ Warning", err.message || "Something went wrong while updating.", "warning");
@@ -512,5 +536,6 @@
     window.location.replace("index.html");
   }
 </script>
+  
 </body>
 </html>
