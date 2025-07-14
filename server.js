@@ -560,7 +560,7 @@ app.post("/submit-du", (req, res) => {
 
   // 🆕 Step 1: Get unique_id from students table
   connection.query(
-    "SELECT unique_id FROM students WHERE userId = ?",
+    "SELECT uniqueId FROM students WHERE userId = ?",
     [userId],
     (err, results) => {
       if (err || results.length === 0) {
