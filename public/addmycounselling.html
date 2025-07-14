@@ -313,9 +313,9 @@ body{
     const toReg = document.getElementById("toReg").value.trim();
     const counsellorName = document.getElementById("counsellorName").value.trim();
     const counsellorMobile = document.getElementById("counsellorMobile").value.trim();
-    const staffId = document.getElementById("staffId").value.trim(); // newly added
+    const counsellorId = document.getElementById("staffId").value.trim(); // renamed key here
 
-    if (!fromReg || !toReg || !counsellorName || !counsellorMobile || !staffId) {
+    if (!fromReg || !toReg || !counsellorName || !counsellorMobile || !counsellorId) {
       Swal.fire({
         icon: "warning",
         title: "All fields required",
@@ -328,7 +328,13 @@ body{
       const res = await fetch("https://crr-noc.onrender.com/assign-counselling", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fromReg, toReg, counsellorName, counsellorMobile, staffId }),
+        body: JSON.stringify({
+          fromReg,
+          toReg,
+          counsellorName,
+          counsellorMobile,
+          counsellorId, //  backend expects this key
+        }),
       });
 
       const data = await res.json();
@@ -347,7 +353,7 @@ body{
           <p><strong>To RegNo:</strong> ${toReg}</p>
           <p><strong>Counsellor Name:</strong> ${counsellorName}</p>
           <p><strong>Counsellor Mobile:</strong> ${counsellorMobile}</p>
-          <p><strong>Staff ID:</strong> ${staffId}</p>
+          <p><strong>Staff ID:</strong> ${counsellorId}</p>
         `;
         form.reset();
       } else {
