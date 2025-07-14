@@ -390,14 +390,21 @@
       });
   });
 
-  // Only allow numeric input
+  // ✅ DU Numbers: auto-uppercase + only A-Z and 0-9
+  document.querySelectorAll('.form input[type="text"]').forEach(input => {
+    input.addEventListener('input', () => {
+      input.value = input.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    });
+  });
+
+  // ✅ Amounts: only numbers
   document.querySelectorAll('.form input[type="number"]').forEach(input => {
     input.addEventListener('input', () => {
       input.value = input.value.replace(/[^\d]/g, '');
     });
   });
 
-  // Enter key = move to next field
+  // ✅ Enter key to move to next field
   document.querySelectorAll('.form input').forEach((input, index, inputs) => {
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
@@ -408,7 +415,7 @@
     });
   });
 
-  // Toggle sidebar on mobile
+  // ✅ Toggle sidebar for mobile
   function toggleMobileMenu() {
     document.querySelector('.sidebar').classList.toggle('open');
   }
@@ -421,6 +428,7 @@
     });
   });
 
+  // ✅ Logout
   function logout() {
     localStorage.removeItem("userId");
     if ("caches" in window) {
@@ -429,6 +437,7 @@
     window.location.replace("index.html");
   }
 
+  // ✅ Ensure login on page load
   window.addEventListener("pageshow", function (event) {
     const userId = localStorage.getItem("userId");
     if (!userId) {
