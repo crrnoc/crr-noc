@@ -2258,6 +2258,56 @@ app.get("/student/overallResults/:regno", async (req, res) => {
     res.status(500).json({ sgpa: "0.00", percentage: "0.00" });
   }
 });
+// result verification
+//verify result
+app.get("/api/verify-result", async (req, res) => {
+  const { regno, sem } = req.query;
+  if (!regno || !sem) return res.status(400).json({ error: "Missing regno or sem" });
+
+  function queryAsync(sql, values) {
+    return new Promise((resolve, reject) => {
+      connection.query(sql, values, (err, result) => {
+        if (err) reject(err);
+        else resolve(result);
+      });
+    });
+  }
+
+  try {
+    const results = await queryAsync(
+      "SELECT subcode, subname, grade, credits FROM results WHERE regno = ? AND semester = ?",
+      [regno, sem]
+    );
+    const studentRows = await queryAsync(
+      "SELECT name, reg_no, course, photo_url FROM students WHERE reg_no = ?",
+      [regno]
+    );
+    const student = studentRows[0] || {};
+
+    const gradeMap = { S: 10, A: 9, B: 8, C: 7, D: 6, E: 5, F: 0, Ab: 0 };
+    let totalCredits = 0, totalPoints = 0;
+    results.forEach(r => {
+      const gp = gradeMap[r.grade] ?? 0;
+      totalCredits += r.credits;
+      totalPoints += gp * r.credits;
+    });
+
+    const sgpa = totalCredits ? (totalPoints / totalCredits).toFixed(2) : "N/A";
+
+    res.json({
+      name: student.name || "N/A",
+      regno: student.reg_no || regno,
+      course: student.course || "N/A",
+      semester: sem,
+      photo_url: student.photo_url || null,
+      sgpa,
+      results
+    });
+  } catch (err) {
+    console.error("❌ Verification error:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 //generate results certificate
 app.get("/generate-certificate/:userId", async (req, res) => {
   const { userId } = req.params;
@@ -2298,7 +2348,6 @@ app.get("/generate-certificate/:userId", async (req, res) => {
       [userId]
     );
     const student = studentRows[0] || {};
-
     const reg = student.reg_no || "";
     const isJNTUK = /^([0-1][0-9]|23)B8/.test(reg);
 
@@ -2341,13 +2390,16 @@ app.get("/generate-certificate/:userId", async (req, res) => {
     doc.text("YEAR - SEMESTER :", labelX, lineY);
     doc.text(semester.toUpperCase(), valueX, lineY);
 
-    // ✅ Cloudinary photo fix
+    // ✅ Cloudinary photo fix with headers
     const photo_url = student.photo_url;
     if (photo_url) {
       try {
         const photoRes = await axios.get(photo_url, {
           responseType: "arraybuffer",
-          headers: { "User-Agent": "Mozilla/5.0" } // important for Render + Cloudinary
+          headers: {
+            "User-Agent": "Mozilla/5.0", // needed for Render + Cloudinary
+            "Accept": "image/avif,image/webp,image/apng,image/*,*/*;q=0.8"
+          }
         });
         doc.image(photoRes.data, 400, startY, { fit: [100, 120] });
       } catch (err) {
@@ -2419,63 +2471,13 @@ app.get("/generate-certificate/:userId", async (req, res) => {
     doc.fontSize(6).text(`ISSUED DATE: ${date}`, 440, 790, { align: "right", width: 100 });
 
     doc.end();
-
   } catch (err) {
     console.error("❌ PDF generation error:", err);
     doc.fontSize(12).text("Something went wrong while generating the result.");
     doc.end();
   }
 });
-// result verification
-//verify result
-app.get("/api/verify-result", async (req, res) => {
-  const { regno, sem } = req.query;
-  if (!regno || !sem) return res.status(400).json({ error: "Missing regno or sem" });
 
-  function queryAsync(sql, values) {
-    return new Promise((resolve, reject) => {
-      connection.query(sql, values, (err, result) => {
-        if (err) reject(err);
-        else resolve(result);
-      });
-    });
-  }
-
-  try {
-    const results = await queryAsync(
-      "SELECT subcode, subname, grade, credits FROM results WHERE regno = ? AND semester = ?",
-      [regno, sem]
-    );
-    const studentRows = await queryAsync(
-      "SELECT name, reg_no, course, photo_url FROM students WHERE reg_no = ?",
-      [regno]
-    );
-    const student = studentRows[0] || {};
-
-    const gradeMap = { S: 10, A: 9, B: 8, C: 7, D: 6, E: 5, F: 0, Ab: 0 };
-    let totalCredits = 0, totalPoints = 0;
-    results.forEach(r => {
-      const gp = gradeMap[r.grade] ?? 0;
-      totalCredits += r.credits;
-      totalPoints += gp * r.credits;
-    });
-
-    const sgpa = totalCredits ? (totalPoints / totalCredits).toFixed(2) : "N/A";
-
-    res.json({
-      name: student.name || "N/A",
-      regno: student.reg_no || regno,
-      course: student.course || "N/A",
-      semester: sem,
-      photo_url: student.photo_url || null,
-      sgpa,
-      results
-    });
-  } catch (err) {
-    console.error("❌ Verification error:", err);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
 //admin create noc 
 app.post('/admin/manual-create-noc', (req, res) => {
   const { regno, year, feeStatus } = req.body;
