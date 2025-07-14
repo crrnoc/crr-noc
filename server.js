@@ -410,23 +410,28 @@ app.post('/send-bulk-notification', async (req, res) => {
 });
 
 // Get notifications for a specific user
+// GET: Notifications with staff name included
 app.get('/notifications/:userId', (req, res) => {
   const { userId } = req.params;
 
-  const query = 'SELECT message, date_sent FROM notifications WHERE userId = ? ORDER BY date_sent DESC';
+  const query = `
+    SELECT n.message, n.date_sent, s.staff_name
+    FROM notifications n
+    LEFT JOIN staff s ON n.staffId = s.staff_id
+    WHERE n.userId = ?
+    ORDER BY n.date_sent DESC
+  `;
+
   connection.query(query, [userId], (err, results) => {
     if (err) {
-      console.error("Error fetching notifications:", err);
+      console.error("❌ Error fetching notifications:", err);
       return res.status(500).json({ success: false, message: "Error retrieving notifications" });
     }
 
     res.json({ success: true, notifications: results });
   });
 });
-// delete notifications automatically
-const cron = require('node-cron');
 
-// Run every 3 days at 2:00 AM
 cron.schedule('0 2 */3 * *', () => {
   const query = 'DELETE FROM notifications WHERE date_sent < NOW() - INTERVAL 3 DAY';
   connection.query(query, (err, result) => {
@@ -438,6 +443,7 @@ cron.schedule('0 2 */3 * *', () => {
   });
 });
 //fine impose
+// POST: Impose Fine and send notification
 app.post('/impose-fine', (req, res) => {
   const { userId, amount, reason, staffId, academic_year } = req.body;
 
@@ -445,20 +451,24 @@ app.post('/impose-fine', (req, res) => {
     return res.status(400).json({ success: false, message: "All fields required." });
   }
 
-  const query = `
+  const fineQuery = `
     INSERT INTO fines (userId, amount, reason, staffId, academic_year)
     VALUES (?, ?, ?, ?, ?)
   `;
-  const values = [userId, amount, reason, staffId, academic_year];
+  const fineValues = [userId, amount, reason, staffId, academic_year];
 
-  connection.query(query, values, (err, result) => {
+  connection.query(fineQuery, fineValues, (err, result) => {
     if (err) {
       console.error("❌ Error inserting fine:", err);
       return res.status(500).json({ success: false, message: "Failed to insert fine" });
     }
 
-    const message = `💸 Fine of ₹${amount} for Year ${academic_year} imposed by Staff ID: ${staffId}. Reason: ${reason}`;
-    connection.query('INSERT INTO notifications (userId, message) VALUES (?, ?)', [userId, message], (err2) => {
+    const message = `💸 Fine of ₹${amount} for Year ${academic_year}. Reason: ${reason}`;
+    const notifyQuery = `
+      INSERT INTO notifications (userId, message, staffId)
+      VALUES (?, ?, ?)
+    `;
+    connection.query(notifyQuery, [userId, message, staffId], (err2) => {
       if (err2) {
         console.error("❌ Notification insert error:", err2);
         return res.status(500).json({ success: false, message: "Fine added, but notification failed" });
