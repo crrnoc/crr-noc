@@ -185,65 +185,72 @@
     </div>
   </div>
 
-  <script>
-    function navigateTo(page) {
-      window.location.href = page;
-    }
-
-    function logout() {
-      localStorage.removeItem("userId");
-      window.location.replace("index.html");
-    }
-
-    function toggleSidebar() {
-      document.querySelector('.sidebar').classList.toggle('open');
-    }
-
-    function loadNOC() {
-      fetch("https://crr-noc.onrender.com/admin/noc-status")
-        .then(res => res.json())
-        .then(data => {
-          const tbody = document.querySelector("#nocTable tbody");
-          tbody.innerHTML = data.map(user => `
-            <tr>
-              <td>${user.userId}</td>
-              <td>${user.eligible ? '✅ Approved' : '❌ Pending'}</td>
-            </tr>
-          `).join("");
-        });
-    }
-
-function searchNOC() {
-  const query = document.getElementById("nocSearchInput").value.trim();
-
-  if (!query) {
-    loadNOC(); // show all if input is cleared
-    return;
+<script>
+  function navigateTo(page) {
+    window.location.href = page;
   }
 
-  fetch("https://crr-noc.onrender.com/admin/search-noc-status", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ query })
-  })
-    .then(res => res.json())
-    .then(data => {
-      const tbody = document.querySelector("#nocTable tbody");
-      if (data.success && data.data.length) {
-        tbody.innerHTML = data.data.map(user => `
+  function logout() {
+    localStorage.removeItem("userId");
+    window.location.replace("index.html");
+  }
+
+  function toggleSidebar() {
+    document.querySelector('.sidebar').classList.toggle('open');
+  }
+
+  function loadNOC() {
+    fetch("https://crr-noc.onrender.com/admin/noc-status")
+      .then(res => res.json())
+      .then(data => {
+        const tbody = document.querySelector("#nocTable tbody");
+        tbody.innerHTML = data.map(user => `
           <tr>
             <td>${user.userId}</td>
             <td>${user.eligible ? '✅ Approved' : '❌ Pending'}</td>
           </tr>
         `).join("");
-      } else {
-        tbody.innerHTML = `<tr><td colspan="2">No matching records found.</td></tr>`;
-      }
-    })
-    .catch(() => alert("Search failed."));
-}
+      });
+  }
 
-    loadNOC(); // Initial load
-  </script>
+  function searchNOC() {
+    const query = document.getElementById("searchInput").value.trim();
+    const tbody = document.querySelector("#nocTable tbody");
+
+    if (!query) {
+      loadNOC(); // If search cleared, load all
+      return;
+    }
+
+    tbody.innerHTML = `<tr><td colspan="2">⏳ Searching, please wait...</td></tr>`;
+
+    fetch("https://crr-noc.onrender.com/admin/search-noc-status", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.data.length) {
+          tbody.innerHTML = data.data.map(user => `
+            <tr>
+              <td>${user.userId}</td>
+              <td>${user.eligible ? '✅ Approved' : '❌ Pending'}</td>
+            </tr>
+          `).join("");
+        } else {
+          tbody.innerHTML = `<tr><td colspan="2">No matching records found.</td></tr>`;
+        }
+      })
+      .catch((err) => {
+        console.error("Search error:", err);
+        tbody.innerHTML = `<tr><td colspan="2">🔴 Failed to load data. Please try again.</td></tr>`;
+      });
+  }
+
+  // Initial load
+  loadNOC();
+</script>
+
 </body>
 </html>
