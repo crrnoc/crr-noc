@@ -1568,85 +1568,6 @@ app.delete("/delete-fee-entry/:id", (req, res) => {
     res.json({ success: true, message: "Fee entry deleted successfully." });
   });
 });
-//admin filter section
-app.post('/admin/noc-filter', (req, res) => {
-  const { course, year, section } = req.body;
-
-  let query = `SELECT userId, reg_no FROM students WHERE 1=1`;
-  const params = [];
-
-  if (course) {
-    query += ` AND course = ?`;
-    params.push(course);
-  }
-
-  if (year) {
-    query += ` AND year = ?`;
-    params.push(year);
-  }
-
-  if (section) {
-    query += ` AND section = ?`;
-    params.push(section);
-  }
-
-  connection.query(query, params, (err, students) => {
-    if (err) return res.status(500).json([]);
-
-    const checks = students.map(student => {
-      const { userId, reg_no } = student;
-
-      return new Promise(resolve => {
-        connection.query(
-          'SELECT * FROM student_fee_structure WHERE reg_no = ? ORDER BY updated_at DESC LIMIT 1',
-          [reg_no],
-          (err2, feeRows) => {
-            if (err2 || feeRows.length === 0) return resolve({ userId, eligible: false });
-
-            const fees = feeRows[0];
-            connection.query(
-              `SELECT fee_type, SUM(amount_paid) AS totalPaid FROM student_fee_payments WHERE userId = ? AND matched = 1 GROUP BY fee_type`,
-              [userId],
-              (err3, paidRows) => {
-                if (err3) return resolve({ userId, eligible: false });
-
-                const paidMap = {};
-                paidRows.forEach(r => paidMap[r.fee_type] = parseFloat(r.totalPaid));
-
-                connection.query(
-                  'SELECT SUM(amount) AS fine FROM fines WHERE userId = ?',
-                  [userId],
-                  (err4, fineRes) => {
-                    const fine = err4 ? 0 : (fineRes[0]?.fine || 0);
-
-                    const expected = {
-                      tuition: parseFloat(fees.tuition) || 0,
-                      hostel: parseFloat(fees.hostel) || 0,
-                      bus: parseFloat(fees.bus) || 0,
-                      university: parseFloat(fees.university) || 0,
-                      semester: parseFloat(fees.semester) || 0,
-                      library: parseFloat(fees.library) || 0,
-                      fines: parseFloat(fine)
-                    };
-
-                    for (let key in expected) {
-                      const remaining = expected[key] - (paidMap[key] || 0);
-                      if (remaining > 0) return resolve({ userId, eligible: false });
-                    }
-
-                    resolve({ userId, eligible: true });
-                  }
-                );
-              }
-            );
-          }
-        );
-      });
-    });
-
-    Promise.all(checks).then(data => res.json(data));
-  });
-});
 
 app.post('/admin/search-student-sbi', (req, res) => {
   const { query } = req.body;
@@ -1669,44 +1590,71 @@ app.post('/admin/search-student-sbi', (req, res) => {
     res.json({ success: true, data: results });
   });
 });
+app.get('/admin/noc-status', (req, res) => {
+  connection.query('SELECT userId, reg_no, name FROM students', (err, students) => {
+    if (err) return res.status(500).json([]);
 
-app.post('/admin/search-noc-status', (req, res) => {
-  const { query } = req.body;
+    const checks = students.map(student => {
+      const { userId, reg_no, name } = student;
 
-  if (!query) {
-    return res.status(400).json({ success: false, message: "No query provided" });
-  }
+      return new Promise(resolve => {
+        // 1️⃣ Get latest fee structure
+        connection.query(
+          'SELECT * FROM student_fee_structure WHERE reg_no = ? ORDER BY updated_at DESC LIMIT 1',
+          [reg_no],
+          (err2, feeRows) => {
+            if (err2 || feeRows.length === 0) return resolve({ userId, name, eligible: false });
 
-  const searchTerm = `%${query}%`;
+            const fees = feeRows[0];
 
-  const sql = `
-    SELECT s.userId, s.name,
-      CASE
-        WHEN (
-          SELECT COUNT(*) FROM student_fee_structure fs
-          WHERE fs.reg_no = s.userId
-          AND fs.total_fee > (
-            SELECT COALESCE(SUM(p.amount_paid), 0)
-            FROM student_fee_payments p
-            WHERE p.userId = s.userId AND p.matched = 1
-          )
-        ) = 0
-        THEN 1 ELSE 0
-      END AS eligible
-    FROM students s
-    WHERE s.userId LIKE ? OR s.name LIKE ?
-  `;
+            // 2️⃣ Get verified paid fees
+            connection.query(
+              `SELECT fee_type, SUM(amount_paid) AS totalPaid 
+               FROM student_fee_payments 
+               WHERE userId = ? AND matched = 1 
+               GROUP BY fee_type`,
+              [userId],
+              (err3, paidRows) => {
+                if (err3) return resolve({ userId, name, eligible: false });
 
-  db.query(sql, [searchTerm, searchTerm], (err, results) => {
-    if (err) {
-      console.error("❌ Error in NOC search route:", err);
-      return res.status(500).json({ success: false, message: "Internal server error" });
-    }
+                const paidMap = {};
+                paidRows.forEach(r => paidMap[r.fee_type] = parseFloat(r.totalPaid));
 
-    return res.json({ success: true, data: results });
+                // 3️⃣ Get fines
+                connection.query(
+                  'SELECT SUM(amount) AS fine FROM fines WHERE userId = ?',
+                  [userId],
+                  (err4, fineRes) => {
+                    const fine = err4 ? 0 : (fineRes[0]?.fine || 0);
+
+                    const expected = {
+                      tuition: parseFloat(fees.tuition) || 0,
+                      hostel: parseFloat(fees.hostel) || 0,
+                      bus: parseFloat(fees.bus) || 0,
+                      university: parseFloat(fees.university) || 0,
+                      semester: parseFloat(fees.semester) || 0,
+                      library: parseFloat(fees.library) || 0,
+                      fines: parseFloat(fine)
+                    };
+
+                    for (let key in expected) {
+                      const remaining = expected[key] - (paidMap[key] || 0);
+                      if (remaining > 0) return resolve({ userId, name, eligible: false });
+                    }
+
+                    resolve({ userId, name, eligible: true });
+                  }
+                );
+              }
+            );
+          }
+        );
+      });
+    });
+
+    Promise.all(checks).then(data => res.json(data));
   });
 });
-
 
 // ✅ Year-wise full fee breakdown (structure + paid + fines)
 app.get('/yearwise-fee/:userId', (req, res) => {
