@@ -283,94 +283,94 @@
     <!-- 🔘 Stylish Tab Switch -->
     <div class="tab-toggle">
       <button id="tabSingle" class="tab-button active" onclick="showSingle()">👤 Add Student</button>
-      <button id="tabBulk" class="tab-button" onclick="showBulk()">📋 Bulk Add</button>
     </div>
+<!-- 🎯 Single Student Form -->
+<form id="singleForm" class="student-form">
+  <label>User ID</label>
+  <input type="text" name="userId" minlength="10" maxlength="10"
+         oninput="this.value = this.value.toUpperCase()" required />
 
-    <!-- 🎯 Single Student Form -->
-    <form id="singleForm" class="student-form">
-     <label>User ID</label>
-<input type="text" name="userId" minlength="10" maxlength="10"
-       oninput="this.value = this.value.toUpperCase()" required />
-      
-      <label>Full Name</label>
-      <input type="text" name="name" required />
+  <label>Full Name</label>
+  <input type="text" name="name" required oninput="liveTitleCase(this)" />
 
-      <label>DOB</label>
-      <input type="date" name="dob" required min="1990-01-01" max="2009-12-31" />
+  <label>DOB</label>
+  <input type="date" name="dob" required id="dobField" />
 
-     <label>Registration No</label>
-<input type="text" name="reg_no" minlength="10" maxlength="10"
-       oninput="this.value = this.value.toUpperCase()" required />
+  <label>Registration No</label>
+  <input type="text" name="reg_no" minlength="10" maxlength="10"
+         oninput="this.value = this.value.toUpperCase()" required />
 
-      <label>Unique ID</label>
-      <input type="text" name="unique_id" maxlength="16" required />
+  <label>Unique ID</label>
+  <input type="text" name="unique_id" maxlength="16" required />
 
-      <label>Year</label>
-      <select name="year" required>
-        <option value="">Select</option>
-        <option value="1">1</option>
-        <option value="2">2</option>
-        <option value="3">3</option>
-        <option value="4">4</option>
-      </select>
+  <label>Year</label>
+  <select name="year" required>
+    <option value="">Select</option>
+    <option value="1">1</option>
+    <option value="2">2</option>
+    <option value="3">3</option>
+    <option value="4">4</option>
+  </select>
 
-      <label>Course</label>
-      <select name="course" required>
-        <option value="">Select</option>
-        <option value="B.Tech-CSE">B.Tech-CSE</option>
-        <option value="B.Tech-AI&ML">B.Tech-AI&ML</option>
-        <option value="B.Tech-AI&DS">B.Tech-AI&DS</option>
-        <option value="B.Tech-Cyber Security">B.Tech-Cyber Security</option>
-        <option value="B.Tech-ECE">B.Tech-ECE</option>
-        <option value="B.Tech-EEE">B.Tech-EEE</option>
-        <option value="B.Tech-Civil">B.Tech-Civil</option>
-        <option value="B.Tech-Mech">B.Tech-Mech</option>
-      </select>
+  <label>Course</label>
+  <select name="course" required>
+    <option value="">Select</option>
+    <option value="B.Tech-CSE">B.Tech-CSE</option>
+    <option value="B.Tech-AI&ML">B.Tech-AI&ML</option>
+    <option value="B.Tech-AI&DS">B.Tech-AI&DS</option>
+    <option value="B.Tech-Cyber Security">B.Tech-Cyber Security</option>
+    <option value="B.Tech-ECE">B.Tech-ECE</option>
+    <option value="B.Tech-EEE">B.Tech-EEE</option>
+    <option value="B.Tech-Civil">B.Tech-Civil</option>
+    <option value="B.Tech-Mech">B.Tech-Mech</option>
+  </select>
 
-      <label>Semester</label>
-      <select name="semester" required>
-        <option value="">Select</option>
-        <option value="1">1</option>
-        <option value="2">2</option>
-      </select>
+  <label>Semester</label>
+  <select name="semester" required>
+    <option value="">Select</option>
+    <option value="1">1</option>
+    <option value="2">2</option>
+  </select>
 
-      <label>Section</label>
-      <input type="text" name="section" maxlength="1" required />
+  <label>Section</label>
+  <input type="text" name="section" maxlength="1"
+         oninput="this.value = this.value.toUpperCase()" required />
 
-      <label>Aadhar No</label>
-      <input type="text" name="aadhar_no" maxlength="12" pattern="\d{12}" />
+  <label>Aadhar No</label>
+  <input type="text" name="aadhar_no" maxlength="12" pattern="\d{12}" />
 
-      <label>Mobile No</label>
-      <input type="text" name="mobile_no" maxlength="10" pattern="\d{10}" required />
+  <label>Mobile No</label>
+  <input type="text" name="mobile_no" maxlength="10" pattern="\d{10}" required />
 
-      <label>Father Name</label>
-      <input type="text" name="father_name" required />
+  <label>Father Name</label>
+  <input type="text" name="father_name" required oninput="liveTitleCase(this)" />
 
-      <label>Father Mobile</label>
-      <input type="text" name="father_mobile_no" maxlength="10" pattern="\d{10}" required />
+  <label>Father Mobile</label>
+  <input type="text" name="father_mobile_no" maxlength="10" pattern="\d{10}" required />
 
-      <label>Counsellor Name</label>
-      <input type="text" name="counsellor_name" required />
+  <label>Counsellor Name</label>
+  <input type="text" name="counsellor_name" required oninput="liveTitleCase(this)" />
 
-      <label>Counsellor Mobile</label>
-      <input type="text" name="counsellor_mobile" maxlength="10" pattern="\d{10}" required />
+  <label>Counsellor Mobile</label>
+  <input type="text" name="counsellor_mobile" maxlength="10" pattern="\d{10}" required />
 
-      <label>Email</label>
-      <input type="email" name="email" required />
-      <label>Admission Type</label>
-     <select name="admission_type" required>
-     <option value="">Select</option>
-     <option value="Counselling">Counselling</option>
-     <option value="Management">Management</option>
-     <option value="Spot">Spot</option>
-     </select>
+  <label>Email</label>
+  <input type="email" name="email" required />
 
+  <label>Admission Type</label>
+  <select name="admission_type" required>
+    <option value="">Select</option>
+    <option value="Counselling">Counselling</option>
+    <option value="Management">Management</option>
+    <option value="Spot">Spot</option>
+  </select>
 
-      <label>Password</label>
-      <input type="password" name="password" required />
+  <label>Password</label>
+  <input type="password" name="password" required />
 
-      <button type="submit">Add Student</button>
-    </form>
+  <button type="submit">Add Student</button>
+</form>
+
     <p id="response" class="message"></p>
   </div>
 </div>
@@ -386,9 +386,7 @@ document.getElementById("userId").textContent = userId || "Admin";
 
 function showSingle() {
   document.getElementById("singleForm").style.display = "block";
-  document.getElementById("bulkForm").style.display = "none";
   document.getElementById("tabSingle").classList.add("active");
-  document.getElementById("tabBulk").classList.remove("active");
 }
 function toggleMobileMenu() {
   document.querySelector(".sidebar").classList.toggle("open");
@@ -398,18 +396,27 @@ function logout() {
   location.href = "index.html";
 }
 
-/* ---------- 🎯 Capitalize Helper ---------- */
-function toTitleCase(str) {
-  return str.toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
+/* 🎯 Capitalize as user types */
+function liveTitleCase(input) {
+  input.value = input.value.toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
 }
 
-/* ---------- 1️⃣ single‑student ---------- */
+/* 🎯 Set dynamic max DOB for 16+ age */
+window.addEventListener("DOMContentLoaded", () => {
+  const dobField = document.querySelector("input[name='dob']");
+  const today = new Date();
+  const maxDOB = new Date(today.getFullYear() - 16, today.getMonth(), today.getDate());
+  dobField.max = maxDOB.toISOString().split("T")[0];
+  dobField.min = "1990-01-01";
+});
+
+/* ✅ Single student submit */
 document.getElementById("singleForm").addEventListener("submit", async e => {
   e.preventDefault();
   const form = e.target;
   const data = Object.fromEntries(new FormData(form).entries());
 
-  // Capitalize relevant fields
+  // Capitalize relevant fields before send
   data.name = toTitleCase(data.name.trim());
   data.father_name = toTitleCase(data.father_name.trim());
   data.counsellor_name = toTitleCase(data.counsellor_name.trim());
@@ -444,6 +451,21 @@ document.getElementById("singleForm").addEventListener("submit", async e => {
   Swal.fire(out.success ? "✅ Added" : "❌ Failed", out.message, out.success ? "success" : "error");
   if (out.success) form.reset();
 });
+
+/* 🔠 Attach auto-capitalization to fields */
+document.addEventListener("DOMContentLoaded", () => {
+  ["name", "father_name", "counsellor_name"].forEach(field => {
+    const input = document.querySelector(`input[name="${field}"]`);
+    if (input) {
+      input.addEventListener("input", () => liveTitleCase(input));
+    }
+  });
+});
+
+/* Title Case helper used in backend and submit */
+function toTitleCase(str) {
+  return str.toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
+}
 </script>
 </body>
 </html>
