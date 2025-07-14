@@ -1618,40 +1618,20 @@ app.post('/admin/noc-filter', (req, res) => {
   });
 });
 
-app.post('/admin/match-filter', (req, res) => {
-  const { course, year, section } = req.body;
+app.post('/admin/search-student-sbi', (req, res) => {
+  const { query } = req.body;
 
-  let query = `SELECT userId FROM students WHERE 1=1`;
-  const params = [];
+  const sql = `
+    SELECT s.reg_no AS userId, s.name, f.fee_type, f.reference_no, f.date, f.matched
+    FROM students s
+    LEFT JOIN student_fee_payments f ON s.reg_no = f.userId
+    WHERE s.reg_no LIKE ? OR s.name LIKE ?
+  `;
 
-  if (course) {
-    query += ` AND course = ?`;
-    params.push(course);
-  }
-
-  if (year) {
-    query += ` AND year = ?`;
-    params.push(year);
-  }
-
-  if (section) {
-    query += ` AND section = ?`;
-    params.push(section);
-  }
-
-  connection.query(query, params, (err, students) => {
-    if (err) return res.status(500).json([]);
-
-    const userIds = students.map(s => s.userId);
-    if (!userIds.length) return res.json([]);
-
-    const inClause = userIds.map(() => '?').join(',');
-    const sql = `SELECT * FROM student_fee_payments WHERE userId IN (${inClause})`;
-
-    connection.query(sql, userIds, (err2, results) => {
-      if (err2) return res.status(500).json([]);
-      res.json(results);
-    });
+  const likeQuery = `%${query}%`;
+  connection.query(sql, [likeQuery, likeQuery], (err, results) => {
+    if (err) return res.status(500).json({ success: false });
+    res.json({ success: true, data: results });
   });
 });
 
