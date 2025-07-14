@@ -1680,34 +1680,40 @@ app.post("/get-student-details", async (req, res) => {
 });
 // ✅ Delete Student
 // ✅ Delete Student with Photo Removal
-app.post("/delete-student", async (req, res) => {
+// 🗑️ Delete a single student and all their data
+app.post('/delete-student', (req, res) => {
   const { reg_no } = req.body;
 
-  try {
-    // Step 1: Delete student-related records from MySQL
-        await connection.promise().query("DELETE FROM users WHERE userid = ?", [userid]);
-        await connection.promise().query("DELETE FROM students WHERE userId = ?", [reg_no]);
-        await connection.promise().query("DELETE FROM student_fee_structure WHERE reg_no = ?", [reg_no]);
-        await connection.promise().query("DELETE FROM student_fee_payments WHERE userId = ?", [reg_no]);
-        await connection.promise().query("DELETE FROM notifications WHERE userId = ?", [reg_no]);
-        await connection.promise().query("DELETE FROM fines WHERE userId = ?", [reg_no]);
-        await connection.promise().query("DELETE FROM autonomous_results WHERE userId = ?", [regno]);
-        await connection.promise().query("DELETE FROM attendance WHERE userId = ?", [regno]);
-        await connection.promise().query("DELETE FROM results WHERE userId = ?", [regno]);
-        
-    // Step 2: Delete Cloudinary photo(s)
-    try {
-      const result = await cloudinary.api.delete_resources_by_prefix(`students/${reg_no}`);
-      console.log(`🧹 Cloudinary photo(s) deleted for ${reg_no}`, result);
-    } catch (err) {
-      console.error(`❌ Failed to delete Cloudinary photo for ${reg_no}:`, err.message);
+  if (!reg_no) return res.status(400).json({ success: false, message: "Registration number required." });
+
+  // First get userId from students table using reg_no
+  connection.query('SELECT userId FROM students WHERE reg_no = ?', [reg_no], (err, results) => {
+    if (err || results.length === 0) {
+      return res.status(404).json({ success: false, message: "Student not found." });
     }
 
-    res.json({ success: true, message: "Student deleted successfully (including photo)" });
-  } catch (err) {
-    console.error("❌ Student deletion error:", err);
-    res.status(500).json({ success: false, message: "Error deleting student" });
-  }
+    const userId = results[0].userId;
+
+    const queries = [
+      ['DELETE FROM users WHERE userid = ?', [reg_no]],
+      ['DELETE FROM students WHERE reg_no = ?', [reg_no]],
+      ['DELETE FROM student_fee_structure WHERE reg_no = ?', [reg_no]],
+      ['DELETE FROM student_fee_payments WHERE userId = ?', [reg_no]],
+      ['DELETE FROM notifications WHERE userId = ?', [reg_no]],
+      ['DELETE FROM fines WHERE userId = ?', [reg_no]],
+    ];
+
+    let completed = 0;
+    queries.forEach(([query, params]) => {
+      connection.query(query, params, (err2) => {
+        if (err2) console.error(`Error deleting from table: ${query}`, err2);
+        completed++;
+        if (completed === queries.length) {
+          return res.json({ success: true, message: `Student ${reg_no} and all related data deleted.` });
+        }
+      });
+    });
+  });
 });
 
 
@@ -1728,46 +1734,63 @@ app.post("/filter-batch", async (req, res) => {
 
 // ✅ Delete Batch
 // ✅ Delete Batch with Photos
-app.post("/delete-batch", async (req, res) => {
+app.post('/delete-batch', (req, res) => {
   const { batchPrefix, branch } = req.body;
 
-  try {
-    const [students] = await connection.promise().query(
-      "SELECT reg_no FROM students WHERE reg_no LIKE ? AND course = ?",
-      [`${batchPrefix}%`, branch]
-    );
+  if (!batchPrefix || !branch) {
+    return res.status(400).json({ success: false, message: "Batch prefix and branch required." });
+  }
 
-    for (const student of students) {
-      const reg_no = student.reg_no;
+  const pattern = `${batchPrefix}%`;
 
-      try {
-        await connection.promise().query("DELETE FROM users WHERE userid = ?", [userid]);
-        await connection.promise().query("DELETE FROM students WHERE userId = ?", [reg_no]);
-        await connection.promise().query("DELETE FROM student_fee_structure WHERE reg_no = ?", [reg_no]);
-        await connection.promise().query("DELETE FROM student_fee_payments WHERE userId = ?", [reg_no]);
-        await connection.promise().query("DELETE FROM notifications WHERE userId = ?", [reg_no]);
-        await connection.promise().query("DELETE FROM fines WHERE userId = ?", [reg_no]);
-        await connection.promise().query("DELETE FROM autonomous_results WHERE userId = ?", [regno]);
-        await connection.promise().query("DELETE FROM attendance WHERE userId = ?", [regno]);
-        await connection.promise().query("DELETE FROM results WHERE userId = ?", [regno]);
-        
-        // 👇 Delete Cloudinary photo(s) for each student
-        try {
-          const result = await cloudinary.api.delete_resources_by_prefix(`students/${reg_no}`);
-          console.log(`🧹 Deleted photo(s) for ${reg_no}`, result);
-        } catch (err) {
-          console.error(`❌ Failed to delete photo for ${reg_no}:`, err.message);
-        }
-      } catch (err) {
-        console.error(`❌ Error deleting records for ${reg_no}:`, err.message);
-      }
+  connection.query('SELECT reg_no FROM students WHERE reg_no LIKE ? AND course = ?', [pattern, branch], (err, results) => {
+    if (err) return res.status(500).json({ success: false, message: "DB Error" });
+
+    if (results.length === 0) {
+      return res.json({ success: false, message: "No students found for given batch." });
     }
 
-    res.json({ success: true, message: "Batch deleted successfully (including photos)" });
-  } catch (err) {
-    console.error("❌ Batch delete error:", err);
-    res.status(500).json({ success: false, message: "Error deleting batch" });
-  }
+    const regnos = results.map(r => r.reg_no);
+    let deletedCount = 0;
+
+    const deleteNext = () => {
+      if (deletedCount >= regnos.length) {
+        return res.json({ success: true, message: `Batch ${batchPrefix} - ${branch} deleted successfully.` });
+      }
+
+      const reg = regnos[deletedCount];
+      connection.query('SELECT userId FROM students WHERE reg_no = ?', [reg], (err2, result2) => {
+        if (err2 || result2.length === 0) {
+          deletedCount++;
+          return deleteNext();
+        }
+
+        const userId = result2[0].userId;
+
+        const queries = [
+          ['DELETE FROM users WHERE userid = ?', [reg]],
+          ['DELETE FROM students WHERE reg_no = ?', [reg]],
+          ['DELETE FROM student_fee_structure WHERE reg_no = ?', [reg]],
+          ['DELETE FROM student_fee_payments WHERE userId = ?', [reg]],
+          ['DELETE FROM notifications WHERE userId = ?', [reg]],
+          ['DELETE FROM fines WHERE userId = ?', [reg]],
+        ];
+
+        let step = 0;
+        queries.forEach(([sql, values]) => {
+          connection.query(sql, values, () => {
+            step++;
+            if (step === queries.length) {
+              deletedCount++;
+              deleteNext();
+            }
+          });
+        });
+      });
+    };
+
+    deleteNext();
+  });
 });
 
 // result pdf upload
