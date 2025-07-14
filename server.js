@@ -721,62 +721,65 @@ app.get('/noc-eligibility/:userId', (req, res) => {
 });
 app.post('/admin/upload-sbi', upload.single('sbiFile'), (req, res) => {
   const filePath = path.join(__dirname, req.file.path);
+  const csv = require('csv-parser');
+  const results = [];
 
-  const lines = fs.readFileSync(filePath, 'utf-8')
-    .split('\n')
-    .map(line => line.trim())
-    .filter(line => line !== '');
+  fs.createReadStream(filePath)
+    .pipe(csv())
+    .on('data', (row) => {
+      const du = row["Bank Reference No"]?.trim();
+      const amt = parseFloat(row["Amount"]);
+      const status = row["Status"]?.toLowerCase();
+      const uniqueId = row["UNIQUE NO"]?.trim();
 
-  // ✅ Extract and filter only valid completed entries with 4 fields
-  const formatted = lines
-    .map(row => row.split(','))
-    .filter(cols =>
-      cols.length >= 4 &&
-      cols[3].toLowerCase().includes("Completed Successfully") &&
-      cols[0].trim() !== "" && // ref
-      cols[1].trim() !== "" && // amount
-      cols[2].trim() !== ""    // uniqueId
-    )
-    .map(([ref, amount, uniqueId]) => [ref.trim(), parseFloat(amount.trim()), uniqueId.trim()]);
-
-  if (formatted.length === 0) {
-    return res.status(400).json({ success: false, message: '❌ No valid COMPLETED entries found in file.' });
-  }
-
-  // ✅ Step 1: Insert into sbi_uploaded_references
-  const insertQuery = `
-    INSERT INTO sbi_uploaded_references (sbi_ref_no, amount, unique_id)
-    VALUES ?
-  `;
-
-  connection.query(insertQuery, [formatted], (err) => {
-    if (err) {
-      console.error('❌ Upload error:', err);
-      return res.status(500).json({ success: false, message: 'Upload failed.' });
-    }
-
-    // ✅ Step 2: Match entries where DU, amount, and unique ID match
-    const matchQuery = `
-      UPDATE student_fee_payments p
-      JOIN students s ON p.userId = s.userId
-      JOIN sbi_uploaded_references r 
-        ON p.sbi_ref_no = r.sbi_ref_no 
-        AND p.amount_paid = r.amount 
-        AND s.uniqueId = r.unique_id
-      SET p.matched = 1, p.matched_on = NOW()
-      WHERE p.matched = 0
-    `;
-
-    connection.query(matchQuery, (err2, result) => {
-      if (err2) {
-        console.error('❌ Match error:', err2);
-        return res.status(500).json({ success: false, message: 'Matching failed.' });
+      if (
+        du && amt && uniqueId &&
+        status && status.includes("completed successfully")
+      ) {
+        results.push([du, amt, uniqueId]);
+      }
+    })
+    .on('end', () => {
+      if (results.length === 0) {
+        return res.status(400).json({ success: false, message: '❌ No valid COMPLETED entries found.' });
       }
 
-      res.json({ success: true, message: `✅ SBI file uploaded and ${result.affectedRows} entries matched successfully.` });
+      // Step 1: Insert into sbi_uploaded_references
+      const insertQuery = `
+        INSERT INTO sbi_uploaded_references (sbi_ref_no, amount, unique_id)
+        VALUES ?
+      `;
+
+      connection.query(insertQuery, [results], (err) => {
+        if (err) {
+          console.error('❌ Upload error:', err);
+          return res.status(500).json({ success: false, message: 'Upload failed.' });
+        }
+
+        // Step 2: Match with student_fee_payments + uniqueId from students table
+        const matchQuery = `
+          UPDATE student_fee_payments p
+          JOIN students s ON p.userId = s.userId
+          JOIN sbi_uploaded_references r 
+            ON p.sbi_ref_no = r.sbi_ref_no 
+            AND p.amount_paid = r.amount 
+            AND s.uniqueId = r.unique_id
+          SET p.matched = 1, p.matched_on = NOW()
+          WHERE p.matched = 0
+        `;
+
+        connection.query(matchQuery, (err2, result) => {
+          if (err2) {
+            console.error('❌ Match error:', err2);
+            return res.status(500).json({ success: false, message: 'Matching failed.' });
+          }
+
+          res.json({ success: true, message: `✅ SBI file uploaded. ${result.affectedRows} entries matched successfully.` });
+        });
+      });
     });
-  });
 });
+
 
 app.get('/admin/matches', (req, res) => {
   connection.query('SELECT * FROM student_fee_payments', (err, results) => {
