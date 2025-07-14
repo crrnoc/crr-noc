@@ -2458,7 +2458,7 @@ app.get("/generate-certificate/:userId", async (req, res) => {
     doc.font("Helvetica").fontSize(8).fillColor("black");
     doc.text("CP: COMPLETED   NCP: NOT-COMPLETED   MP: Malpractice   WH: Withheld   P: Pass   F: Fail   AB: Absent", 40, finalTableY + 50);
 
-    const qrText = `https://crr-noc.onrender.com/verify-result?regno=${userId}&sem=${semester}`;
+    const qrText = `https://crr-noc.onrender.com/verifyresult.html?regno=${userId}&sem=${semester}`;
     const qrDataURL = await QRCode.toDataURL(qrText);
     const qrBuffer = Buffer.from(qrDataURL.split(",")[1], "base64");
     doc.image(qrBuffer, 440, 670, { width: 80 });
