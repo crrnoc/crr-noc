@@ -280,170 +280,165 @@
   <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
 
   <!-- 🔌 Script -->
-  <script>
-    const userId = localStorage.getItem("userId");
-    const role = localStorage.getItem("role");
-    document.getElementById("userId").textContent = userId || "Unknown";
+<script>
+  const userId = localStorage.getItem("userId");
+  const role = localStorage.getItem("role");
+  document.getElementById("userId").textContent = userId || "Unknown";
 
-    // 🔒 Auth Check
-    if (!userId || role !== "staff") {
-      Swal.fire({
-        icon: "error",
-        title: "Unauthorized",
-        text: "You must login as staff to view this page.",
-        confirmButtonText: "Go to Login"
-      }).then(() => {
-        window.location.href = "index.html";
-      });
-    } else {
-      // 🎯 Fetch counselling students
-      fetch(`/my-counselling-students/${userId}`)
-        .then(res => res.json())
-        .then(data => {
-          const container = document.getElementById("cardContainer");
-
-          if (data.success && data.students.length > 0) {
-            data.students.forEach(std => {
-              const card = document.createElement("div");
-              card.className = "student-card";
-              card.innerHTML = `
-              
-                <h3>${std.name}</h3>
-                <p><strong>Reg No:</strong> ${std.reg_no}</p>
-                <p><strong>Course:</strong> ${std.course}</p>
-                <p><strong>Year:</strong> ${std.year}</p>
-                <p><strong>Section:</strong> ${std.section}</p>
-                <p><strong>Email:</strong> ${std.email}</p>
-                <p><strong>Mobile:</strong> ${std.mobile_no}</p>
-              `;
-               card.onclick = () => openModal(std); // ✅ This line should be outside the innerHTML
-              container.appendChild(card);
-            });
-          } else {
-            container.innerHTML = `<p style="text-align:center; color:#666;">No students assigned yet.</p>`;
-          }
-        })
-        .catch(err => {
-          console.error("Error fetching students:", err);
-          Swal.fire("Error", "Failed to fetch student data.", "error");
-        });
-    }
-     function openModal(student) {
-  // Set name, father info
-  document.getElementById("modalName").textContent = student.name;
-  document.getElementById("modalFather").textContent = `Father: ${student.father_name || "N/A"}`;
-  document.getElementById("modalMobile").textContent = `Father Mobile: ${student.father_mobile || "N/A"}`;
-
-  // Show modal
-  document.getElementById("studentModal").style.display = "block";
-
-  // Default to attendance tab
-  showTab("attendance");
-
-  // 📊 Fetch Attendance
-  fetch(`/student-attendance/${student.reg_no}`)
-    .then(res => res.json())
-    .then(data => {
-      if (data.success && data.data.length > 0) {
-        const rows = data.data.map(row => `
-          <tr>
-            <td>${row.semester}</td>
-            <td>${row.total_classes}</td>
-            <td>${row.attended_classes}</td>
-            <td>${row.percentage}%</td>
-          </tr>`).join("");
-        document.getElementById("attendanceContent").innerHTML = `
-          <table style="width:100%; border-collapse: collapse; margin-top: 10px;">
-            <tr style="background:#eee;">
-              <th>Semester</th>
-              <th>Total</th>
-              <th>Attended</th>
-              <th>%</th>
-            </tr>
-            ${rows}
-          </table>
-        `;
-      } else {
-        document.getElementById("attendanceContent").innerHTML = "No attendance data available.";
-      }
+  // 🔒 Auth Check
+  if (!userId || role !== "staff") {
+    Swal.fire({
+      icon: "error",
+      title: "Unauthorized",
+      text: "You must login as staff to view this page.",
+      confirmButtonText: "Go to Login"
+    }).then(() => {
+      window.location.href = "index.html";
     });
+  } else {
+    // 🎯 Fetch counselling students
+    fetch(`/my-counselling-students/${userId}`)
+      .then(res => res.json())
+      .then(data => {
+        const container = document.getElementById("cardContainer");
 
-  // 📚 Fetch Results (all sems)
- // 📚 Set up semester dropdown listener
-const semesterDropdown = document.getElementById("semesterSelect");
-semesterDropdown.value = ""; // reset on open
-semesterDropdown.onchange = () => {
-  const semester = semesterDropdown.value;
-  if (!semester) {
-    document.getElementById("resultsContent").innerHTML = "";
-    return;
+        if (data.success && data.students.length > 0) {
+          data.students.forEach(std => {
+            const card = document.createElement("div");
+            card.className = "student-card";
+            card.innerHTML = `
+              <h3>${std.name}</h3>
+              <p><strong>Reg No:</strong> ${std.reg_no}</p>
+              <p><strong>Course:</strong> ${std.course}</p>
+              <p><strong>Year:</strong> ${std.year}</p>
+              <p><strong>Section:</strong> ${std.section}</p>
+              <p><strong>Email:</strong> ${std.email}</p>
+              <p><strong>Mobile:</strong> ${std.mobile_no}</p>
+            `;
+            card.onclick = () => openModal(std);
+            container.appendChild(card);
+          });
+        } else {
+          container.innerHTML = `<p style="text-align:center; color:#666;">No students assigned yet.</p>`;
+        }
+      })
+      .catch(err => {
+        console.error("Error fetching students:", err);
+        Swal.fire("Error", "Failed to fetch student data.", "error");
+      });
   }
 
-  fetch(`/student/results/${student.reg_no}?semester=${semester}`)
-    .then(res => res.json())
-    .then(data => {
-      if (data.results && data.results.length > 0) {
-        const subjectRows = data.results.map(r => `
-          <tr>
-            <td>${r.subcode}</td>
-            <td>${r.subname}</td>
-            <td>${r.grade}</td>
-            <td>${r.credits}</td>
-          </tr>`).join("");
+  function openModal(student) {
+    console.log("🟢 Modal opened for", student.name);
+    document.getElementById("modalName").textContent = student.name;
+    document.getElementById("modalFather").textContent = `Father: ${student.father_name || "N/A"}`;
+    document.getElementById("modalMobile").textContent = `Father Mobile: ${student.father_mobile || "N/A"}`;
 
-        document.getElementById("resultsContent").innerHTML = `
-          <table style="width:100%; border-collapse: collapse; margin-top: 10px;">
-            <tr style="background:#eee;">
-              <th>Sub Code</th>
-              <th>Subject</th>
-              <th>Grade</th>
-              <th>Credits</th>
-            </tr>
-            ${subjectRows}
-          </table>
-          <div style="margin-top: 10px;">
-            <p><strong>SGPA:</strong> ${data.sgpa}</p>
-            <p><strong>CGPA:</strong> ${data.cgpa}</p>
-            <p><strong>Percentage:</strong> ${data.percentage}%</p>
-          </div>
-        `;
-      } else {
-        document.getElementById("resultsContent").innerHTML = "No result data for selected semester.";
-      }
-    });
-};
+    document.getElementById("studentModal").style.display = "block";
+    showTab("attendance");
 
-function closeModal() {
-  document.getElementById("studentModal").style.display = "none";
-}
-
-function showTab(tabName) {
-  document.getElementById("attendanceTab").style.display = tabName === "attendance" ? "block" : "none";
-  document.getElementById("resultsTab").style.display = tabName === "results" ? "block" : "none";
-
-  // optional: highlight active button
-  document.getElementById("btnAttendance").style.backgroundColor = tabName === "attendance" ? "#ddd" : "#f0f0f0";
-  document.getElementById("btnResults").style.backgroundColor = tabName === "results" ? "#ddd" : "#f0f0f0";
-}
-
-    function logout() {
-      localStorage.clear();
-      window.location.href = "index.html";
-    }
-
-    function toggleMobileMenu() {
-      const sidebar = document.getElementById("sidebar");
-      sidebar.classList.toggle("open");
-    }
-
-    // Auto-close sidebar on mobile after clicking a menu item
-    document.querySelectorAll(".menu li a").forEach(link => {
-      link.addEventListener("click", () => {
-        if (window.innerWidth <= 768) {
-          document.querySelector('.sidebar').classList.remove('open');
+    // 📊 Fetch Attendance
+    fetch(`/student-attendance/${student.reg_no}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.data.length > 0) {
+          const rows = data.data.map(row => `
+            <tr>
+              <td>${row.semester}</td>
+              <td>${row.total_classes}</td>
+              <td>${row.attended_classes}</td>
+              <td>${row.percentage}%</td>
+            </tr>`).join("");
+          document.getElementById("attendanceContent").innerHTML = `
+            <table style="width:100%; border-collapse: collapse; margin-top: 10px;">
+              <tr style="background:#eee;">
+                <th>Semester</th>
+                <th>Total</th>
+                <th>Attended</th>
+                <th>%</th>
+              </tr>
+              ${rows}
+            </table>
+          `;
+        } else {
+          document.getElementById("attendanceContent").innerHTML = "No attendance data available.";
         }
       });
+
+    // 📚 Set up semester dropdown listener
+    const semesterDropdown = document.getElementById("semesterSelect");
+    semesterDropdown.value = "";
+    semesterDropdown.onchange = () => {
+      const semester = semesterDropdown.value;
+      if (!semester) {
+        document.getElementById("resultsContent").innerHTML = "";
+        return;
+      }
+
+      fetch(`/student/results/${student.reg_no}?semester=${semester}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.results && data.results.length > 0) {
+            const subjectRows = data.results.map(r => `
+              <tr>
+                <td>${r.subcode}</td>
+                <td>${r.subname}</td>
+                <td>${r.grade}</td>
+                <td>${r.credits}</td>
+              </tr>`).join("");
+
+            document.getElementById("resultsContent").innerHTML = `
+              <table style="width:100%; border-collapse: collapse; margin-top: 10px;">
+                <tr style="background:#eee;">
+                  <th>Sub Code</th>
+                  <th>Subject</th>
+                  <th>Grade</th>
+                  <th>Credits</th>
+                </tr>
+                ${subjectRows}
+              </table>
+              <div style="margin-top: 10px;">
+                <p><strong>SGPA:</strong> ${data.sgpa}</p>
+                <p><strong>CGPA:</strong> ${data.cgpa}</p>
+                <p><strong>Percentage:</strong> ${data.percentage}%</p>
+              </div>
+            `;
+          } else {
+            document.getElementById("resultsContent").innerHTML = "No result data for selected semester.";
+          }
+        });
+    };
+  } // ✅ <-- this was the missing bracket
+
+  function closeModal() {
+    document.getElementById("studentModal").style.display = "none";
+  }
+
+  function showTab(tabName) {
+    document.getElementById("attendanceTab").style.display = tabName === "attendance" ? "block" : "none";
+    document.getElementById("resultsTab").style.display = tabName === "results" ? "block" : "none";
+
+    document.getElementById("btnAttendance").style.backgroundColor = tabName === "attendance" ? "#ddd" : "#f0f0f0";
+    document.getElementById("btnResults").style.backgroundColor = tabName === "results" ? "#ddd" : "#f0f0f0";
+  }
+
+  function logout() {
+    localStorage.clear();
+    window.location.href = "index.html";
+  }
+
+  function toggleMobileMenu() {
+    const sidebar = document.getElementById("sidebar");
+    sidebar.classList.toggle("open");
+  }
+
+  document.querySelectorAll(".menu li a").forEach(link => {
+    link.addEventListener("click", () => {
+      if (window.innerWidth <= 768) {
+        document.querySelector('.sidebar').classList.remove('open');
+      }
     });
-  </script>
+  });
+</script>
 </body>
 </html>
