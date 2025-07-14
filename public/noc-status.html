@@ -169,26 +169,13 @@
   <div class="main">
     <div class="banner">📜 NOC Generation Status</div>
     <div class="card">
-      <div style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;">
-        <select id="nocCourse">
-          <option value="">-- Course --</option>
-          <option>CIVIL</option><option>MECH</option><option>EEE</option>
-          <option>ECE</option><option>CSE</option><option>CSD</option>
-          <option>CSM</option><option>CSC</option><option>IT</option>
-        </select>
-        <select id="nocYear">
-          <option value="">-- Year --</option>
-          <option value="1">1st Year</option><option value="2">2nd Year</option>
-          <option value="3">3rd Year</option><option value="4">4th Year</option>
-        </select>
-        <select id="nocSection">
-          <option value="">-- Section --</option>
-          <option>A</option><option>B</option><option>C</option>
-          <option>D</option><option>E</option><option>F</option>
-        </select>
-        <button onclick="applyNOCFilter()">Filter</button>
-        <button onclick="loadNOC()">Reset</button>
-      </div>
+    <div style="margin-bottom: 20px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+  <input type="text" id="nocSearchInput" oninput="searchNOC()" placeholder="🔍 Search by Reg No or Name"
+    style="flex: 1; padding: 10px 15px; border-radius: 10px; font-size: 15px;
+           border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.08);
+           color: white; backdrop-filter: blur(5px); outline: none;" />
+  <button onclick="loadNOC()">Reset</button>
+</div>
       <div style="overflow-x: auto;">
         <table id="nocTable">
           <thead><tr><th>User ID</th><th>Status</th></tr></thead>
@@ -226,32 +213,35 @@
         });
     }
 
-    function applyNOCFilter() {
-      const course = document.getElementById("nocCourse").value.trim();
-      const year = document.getElementById("nocYear").value.trim();
-      const section = document.getElementById("nocSection").value.trim();
+function searchNOC() {
+  const query = document.getElementById("nocSearchInput").value.trim();
 
-      fetch("https://crr-noc.onrender.com/admin/noc-filter", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ course, year, section })
-      })
-        .then(res => res.json())
-        .then(data => {
-          const tbody = document.querySelector("#nocTable tbody");
-          if (data.length) {
-            tbody.innerHTML = data.map(user => `
-              <tr>
-                <td>${user.userId}</td>
-                <td>${user.eligible ? '✅ Approved' : '❌ Pending'}</td>
-              </tr>
-            `).join("");
-          } else {
-            tbody.innerHTML = `<tr><td colspan="2">No matching records found.</td></tr>`;
-          }
-        })
-        .catch(() => alert("Failed to apply NOC filter."));
-    }
+  if (!query) {
+    loadNOC(); // show all if input is cleared
+    return;
+  }
+
+  fetch("https://crr-noc.onrender.com/admin/search-noc-status", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ query })
+  })
+    .then(res => res.json())
+    .then(data => {
+      const tbody = document.querySelector("#nocTable tbody");
+      if (data.success && data.data.length) {
+        tbody.innerHTML = data.data.map(user => `
+          <tr>
+            <td>${user.userId}</td>
+            <td>${user.eligible ? '✅ Approved' : '❌ Pending'}</td>
+          </tr>
+        `).join("");
+      } else {
+        tbody.innerHTML = `<tr><td colspan="2">No matching records found.</td></tr>`;
+      }
+    })
+    .catch(() => alert("Search failed."));
+}
 
     loadNOC(); // Initial load
   </script>
