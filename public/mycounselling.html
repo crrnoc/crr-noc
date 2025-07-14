@@ -205,9 +205,6 @@
 </head>
 <body>
   <div class="main-container">
-    <!-- ☰ Mobile Toggle Button -->
-    <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
-
     <!-- 🧊 Sidebar -->
     <div class="sidebar" id="sidebar">
       <h2>ID: <span id="userId">Loading...</span></h2>
@@ -274,7 +271,7 @@
       </div>
     </div>
   </div>
-
+    <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
   <script>
     const userId = localStorage.getItem("userId");
     const role = localStorage.getItem("role");
