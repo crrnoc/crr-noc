@@ -99,6 +99,17 @@ connection.connect((err) => {
     console.log('✅ Connected to MySQL database');
   }
 });
+// 🔁 Cleanup old notifications every 24 hours
+setInterval(() => {
+  const query = `DELETE FROM notifications WHERE date_sent < NOW() - INTERVAL 3 DAY`;
+  connection.query(query, (err, result) => {
+    if (err) {
+      console.error("❌ Failed to delete old notifications:", err);
+    } else {
+      console.log(`🧹 Deleted ${result.affectedRows} notifications older than 3 days`);
+    }
+  });
+}, 24 * 60 * 60 * 1000); // Runs once every 24 hours
 
 
 // ✅ Admin routes
