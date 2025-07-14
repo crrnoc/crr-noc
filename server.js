@@ -1624,7 +1624,7 @@ app.post('/admin/search-student-sbi', (req, res) => {
   if (!query) return res.status(400).json({ success: false, message: "Query is required" });
 
   const sql = `
-    SELECT s.reg_no AS userId, s.name, f.fee_type, f.reference_no, f.date, f.matched
+    SELECT s.reg_no AS userId, s.name, f.fee_type, f.sbi_ref_no, f.matched, f.matched_on
     FROM students s
     LEFT JOIN student_fee_payments f ON s.reg_no = f.userId
     WHERE s.reg_no LIKE ? OR s.name LIKE ?
@@ -1633,8 +1633,8 @@ app.post('/admin/search-student-sbi', (req, res) => {
   const likeQuery = `%${query}%`;
   connection.query(sql, [likeQuery, likeQuery], (err, results) => {
     if (err) {
-      console.error("SQL Error:", err); // log the error
-      return res.status(500).json({ success: false, message: "Database error" });
+      console.error("🔥 SQL Execution Error:", err.sqlMessage);
+      return res.status(500).json({ success: false, message: "Internal error" });
     }
     res.json({ success: true, data: results });
   });
