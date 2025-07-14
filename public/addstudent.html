@@ -371,60 +371,6 @@
 
       <button type="submit">Add Student</button>
     </form>
-
-    <!-- 🔄 Bulk Add Form (Updated) -->
-    <form id="bulkForm" class="student-form" style="display:none;">
-      <label>Roll Number Range (Ex: 23B81A4601-66)</label>
-      <input type="text" name="roll_range" required />
-
-      <label>Year</label>
-      <select name="year" required>
-        <option value="">Select</option>
-        <option value="1">1</option>
-        <option value="2">2</option>
-        <option value="3">3</option>
-        <option value="4">4</option>
-      </select>
-
-      <label>Course</label>
-      <select name="course" required>
-        <option value="">Select</option>
-        <option value="B.Tech-CSE">B.Tech-CSE</option>
-        <option value="B.Tech-AI&ML">B.Tech-AI&ML</option>
-        <option value="B.Tech-AI&DS">B.Tech-AI&DS</option>
-        <option value="B.Tech-Cyber Security">B.Tech-Cyber Security</option>
-        <option value="B.Tech-ECE">B.Tech-ECE</option>
-        <option value="B.Tech-EEE">B.Tech-EEE</option>
-        <option value="B.Tech-Civil">B.Tech-Civil</option>
-        <option value="B.Tech-Mech">B.Tech-Mech</option>
-      </select>
-
-      <label>Semester</label>
-      <select name="semester" required>
-        <option value="">Select</option>
-        <option value="1">1</option>
-        <option value="2">2</option>
-      </select>
-
-      <label>Section</label>
-      <input type="text" name="section" maxlength="1" required />
-
-      <label>Counsellor Name</label>
-      <input type="text" name="counsellor_name" required />
-
-      <label>Counsellor Mobile</label>
-      <input type="text" name="counsellor_mobile" maxlength="10" pattern="\d{10}" required />
-    <label>Admission Type</label>
-<select name="admission_type" required>
-  <option value="">Select</option>
-  <option value="Counselling">Counselling</option>
-  <option value="Management">Management</option>
-  <option value="Spot">Spot</option>
-</select>
-
-      <button type="submit">Add Bulk Students</button>
-    </form>
-
     <p id="response" class="message"></p>
   </div>
 </div>
@@ -443,12 +389,6 @@ function showSingle() {
   document.getElementById("bulkForm").style.display = "none";
   document.getElementById("tabSingle").classList.add("active");
   document.getElementById("tabBulk").classList.remove("active");
-}
-function showBulk() {
-  document.getElementById("singleForm").style.display = "none";
-  document.getElementById("bulkForm").style.display = "block";
-  document.getElementById("tabBulk").classList.add("active");
-  document.getElementById("tabSingle").classList.remove("active");
 }
 function toggleMobileMenu() {
   document.querySelector(".sidebar").classList.toggle("open");
@@ -503,75 +443,6 @@ document.getElementById("singleForm").addEventListener("submit", async e => {
   const out = await (res?.json() ?? { success: false, message: "Server error" });
   Swal.fire(out.success ? "✅ Added" : "❌ Failed", out.message, out.success ? "success" : "error");
   if (out.success) form.reset();
-});
-
-/* ---------- 2️⃣ bulk‑add ---------- */
-document.getElementById("bulkForm").addEventListener("submit", async e => {
-  e.preventDefault();
-  const data = Object.fromEntries(new FormData(e.target).entries());
-  const ranges = data.roll_range.split(",").map(r => r.trim());
-  const students = [];
-
-  // Format & validate inputs
-  const course = data.course.trim();
-  const section = data.section.trim().toUpperCase();
-  const counsellor_name = toTitleCase(data.counsellor_name.trim());
-  const counsellor_mobile = data.counsellor_mobile.trim();
-
-  if (!/^\d{10}$/.test(counsellor_mobile)) {
-    Swal.fire("Invalid Counsellor Mobile", "Enter valid 10-digit number.", "error");
-    return;
-  }
-
-  for (const text of ranges) {
-    const [startFull, endRaw] = text.split("-");
-    const startMatch = startFull.match(/(\D+)(\d+)$/);
-    if (!startMatch) continue;
-
-    const prefix = startMatch[1];
-    const startNum = +startMatch[2];
-    const endNum = /^\d+$/.test(endRaw) ? +endRaw : +(endRaw.match(/\d+$/) || [])[0];
-
-    if (Number.isNaN(startNum) || Number.isNaN(endNum)) continue;
-
-    for (let i = startNum; i <= endNum; i++) {
-      const roll = prefix + String(i).padStart(3, "0");
-students.push({
-  userId: roll,
-  reg_no: roll,
-  unique_id: roll,
-  year: data.year,
-  course: course,
-  semester: data.semester,
-  section: section,
-  counsellor_name: counsellor_name,
-  counsellor_mobile: counsellor_mobile,
-  admission_type: data.admission_type, // ✅ ADD THIS LINE
-  password: roll,
-  email: ""
-});
-
-    }
-  }
-
-  if (!students.length) {
-    Swal.fire("⚠️ Invalid Range", "No students generated. Check roll-range format.", "warning");
-    return;
-  }
-
-  let ok = 0, fail = [];
-  for (const s of students) {
-    const r = await fetch("https://crr-noc.onrender.com/add-student", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(s)
-    }).catch(() => null);
-    const j = await (r?.json() ?? { success: false });
-    j.success ? ok++ : fail.push(s.userId);
-  }
-
-  Swal.fire("Bulk Add Done", `✅ Success: ${ok}<br>❌ Failed: ${fail.length}`, "info");
-  e.target.reset();
 });
 </script>
 </body>
