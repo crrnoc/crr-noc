@@ -2222,7 +2222,7 @@ app.get("/student/overallResults/:regno", async (req, res) => {
   }
 });
 
-aapp.get("/generate-certificate/:userId", async (req, res) => {
+app.get("/generate-certificate/:userId", async (req, res) => {
   const { userId } = req.params;
   const semester = req.query.semester;
   if (!semester) return res.status(400).send("Semester is required");
