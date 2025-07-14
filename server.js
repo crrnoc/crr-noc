@@ -2222,7 +2222,7 @@ app.get("/student/overallResults/:regno", async (req, res) => {
   }
 });
 
-app.get("/generate-certificate/:userId", async (req, res) => {
+aapp.get("/generate-certificate/:userId", async (req, res) => {
   const { userId } = req.params;
   const semester = req.query.semester;
   if (!semester) return res.status(400).send("Semester is required");
@@ -2241,13 +2241,11 @@ app.get("/generate-certificate/:userId", async (req, res) => {
     });
   }
 
-  // ✅ Grade point map
   const gradePointMap = {
     S: 10, A: 9, B: 8, C: 7, D: 6, E: 5, F: 0, Ab: 0, ABSENT: 0, Completed: 0
   };
 
   try {
-    // ✅ 1. Get results
     const results = await queryAsync(
       "SELECT regno, subcode, subname, grade, credits FROM results WHERE regno = ? AND semester = ?",
       [userId, semester]
@@ -2258,26 +2256,44 @@ app.get("/generate-certificate/:userId", async (req, res) => {
       return;
     }
 
-    // ✅ 2. Get student info
     const studentRows = await queryAsync(
       "SELECT name, reg_no, course, father_name, photo_url FROM students WHERE userId = ?",
       [userId]
     );
     const student = studentRows[0] || {};
 
-    // ✅ 3. Header
-    const headerPath = path.join(__dirname, "public", "noc_header.jpg");
-    if (fs.existsSync(headerPath)) {
-      doc.image(headerPath, { fit: [520, 120], align: "center" });
+    const reg = student.reg_no || "";
+    const isJNTUK = /^([0-1][0-9]|23)B8/.test(reg); // ✅ JNTUK only up to 23B8
+
+    if (isJNTUK) {
+      const logoPath = path.join(__dirname, "public", "jntuk_logo.png");
+      if (fs.existsSync(logoPath)) {
+        doc.image(logoPath, 40, 40, { width: 60 });
+      }
+
+      doc
+        .font("Helvetica-Bold")
+        .fillColor("#7A0C0C")
+        .fontSize(14)
+        .text("JAWAHARLAL NEHRU TECHNOLOGICAL UNIVERSITY KAKINADA", 110, 45)
+        .text("KAKINADA - 533003, ANDHRA PRADESH, INDIA", 110, 65);
+
+      // 🔲 Decorative black line below header
+      doc.moveTo(40, 100).lineTo(555, 100).stroke("#000");
+    } else {
+      const headerPath = path.join(__dirname, "public", "noc_header.jpg");
+      if (fs.existsSync(headerPath)) {
+        doc.image(headerPath, { fit: [520, 120], align: "center" });
+      }
     }
 
-    doc.moveDown(1);
+    doc.moveDown(2);
     const startY = doc.y;
     let lineY = startY;
     const labelX = 40;
     const valueX = 180;
 
-    doc.font("Helvetica").fontSize(10);
+    doc.font("Helvetica").fillColor("black").fontSize(10);
     doc.text("STUDENT NAME    :", labelX, lineY);
     doc.text(student.name || "N/A", valueX, lineY); lineY += 26;
     doc.text("FATHER'S NAME   :", labelX, lineY);
@@ -2289,7 +2305,6 @@ app.get("/generate-certificate/:userId", async (req, res) => {
     doc.text("YEAR - SEMESTER :", labelX, lineY);
     doc.text(semester.toUpperCase(), valueX, lineY);
 
-    // ✅ 4. Student photo
     const photo_url = student.photo_url;
     if (photo_url) {
       try {
@@ -2302,12 +2317,19 @@ app.get("/generate-certificate/:userId", async (req, res) => {
       doc.rect(400, startY, 100, 120).stroke();
     }
 
-    // ✅ 5. Results Table
+    // 👉 Results Table
     doc.y = lineY + 60;
     const tableTop = doc.y;
     const rowHeight = 30;
     const colX = [40, 80, 180, 400, 460];
     const colWidths = [40, 100, 220, 60, 60];
+
+    // 🖼️ Watermark Logo
+    const watermarkPath = path.join(__dirname, "public", "jntuk_logo.png");
+    if (fs.existsSync(watermarkPath)) {
+      doc.opacity(0.1).image(watermarkPath, 160, tableTop + 60, { width: 250 });
+      doc.opacity(1); // Reset opacity
+    }
 
     doc.font("Helvetica-Bold").fontSize(9);
     ["S.No", "Sub Code", "Subject Name", "Grade", "Credits"].forEach((text, i) => {
@@ -2315,7 +2337,7 @@ app.get("/generate-certificate/:userId", async (req, res) => {
       doc.text(text, colX[i] + 2, tableTop + 8, { width: colWidths[i] - 4, align: "center" });
     });
 
-    // ✅ Loop and draw rows
+    // Rows
     doc.font("Helvetica").fontSize(9);
     let totalCredits = 0, weightedSum = 0;
     results.forEach((row, i) => {
@@ -2335,7 +2357,7 @@ app.get("/generate-certificate/:userId", async (req, res) => {
       });
     });
 
-    // ✅ SGPA Calculation
+    // ✅ SGPA
     const calculatedSGPA = totalCredits > 0 ? (weightedSum / totalCredits).toFixed(2) : "N/A";
     const finalTableY = tableTop + rowHeight * (results.length + 1);
     doc.font("Helvetica-Bold").fontSize(10);
@@ -2344,17 +2366,22 @@ app.get("/generate-certificate/:userId", async (req, res) => {
       align: "center"
     });
 
-    // ✅ 6. QR Code
-    const qrText = `https://crr-noc.onrender.com/verifyresult.html?regno=${userId}&sem=${semester}`;
+    // ✅ Grading Legend
+    doc.font("Helvetica").fontSize(7).fillColor("black");
+    doc.text("> CP: COMPLETED   NCP: NOT-COMPLETED   MP: Malpractice   WH: Withheld   P: Pass   F: Fail   AB: Absent", 40, finalTableY + 50);
+
+    // ✅ QR Code
+    const qrText = `https://crr-noc.onrender.com/verify-result?regno=${userId}&sem=${semester}`;
     const qrDataURL = await QRCode.toDataURL(qrText);
     const qrBuffer = Buffer.from(qrDataURL.split(",")[1], "base64");
     doc.image(qrBuffer, 440, 670, { width: 80 });
 
-    // ✅ 7. Signature and Date
+    // ✅ Signatures
     doc.font("Helvetica").fontSize(10);
     doc.text("Controller of Examinations", 40, 740);
     doc.text("Principal", 320, 740);
 
+    // ✅ Date
     const date = new Date().toLocaleDateString("en-GB").replace(/\//g, "-");
     doc.fontSize(6).text(`ISSUED DATE: ${date}`, 440, 790, { align: "right", width: 100 });
 
@@ -2366,56 +2393,7 @@ app.get("/generate-certificate/:userId", async (req, res) => {
     doc.end();
   }
 });
-// result verification
-//verify result
-app.get("/api/verify-result", async (req, res) => {
-  const { regno, sem } = req.query;
-  if (!regno || !sem) return res.status(400).json({ error: "Missing regno or sem" });
 
-  function queryAsync(sql, values) {
-    return new Promise((resolve, reject) => {
-      connection.query(sql, values, (err, result) => {
-        if (err) reject(err);
-        else resolve(result);
-      });
-    });
-  }
-
-  try {
-    const results = await queryAsync(
-      "SELECT subcode, subname, grade, credits FROM results WHERE regno = ? AND semester = ?",
-      [regno, sem]
-    );
-    const studentRows = await queryAsync(
-      "SELECT name, reg_no, course, photo_url FROM students WHERE reg_no = ?",
-      [regno]
-    );
-    const student = studentRows[0] || {};
-
-    const gradeMap = { S: 10, A: 9, B: 8, C: 7, D: 6, E: 5, F: 0, Ab: 0 };
-    let totalCredits = 0, totalPoints = 0;
-    results.forEach(r => {
-      const gp = gradeMap[r.grade] ?? 0;
-      totalCredits += r.credits;
-      totalPoints += gp * r.credits;
-    });
-
-    const sgpa = totalCredits ? (totalPoints / totalCredits).toFixed(2) : "N/A";
-
-    res.json({
-      name: student.name || "N/A",
-      regno: student.reg_no || regno,
-      course: student.course || "N/A",
-      semester: sem,
-      photo_url: student.photo_url || null,
-      sgpa,
-      results
-    });
-  } catch (err) {
-    console.error("❌ Verification error:", err);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
 
 //admin create noc 
 app.post('/admin/manual-create-noc', (req, res) => {
