@@ -6,400 +6,279 @@
   <title>My Counselling Students</title>
   <link rel="icon" href="crrengglogo.png" type="image/png" />
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<style>
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  }
-
-  body {
-    background-color: #ffffff;
-    color: #000;
-  }
-
-  .main-container {
-    display: flex;
-    height: 100vh;
-    flex-direction: row;
-  }
-
-  .sidebar {
-    width: 270px;
-    background-color: rgb(247, 201, 155);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    padding: 20px;
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    z-index: 100;
-    overflow-y: auto;
-    transition: top 0.3s ease-in-out;
-  }
-
-  .sidebar h2 {
-    margin: 40px 20px 20px 20px;
-    color: black;
-    font-size: 18px;
-  }
-
-  .menu {
-    list-style-type: none;
-    padding: 0;
-  }
-
-  .menu li {
-    margin-bottom: 15px;
-  }
-
-  .menu li a {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 16px;
-    color: black;
-    padding: 12px 20px;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-    text-decoration: none;
-    border: none;
-  }
-
-  .menu li a:hover,
-  .menu li.active a {
-    background-color: #d4d4d4;
-    font-weight: bold;
-    transform: translateX(5px);
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
-  }
-
-  .menu li a span {
-    font-size: 18px;
-    transition: transform 0.3s ease;
-  }
-
-  .menu li a:hover span {
-    transform: scale(1.2);
-  }
-
-  .logout {
-    background-color: #f09000;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 20px;
-    cursor: pointer;
-    font-size: 16px;
-    width: 50%;
-    margin: 20px auto;
-    transition: background 0.3s ease;
-  }
-
-  .logout:hover {
-    background-color: #d07900;
-  }
-
-  .content {
-    flex-grow: 1;
-    margin-left: 270px;
-    padding: 40px 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .header {
-    font-size: 24px;
-    font-weight: bold;
-    margin-bottom: 20px;
-    color: black;
-  }
-
-  .card-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 20px;
-    width: 100%;
-    max-width: 1200px;
-  }
-
-  .student-card {
-    background: #ffffff;
-    border-radius: 18px;
-    padding: 20px;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
-    border: 2px solid transparent;
-    background-clip: padding-box;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .student-card::before {
-    content: "";
-    position: absolute;
-    top: -2px;
-    left: -2px;
-    right: -2px;
-    bottom: -2px;
-    background: linear-gradient(45deg, #00b894, #6c5ce7, #00cec9);
-    z-index: -1;
-    border-radius: 20px;
-    animation: borderShift 5s linear infinite;
-  }
-
-  @keyframes borderShift {
-    0% {
-      background-position: 0% 50%;
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
-    100% {
-      background-position: 100% 50%;
+
+    body {
+      background-color: #ffffff;
+      color: #000;
     }
-  }
 
-  .student-card h3 {
-    margin-bottom: 10px;
-    font-size: 18px;
-    font-weight: bold;
-    color: #222;
-  }
-
-  .student-card p {
-    font-size: 14px;
-    margin: 4px 0;
-    color: #555;
-  }
-
-  .student-card:hover {
-    transform: translateY(-8px) scale(1.01);
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
-  }
-
-  .mobile-toggle {
-    display: none;
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: #1f75cb;
-    color: white;
-    font-size: 24px;
-    padding: 12px 18px;
-    border-radius: 50px;
-    z-index: 9999;
-    cursor: pointer;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-  }
-
-  /* Modal container refinement */
-  #modalOverlay > div {
-    background: #ffffff;
-    border-radius: 20px;
-    padding: 30px 35px;
-    width: 95%;
-    max-width: 750px;
-    max-height: 90vh;
-    overflow-y: auto;
-    position: relative;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
-    animation: modalFadeIn 0.4s ease;
-  }
-
-  /* Modal heading */
-  #modalName {
-    font-size: 24px;
-    font-weight: bold;
-    color: #222;
-    margin-bottom: 20px;
-    border-bottom: 2px solid #ddd;
-    padding-bottom: 10px;
-  }
-
-  #studentModal label {
-    font-weight: 600;
-    font-size: 14px;
-    color: #333;
-    display: block;
-    margin-top: 10px;
-    margin-bottom: 4px;
-  }
-
-  #studentModal input {
-    padding: 10px 12px;
-    font-size: 15px;
-    width: 100%;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-    margin-bottom: 15px;
-    transition: border-color 0.3s ease;
-  }
-
-  #studentModal input:focus {
-    border-color: #007bff;
-    outline: none;
-  }
-
-  #studentModal button[onclick="saveFatherDetails()"] {
-    background: linear-gradient(to right, #00b894, #00cec9);
-    padding: 10px 20px;
-    font-weight: bold;
-    font-size: 14px;
-    border-radius: 8px;
-    box-shadow: 0 5px 15px rgba(0, 200, 150, 0.3);
-  }
-
-  #studentModal button[onclick="saveFatherDetails()"]:hover {
-    background: linear-gradient(to right, #00cec9, #00b894);
-  }
-
-  #studentModal button#btnAttendance,
-  #studentModal button#btnResults {
-    margin-top: 10px;
-    background-color: #f3f3f3;
-    font-weight: 600;
-    border: 1px solid #ccc;
-    transition: background 0.3s ease, transform 0.2s ease;
-  }
-
-  #studentModal button#btnAttendance:hover,
-  #studentModal button#btnResults:hover {
-    background-color: #e0e0e0;
-    transform: scale(1.03);
-  }
-
-  #resultsContent table,
-  #attendanceContent table {
-    width: 100%;
-    margin-top: 10px;
-    border-collapse: collapse;
-    background: #fafafa;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    overflow: hidden;
-  }
-
-  #resultsContent th,
-  #attendanceContent th {
-    background-color: #f2f2f2;
-    font-weight: bold;
-    text-align: left;
-    padding: 10px;
-    border-bottom: 1px solid #ddd;
-  }
-
-  #resultsContent td,
-  #attendanceContent td {
-    padding: 10px;
-    border-bottom: 1px solid #eee;
-    color: #333;
-  }
-
-  #resultsContent > div {
-    margin-top: 15px;
-    padding: 15px;
-    background: #f8f9fa;
-    border: 1px solid #ddd;
-    border-radius: 10px;
-    color: #444;
-    font-size: 15px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-  }
-
-  #resultsContent p {
-    margin: 6px 0;
-  }
-
-  #semesterSelect {
-    width: 100%;
-    padding: 10px 12px;
-    font-size: 15px;
-    margin-top: 8px;
-    margin-bottom: 15px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-    background-color: #fff;
-    transition: border 0.3s ease;
-  }
-
-  #semesterSelect:focus {
-    border-color: #007bff;
-    outline: none;
-  }
-
-  @keyframes modalFadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(-20px) scale(0.95);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-    }
-  }
-
-  #modalOverlay {
-    backdrop-filter: blur(6px);
-    animation: fadeInOverlay 0.3s ease;
-  }
-
-  @keyframes fadeInOverlay {
-    from {
-      background: rgba(0, 0, 0, 0);
-    }
-    to {
-      background: rgba(0, 0, 0, 0.6);
-    }
-  }
-
-  #studentModal button[onclick="closeModal()"] {
-    top: 12px;
-    right: 15px;
-    background: #ff4d4d;
-    transition: background 0.2s ease;
-  }
-
-  #studentModal button[onclick="closeModal()"]:hover {
-    background: #e60000;
-  }
-
-  @media (max-width: 768px) {
     .main-container {
-      flex-direction: column;
+      display: flex;
+      height: 100vh;
+      flex-direction: row;
     }
 
     .sidebar {
-      width: 100%;
-      position: fixed;
-      top: -100%;
-      left: 0;
+      width: 270px;
       background-color: rgb(247, 201, 155);
-      height: auto;
-      max-height: 90vh;
-      overflow-y: auto;
-      z-index: 9999;
-      transition: top 0.4s ease;
-    }
-
-    .sidebar.open {
-      top: 0;
-    }
-
-    .content {
-      margin-left: 0;
-      margin-top: 100px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
       padding: 20px;
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      z-index: 100;
+      overflow-y: auto;
+      transition: top 0.3s ease-in-out;
+    }
+
+    .sidebar h2 {
+      margin: 40px 20px 20px 20px;
+      color: black;
+      font-size: 18px;
+    }
+
+    .menu {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    .menu li {
+      margin-bottom: 15px;
+    }
+
+    .menu li a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 16px;
+      color: black;
+      padding: 12px 20px;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      border: none;
+    }
+
+    .menu li a:hover,
+    .menu li.active a {
+      background-color: #d4d4d4;
+      font-weight: bold;
+      transform: translateX(5px);
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .menu li a span {
+      font-size: 18px;
+      transition: transform 0.3s ease;
+    }
+
+    .menu li a:hover span {
+      transform: scale(1.2);
+    }
+
+    .logout {
+      background-color: #f09000;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 16px;
+      width: 50%;
+      margin: 20px auto;
+      transition: background 0.3s ease;
+    }
+
+    .logout:hover {
+      background-color: #d07900;
+    }
+    .content {
+      flex-grow: 1;
+      margin-left: 270px;
+      padding: 40px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .header {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 20px;
+      color: black;
+    }
+
+    .card-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+      width: 100%;
+      max-width: 1200px;
+    }
+
+    .student-card {
+      background: #ffffff;
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+      border: 2px solid transparent;
+      background-clip: padding-box;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .student-card::before {
+      content: "";
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      right: -2px;
+      bottom: -2px;
+      background: linear-gradient(45deg, #00b894, #6c5ce7, #00cec9);
+      z-index: -1;
+      border-radius: 20px;
+      animation: borderShift 5s linear infinite;
+    }
+
+    @keyframes borderShift {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 100% 50%; }
+    }
+
+    .student-card h3 {
+      margin-bottom: 10px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #222;
+    }
+
+    .student-card p {
+      font-size: 14px;
+      margin: 4px 0;
+      color: #555;
+    }
+
+    .student-card:hover {
+      transform: translateY(-8px) scale(1.01);
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
     }
 
     .mobile-toggle {
-      display: block;
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #1f75cb;
+      color: white;
+      font-size: 24px;
+      padding: 12px 18px;
+      border-radius: 50px;
+      z-index: 9999;
+      cursor: pointer;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
     }
-  }
-</style>
-<body>
+
+    /* Centered Modal Overlay */
+    #modalOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      backdrop-filter: blur(6px);
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 9999;
+      animation: fadeInOverlay 0.3s ease;
+    }
+
+    .modal-box {
+      background: white;
+      border-radius: 20px;
+      padding: 30px 35px;
+      width: 95%;
+      max-width: 750px;
+      max-height: 90vh;
+      overflow-y: auto;
+      position: relative;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+      animation: modalFadeIn 0.4s ease;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 14px;
+      right: 18px;
+      background: #ff3b3b;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      font-size: 18px;
+      font-weight: bold;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.2s ease;
+    }
+
+    .modal-close:hover {
+      background: #e60000;
+      transform: scale(1.1);
+    }
+
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: translateY(-20px) scale(0.95); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes fadeInOverlay {
+      from { background: rgba(0, 0, 0, 0); }
+      to { background: rgba(0, 0, 0, 0.6); }
+    }
+
+    @media (max-width: 768px) {
+      .main-container {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        width: 100%;
+        position: fixed;
+        top: -100%;
+        left: 0;
+        background-color: rgb(247, 201, 155);
+        height: auto;
+        max-height: 90vh;
+        overflow-y: auto;
+        z-index: 9999;
+        transition: top 0.4s ease;
+      }
+
+      .sidebar.open {
+        top: 0;
+      }
+
+      .content {
+        margin-left: 0;
+        margin-top: 100px;
+        padding: 20px;
+      }
+
+      .mobile-toggle {<body>
   <div class="main-container">
     <!-- 🧊 Sidebar -->
     <div class="sidebar" id="sidebar">
@@ -429,7 +308,7 @@
   <!-- 📦 Modal -->
   <div id="studentModal" style="display: none;">
     <div id="modalOverlay">
-      <div>
+      <div class="modal-box">
         <h2 id="modalName">Student Name</h2>
 
         <label>Father Name</label>
@@ -438,7 +317,6 @@
         <label>Father Mobile</label>
         <input type="text" id="modalMobileInput" maxlength="10" pattern="\d{10}" />
 
-        <!-- ✅ Save button -->
         <button onclick="saveFatherDetails()">Save Changes</button>
 
         <div style="margin: 20px 0; display: flex; gap: 10px; flex-wrap: wrap;">
@@ -468,12 +346,12 @@
           <div id="resultsContent"></div>
         </div>
 
-        <button onclick="closeModal()" style="position: absolute; top: 10px; right: 20px;">✖</button>
+        <button class="modal-close" onclick="closeModal()">✖</button>
       </div>
     </div>
   </div>
 
-  <!-- ☰ Mobile Menu Button -->
+  <!-- 📱 Mobile Toggle -->
   <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
 <script>
   const userId = localStorage.getItem("userId");
@@ -513,7 +391,7 @@
               <p><strong>Email:</strong> ${std.email}</p>
               <p><strong>Mobile:</strong> ${std.mobile_no}</p>
             `;
-            card.addEventListener("click", () => openModal(std));
+            card.onclick = () => openModal(std);
             container.appendChild(card);
           });
         } else {
@@ -527,17 +405,15 @@
   }
 
   function openModal(student) {
-    console.log("Card clicked:", student); // Debug log
     currentStudent = student;
 
     document.getElementById("modalName").textContent = student.name;
     document.getElementById("modalFatherInput").value = student.father_name || "";
     document.getElementById("modalMobileInput").value = student.father_mobile || "";
+
     document.getElementById("studentModal").style.display = "block";
-    document.getElementById("studentModal").style.zIndex = "9999";
     showTab("attendance");
 
-    // Attendance
     fetch(`/student-attendance/${student.reg_no}`)
       .then(res => res.json())
       .then(data => {
@@ -565,7 +441,6 @@
         }
       });
 
-    // Results
     const semesterDropdown = document.getElementById("semesterSelect");
     semesterDropdown.value = "";
     document.getElementById("resultsContent").innerHTML = "";
@@ -585,7 +460,6 @@
                 <td>${r.grade}</td>
                 <td>${r.credits}</td>
               </tr>`).join("");
-
             document.getElementById("resultsContent").innerHTML = `
               <table>
                 <tr>
@@ -663,3 +537,8 @@
 </body>
 </html>
 
+        display: block;
+      }
+    }
+  </style>
+</head>
