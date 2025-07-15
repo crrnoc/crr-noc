@@ -569,33 +569,44 @@ app.post("/submit-du", (req, res) => {
     return res.status(400).json({ success: false, message: "Invalid data" });
   }
 
-  // 🆕 Step 1: Get unique_id from students table
+  // 🧠 Step 1: Get unique_id from students table
   connection.query(
     "SELECT uniqueId FROM students WHERE userId = ?",
     [userId],
     (err, results) => {
-      if (err || results.length === 0) {
+      if (err) {
         console.error("❌ Error fetching unique_id:", err);
-        return res.status(500).json({ success: false, message: "Student unique_id not found" });
+        return res.status(500).json({ success: false, message: "Server error" });
       }
 
-      const unique_id = results[0].unique_id;
+      if (!results.length || !results[0].uniqueId) {
+        return res.status(400).json({
+          success: false,
+          message: "❌ Unique ID missing. Please update your profile first."
+        });
+      }
+
+      const unique_id = results[0].uniqueId;
       const values = [];
       const checkMatches = [];
 
+      // 📦 Loop through payments
       for (const p of payments) {
         const du = p.du?.trim();
         const amt = parseFloat(p.amount);
         const feeType = p.type;
 
-        // ✅ Now pushing unique_id also
+        if (!du || isNaN(amt) || !feeType) continue;
+
+        // ✅ Prepare values for matching
         values.push([userId, unique_id, feeType, du, amt, academic_year, 0]);
 
+        // 🧠 Check if DU + amount exists in SBI uploaded table
         checkMatches.push(
           new Promise(resolve => {
             connection.query(
-              "SELECT * FROM sbi_uploaded_references WHERE sbi_ref_no = ? AND amount = ?",
-              [du, amt],
+              "SELECT * FROM sbi_uploaded_references WHERE sbi_ref_no = ? AND amount = ? AND unique_id = ?",
+              [du, amt, unique_id],
               (err, results) => {
                 if (err) return resolve([du, false]);
                 resolve([du, results.length > 0]);
@@ -605,10 +616,11 @@ app.post("/submit-du", (req, res) => {
         );
       }
 
+      // 🔁 After all checks
       Promise.all(checkMatches).then(matchResults => {
         const matchMap = Object.fromEntries(matchResults);
 
-        // ✅ include unique_id in finalValues
+        // 🔄 Build final values with matched = 1 or 0
         const finalValues = values.map(([userId, unique_id, type, du, amt, year, matched]) => {
           const isMatched = matchMap[du] ? 1 : 0;
           return [userId, unique_id, type, du, amt, year, isMatched];
@@ -634,13 +646,15 @@ app.post("/submit-du", (req, res) => {
             return res.status(500).json({ success: false, message: "DB error" });
           }
 
-          res.json({ success: true, message: "✅ DU entries verified and stored successfully." });
+          res.json({
+            success: true,
+            message: "✅ DU entries submitted and matched successfully."
+          });
         });
       });
     }
   );
 });
-
 
 //fee structure
 app.get("/fee-structure/:reg_no", (req, res) => {
