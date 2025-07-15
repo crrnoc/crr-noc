@@ -513,7 +513,7 @@
               <p><strong>Email:</strong> ${std.email}</p>
               <p><strong>Mobile:</strong> ${std.mobile_no}</p>
             `;
-            card.onclick = () => openModal(std);
+            card.addEventListener("click", () => openModal(std));
             container.appendChild(card);
           });
         } else {
@@ -527,14 +527,17 @@
   }
 
   function openModal(student) {
+    console.log("Card clicked:", student); // Debug log
     currentStudent = student;
+
     document.getElementById("modalName").textContent = student.name;
     document.getElementById("modalFatherInput").value = student.father_name || "";
     document.getElementById("modalMobileInput").value = student.father_mobile || "";
     document.getElementById("studentModal").style.display = "block";
+    document.getElementById("studentModal").style.zIndex = "9999";
     showTab("attendance");
 
-    // Fetch attendance
+    // Attendance
     fetch(`/student-attendance/${student.reg_no}`)
       .then(res => res.json())
       .then(data => {
@@ -566,6 +569,7 @@
     const semesterDropdown = document.getElementById("semesterSelect");
     semesterDropdown.value = "";
     document.getElementById("resultsContent").innerHTML = "";
+
     semesterDropdown.onchange = () => {
       const semester = semesterDropdown.value;
       if (!semester) return;
@@ -581,6 +585,7 @@
                 <td>${r.grade}</td>
                 <td>${r.credits}</td>
               </tr>`).join("");
+
             document.getElementById("resultsContent").innerHTML = `
               <table>
                 <tr>
