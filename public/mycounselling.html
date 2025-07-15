@@ -176,22 +176,21 @@
     box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
   }
 
-  .mobile-toggle {
-    display: none;
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: #1f75cb;
-    color: white;
-    font-size: 24px;
-    padding: 12px 18px;
-    border-radius: 50px;
-    z-index: 9999;
-    cursor: pointer;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-  }
-
+.mobile-toggle {
+  display: none;
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #1f75cb;
+  color: white;
+  font-size: 24px;
+  padding: 12px 18px;
+  border-radius: 50px;
+  z-index: 10001; /* ✅ on top of sidebar */
+  cursor: pointer;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
   /* Centered Modal Overlay */
   #modalOverlay {
     position: fixed;
