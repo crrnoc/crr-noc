@@ -1,3 +1,4 @@
+<!-- Save this as mycounselling.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,167 +8,70 @@
   <link rel="icon" href="crrengglogo.png" type="image/png" />
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-
-    body {
-      background-color: #ffffff;
-      color: #000;
-    }
-
-    .main-container {
-      display: flex;
-      height: 100vh;
-      flex-direction: row;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: #ffffff; color: #000; }
+    .main-container { display: flex; height: 100vh; flex-direction: row; }
 
     .sidebar {
-      width: 270px;
-      background-color: rgb(247, 201, 155);
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      padding: 20px;
-      position: fixed;
-      top: 0;
-      bottom: 0;
-      left: 0;
-      z-index: 100;
-      overflow-y: auto;
-      transition: top 0.3s ease-in-out;
+      width: 270px; background-color: rgb(247, 201, 155);
+      display: flex; flex-direction: column; justify-content: space-between;
+      padding: 20px; position: fixed; top: 0; bottom: 0; left: 0;
+      z-index: 100; overflow-y: auto; transition: top 0.3s ease-in-out;
     }
 
-    .sidebar h2 {
-      margin: 40px 20px 20px 20px;
-      color: black;
-      font-size: 18px;
-    }
-
-    .menu {
-      list-style-type: none;
-      padding: 0;
-    }
-
-    .menu li {
-      margin-bottom: 15px;
-    }
-
+    .sidebar h2 { margin: 40px 20px 20px 20px; color: black; font-size: 18px; }
+    .menu { list-style-type: none; padding: 0; }
+    .menu li { margin-bottom: 15px; }
     .menu li a {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 16px;
-      color: black;
-      padding: 12px 20px;
-      border-radius: 8px;
-      transition: all 0.3s ease;
-      text-decoration: none;
-      border: none;
+      display: flex; align-items: center; gap: 10px;
+      font-size: 16px; color: black; padding: 12px 20px;
+      border-radius: 8px; transition: all 0.3s ease; text-decoration: none;
     }
 
-    .menu li a:hover,
-    .menu li.active a {
-      background-color: #d4d4d4;
-      font-weight: bold;
-      transform: translateX(5px);
+    .menu li a:hover, .menu li.active a {
+      background-color: #d4d4d4; font-weight: bold; transform: translateX(5px);
       box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
     }
 
-    .menu li a span {
-      font-size: 18px;
-      transition: transform 0.3s ease;
-    }
-
-    .menu li a:hover span {
-      transform: scale(1.2);
-    }
+    .menu li a span { font-size: 18px; transition: transform 0.3s ease; }
+    .menu li a:hover span { transform: scale(1.2); }
 
     .logout {
-      background-color: #f09000;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 20px;
-      cursor: pointer;
-      font-size: 16px;
-      width: 50%;
-      margin: 20px auto;
-      transition: background 0.3s ease;
+      background-color: #f09000; color: white;
+      border: none; padding: 10px 20px;
+      border-radius: 20px; cursor: pointer; font-size: 16px;
+      width: 50%; margin: 20px auto; transition: background 0.3s ease;
     }
+    .logout:hover { background-color: #d07900; }
 
-    .logout:hover {
-      background-color: #d07900;
-    }
     .content {
-      flex-grow: 1;
-      margin-left: 270px;
-      padding: 40px 20px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      flex-grow: 1; margin-left: 270px; padding: 40px 20px;
+      display: flex; flex-direction: column; align-items: center;
     }
 
-    .header {
-      font-size: 24px;
-      font-weight: bold;
-      margin-bottom: 20px;
-      color: black;
-    }
+    .header { font-size: 24px; font-weight: bold; margin-bottom: 20px; color: black; }
 
     .card-container {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 20px;
-      width: 100%;
-      max-width: 1200px;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px; width: 100%; max-width: 1200px;
     }
 
     .student-card {
-      background: #ffffff;
-      border-radius: 18px;
-      padding: 20px;
+      background: #ffffff; border-radius: 18px; padding: 20px;
       box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
-      transition: all 0.3s ease;
-      border: 2px solid transparent;
-      background-clip: padding-box;
-      position: relative;
-      overflow: hidden;
-      cursor: pointer;
+      transition: all 0.3s ease; position: relative; overflow: hidden;
+      border: 2px solid transparent; background-clip: padding-box; cursor: pointer;
     }
 
     .student-card::before {
-      content: "";
-      position: absolute;
-      top: -2px;
-      left: -2px;
-      right: -2px;
-      bottom: -2px;
+      content: ""; position: absolute; top: -2px; left: -2px; right: -2px; bottom: -2px;
       background: linear-gradient(45deg, #00b894, #6c5ce7, #00cec9);
-      z-index: -1;
-      border-radius: 20px;
-      animation: borderShift 5s linear infinite;
+      z-index: -1; border-radius: 20px; animation: borderShift 5s linear infinite;
     }
 
     @keyframes borderShift {
       0% { background-position: 0% 50%; }
       100% { background-position: 100% 50%; }
-    }
-
-    .student-card h3 {
-      margin-bottom: 10px;
-      font-size: 18px;
-      font-weight: bold;
-      color: #222;
-    }
-
-    .student-card p {
-      font-size: 14px;
-      margin: 4px 0;
-      color: #555;
     }
 
     .student-card:hover {
@@ -176,68 +80,46 @@
     }
 
     .mobile-toggle {
-      display: none;
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background-color: #1f75cb;
-      color: white;
-      font-size: 24px;
-      padding: 12px 18px;
-      border-radius: 50px;
-      z-index: 9999;
-      cursor: pointer;
+      display: none; position: fixed; bottom: 20px; left: 50%;
+      transform: translateX(-50%); background-color: #1f75cb; color: white;
+      font-size: 24px; padding: 12px 18px; border-radius: 50px;
+      z-index: 9999; cursor: pointer;
       box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
     }
 
-    /* Centered Modal Overlay */
+    /* MODAL */
     #modalOverlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      backdrop-filter: blur(6px);
-      background: rgba(0, 0, 0, 0.6);
-      z-index: 9999;
-      animation: fadeInOverlay 0.3s ease;
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      display: flex; justify-content: center; align-items: center;
+      backdrop-filter: blur(6px); background: rgba(0, 0, 0, 0.6);
+      z-index: 9999; animation: fadeInOverlay 0.3s ease;
     }
 
     .modal-box {
-      background: white;
-      border-radius: 20px;
-      padding: 30px 35px;
-      width: 95%;
-      max-width: 750px;
-      max-height: 90vh;
-      overflow-y: auto;
-      position: relative;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+      background: white; border-radius: 20px; padding: 30px 35px;
+      width: 95%; max-width: 750px; max-height: 90vh; overflow-y: auto;
+      position: relative; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
       animation: modalFadeIn 0.4s ease;
     }
 
     .modal-close {
-      position: absolute;
-      top: 14px;
-      right: 18px;
-      background: #ff3b3b;
-      color: white;
-      border: none;
-      padding: 10px 16px;
-      font-size: 18px;
-      font-weight: bold;
-      border-radius: 50%;
-      cursor: pointer;
+      position: absolute; top: 14px; right: 18px; background: #ff3b3b;
+      color: white; border: none; padding: 10px 16px; font-size: 18px;
+      font-weight: bold; border-radius: 50%; cursor: pointer;
       transition: background 0.3s ease, transform 0.2s ease;
     }
+    .modal-close:hover { background: #e60000; transform: scale(1.1); }
 
-    .modal-close:hover {
-      background: #e60000;
-      transform: scale(1.1);
+    .modal-box button {
+      background: linear-gradient(135deg, #6c5ce7, #00cec9);
+      border: none; color: white; padding: 10px 16px;
+      border-radius: 8px; font-weight: bold; cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .modal-box button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
     }
 
     @keyframes modalFadeIn {
@@ -251,78 +133,51 @@
     }
 
     @media (max-width: 768px) {
-      .main-container {
-        flex-direction: column;
-      }
-
+      .main-container { flex-direction: column; }
       .sidebar {
-        width: 100%;
-        position: fixed;
-        top: -100%;
-        left: 0;
-        background-color: rgb(247, 201, 155);
-        height: auto;
-        max-height: 90vh;
-        overflow-y: auto;
-        z-index: 9999;
-        transition: top 0.4s ease;
+        width: 100%; position: fixed; top: -100%; left: 0;
+        background-color: rgb(247, 201, 155); height: auto;
+        max-height: 90vh; overflow-y: auto;
+        z-index: 10000; transition: top 0.4s ease;
       }
-
-      .sidebar.open {
-        top: 0;
-      }
-
-      .content {
-        margin-left: 0;
-        margin-top: 100px;
-        padding: 20px;
-      }
-
-      .mobile-toggle {
-        display: block;
-      }
+      .sidebar.open { top: 0; }
+      .content { margin-left: 0; margin-top: 100px; padding: 20px; }
+      .mobile-toggle { display: block; }
     }
   </style>
 </head>
 <body>
   <div class="main-container">
-    <!-- 🧊 Sidebar -->
     <div class="sidebar" id="sidebar">
       <h2>ID: <span id="userId">Loading...</span></h2>
       <ul class="menu">
-        <li><a href="knowaboutstd1.html"><span>👤</span> Know about Student</a></li>
-        <li><a href="sendnotification.html"><span>📨</span> Send Notification</a></li>
-        <li><a href="updatefee.html"><span>💵</span> Update Fee</a></li>
-        <li><a href="imposefines.html"><span>💰</span> Impose Fines</a></li>
-        <li><a href="addstudent.html"><span>➕</span> Add Student</a></li>
-        <li><a href="addmycounselling.html"><span>👥</span> Assign Counselling</a></li>
+        <li><a href="#"><span>👤</span> Know about Student</a></li>
+        <li><a href="#"><span>📨</span> Send Notification</a></li>
+        <li><a href="#"><span>💵</span> Update Fee</a></li>
+        <li><a href="#"><span>💰</span> Impose Fines</a></li>
+        <li><a href="#"><span>➕</span> Add Student</a></li>
+        <li><a href="#"><span>👥</span> Assign Counselling</a></li>
         <li class="active"><a href="#"><span>📋</span> View Counselling</a></li>
-        <li><a href="staffsettings.html"><span>⚙️</span> Settings</a></li>
+        <li><a href="#"><span>⚙️</span> Settings</a></li>
       </ul>
       <button class="logout" onclick="logout()">Logout</button>
     </div>
 
-    <!-- 📋 Main Content -->
     <div class="content">
       <div class="header">My Counselling Students</div>
-      <div class="card-container" id="cardContainer">
-        <!-- Student cards will be injected here -->
-      </div>
+      <div class="card-container" id="cardContainer"></div>
     </div>
   </div>
 
-  <!-- 📦 Modal -->
+  <!-- Modal -->
   <div id="studentModal" style="display: none;">
     <div id="modalOverlay">
       <div class="modal-box">
         <h2 id="modalName">Student Name</h2>
-
         <label>Father Name</label>
         <input type="text" id="modalFatherInput" />
-
         <label>Father Mobile</label>
         <input type="text" id="modalMobileInput" maxlength="10" pattern="\d{10}" />
-
         <button onclick="saveFatherDetails()">Save Changes</button>
 
         <div style="margin: 20px 0; display: flex; gap: 10px; flex-wrap: wrap;">
@@ -331,24 +186,13 @@
         </div>
 
         <div id="attendanceTab" style="display: none;">
-          <h3 style="margin-top: 20px; border-bottom: 1px solid #ddd; padding-bottom: 6px;">📊 Attendance Details</h3>
+          <h3>📊 Attendance Details</h3>
           <div id="attendanceContent"></div>
         </div>
 
         <div id="resultsTab" style="display: none;">
-          <h3 style="margin-top: 20px; border-bottom: 1px solid #ddd; padding-bottom: 6px;">📚 Results Overview</h3>
-          <h4 style="margin-bottom: 8px;">🎓 Select Semester to View Results:</h4>
-          <select id="semesterSelect">
-            <option value="">-- Select --</option>
-            <option value="1-1">1-1</option>
-            <option value="1-2">1-2</option>
-            <option value="2-1">2-1</option>
-            <option value="2-2">2-2</option>
-            <option value="3-1">3-1</option>
-            <option value="3-2">3-2</option>
-            <option value="4-1">4-1</option>
-            <option value="4-2">4-2</option>
-          </select>
+          <h3>📚 Results Overview</h3>
+          <select id="semesterSelect"></select>
           <div id="resultsContent"></div>
         </div>
 
@@ -357,188 +201,46 @@
     </div>
   </div>
 
-  <!-- 📱 Mobile Toggle -->
   <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
-<script>
-  const userId = localStorage.getItem("userId");
-  const role = localStorage.getItem("role");
-  document.getElementById("userId").textContent = userId || "Unknown";
 
-  let currentStudent = null;
+  <script>
+    const userId = localStorage.getItem("userId");
+    const role = localStorage.getItem("role");
+    document.getElementById("userId").textContent = userId || "Unknown";
 
-  if (!userId || role !== "staff") {
-    Swal.fire({
-      icon: "error",
-      title: "Unauthorized",
-      text: "You must login as staff to view this page.",
-      confirmButtonText: "Go to Login"
-    }).then(() => {
+    function logout() {
+      localStorage.clear();
       window.location.href = "index.html";
+    }
+
+    function toggleMobileMenu() {
+      document.querySelector('.sidebar').classList.toggle('open');
+    }
+
+    function openModal(student) {
+      document.body.style.overflow = "hidden";
+      document.getElementById("studentModal").style.display = "block";
+    }
+
+    function closeModal() {
+      document.body.style.overflow = "";
+      document.getElementById("studentModal").style.display = "none";
+    }
+
+    function showTab(tabName) {
+      document.getElementById("attendanceTab").style.display = tabName === "attendance" ? "block" : "none";
+      document.getElementById("resultsTab").style.display = tabName === "results" ? "block" : "none";
+    }
+
+    // Close modal when clicked outside
+    document.addEventListener("click", function (e) {
+      const modalBox = document.querySelector(".modal-box");
+      const modalOverlay = document.getElementById("modalOverlay");
+      if (document.getElementById("studentModal").style.display === "block" &&
+          !modalBox.contains(e.target) && !e.target.closest(".student-card")) {
+        closeModal();
+      }
     });
-  } else {
-    fetch(`/my-counselling-students/${userId}`)
-      .then(res => res.json())
-      .then(data => {
-        const container = document.getElementById("cardContainer");
-
-        if (data.success && data.students.length > 0) {
-          data.students.forEach(std => {
-            const card = document.createElement("div");
-            card.className = "student-card";
-            card.innerHTML = `
-              <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
-                <img src="https://ui-avatars.com/api/?name=${std.name}&background=random&rounded=true" style="width:40px; height:40px; border-radius:50%;">
-                <h3 style="margin:0;">${std.name}</h3>
-              </div>
-              <p><strong>Reg No:</strong> ${std.reg_no}</p>
-              <p><strong>Course:</strong> ${std.course}</p>
-              <p><strong>Year:</strong> ${std.year}</p>
-              <p><strong>Section:</strong> ${std.section}</p>
-              <p><strong>Email:</strong> ${std.email}</p>
-              <p><strong>Mobile:</strong> ${std.mobile_no}</p>
-            `;
-            card.onclick = () => openModal(std);
-            container.appendChild(card);
-          });
-        } else {
-          container.innerHTML = `<p style="text-align:center; color:#666;">No students assigned yet.</p>`;
-        }
-      })
-      .catch(err => {
-        console.error("Error fetching students:", err);
-        Swal.fire("Error", "Failed to fetch student data.", "error");
-      });
-  }
-
-  function openModal(student) {
-    currentStudent = student;
-
-    document.getElementById("modalName").textContent = student.name;
-    document.getElementById("modalFatherInput").value = student.father_name || "";
-    document.getElementById("modalMobileInput").value = student.father_mobile || "";
-
-    document.getElementById("studentModal").style.display = "block";
-    showTab("attendance");
-
-    fetch(`/student-attendance/${student.reg_no}`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.success && data.data.length > 0) {
-          const rows = data.data.map(row => `
-            <tr>
-              <td>${row.semester}</td>
-              <td>${row.total_classes}</td>
-              <td>${row.attended_classes}</td>
-              <td>${row.percentage}%</td>
-            </tr>`).join("");
-          document.getElementById("attendanceContent").innerHTML = `
-            <table>
-              <tr>
-                <th>Semester</th>
-                <th>Total</th>
-                <th>Attended</th>
-                <th>%</th>
-              </tr>
-              ${rows}
-            </table>
-          `;
-        } else {
-          document.getElementById("attendanceContent").innerHTML = "No attendance data available.";
-        }
-      });
-
-    const semesterDropdown = document.getElementById("semesterSelect");
-    semesterDropdown.value = "";
-    document.getElementById("resultsContent").innerHTML = "";
-
-    semesterDropdown.onchange = () => {
-      const semester = semesterDropdown.value;
-      if (!semester) return;
-
-      fetch(`/student/results/${student.reg_no}?semester=${semester}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.results && data.results.length > 0) {
-            const subjectRows = data.results.map(r => `
-              <tr>
-                <td>${r.subcode}</td>
-                <td>${r.subname}</td>
-                <td>${r.grade}</td>
-                <td>${r.credits}</td>
-              </tr>`).join("");
-            document.getElementById("resultsContent").innerHTML = `
-              <table>
-                <tr>
-                  <th>Sub Code</th>
-                  <th>Subject</th>
-                  <th>Grade</th>
-                  <th>Credits</th>
-                </tr>
-                ${subjectRows}
-              </table>
-              <div>
-                <p><strong>SGPA:</strong> ${data.sgpa}</p>
-                <p><strong>CGPA:</strong> ${data.cgpa}</p>
-                <p><strong>Percentage:</strong> ${data.percentage}%</p>
-              </div>
-            `;
-          } else {
-            document.getElementById("resultsContent").innerHTML = "No result data for selected semester.";
-          }
-        });
-    };
-  }
-
-  function closeModal() {
-    document.getElementById("studentModal").style.display = "none";
-  }
-
-  function showTab(tabName) {
-    document.getElementById("attendanceTab").style.display = tabName === "attendance" ? "block" : "none";
-    document.getElementById("resultsTab").style.display = tabName === "results" ? "block" : "none";
-    document.getElementById("btnAttendance").style.backgroundColor = tabName === "attendance" ? "#ddd" : "#f0f0f0";
-    document.getElementById("btnResults").style.backgroundColor = tabName === "results" ? "#ddd" : "#f0f0f0";
-  }
-
-  function logout() {
-    localStorage.clear();
-    window.location.href = "index.html";
-  }
-
-  function toggleMobileMenu() {
-    document.querySelector('.sidebar').classList.toggle('open');
-  }
-
-  async function saveFatherDetails() {
-    if (!currentStudent) return;
-
-    const father_name = document.getElementById("modalFatherInput").value.trim();
-    const father_mobile = document.getElementById("modalMobileInput").value.trim();
-
-    if (!/^\d{10}$/.test(father_mobile)) {
-      Swal.fire("Invalid Mobile", "Please enter a valid 10-digit number.", "error");
-      return;
-    }
-
-    const res = await fetch("/update-father-details", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        reg_no: currentStudent.reg_no,
-        father_name,
-        father_mobile
-      })
-    }).catch(() => null);
-
-    const out = await (res?.json() ?? { success: false, message: "Server error" });
-
-    Swal.fire(out.success ? "✅ Updated" : "❌ Failed", out.message, out.success ? "success" : "error");
-
-    if (out.success) {
-      currentStudent.father_name = father_name;
-      currentStudent.father_mobile = father_mobile;
-    }
-  }
-</script>
+  </script>
 </body>
 </html>
