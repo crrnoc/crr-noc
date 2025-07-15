@@ -368,9 +368,16 @@
     }
 
     // ✅ Show confirmation popup
-    const html = paymentData.map(p =>
-      `<div style="text-align:left;padding:4px 0;"><strong>${p.type}</strong><br>DU: ${p.du} <br>Amount: ₹${p.amount}</div>`
-    ).join("<hr>");
+    const html = `
+      <div style="text-align:left; font-size: 14px;">
+        <strong>Academic Year:</strong> ${academicYear}<br><br>
+        ${paymentData.map(p => `
+          <strong>${p.type}</strong><br>
+          DU: ${p.du}<br>
+          Amount: ₹${p.amount}
+        `).join("<hr>")}
+      </div>
+    `;
 
     Swal.fire({
       title: "Verify Fee Details",
@@ -456,7 +463,7 @@
   }
 
   // ✅ Ensure login on page load
-  window.addEventListener("pageshow", function (event) {
+  window.addEventListener("pageshow", function () {
     const userId = localStorage.getItem("userId");
     if (!userId) {
       Swal.fire({
