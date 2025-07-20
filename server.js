@@ -178,7 +178,7 @@ app.post('/login', (req, res) => {
         req.session.role = role;
 
         let redirectTo = "";
-        if (role === "student") redirectTo = /student/${userId};
+        if (role === "student") redirectTo = `/student/${userId}`;
         else if (role === "staff") redirectTo = `/staff/${userId}`;
         else if (role === "admin") redirectTo = `/admin/dashboard`;
 
