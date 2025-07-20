@@ -1,28 +1,52 @@
-<!-- upload-sbi.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-store" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <title>Upload SBI DU References</title>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron&family=Poppins:wght@300;500;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
-    /* ✅ Your shared CSS from adminpanel.html (same styles and animations) */
     :root { --main-color: #3cb6ff; --accent-color: #ff3d3d; }
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
     body { display: flex; min-height: 100vh; background: linear-gradient(to right, #0f2027, #203a43, #2c5364); color: white; }
-    .sidebar { width: 260px; background: rgba(60, 66, 84, 0.5); backdrop-filter: blur(8px); padding: 30px 20px; display: flex; flex-direction: column; box-shadow: 4px 0 25px rgba(0, 0, 0, 0.4); position: fixed; height: 100vh; left: 0; top: 0; z-index: 10; }
+
+    .sidebar {
+      width: 260px; background: rgba(60, 66, 84, 0.5); backdrop-filter: blur(8px);
+      padding: 30px 20px; display: flex; flex-direction: column;
+      box-shadow: 4px 0 25px rgba(0, 0, 0, 0.4); position: fixed; height: 100vh; z-index: 10;
+    }
+
     .sidebar h2 { text-align: center; font-size: 24px; color: var(--main-color); margin-bottom: 30px; }
     .sidebar ul { list-style: none; }
-    .sidebar li { padding: 12px 18px; margin: 12px 0; background: rgba(255, 255, 255, 0.1); border-radius: 10px; cursor: pointer; transition: 0.3s ease; }
+    .sidebar li {
+      padding: 12px 18px; margin: 12px 0; background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px; cursor: pointer; transition: 0.3s ease;
+    }
     .sidebar li:hover { background: var(--main-color); box-shadow: 0 0 12px var(--main-color); }
-    .sidebar button { margin-top: auto; padding: 10px 20px; border: none; background: linear-gradient(to right, #ff416c, #ff4b2b); color: white; border-radius: 12px; cursor: pointer; font-weight: bold; box-shadow: 0 0 10px rgba(255, 65, 108, 0.5); transition: 0.3s ease; }
+    .sidebar button {
+      margin-top: auto; padding: 10px 20px; border: none;
+      background: linear-gradient(to right, #ff416c, #ff4b2b); color: white;
+      border-radius: 12px; cursor: pointer; font-weight: bold;
+      box-shadow: 0 0 10px rgba(255, 65, 108, 0.5); transition: 0.3s ease;
+    }
     .sidebar button:hover { transform: scale(1.05); }
+
     .main { margin-left: 260px; padding: 70px; flex: 1; animation: slideIn 1s ease forwards; }
-    .banner { background: rgba(255, 255, 255, 0.08); border-radius: 14px; padding: 16px; font-size: 18px; text-align: center; margin-bottom: 30px; box-shadow: 0 0 15px rgba(0, 191, 255, 0.3); }
-    .card { background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(6px); padding: 25px; border-radius: 16px; margin-bottom: 30px; border: 1px solid rgba(255, 255, 255, 0.15); animation: fadeUp 0.6s ease forwards; }
-    @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
-    @keyframes slideIn { from { opacity: 0; transform: translateX(50px); } to { opacity: 1; transform: translateX(0); } }
+    .banner {
+      background: rgba(255, 255, 255, 0.08); border-radius: 14px;
+      padding: 16px; font-size: 18px; text-align: center; margin-bottom: 30px;
+      box-shadow: 0 0 15px rgba(0, 191, 255, 0.3);
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(6px);
+      padding: 25px; border-radius: 16px; margin-bottom: 30px;
+      border: 1px solid rgba(255, 255, 255, 0.15); animation: fadeUp 0.6s ease forwards;
+    }
 
     input[type="file"] { display: none; }
     .file-label {
@@ -33,6 +57,7 @@
       cursor: pointer;
       box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
     }
+
     button {
       background: linear-gradient(135deg, var(--main-color), var(--accent-color));
       padding: 10px 18px;
@@ -44,10 +69,12 @@
       transition: all 0.3s ease;
       box-shadow: 0 0 12px rgba(60, 182, 255, 0.3);
     }
+
     button:hover {
       transform: scale(1.05);
       box-shadow: 0 0 18px rgba(255, 61, 61, 0.5);
     }
+
     .mobile-toggle {
       position: fixed;
       top: 15px;
@@ -58,26 +85,31 @@
       display: none;
       color: white;
     }
+
     @media (max-width: 768px) {
       .sidebar { transform: translateX(-100%); transition: 0.4s ease; }
       .sidebar.open { transform: translateX(0); }
       .mobile-toggle { display: block; }
       .main { margin-left: 0; padding: 80px 20px 20px; }
     }
+
+    @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(50px); } to { opacity: 1; transform: translateX(0); } }
   </style>
 </head>
 <body>
+
   <div class="sidebar">
     <h2>Admin Panel</h2>
-   <ul>
-  <li onclick="navigateTo('uploadresultsAd.html')">📥 Upload Results</li>
-  <li onclick="navigateTo('uploadattendanceAd.html')">🗓 Upload Attendance</li>
-  <li onclick="navigateTo('upload-sbi.html')">📤 Upload SBI References</li>
-  <li onclick="navigateTo('du-match-status.html')">📊 DU Match Status</li>
-  <li onclick="navigateTo('noc-status.html')">📜 NOC Status</li>
-  <li onclick="navigateTo('removestudents.html')">🗑️ Delete Students</li>
-  <li onclick="navigateTo('createnocAd.html')">📝 Create NOC</li>
-</ul>
+    <ul>
+      <li onclick="navigateTo('uploadresultsAd.html')">📥 Upload Results</li>
+      <li onclick="navigateTo('uploadattendanceAd.html')">🗓 Upload Attendance</li>
+      <li onclick="navigateTo('upload-sbi.html')">📤 Upload SBI References</li>
+      <li onclick="navigateTo('du-match-status.html')">📊 DU Match Status</li>
+      <li onclick="navigateTo('noc-status.html')">📜 NOC Status</li>
+      <li onclick="navigateTo('removestudents.html')">🗑️ Delete Students</li>
+      <li onclick="navigateTo('createnocAd.html')">📝 Create NOC</li>
+    </ul>
     <button onclick="logout()">🚪 Logout</button>
   </div>
 
@@ -95,26 +127,63 @@
   </div>
 
   <script>
-    function navigateTo(page) {
-      window.location.href = page;
+    // Session check
+    (async () => {
+      try {
+        const res = await fetch("/check-session");
+        if (!res.ok) throw new Error("Unauthorized");
+      } catch (err) {
+        localStorage.removeItem("userId");
+        window.location.replace("index.html");
+      }
+    })();
+
+    // Navigation routes
+    function navigateTo(route) {
+      const routes = {
+        'uploadresultsAd.html': '/uploadresults',
+        'uploadattendanceAd.html': '/uploadattendance',
+        'upload-sbi.html': '/upload-sbi',
+        'du-match-status.html': '/dumatch',
+        'noc-status.html': '/nocstatus',
+        'removestudents.html': '/removestudents',
+        'createnocAd.html': '/createnoc'
+      };
+      window.location.href = routes[route] || '/adminpanel';
     }
 
+    // Logout
     function logout() {
-      localStorage.removeItem("userId");
-      window.location.replace("index.html");
+      fetch("/logout")
+        .then(() => {
+          localStorage.removeItem("userId");
+          window.location.replace("index.html");
+        });
     }
 
+    // Sidebar toggle
     function toggleSidebar() {
       document.querySelector('.sidebar').classList.toggle('open');
     }
 
+    // Back/forward block
+    window.addEventListener("pageshow", (event) => {
+      if (event.persisted) window.location.reload();
+    });
+    window.history.pushState(null, "", window.location.href);
+    window.onpopstate = function () {
+      window.history.pushState(null, "", window.location.href);
+    };
+
+    // File label display
     document.getElementById("sbiFile").addEventListener("change", function () {
       document.getElementById("fileName").textContent = this.files[0]?.name || "";
     });
 
+    // Upload function
     function uploadSBI() {
       const file = document.getElementById("sbiFile").files[0];
-      if (!file) return alert("No file selected!");
+      if (!file) return Swal.fire("No File Selected", "Please choose a file first.", "warning");
 
       const formData = new FormData();
       formData.append("sbiFile", file);
@@ -122,9 +191,12 @@
       fetch("https://crr-noc.onrender.com/admin/upload-sbi", {
         method: "POST",
         body: formData
-      }).then(res => res.json()).then(data => {
-        alert(data.message || "Upload complete!");
-      }).catch(() => alert("Upload failed."));
+      })
+        .then(res => res.json())
+        .then(data => {
+          Swal.fire("Upload Result", data.message || "Upload complete!", "success");
+        })
+        .catch(() => Swal.fire("Error", "Upload failed.", "error"));
     }
   </script>
 </body>
