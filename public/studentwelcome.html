@@ -17,11 +17,6 @@
       background-color: #2e2e2e;
     }
 
-    a {
-      text-decoration: none;
-      color: inherit;
-    }
-
     .container {
       display: flex;
       min-height: 100vh;
@@ -60,7 +55,6 @@
 
     .menu {
       list-style: none;
-      padding: 0;
     }
 
     .menu li {
@@ -76,6 +70,7 @@
       padding: 12px 20px;
       border-radius: 8px;
       transition: all 0.3s ease;
+      text-decoration: none;
     }
 
     .menu li a:hover,
@@ -84,15 +79,6 @@
       font-weight: bold;
       transform: translateX(5px);
       box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
-    }
-
-    .menu li a span {
-      font-size: 18px;
-      transition: transform 0.3s ease;
-    }
-
-    .menu li a:hover span {
-      transform: scale(1.2);
     }
 
     .logout {
@@ -112,17 +98,16 @@
       background-color: #d07900;
     }
 
-.main-section {
-  flex-grow: 1;
-  background-color: #ffffff;
-  padding: 40px 20px;
-  margin-left: 270px;
-  display: flex;
-  flex-direction: column; /* stack children vertically */
-  align-items: center;
-  gap: 40px; /* optional spacing between blocks */
-}
-
+    .main-section {
+      flex-grow: 1;
+      background-color: #ffffff;
+      padding: 40px 20px;
+      margin-left: 270px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 40px;
+    }
 
     .welcome-card {
       background: linear-gradient(135deg, rgba(255, 165, 0, 0.9), rgba(255, 110, 0, 0.9));
@@ -142,6 +127,32 @@
 
     .welcome-card p {
       font-size: 18px;
+    }
+
+    .slideshow-container {
+      margin-top: 40px;
+      width: 100%;
+      max-width: 1000px;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+      position: relative;
+      height: 400px;
+    }
+
+    .slide {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0;
+      transition: opacity 1.5s ease-in-out;
+      z-index: 0;
+    }
+
+    .slide.active {
+      opacity: 1;
+      z-index: 1;
     }
 
     .mobile-toggle {
@@ -190,20 +201,6 @@
         padding: 30px 20px;
       }
     }
-  .slideshow-container .slide {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    object-fit: cover;
-    opacity: 0;
-    transition: opacity 1.5s ease-in-out;
-    z-index: 0;
-  }
-
-  .slideshow-container .slide.active {
-    opacity: 1;
-    z-index: 1;
-  }
   </style>
 </head>
 <body>
@@ -212,57 +209,64 @@
       <img id="sidebarPhoto" class="sidebar-photo" style="display: none;" />
       <h2>ID: <span id="userId">Loading...</span></h2>
       <ul class="menu">
-        <li><a href="studentdetails.html"><span>📄</span> Student details</a></li>
-        <li><a href="editprofile.html"><span>✏️</span> Edit profile</a></li>
-        <li><a href="feedetails.html"><span>🎓</span> Fee details</a></li>
-        <li><a href="updaterefno.html"><span>🔄</span> Update fee payment</a></li>
-        <li><a href="attendence.html"><span>📅</span> View Attendance</a></li>
-        <li><a href="studentresults.html"><span>📊</span> Student Results</a></li>
-        <li><a href="generatenoc.html"><span>➕</span> Generate NOC</a></li>
-        <li><a href="settings.html"><span>⚙️</span> Settings</a></li>
+        <li><a href="studentdetails.html">📄 Student details</a></li>
+        <li><a href="editprofile.html">✏️ Edit profile</a></li>
+        <li><a href="feedetails.html">🎓 Fee details</a></li>
+        <li><a href="updaterefno.html">🔄 Update fee payment</a></li>
+        <li><a href="attendence.html">📅 View Attendance</a></li>
+        <li><a href="studentresults.html">📊 Student Results</a></li>
+        <li><a href="generatenoc.html">➕ Generate NOC</a></li>
+        <li><a href="settings.html">⚙️ Settings</a></li>
       </ul>
       <button class="logout" onclick="logout()">Logout</button>
     </div>
 
-<div class="main-section">
-  <div class="welcome-card">
-    <h1>Welcome, <span id="welcomeName">Student</span>!</h1>
-    <p>We're glad to have you back at CRR Engineering College.<br>
-      Use the sidebar to navigate through your academic dashboard.</p>
-  </div>
+    <div class="main-section">
+      <div class="welcome-card">
+        <h1>Welcome, <span id="welcomeName">Student</span>!</h1>
+        <p>We're glad to have you back at CRR Engineering College.<br>
+          Use the sidebar to navigate through your academic dashboard.</p>
+      </div>
 
-  <!-- 🏫 College About Section -->
-  <div style="margin-top: 40px; background: #fff; padding: 30px; border-radius: 16px; box-shadow: 0 6px 15px rgba(0,0,0,0.1); line-height: 1.8; color: #333; max-width: 1000px;">
-    <h2 style="color: #ff6600; margin-bottom: 20px;">Welcome to Sir C. R. Reddy College of Engineering (AUTONOMOUS)</h2>
-    <p>
-      Sir C.R. Reddy College of Engineering(A) is the first Engineering College in Andhra Pradesh sanctioned and recognized by All India Council for Technical Education (AICTE). This College is permanently affiliated to JNTUK from the Academic Year 2017-18.
-      <br><br>
-      Since its inception in 1989, Sir C.R. Reddy College of Engineering(A) has been a premier institute for quality engineering education in Andhra Pradesh under the stewardship of its broad-minded and magnanimous management. The last two and a half decades have seen the Institute fulfilling its motto of <strong>'QUALITY SERVICE & VALUE BASED EDUCATION'</strong> to the student community.
-      <br><br>
-      Adhering to its core values, the institute gives top priority to ethical values, high standards, and a commitment to value-based education. We believe in working honestly and sincerely, in building trust, and in maintaining a long-lasting relationship with society.
-      <br><br>
-      The College is situated near Vatluru railway gate in Eluru, the Head Quarters of West Godavari district. It is surrounded by beautiful paddy fields and is on the Chennai-Howrah highway and train route. A large number of buses and trains run via this town. It is easily accessible from any part of the country by rail as well as road.
-      <br><br>
-      The College is located in its own sprawling campus with an area of 30.48 acres. Its magnanimous infrastructure and greenery attract the attention of people who pass by. The vast green campus housing several Departments provides a stimulating environment to the high-caliber staff and students of the institution.
-      <br><br>
-      The Campus at Vatluru is a place where students from all walks of life are under a single umbrella pursuing their BE/B.Tech, M.Tech, and MBA courses.
-    </p>
-  </div>
+      <div style="background: #fff; padding: 30px; border-radius: 16px; box-shadow: 0 6px 15px rgba(0,0,0,0.1); line-height: 1.8; color: #333; max-width: 1000px;">
+        <h2 style="color: #ff6600; margin-bottom: 20px;">Welcome to Sir C. R. Reddy College of Engineering (AUTONOMOUS)</h2>
+        <p>
+          Sir C.R. Reddy College of Engineering(A) is the first Engineering College in Andhra Pradesh sanctioned and recognized by All India Council for Technical Education (AICTE). This College is permanently affiliated to JNTUK from the Academic Year 2017-18.
+          <br><br>
+          Since its inception in 1989, Sir C.R. Reddy College of Engineering(A) has been a premier institute for quality engineering education in Andhra Pradesh under the stewardship of its broad-minded and magnanimous management. The last two and a half decades have seen the Institute fulfilling its motto of <strong>'QUALITY SERVICE & VALUE BASED EDUCATION'</strong> to the student community.
+          <br><br>
+          Adhering to its core values, the institute gives top priority to ethical values, high standards, and a commitment to value-based education. We believe in working honestly and sincerely, in building trust, and in maintaining a long-lasting relationship with society.
+          <br><br>
+          The College is situated near Vatluru railway gate in Eluru, the Head Quarters of West Godavari district. It is surrounded by beautiful paddy fields and is on the Chennai-Howrah highway and train route. A large number of buses and trains run via this town. It is easily accessible from any part of the country by rail as well as road.
+          <br><br>
+          The College is located in its own sprawling campus with an area of 30.48 acres. Its magnanimous infrastructure and greenery attract the attention of people who pass by. The vast green campus housing several Departments provides a stimulating environment to the high-caliber staff and students of the institution.
+          <br><br>
+          The Campus at Vatluru is a place where students from all walks of life are under a single umbrella pursuing their BE/B.Tech, M.Tech, and MBA courses.
+        </p>
+      </div>
 
-  <!-- 📸 Slideshow Section -->
-<div class="slideshow-container" style="margin-top: 40px; width: 100%; max-width: 1000px; border-radius: 16px; overflow: hidden; box-shadow: 0 6px 15px rgba(0,0,0,0.1); position: relative; height: 400px;">
-  <img class="slide active" src="img1.jpg" alt="College Image 1">
-  <img class="slide" src="img2.jpg" alt="College Image 2">
-  <img class="slide" src="img3.jpg" alt="College Image 3">
-  <img class="slide" src="img4.jpg" alt="College Image 4">
-</div>
-</div>
+      <div class="slideshow-container">
+        <img class="slide active" src="img1.jpg" alt="College Image 1">
+        <img class="slide" src="img2.jpg" alt="College Image 2">
+        <img class="slide" src="img3.jpg" alt="College Image 3">
+        <img class="slide" src="img4.jpg" alt="College Image 4">
+      </div>
+    </div>
+  </div>
 
   <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
 
   <script>
     function toggleMobileMenu() {
       document.querySelector('.sidebar').classList.toggle('open');
+    }
+
+    function logout() {
+      localStorage.removeItem("userId");
+      if ("caches" in window) {
+        caches.keys().then(names => names.forEach(name => caches.delete(name)));
+      }
+      window.location.replace("index.html");
     }
 
     document.addEventListener("DOMContentLoaded", () => {
@@ -287,25 +291,17 @@
             photo.style.display = "block";
           }
         })
-        .catch(err => {
-          console.error("Error loading student data:", err);
-        });
+        .catch(err => console.error("Error loading student data:", err));
     });
-     // Slideshow logic
-  let slideIndex = 0;
-  const slides = document.querySelectorAll(".slide");
-  setInterval(() => {
-    slides.forEach((img, i) => img.style.display = i === slideIndex ? "block" : "none");
-    slideIndex = (slideIndex + 1) % slides.length;
-  }, 5000);
-    
-    function logout() {
-      localStorage.removeItem("userId");
-      if ("caches" in window) {
-        caches.keys().then(names => names.forEach(name => caches.delete(name)));
-      }
-      window.location.replace("index.html");
-    }
+
+    // Slideshow
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide');
+    setInterval(() => {
+      slides[currentSlide].classList.remove('active');
+      currentSlide = (currentSlide + 1) % slides.length;
+      slides[currentSlide].classList.add('active');
+    }, 5000);
   </script>
 </body>
 </html>
