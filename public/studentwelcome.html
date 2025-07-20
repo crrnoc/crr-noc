@@ -2,137 +2,263 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Welcome Student</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Student Welcome</title>
+  <link rel="icon" href="crrengglogo.png" type="image/png" />
   <style>
-    body {
+    * {
       margin: 0;
-      font-family: Arial, sans-serif;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: #2e2e2e;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .container {
       display: flex;
-      height: 100vh;
-      background: #f2f2f2;
+      min-height: 100vh;
     }
 
     .sidebar {
-      width: 250px;
-      background: #1a237e;
-      color: white;
+      width: 270px;
+      background-color: rgb(247, 201, 155);
       display: flex;
       flex-direction: column;
-      align-items: center;
-      padding-top: 30px;
+      padding: 20px;
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      overflow-y: auto;
+      z-index: 999;
     }
 
-    .sidebar img {
+    .sidebar-photo {
       width: 100px;
       height: 100px;
-      border-radius: 50%;
-      margin-bottom: 10px;
       object-fit: cover;
-      border: 2px solid white;
+      border-radius: 50%;
+      margin: 0 auto 10px;
+      border: 3px solid #333;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
     }
 
-    .sidebar h3 {
-      margin: 5px 0;
-    }
-
-    .sidebar a {
-      color: white;
-      text-decoration: none;
-      margin: 10px 0;
-      font-size: 16px;
-      display: block;
-    }
-
-    .sidebar a:hover {
-      text-decoration: underline;
-    }
-
-    .main-content {
-      flex: 1;
-      padding: 30px;
-    }
-
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .header h1 {
-      margin: 0;
-      font-size: 24px;
-      color: #1a237e;
-    }
-
-    .welcome-box {
-      background: white;
-      padding: 30px;
-      border-radius: 10px;
-      margin-top: 30px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-      text-align: center;
-    }
-
-    .welcome-box h2 {
-      color: #1a237e;
-      font-size: 28px;
-      margin-bottom: 10px;
-    }
-
-    .welcome-box p {
+    .sidebar h2 {
+      margin: 40px 20px 20px 20px;
+      color: black;
       font-size: 18px;
-      color: #555;
+      font-weight: bold;
+    }
+
+    .menu {
+      list-style: none;
+      padding: 0;
+    }
+
+    .menu li {
+      margin-bottom: 15px;
+    }
+
+    .menu li a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 16px;
+      color: black;
+      padding: 12px 20px;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
+
+    .menu li a:hover,
+    .menu li.active a {
+      background-color: #d4d4d4;
+      font-weight: bold;
+      transform: translateX(5px);
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .menu li a span {
+      font-size: 18px;
+      transition: transform 0.3s ease;
+    }
+
+    .menu li a:hover span {
+      transform: scale(1.2);
+    }
+
+    .logout {
+      background-color: #f09000;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 16px;
+      width: 50%;
+      margin: 20px auto 0;
+      transition: background 0.3s ease;
+    }
+
+    .logout:hover {
+      background-color: #d07900;
+    }
+
+    .main-section {
+      flex-grow: 1;
+      background-color: #ffffff;
+      padding: 40px 20px;
+      margin-left: 270px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .welcome-card {
+      background: linear-gradient(135deg, rgba(255, 165, 0, 0.9), rgba(255, 110, 0, 0.9));
+      color: white;
+      padding: 50px 30px;
+      border-radius: 20px;
+      text-align: center;
+      width: 90%;
+      max-width: 600px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+    }
+
+    .welcome-card h1 {
+      font-size: 32px;
+      margin-bottom: 15px;
+    }
+
+    .welcome-card p {
+      font-size: 18px;
+    }
+
+    .mobile-toggle {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #1f75cb;
+      color: white;
+      font-size: 24px;
+      padding: 12px 18px;
+      border-radius: 50px;
+      z-index: 9999;
+      cursor: pointer;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        top: -100%;
+        left: 0;
+        width: 100%;
+        max-height: 90vh;
+      }
+
+      .sidebar.open {
+        top: 0;
+      }
+
+      .mobile-toggle {
+        display: block;
+      }
+
+      .main-section {
+        margin-left: 0;
+        padding: 20px;
+      }
+
+      .welcome-card {
+        width: 100%;
+        padding: 30px 20px;
+      }
     }
   </style>
 </head>
 <body>
+  <div class="container">
+    <div class="sidebar">
+      <img id="sidebarPhoto" class="sidebar-photo" style="display: none;" />
+      <h2>ID: <span id="userId">Loading...</span></h2>
+      <ul class="menu">
+        <li class="active"><a href="#"><span>🏠</span> Welcome</a></li>
+        <li><a href="studentdetails.html"><span>📄</span> Student details</a></li>
+        <li><a href="editprofile.html"><span>✏️</span> Edit profile</a></li>
+        <li><a href="feedetails.html"><span>🎓</span> Fee details</a></li>
+        <li><a href="updaterefno.html"><span>🔄</span> Update fee payment</a></li>
+        <li><a href="attendence.html"><span>📅</span> View Attendance</a></li>
+        <li><a href="studentresults.html"><span>📊</span> Student Results</a></li>
+        <li><a href="generatenoc.html"><span>➕</span> Generate NOC</a></li>
+        <li><a href="settings.html"><span>⚙️</span> Settings</a></li>
+      </ul>
+      <button class="logout" onclick="logout()">Logout</button>
+    </div>
 
-  <div class="sidebar">
-    <img id="sidebarPhoto" src="default.jpg" alt="Student Photo" />
-    <h3 id="studentName">Student Name</h3>
-    <p id="studentRegNo">Reg No</p>
-    <a href="studentdetails.html"><i class="fas fa-user"></i> Profile</a>
-    <a href="viewresults.html"><i class="fas fa-chart-bar"></i> Results</a>
-    <a href="attendance.html"><i class="fas fa-calendar-check"></i> Attendance</a>
-    <a href="logout.html"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    <div class="main-section">
+      <div class="welcome-card">
+        <h1>Welcome, <span id="welcomeName">Student</span>!</h1>
+        <p>We're glad to have you back at CRR Engineering College.<br>
+          Use the sidebar to navigate through your academic dashboard.</p>
+      </div>
+    </div>
   </div>
 
-  <div class="main-content">
-    <div class="header">
-      <h1>Welcome Page</h1>
-    </div>
-    <div class="welcome-box">
-      <h2>Welcome, <span id="welcomeName">Student</span>!</h2>
-      <p>We're glad to have you back. Check your latest updates using the sidebar links.</p>
-    </div>
-  </div>
+  <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
 
   <script>
-    const userId = localStorage.getItem("userId");
-    document.getElementById("welcomeName").textContent = "Student";
+    function toggleMobileMenu() {
+      document.querySelector('.sidebar').classList.toggle('open');
+    }
 
-    if (userId) {
+    document.addEventListener("DOMContentLoaded", () => {
+      const userId = localStorage.getItem('userId');
+      if (!userId) {
+        alert("Please login first.");
+        window.location.href = "index.html";
+        return;
+      }
+
+      document.getElementById("userId").textContent = userId;
+
       fetch(`https://crr-noc.onrender.com/student/${userId}`)
         .then(res => res.json())
         .then(data => {
           if (data.name) {
-            document.getElementById("studentName").textContent = data.name;
-            document.getElementById("welcomeName").textContent = data.name.split(" ")[0];
-          }
-          if (data.reg_no) {
-            document.getElementById("studentRegNo").textContent = data.reg_no;
+            document.getElementById("welcomeName").textContent = data.name.split(' ')[0];
           }
           if (data.photo_url) {
-            document.getElementById("sidebarPhoto").src = data.photo_url;
+            const photo = document.getElementById("sidebarPhoto");
+            photo.src = data.photo_url;
+            photo.style.display = "block";
           }
         })
         .catch(err => {
-          console.error("Failed to fetch student data:", err);
+          console.error("Error loading student data:", err);
         });
+    });
+
+    function logout() {
+      localStorage.removeItem("userId");
+      if ("caches" in window) {
+        caches.keys().then(names => names.forEach(name => caches.delete(name)));
+      }
+      window.location.replace("index.html");
     }
   </script>
 </body>
 </html>
-
