@@ -187,16 +187,53 @@
 </div>
 
 <script>
-function navigateTo(page) {
-  window.location.href = page;
+// ✅ Session Protection
+(async () => {
+  try {
+    const res = await fetch("/check-session");
+    if (!res.ok) throw new Error("Unauthorized");
+  } catch (err) {
+    localStorage.removeItem("userId");
+    window.location.replace("index.html");
+  }
+})();
+
+// 🧭 Smart Navigation
+function navigateTo(route) {
+  const routes = {
+    'uploadresultsAd.html': '/uploadresults',
+    'uploadattendanceAd.html': '/uploadattendance',
+    'upload-sbi.html': '/upload-sbi',
+    'du-match-status.html': '/dumatch',
+    'noc-status.html': '/nocstatus',
+    'removestudents.html': '/removestudents',
+    'createnocAd.html': '/createnoc'
+  };
+  window.location.href = routes[route] || '/adminpanel';
 }
+
+// 🚪 Logout Handler
+function logout() {
+  fetch("/logout").then(() => {
+    localStorage.removeItem("userId");
+    window.location.replace("index.html");
+  });
+}
+
+// 📱 Mobile Sidebar
 function toggleSidebar() {
   document.querySelector('.sidebar').classList.toggle('open');
 }
-function logout() {
-  localStorage.removeItem("userId");
-  window.location.replace("index.html");
-}
+
+// 🔒 Block Back/Forward Nav
+window.addEventListener("pageshow", (event) => {
+  if (event.persisted) window.location.reload();
+});
+window.history.pushState(null, "", window.location.href);
+window.onpopstate = function () {
+  window.history.pushState(null, "", window.location.href);
+};
+  
 let fetchedReg = "";
 
 function fetchStudentDetails() {
