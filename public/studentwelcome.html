@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Welcome Student</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      height: 100vh;
+      background: #f2f2f2;
+    }
+
+    .sidebar {
+      width: 250px;
+      background: #1a237e;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 30px;
+    }
+
+    .sidebar img {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      margin-bottom: 10px;
+      object-fit: cover;
+      border: 2px solid white;
+    }
+
+    .sidebar h3 {
+      margin: 5px 0;
+    }
+
+    .sidebar a {
+      color: white;
+      text-decoration: none;
+      margin: 10px 0;
+      font-size: 16px;
+      display: block;
+    }
+
+    .sidebar a:hover {
+      text-decoration: underline;
+    }
+
+    .main-content {
+      flex: 1;
+      padding: 30px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 24px;
+      color: #1a237e;
+    }
+
+    .welcome-box {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      margin-top: 30px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+
+    .welcome-box h2 {
+      color: #1a237e;
+      font-size: 28px;
+      margin-bottom: 10px;
+    }
+
+    .welcome-box p {
+      font-size: 18px;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="sidebar">
+    <img id="sidebarPhoto" src="default.jpg" alt="Student Photo" />
+    <h3 id="studentName">Student Name</h3>
+    <p id="studentRegNo">Reg No</p>
+    <a href="studentdetails.html"><i class="fas fa-user"></i> Profile</a>
+    <a href="viewresults.html"><i class="fas fa-chart-bar"></i> Results</a>
+    <a href="attendance.html"><i class="fas fa-calendar-check"></i> Attendance</a>
+    <a href="logout.html"><i class="fas fa-sign-out-alt"></i> Logout</a>
+  </div>
+
+  <div class="main-content">
+    <div class="header">
+      <h1>Welcome Page</h1>
+    </div>
+    <div class="welcome-box">
+      <h2>Welcome, <span id="welcomeName">Student</span>!</h2>
+      <p>We're glad to have you back. Check your latest updates using the sidebar links.</p>
+    </div>
+  </div>
+
+  <script>
+    const userId = localStorage.getItem("userId");
+    document.getElementById("welcomeName").textContent = "Student";
+
+    if (userId) {
+      fetch(`https://crr-noc.onrender.com/student/${userId}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.name) {
+            document.getElementById("studentName").textContent = data.name;
+            document.getElementById("welcomeName").textContent = data.name.split(" ")[0];
+          }
+          if (data.reg_no) {
+            document.getElementById("studentRegNo").textContent = data.reg_no;
+          }
+          if (data.photo_url) {
+            document.getElementById("sidebarPhoto").src = data.photo_url;
+          }
+        })
+        .catch(err => {
+          console.error("Failed to fetch student data:", err);
+        });
+    }
+  </script>
+</body>
+</html>
+
