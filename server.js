@@ -87,23 +87,21 @@ app.get("/adminpanel", requireAdminSession, (req, res) => {
 app.get("/uploadresults", requireAdminSession, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "uploadresultsAd.html"));
 });
-
+app.get("/dumatch", requireAdminSession, (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "du-match-status.html"));
+});
 app.get("/uploadattendance", requireAdminSession, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "uploadattendanceAd.html"));
 });
-
 app.get("/nocstatus", requireAdminSession, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "noc-status.html"));
 });
-
 app.get("/removestudents", requireAdminSession, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "removestudents.html"));
 });
-
 app.get("/createnoc", requireAdminSession, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "createnocAd.html"));
 });
-
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads"))); // for previews
 
