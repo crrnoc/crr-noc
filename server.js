@@ -2791,4 +2791,10 @@ app.get('/logout', (req, res) => {
     res.redirect('/index.html');
   });
 });
-
+app.get('/check-session', (req, res) => {
+  if (req.session.userId && req.session.role === 'admin') {
+    res.json({ success: true });
+  } else {
+    res.status(401).json({ success: false });
+  }
+});
