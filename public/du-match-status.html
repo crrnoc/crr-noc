@@ -82,17 +82,18 @@
   </style>
 </head>
 <body>
+
   <div class="sidebar">
     <h2>Admin Panel</h2>
-<ul>
-  <li onclick="navigateTo('uploadresultsAd.html')">📥 Upload Results</li>
-  <li onclick="navigateTo('uploadattendanceAd.html')">🗓 Upload Attendance</li>
-  <li onclick="navigateTo('upload-sbi.html')">📤 Upload SBI References</li>
-  <li onclick="navigateTo('du-match-status.html')">📊 DU Match Status</li>
-  <li onclick="navigateTo('noc-status.html')">📜 NOC Status</li>
-  <li onclick="navigateTo('removestudents.html')">🗑️ Delete Students</li>
-  <li onclick="navigateTo('createnocAd.html')">📝 Create NOC</li>
-</ul>
+    <ul>
+      <li onclick="navigateTo('uploadresultsAd.html')">📥 Upload Results</li>
+      <li onclick="navigateTo('uploadattendanceAd.html')">🗓 Upload Attendance</li>
+      <li onclick="navigateTo('upload-sbi.html')">📤 Upload SBI References</li>
+      <li onclick="navigateTo('du-match-status.html')">📊 DU Match Status</li>
+      <li onclick="navigateTo('noc-status.html')">📜 NOC Status</li>
+      <li onclick="navigateTo('removestudents.html')">🗑️ Delete Students</li>
+      <li onclick="navigateTo('createnocAd.html')">📝 Create NOC</li>
+    </ul>
     <button onclick="logout()">🚪 Logout</button>
   </div>
 
@@ -102,14 +103,13 @@
     <div class="banner">📊 DU Match Status</div>
     <div class="card">
       <div style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center;">
-  <input type="text" id="searchInput" placeholder="Search by Reg No or Name" 
-    style="padding: 10px 14px; border-radius: 10px; width: 100%; max-width: 350px;
-           background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
-           color: white; box-shadow: inset 0 0 8px rgba(111,180,218,0.708); outline: none;" 
-    oninput="searchDU()"
-  />
-  <button onclick="loadMatches()">Reset</button>
-</div>
+        <input type="text" id="searchInput" placeholder="Search by Reg No or Name"
+          style="padding: 10px 14px; border-radius: 10px; width: 100%; max-width: 350px;
+                 background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+                 color: white; box-shadow: inset 0 0 8px rgba(111,180,218,0.708); outline: none;"
+          oninput="searchDU()" />
+        <button onclick="loadMatches()">Reset</button>
+      </div>
 
       <div style="overflow-x: auto;">
         <table id="matchTable">
@@ -123,19 +123,54 @@
   </div>
 
   <script>
-    function navigateTo(page) {
-      window.location.href = page;
+    // 🔐 Session check
+    (async () => {
+      try {
+        const res = await fetch("/check-session");
+        if (!res.ok) throw new Error("Unauthorized");
+      } catch (err) {
+        localStorage.removeItem("userId");
+        window.location.replace("index.html");
+      }
+    })();
+
+    // 🔁 Navigation routing
+    function navigateTo(route) {
+      const routes = {
+        'uploadresultsAd.html': '/uploadresults',
+        'uploadattendanceAd.html': '/uploadattendance',
+        'upload-sbi.html': '/upload-sbi',
+        'du-match-status.html': '/dumatch',
+        'noc-status.html': '/nocstatus',
+        'removestudents.html': '/removestudents',
+        'createnocAd.html': '/createnoc'
+      };
+      window.location.href = routes[route] || '/adminpanel';
     }
 
+    // 🚪 Logout
     function logout() {
-      localStorage.removeItem("userId");
-      window.location.replace("index.html");
+      fetch("/logout").then(() => {
+        localStorage.removeItem("userId");
+        window.location.replace("index.html");
+      });
     }
 
+    // 📱 Sidebar
     function toggleSidebar() {
       document.querySelector('.sidebar').classList.toggle('open');
     }
 
+    // 🔙 Block browser nav
+    window.addEventListener("pageshow", (event) => {
+      if (event.persisted) window.location.reload();
+    });
+    window.history.pushState(null, "", window.location.href);
+    window.onpopstate = function () {
+      window.history.pushState(null, "", window.location.href);
+    };
+
+    // 🔃 Load full DU match status
     function loadMatches() {
       fetch("https://crr-noc.onrender.com/admin/matches")
         .then(res => res.json())
@@ -153,41 +188,44 @@
         });
     }
 
-function searchDU() {
-  const query = document.getElementById("searchInput").value.trim();
+    // 🔍 Search DU Matches
+    function searchDU() {
+      const query = document.getElementById("searchInput").value.trim();
 
-  if (!query) {
-    loadMatches(); // Show all if search is cleared
-    return;
-  }
+      if (!query) {
+        loadMatches(); return;
+      }
 
-  fetch("https://crr-noc.onrender.com/admin/search-student-sbi", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ query })
-  })
-    .then(res => res.json())
-  .then(data => {
-  const tbody = document.querySelector("#matchTable tbody");
-  if (data.success && data.data.length) {
-    tbody.innerHTML = data.data.map(row => `
-      <tr>
-        <td>${row.userId}</td>
-        <td>${row.fee_type || '-'}</td>
-        <td>${row.sbi_ref_no || '-'}</td>
-        <td>${row.matched ? '✅' : '❌'}</td>
-        <td>${row.matched_on || '-'}</td>
-      </tr>
-    `).join("");
-  } else {
-    tbody.innerHTML = `<tr><td colspan="5">No matching records found.</td></tr>`;
-  }
-})
-    .catch(() => alert("Search failed."));
-}
+      fetch("https://crr-noc.onrender.com/admin/search-student-sbi", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query })
+      })
+        .then(res => res.json())
+        .then(data => {
+          const tbody = document.querySelector("#matchTable tbody");
+          if (data.success && data.data.length) {
+            tbody.innerHTML = data.data.map(row => `
+              <tr>
+                <td>${row.userId}</td>
+                <td>${row.fee_type || '-'}</td>
+                <td>${row.sbi_ref_no || '-'}</td>
+                <td>${row.matched ? '✅' : '❌'}</td>
+                <td>${row.matched_on || '-'}</td>
+              </tr>
+            `).join("");
+          } else {
+            tbody.innerHTML = `<tr><td colspan="5">No matching records found.</td></tr>`;
+          }
+        })
+        .catch(() => {
+          Swal.fire("Error", "Search failed. Please try again.", "error");
+        });
+    }
 
-    // Initial load
+    // 🚀 Initial data load
     loadMatches();
   </script>
+
 </body>
 </html>
