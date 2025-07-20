@@ -84,6 +84,26 @@ app.use(express.static(path.join(__dirname, "public")));
 app.get("/adminpanel", requireAdminSession, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "adminpanel.html"));
 });
+app.get("/uploadresults", requireAdminSession, (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "uploadresultsAd.html"));
+});
+
+app.get("/uploadattendance", requireAdminSession, (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "uploadattendanceAd.html"));
+});
+
+app.get("/nocstatus", requireAdminSession, (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "noc-status.html"));
+});
+
+app.get("/removestudents", requireAdminSession, (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "removestudents.html"));
+});
+
+app.get("/createnoc", requireAdminSession, (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "createnocAd.html"));
+});
+
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads"))); // for previews
 
@@ -2760,3 +2780,15 @@ app.post("/update-father-details", (req, res) => {
     res.json({ success: true, message: "Father details updated successfully" });
   });
 });
+
+app.get('/logout', (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      console.error("Logout failed:", err);
+      return res.status(500).send("Logout failed");
+    }
+    res.clearCookie("noc_sid");
+    res.redirect('/index.html');
+  });
+});
+
