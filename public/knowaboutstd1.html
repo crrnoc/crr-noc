@@ -323,6 +323,11 @@
   function toggleMobileMenu() {
     document.querySelector('.sidebar').classList.toggle('open');
   }
+
+    function logout() {
+    localStorage.clear();
+    window.location.href = "index.html";
+  }
 </script>
 </body>
 </html>
