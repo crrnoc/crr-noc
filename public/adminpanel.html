@@ -24,15 +24,18 @@
       top: 0;
       z-index: 10;
     }
+
     .sidebar h2 {
       text-align: center;
       font-size: 24px;
       color: var(--main-color);
       margin-bottom: 30px;
     }
+
     .sidebar ul {
       list-style: none;
     }
+
     .sidebar li {
       padding: 12px 18px;
       margin: 12px 0;
@@ -41,10 +44,12 @@
       cursor: pointer;
       transition: 0.3s ease;
     }
+
     .sidebar li:hover {
       background: var(--main-color);
       box-shadow: 0 0 12px var(--main-color);
     }
+
     .sidebar button {
       margin-top: auto;
       padding: 10px 20px;
@@ -57,6 +62,7 @@
       box-shadow: 0 0 10px rgba(255, 65, 108, 0.5);
       transition: 0.3s ease;
     }
+
     .sidebar button:hover {
       transform: scale(1.05);
     }
@@ -105,15 +111,15 @@
 <body>
   <div class="sidebar">
     <h2>Admin Panel</h2>
-<ul>
-  <li onclick="navigateTo('uploadresultsAd.html')">📥 Upload Results</li>
-  <li onclick="navigateTo('uploadattendanceAd.html')">🗓 Upload Attendance</li>
-  <li onclick="navigateTo('upload-sbi.html')">📤 Upload SBI References</li>
-  <li onclick="navigateTo('du-match-status.html')">📊 DU Match Status</li>
-  <li onclick="navigateTo('noc-status.html')">📜 NOC Status</li>
-  <li onclick="navigateTo('removestudents.html')">🗑️ Delete Students</li>
-  <li onclick="navigateTo('createnocAd.html')">📝 Create NOC</li>
-</ul>
+    <ul>
+      <li onclick="navigateTo('/uploadresults')">📥 Upload Results</li>
+      <li onclick="navigateTo('/uploadattendance')">🗓 Upload Attendance</li>
+      <li onclick="navigateTo('/upload-sbi')">📤 Upload SBI References</li>
+      <li onclick="navigateTo('/dumatch')">📊 DU Match Status</li>
+      <li onclick="navigateTo('/nocstatus')">📜 NOC Status</li>
+      <li onclick="navigateTo('/removestudents')">🗑️ Delete Students</li>
+      <li onclick="navigateTo('/createnoc')">📝 Create NOC</li>
+    </ul>
     <button onclick="logout()">🚪 Logout</button>
   </div>
 
@@ -128,21 +134,47 @@
   </div>
 
   <script>
-    function navigateTo(page) {
-      window.location.href = page;
+    // 💡 Frontend route navigation
+    function navigateTo(route) {
+      window.location.href = route;
     }
 
     function toggleSidebar() {
       document.querySelector('.sidebar').classList.toggle('open');
     }
 
+    // 🔐 Logout with session destroy
     function logout() {
-      localStorage.removeItem("userId");
-      if ("caches" in window) {
-        caches.keys().then(keys => keys.forEach(key => caches.delete(key)));
-      }
-      window.location.replace("index.html");
+      fetch("/logout")
+        .then(() => {
+          localStorage.removeItem("userId");
+          window.location.replace("index.html");
+        })
+        .catch((err) => {
+          console.error("Logout failed:", err);
+          alert("Logout failed. Try again.");
+        });
     }
+
+    // ✅ Session validation + block forward/back nav
+    window.onload = function () {
+      // Session check
+      fetch('/check-session')
+        .then(res => {
+          if (!res.ok) throw new Error("Unauthorized");
+        })
+        .catch(err => {
+          console.warn("Session expired or unauthorized.");
+          localStorage.removeItem("userId");
+          window.location.replace("index.html");
+        });
+
+      // Block browser back/forward
+      window.history.pushState(null, "", window.location.href);
+      window.onpopstate = function () {
+        window.history.pushState(null, "", window.location.href);
+      };
+    };
   </script>
 </body>
 </html>
