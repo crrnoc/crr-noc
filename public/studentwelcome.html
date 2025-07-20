@@ -130,10 +130,9 @@ body {
 }
 
 .slideshow-container {
-  margin-top: 40px;
   width: 100%;
   max-width: 1000px;
-  aspect-ratio: 16 / 9; /* ✅ Keeps aspect ratio consistent */
+  margin-top: 40px;
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
@@ -141,18 +140,16 @@ body {
 }
 
 .slide {
-  position: absolute;
+  display: none;
   width: 100%;
-  height: 100%;
-  object-fit: cover; /* ✅ Keeps full image visible inside container */
-  opacity: 0;
-  transition: opacity 1.5s ease-in-out;
-  z-index: 0;
+  height: auto;
+  object-fit: contain;
+  transition: opacity 1s ease-in-out;
 }
 
 .slide.active {
+  display: block;
   opacity: 1;
-  z-index: 1;
 }
 
 .mobile-toggle {
@@ -301,13 +298,24 @@ body {
     });
 
     // Slideshow
-    let currentSlide = 0;
-    const slides = document.querySelectorAll('.slide');
-    setInterval(() => {
-      slides[currentSlide].classList.remove('active');
-      currentSlide = (currentSlide + 1) % slides.length;
-      slides[currentSlide].classList.add('active');
-    }, 5000);
+  let currentSlide = 0;
+  const slides = document.querySelectorAll('.slide');
+  const totalSlides = slides.length;
+
+  function showSlide(index) {
+    slides.forEach((slide, i) => {
+      slide.classList.remove('active');
+    });
+    slides[index].classList.add('active');
+  }
+
+  function nextSlide() {
+    currentSlide = (currentSlide + 1) % totalSlides;
+    showSlide(currentSlide);
+  }
+
+  setInterval(nextSlide, 5000); // 5 seconds
+  showSlide(currentSlide); // Show first slide on load
   </script>
 </body>
 </html>
