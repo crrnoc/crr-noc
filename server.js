@@ -40,6 +40,15 @@ app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+// 🔐 Middleware to protect admin-only pages
+function requireAdminSession(req, res, next) {
+  if (req.session.userId && req.session.role === 'admin') {
+    next(); // allow access
+  } else {
+    res.redirect('/index.html'); // redirect to login if not authorized
+  }
+}
+
 const MySQLStore = require('express-mysql-session')(session);
 
 const sessionStore = new MySQLStore({
@@ -71,6 +80,11 @@ cloudinary.config({
 
 // ✅ Static files
 app.use(express.static(path.join(__dirname, "public")));
+// ✅ Secure route for admin panel
+app.get("/adminpanel", requireAdminSession, (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "adminpanel.html"));
+});
+
 app.use("/uploads", express.static(path.join(__dirname, "uploads"))); // for previews
 
 // ✅ MySQL connection
