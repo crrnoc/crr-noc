@@ -90,7 +90,7 @@ app.get("/uploadresults", requireAdminSession, (req, res) => {
 app.get("/upload-sbi", requireAdminSession, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "upload-sbi.html"));
 });
-app.get("/du-match-status", requireAdminSession, (req, res) => {
+app.get("/dumatch", requireAdminSession, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "du-match-status.html"));
 });
 app.get("/uploadattendance", requireAdminSession, (req, res) => {
