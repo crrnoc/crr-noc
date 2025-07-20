@@ -208,13 +208,30 @@
       <button class="logout" onclick="logout()">Logout</button>
     </div>
 
-    <div class="main-section">
-      <div class="welcome-card">
-        <h1>Welcome, <span id="welcomeName">Student</span>!</h1>
-        <p>We're glad to have you back at CRR Engineering College.<br>
-          Use the sidebar to navigate through your academic dashboard.</p>
-      </div>
-    </div>
+<div class="main-section">
+  <div class="welcome-card">
+    <h1>Welcome, <span id="welcomeName">Student</span>!</h1>
+    <p>We're glad to have you back at CRR Engineering College.<br>
+      Use the sidebar to navigate through your academic dashboard.</p>
+  </div>
+
+  <!-- 🏫 College About Section -->
+  <div style="margin-top: 40px; background: #fff; padding: 30px; border-radius: 16px; box-shadow: 0 6px 15px rgba(0,0,0,0.1); line-height: 1.8; color: #333; max-width: 1000px;">
+    <h2 style="color: #ff6600; margin-bottom: 20px;">Welcome to Sir C. R. Reddy College of Engineering (AUTONOMOUS)</h2>
+    <p>
+      Sir C.R. Reddy College of Engineering(A) is the first Engineering College in Andhra Pradesh sanctioned and recognized by All India Council for Technical Education (AICTE). This College is permanently affiliated to JNTUK from the Academic Year 2017-18.
+      <br><br>
+      Since its inception in 1989, Sir C.R. Reddy College of Engineering(A) has been a premier institute for quality engineering education in Andhra Pradesh under the stewardship of its broad-minded and magnanimous management. The last two and a half decades have seen the Institute fulfilling its motto of <strong>'QUALITY SERVICE & VALUE BASED EDUCATION'</strong> to the student community.
+      <br><br>
+      Adhering to its core values, the institute gives top priority to ethical values, high standards, and a commitment to value-based education. We believe in working honestly and sincerely, in building trust, and in maintaining a long-lasting relationship with society.
+      <br><br>
+      The College is situated near Vatluru railway gate in Eluru, the Head Quarters of West Godavari district. It is surrounded by beautiful paddy fields and is on the Chennai-Howrah highway and train route. A large number of buses and trains run via this town. It is easily accessible from any part of the country by rail as well as road.
+      <br><br>
+      The College is located in its own sprawling campus with an area of 30.48 acres. Its magnanimous infrastructure and greenery attract the attention of people who pass by. The vast green campus housing several Departments provides a stimulating environment to the high-caliber staff and students of the institution.
+      <br><br>
+      The Campus at Vatluru is a place where students from all walks of life are under a single umbrella pursuing their BE/B.Tech, M.Tech, and MBA courses.
+    </p>
+  </div>
   </div>
 
   <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
@@ -250,7 +267,14 @@
           console.error("Error loading student data:", err);
         });
     });
-
+     // Slideshow logic
+  let slideIndex = 0;
+  const slides = document.querySelectorAll(".slide");
+  setInterval(() => {
+    slides.forEach((img, i) => img.style.display = i === slideIndex ? "block" : "none");
+    slideIndex = (slideIndex + 1) % slides.length;
+  }, 2000);
+    
     function logout() {
       localStorage.removeItem("userId");
       if ("caches" in window) {
