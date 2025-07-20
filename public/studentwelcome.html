@@ -112,15 +112,17 @@
       background-color: #d07900;
     }
 
-    .main-section {
-      flex-grow: 1;
-      background-color: #ffffff;
-      padding: 40px 20px;
-      margin-left: 270px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+.main-section {
+  flex-grow: 1;
+  background-color: #ffffff;
+  padding: 40px 20px;
+  margin-left: 270px;
+  display: flex;
+  flex-direction: column; /* stack children vertically */
+  align-items: center;
+  gap: 40px; /* optional spacing between blocks */
+}
+
 
     .welcome-card {
       background: linear-gradient(135deg, rgba(255, 165, 0, 0.9), rgba(255, 110, 0, 0.9));
