@@ -233,7 +233,7 @@
         return;
       }
 
-      fetch(`http://localhost:3000/total-backlogs?regno=${regno}`)
+      fetch(`http://crr-noc.onrender.com/total-backlogs?regno=${regno}`)
         .then(res => res.json())
         .then(data => {
           const table = document.getElementById("totalBacklogTable");
