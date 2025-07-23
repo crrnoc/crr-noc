@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Edit Student Profile</title>
+  <link rel="icon" href="crrengglogo.png" type="image/png" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+
+  body {
+    background-color: #1d1d1d;
+    color: #000;
+  }
+
+  .main-container {
+    display: flex;
+    height: 100vh;
+    flex-direction: row;
+  }
+
+  .sidebar {
+    width: 270px;
+    background-color: rgb(247, 201, 155);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 20px;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 100;
+    overflow-y: auto;
+    transition: top 0.3s ease-in-out;
+  }
+
+  .sidebar h2 {
+    margin: 40px 20px 20px 20px;
+    color: black;
+    font-size: 18px;
+  }
+
+  .menu {
+    list-style-type: none;
+    padding: 0;
+  }
+
+  .menu li {
+    margin-bottom: 15px;
+  }
+
+  .menu li a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 16px;
+    color: black;
+    padding: 12px 20px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+  }
+
+  .menu li a:hover,
+  .menu li.active a {
+    background-color: #d4d4d4;
+    font-weight: bold;
+    transform: translateX(5px);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  .menu li a span {
+    font-size: 18px;
+    transition: transform 0.3s ease;
+  }
+
+  .menu li a:hover span {
+    transform: scale(1.2);
+  }
+
+  .logout {
+    background-color: #f09000;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 16px;
+    width: 50%;
+    margin: 20px auto;
+    transition: background 0.3s ease;
+  }
+
+  .logout:hover {
+    background-color: #d07900;
+  }
+
+  .content {
+    flex-grow: 1;
+    background-color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    margin-left: 270px;
+    padding: 20px;
+  }
+
+    .search-box {
+      background: linear-gradient(to right, #67b26f, #4ca2cd);
+      padding: 30px;
+      border-radius: 20px;
+      color: white;
+      box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+      width: 100%;
+      max-width: 500px;
+      margin-top: 40px;
+      text-align: center;
+    }
+
+    .search-box input {
+      width: 80%;
+      padding: 10px;
+      font-size: 16px;
+      border: none;
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
+
+    .search-box button {
+      background-color: #000000;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .edit-form {
+      margin-top: 30px;
+      background: #e0f7fa;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+      width: 100%;
+      max-width: 600px;
+    }
+
+    .edit-form h3 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .edit-form label {
+      font-weight: bold;
+      margin-top: 10px;
+      display: block;
+    }
+
+    .edit-form input,
+    .edit-form select {
+      width: 100%;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      margin-top: 5px;
+    }
+
+    .edit-form button {
+      margin-top: 20px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    .mobile-toggle {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #1f75cb;
+      color: white;
+      font-size: 24px;
+      padding: 12px 18px;
+      border-radius: 50px;
+      z-index: 9999;
+      cursor: pointer;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    @media (max-width: 768px) {
+      .main-container {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        width: 100%;
+        top: -100%;
+        max-height: 90vh;
+      }
+
+      .sidebar.open {
+        top: 0;
+      }
+
+      .content {
+        margin-left: 0;
+        padding: 20px;
+      }
+
+      .mobile-toggle {
+        display: block;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="main-container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <h2><strong>ID:</strong> <span id="userId">Loading...</span></h2>
+<ul class="menu">
+  <li><a href="knowaboutstd1.html"><span>👤</span> Know about Student</a></li>
+  <li class="active"><a href="#"><span>✏️</span> Edit Student Details</a></li>
+  <li><a href="sendnotification.html"><span>📨</span> Send Notification</a></li>
+  <li><a href="updatefee.html"><span>💵</span> Update Fee</a></li>
+  <li><a href="imposefines.html"><span>💰</span> Impose Fines</a></li>
+  <li><a href="addstudent.html"><span>➕</span> Add Student</a></li>
+  <li><a href="addmycounselling.html"><span>👥</span> Assign Counselling</a></li>
+  <li><a href="mycounselling.html"><span>📋</span> View Counselling</a></li>
+  <li><a href="staffsettings.html"><span>⚙️</span> Settings</a></li>
+</ul>
+
+      <button class="logout" onclick="logout()">Logout</button>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content">
+      <div class="search-box">
+        <h2>Enter Student Reg. No to Edit</h2>
+        <input type="text" id="studentRegInput" placeholder="e.g., 22A91A05G5" />
+        <br />
+        <button onclick="fetchStudentData()">Fetch Student</button>
+      </div>
+
+      <div id="editFormContainer"></div>
+    </div>
+  </div>
+
+  <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
+
+  <script>
+    const userId = localStorage.getItem("userId") || "Staff";
+    document.getElementById("userId").textContent = userId;
+
+    function toggleMobileMenu() {
+      document.querySelector('.sidebar').classList.toggle('open');
+    }
+
+    function logout() {
+      localStorage.clear();
+      window.location.href = "index.html";
+    }
+
+    function fetchStudentData() {
+      const regNo = document.getElementById("studentRegInput").value.trim();
+      if (!regNo) {
+        Swal.fire("Enter Reg.No", "Please enter a valid registration number", "warning");
+        return;
+      }
+
+      fetch(`https://crr-noc.onrender.com/student/${regNo}`)
+        .then(res => {
+          if (!res.ok) throw new Error("Student not found");
+          return res.json();
+        })
+        .then(data => {
+          displayEditForm(data);
+        })
+        .catch(err => {
+          Swal.fire("Error", err.message, "error");
+        });
+    }
+
+    function displayEditForm(data) {
+      const formHtml = `
+        <form class="edit-form" onsubmit="submitUpdate(event, '${data.userId}')">
+          <h3>Edit Student Profile</h3>
+
+          <label>Name</label>
+          <input type="text" id="name" value="${data.name}" required>
+
+          <label>DOB</label>
+          <input type="date" id="dob" value="${data.dob?.split('T')[0] || ''}" required>
+
+          <label>Course</label>
+          <input type="text" id="course" value="${data.course}" required>
+
+          <label>Semester</label>
+          <input type="text" id="semester" value="${data.semester}" required>
+
+          <label>Section</label>
+          <input type="text" id="section" value="${data.section}" required>
+
+          <label>Year</label>
+          <input type="number" id="year" value="${data.year}" required>
+
+          <label>Father Name</label>
+          <input type="text" id="father_name" value="${data.father_name}" required>
+
+          <label>Father Mobile</label>
+          <input type="text" id="father_mobile" value="${data.father_mobile}" required>
+
+          <label>Student Mobile</label>
+          <input type="text" id="mobile_no" value="${data.mobile_no}" required>
+
+          <label>Email</label>
+          <input type="email" id="email" value="${data.email}" required>
+
+          <label>Admission Type</label>
+          <input type="text" id="admission_type" value="${data.admission_type}" required>
+
+          <label>Counsellor Name</label>
+          <input type="text" id="counsellor_name" value="${data.counsellor_name}" required>
+
+          <label>Counsellor Mobile</label>
+          <input type="text" id="counsellor_mobile" value="${data.counsellor_mobile}" required>
+
+          <label>Unique ID</label>
+          <input type="text" id="uniqueId" value="${data.uniqueId}" required>
+
+          <br><button type="submit">Save Changes</button>
+        </form>
+      `;
+      document.getElementById("editFormContainer").innerHTML = formHtml;
+    }
+
+    async function submitUpdate(e, userId) {
+      e.preventDefault();
+      const formData = {
+        userId,
+        name: document.getElementById("name").value,
+        dob: document.getElementById("dob").value,
+        course: document.getElementById("course").value,
+        semester: document.getElementById("semester").value,
+        section: document.getElementById("section").value,
+        year: document.getElementById("year").value,
+        father_name: document.getElementById("father_name").value,
+        father_mobile: document.getElementById("father_mobile").value,
+        mobile_no: document.getElementById("mobile_no").value,
+        email: document.getElementById("email").value,
+        admission_type: document.getElementById("admission_type").value,
+        counsellor_name: document.getElementById("counsellor_name").value,
+        counsellor_mobile: document.getElementById("counsellor_mobile").value
+      };
+
+      try {
+        const res = await fetch("https://crr-noc.onrender.com/staff/update-student", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData)
+        });
+
+        const result = await res.json();
+        if (result.success) {
+          Swal.fire("Success", "Student profile updated successfully", "success");
+        } else {
+          throw new Error(result.message || "Update failed");
+        }
+      } catch (err) {
+        Swal.fire("Error", err.message, "error");
+      }
+    }
+  </script>
+</body>
+</html>
