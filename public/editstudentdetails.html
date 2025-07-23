@@ -6,8 +6,8 @@
   <title>Edit Student Profile</title>
   <link rel="icon" href="crrengglogo.png" type="image/png" />
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
- <style>
-  * {
+  <style>
+    * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -258,31 +258,28 @@
       width: 100%;
     }
   }
-</style>
+  </style>
 </head>
 <body>
   <div class="main-container">
-    <!-- Sidebar -->
     <div class="sidebar">
       <h2><strong>ID:</strong> <span id="userId">Loading...</span></h2>
       <ul class="menu">
-        <li><a href="knowaboutstd1.html"><span>👤</span> Know about Student</a></li>
-        <li class="active"><a href="#"><span>✏️</span> Edit Student Details</a></li>
-        <li><a href="sendnotification.html"><span>📨</span> Send Notification</a></li>
-        <li><a href="updatefee.html"><span>💵</span> Update Fee</a></li>
-        <li><a href="imposefines.html"><span>💰</span> Impose Fines</a></li>
-        <li><a href="addstudent.html"><span>➕</span> Add Student</a></li>
-        <li><a href="backlogs.html"><span>📚</span> Find Backlogs</a></li>
-        <li><a href="addmycounselling.html"><span>👥</span> Assign Counselling</a></li>
-        <li><a href="mycounselling.html"><span>📋</span> View Counselling</a></li>
-        <li><a href="staffsettings.html"><span>⚙️</span> Settings</a></li>
+        <li><a href="knowaboutstd1.html">👤 Know about Student</a></li>
+        <li class="active"><a href="#">✏️ Edit Student Details</a></li>
+        <li><a href="sendnotification.html">📨 Send Notification</a></li>
+        <li><a href="updatefee.html">💵 Update Fee</a></li>
+        <li><a href="imposefines.html">💰 Impose Fines</a></li>
+        <li><a href="addstudent.html">➕ Add Student</a></li>
+        <li><a href="backlogs.html">📚 Find Backlogs</a></li>
+        <li><a href="addmycounselling.html">👥 Assign Counselling</a></li>
+        <li><a href="mycounselling.html">📋 View Counselling</a></li>
+        <li><a href="staffsettings.html">⚙️ Settings</a></li>
       </ul>
       <button class="logout" onclick="logout()">Logout</button>
     </div>
 
-    <!-- Main Content -->
     <div class="content">
-      <!-- Centered search box -->
       <div id="searchContainer">
         <div class="search-box">
           <h2>Enter Student Reg. No to Edit</h2>
@@ -292,7 +289,6 @@
         </div>
       </div>
 
-      <!-- Dynamic form container -->
       <div id="editFormContainer"></div>
     </div>
   </div>
@@ -340,43 +336,70 @@
           <h3>Edit Student Profile</h3>
 
           <label>Name</label>
-          <input type="text" id="name" value="${data.name}" required>
+          <input type="text" id="name" value="${data.name}" required oninput="this.value = this.value.toUpperCase()">
 
           <label>DOB</label>
           <input type="date" id="dob" value="${data.dob?.split('T')[0] || ''}" required>
 
           <label>Course</label>
-          <input type="text" id="course" value="${data.course}" required>
+          <select id="course" required>
+            <option value="">Select Course</option>
+            <option>B.Tech-CSE</option>
+            <option>B.Tech-CSE(CYBER SECURITY)</option>
+            <option>CSE(AI&ML)</option>
+            <option>CSE(AI&DS)</option>
+          </select>
 
           <label>Semester</label>
-          <input type="text" id="semester" value="${data.semester}" required>
+          <select id="semester" required>
+            <option value="">Select Semester</option>
+            <option>1-1</option>
+            <option>1-2</option>
+            <option>2-1</option>
+            <option>2-2</option>
+            <option>3-1</option>
+            <option>3-2</option>
+            <option>4-1</option>
+            <option>4-2</option>
+          </select>
 
           <label>Section</label>
-          <input type="text" id="section" value="${data.section}" required>
+          <input type="text" id="section" maxlength="1" value="${data.section}" required oninput="this.value = this.value.toUpperCase().replace(/[^A-Z]/g, '')">
 
           <label>Year</label>
-          <input type="number" id="year" value="${data.year}" required>
+          <select id="year" required>
+            <option value="">Select Year</option>
+            <option>1</option>
+            <option>2</option>
+            <option>3</option>
+            <option>4</option>
+          </select>
 
           <label>Father Name</label>
-          <input type="text" id="father_name" value="${data.father_name}" required>
+          <input type="text" id="father_name" value="${data.father_name}" required oninput="this.value = this.value.toUpperCase()">
 
           <label>Father Mobile</label>
-          <input type="text" id="father_mobile" value="${data.father_mobile}" required>
+          <input type="text" id="father_mobile" value="${data.father_mobile}" required maxlength="10" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
 
           <label>Student Mobile</label>
-          <input type="text" id="mobile_no" value="${data.mobile_no}" required>
+          <input type="text" id="mobile_no" value="${data.mobile_no}" required maxlength="10" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
 
           <label>Email</label>
           <input type="email" id="email" value="${data.email}" required>
 
           <label>Admission Type</label>
-          <input type="text" id="admission_type" value="${data.admission_type}" required>
+          <select id="admission_type" required>
+            <option value="">Select Admission Type</option>
+            <option>Convener</option>
+            <option>Management</option>
+            <option>Spot</option>
+          </select>
 
           <label>Counsellor Name</label>
-          <input type="text" id="counsellor_name" value="${data.counsellor_name}" required>
+          <input type="text" id="counsellor_name" value="${data.counsellor_name}" required oninput="this.value = this.value.toUpperCase().replace(/[^A-Z ]/g, '')">
 
           <label>Counsellor Mobile</label>
-          <input type="text" id="counsellor_mobile" value="${data.counsellor_mobile}" required>
+          <input type="text" id="counsellor_mobile" value="${data.counsellor_mobile}" required maxlength="10" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
 
           <label>Unique ID</label>
           <input type="text" id="uniqueId" value="${data.uniqueId}" required>
@@ -385,10 +408,32 @@
         </form>
       `;
       document.getElementById("editFormContainer").innerHTML = formHtml;
+
+      // Set dropdowns if values exist
+      document.getElementById("course").value = data.course;
+      document.getElementById("semester").value = data.semester;
+      document.getElementById("year").value = data.year;
+      document.getElementById("admission_type").value = data.admission_type;
     }
 
     async function submitUpdate(e, userId) {
       e.preventDefault();
+
+      const dob = new Date(document.getElementById("dob").value);
+      const today = new Date();
+      const age = today.getFullYear() - dob.getFullYear();
+
+      if (age < 16) {
+        Swal.fire("Invalid DOB", "Student must be at least 16 years old.", "warning");
+        return;
+      }
+
+      const email = document.getElementById("email").value;
+      if (!email.includes('@') || email.split('@')[1].length < 3) {
+        Swal.fire("Invalid Email", "Please enter a valid email address.", "warning");
+        return;
+      }
+
       const formData = {
         userId,
         name: document.getElementById("name").value,
@@ -400,7 +445,7 @@
         father_name: document.getElementById("father_name").value,
         father_mobile: document.getElementById("father_mobile").value,
         mobile_no: document.getElementById("mobile_no").value,
-        email: document.getElementById("email").value,
+        email,
         admission_type: document.getElementById("admission_type").value,
         counsellor_name: document.getElementById("counsellor_name").value,
         counsellor_mobile: document.getElementById("counsellor_mobile").value
