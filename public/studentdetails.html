@@ -300,18 +300,22 @@
             document.getElementById("sidebarPhoto").src = data.photo_url || "";
 document.getElementById("sidebarPhoto").style.display = data.photo_url ? "block" : "none";
 
-            document.querySelector('.details-card').innerHTML = `
-              <p><strong>Name</strong>: ${data.name}</p>
-              <p><strong>DOB</strong>: ${data.dob ? new Date(data.dob).toLocaleDateString('CA-en') : 'N/A'}</p>
-              <p><strong>Reg. no</strong>: ${data.reg_no}</p>
-              <p><strong>Unique id</strong>: ${data.uniqueId}</p>
-              <p><strong>Year</strong>: ${data.year}</p>
-              <p><strong>Course</strong>: ${data.course}</p>
-              <p><strong>Semester</strong>: ${data.semester}</p>
-              <p><strong>Aadhar no</strong>: ${data.aadhar_no}</p>
-              <p><strong>Mobile no</strong>: ${data.mobile_no}</p>
-              <p><strong>Email Id</strong>: ${data.email}</p>
-            `;
+           document.querySelector('.details-card').innerHTML = `
+  <p><strong>Student Name:</strong> ${data.name || "N/A"}</p>
+  <p><strong>Date of Birth:</strong> ${data.dob ? new Date(data.dob).toLocaleDateString('en-CA') : 'N/A'}</p>
+  <p><strong>Reg. No:</strong> ${data.reg_no || "N/A"}</p>
+  <p><strong>Course:</strong> ${data.course || "N/A"}</p>
+  <p><strong>Semester:</strong> ${data.semester || "N/A"}</p>
+  <p><strong>Section:</strong> ${data.section || "N/A"}</p>
+  <p><strong>Year:</strong> ${data.year || "N/A"}</p>
+  <p><strong>Father Name:</strong> ${data.father_name || "N/A"}</p>
+  <p><strong>Father Mobile:</strong> ${data.father_mobile || "N/A"}</p>
+  <p><strong>Student Mobile:</strong> ${data.mobile_no || "N/A"}</p>
+  <p><strong>Email:</strong> ${data.email || "N/A"}</p>
+  <p><strong>Admission Type:</strong> ${data.admission_type || "N/A"}</p>
+  <p><strong>Counsellor Name:</strong> ${data.counsellor_name || "N/A"}</p>
+  <p><strong>Counsellor Mobile:</strong> ${data.counsellor_mobile || "N/A"}</p>
+`;
           } else {
             document.querySelector('.details-card').innerHTML = '<p>No data found!</p>';
           }
