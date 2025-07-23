@@ -2800,67 +2800,46 @@ app.get('/check-session', (req, res) => {
   }
 });
 
-app.post("/staff/update-student", async (req, res) => {
-  try {
-    console.log("Received update data:", req.body);
+// ✅ Staff updates student profile (editstudentdetails.html)
+app.post('/staff/update-student', (req, res) => {
+  const {
+    userId,
+    name,
+    dob,
+    course,
+    semester,
+    section,
+    year,
+    father_name,
+    father_mobile,
+    mobile_no,
+    email,
+    admission_type,
+    counsellor_name,
+    counsellor_mobile
+  } = req.body;
 
-    const {
-      userId,
-      name,
-      dob,
-      course,
-      semester,
-      section,
-      year,
-      father_name,
-      father_mobile,
-      mobile_no,
-      email,
-      admission_type,
-      counsellor_name,
-      counsellor_mobile
-    } = req.body;
+  const query = `
+    UPDATE students SET
+      name = ?, dob = ?, course = ?, semester = ?, section = ?, year = ?,
+      father_name = ?, father_mobile = ?, mobile_no = ?, email = ?, admission_type = ?,
+      counsellor_name = ?, counsellor_mobile = ?
+    WHERE userId = ?
+  `;
 
-    // Check if student exists
-    const [rows] = await db.query("SELECT * FROM students WHERE userId = ?", [userId]);
-    if (rows.length === 0) {
-      return res.status(404).json({ success: false, message: "Student not found" });
+  const values = [
+    name, dob, course, semester, section, year,
+    father_name, father_mobile, mobile_no, email, admission_type,
+    counsellor_name, counsellor_mobile,
+    userId
+  ];
+
+  connection.query(query, values, (err, result) => {
+    if (err) {
+      console.error("❌ SQL error while updating student:", err);
+      return res.status(500).json({ success: false, message: "Server error while updating student." });
     }
 
-    // Update students table
-    await db.query(
-      `UPDATE students SET 
-        name = ?, dob = ?, course = ?, semester = ?, section = ?, year = ?, 
-        father_name = ?, father_mobile = ?, mobile_no = ?, email = ?, 
-        admission_type = ?, counsellor_name = ?, counsellor_mobile = ?
-      WHERE userId = ?`,
-      [
-        name,
-        dob,
-        course,
-        semester,
-        section,
-        year,
-        father_name,
-        father_mobile,
-        mobile_no,
-        email,
-        admission_type,
-        counsellor_name,
-        counsellor_mobile,
-        userId
-      ]
-    );
-
-    // Optional: update users table
-    await db.query(
-      `UPDATE users SET mobile_no = ?, email = ? WHERE userId = ?`,
-      [mobile_no, email, userId]
-    );
-
-    res.json({ success: true, message: "Student profile updated successfully" });
-  } catch (err) {
-    console.error("🔥 Error in /staff/update-student:", err);
-    res.status(500).json({ success: false, message: "Internal server error" });
-  }
+    res.json({ success: true, message: "Student profile updated successfully." });
+  });
 });
