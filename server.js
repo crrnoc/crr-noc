@@ -2801,31 +2801,33 @@ app.get('/check-session', (req, res) => {
 });
 
 app.post("/staff/update-student", async (req, res) => {
-  const {
-    userId,
-    name,
-    dob,
-    course,
-    semester,
-    section,
-    year,
-    father_name,
-    father_mobile,
-    mobile_no,
-    email,
-    admission_type,
-    counsellor_name,
-    counsellor_mobile
-  } = req.body;
-
   try {
-    // Check if student exists
+    console.log("Received Data:", req.body); // log data being sent
+
+    const {
+      userId,
+      name,
+      dob,
+      course,
+      semester,
+      section,
+      year,
+      father_name,
+      father_mobile,
+      mobile_no,
+      email,
+      admission_type,
+      counsellor_name,
+      counsellor_mobile
+    } = req.body;
+
+    // 🔍 Check if student exists
     const [rows] = await db.query("SELECT * FROM students WHERE userId = ?", [userId]);
     if (rows.length === 0) {
       return res.status(404).json({ success: false, message: "Student not found" });
     }
 
-    // Update students table
+    // ✅ Update students table
     await db.query(
       `UPDATE students SET 
         name = ?, dob = ?, course = ?, semester = ?, section = ?, year = ?, 
@@ -2850,16 +2852,15 @@ app.post("/staff/update-student", async (req, res) => {
       ]
     );
 
-    // Optionally update users table (for mobile/email sync)
+    // 🔁 Optionally sync mobile/email to users table
     await db.query(
       `UPDATE users SET mobile_no = ?, email = ? WHERE userId = ?`,
       [mobile_no, email, userId]
     );
 
-    res.json({ success: true, message: "Student profile updated successfully" });
+    res.json({ success: true });
   } catch (err) {
-    console.error("🔥 Error in /staff/update-student:", err);
+    console.error("🔥 Error in /staff/update-student:", err); // shows exact error
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 });
-
