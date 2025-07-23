@@ -1834,6 +1834,24 @@ app.get('/yearwise-fee/:userId', (req, res) => {
     );
   });
 });
+// view backlogs 
+app.get("/total-backlogs", (req, res) => {
+  const { regno } = req.query;
+  if (!regno) return res.status(400).json({ message: "Regno is required" });
+
+  const useRegularTable = ["20B8", "21B8", "22B8", "23B8"].some(prefix => regno.toUpperCase().startsWith(prefix));
+  const tableName = useRegularTable ? "results" : "autonomous_results";
+
+  const query = `SELECT semester, subcode, grade, subname FROM ${tableName} WHERE regno = ?`;
+  connection.query(query, [regno], (err, results) => {
+    if (err) return res.status(500).json({ message: "Error fetching data", error: err });
+
+    const isBacklog = g => ["F","ab", "AB", "ABSENT", "MP", "NOT CO", "NOTCOMPLETED"].includes((g || "").toUpperCase());
+    const backlogData = results.filter(r => isBacklog(r.grade));
+
+    res.json({ backlogData, count: backlogData.length });
+  });
+});
 // 🧠 Get Student Details for Removal
 app.post("/get-student-details", async (req, res) => {
   const { reg_no } = req.body;
