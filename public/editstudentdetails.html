@@ -103,16 +103,17 @@
     background-color: #d07900;
   }
 
-  .content {
-    flex-grow: 1;
-    background-color: white;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    margin-left: 270px;
-    padding: 20px;
-  }
+.content {
+  flex-grow: 1;
+  background-color: white;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  flex-direction: column;
+  margin-left: 270px;
+  padding: 40px 20px;
+}
+
 
     .search-box {
       background: linear-gradient(to right, #67b26f, #4ca2cd);
@@ -144,15 +145,20 @@
       cursor: pointer;
     }
 
-    .edit-form {
-      margin-top: 30px;
-      background: #e0f7fa;
-      padding: 30px;
-      border-radius: 20px;
-      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
-      width: 100%;
-      max-width: 600px;
-    }
+.edit-form {
+  margin-top: 40px;
+  background: #e0f7fa;
+  padding: 40px;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+  width: 100%;
+  max-width: 800px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  transition: all 0.3s ease-in-out;
+}
+
 
     .edit-form h3 {
       text-align: center;
@@ -200,6 +206,21 @@
       cursor: pointer;
       box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
     }
+     @media (max-width: 768px) {
+  .edit-form {
+    padding: 20px;
+    max-width: 95%;
+  }
+
+  .search-box input {
+    width: 100%;
+  }
+
+  .search-box button {
+    width: 100%;
+    margin-top: 10px;
+  }
+}
 
     @media (max-width: 768px) {
       .main-container {
