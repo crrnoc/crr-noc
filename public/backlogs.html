@@ -64,6 +64,7 @@
       padding: 12px 20px;
       border-radius: 8px;
       transition: all 0.3s ease;
+      text-decoration:none;
     }
 
     .menu li a:hover,
@@ -72,6 +73,7 @@
       font-weight: bold;
       transform: translateX(5px);
       box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+      text-decoration:none;
     }
 
     .logout {
@@ -184,12 +186,16 @@
     <div class="sidebar">
       <h2><strong>ID:</strong> <span id="userId">Loading...</span></h2>
       <ul class="menu">
-        <li><a href="welcomestaff.html"><span>🏠</span> Home</a></li>
-        <li class="active"><a href="#"><span>📚</span> Total Backlogs</a></li>
-        <li><a href="editstudentdetails.html"><span>✏️</span> Edit Student</a></li>
-        <li><a href="sendnotification.html"><span>📨</span> Notify</a></li>
+        <li><a href="knowaboutstd1.html"><span>👤</span> Know about Student</a></li>
+        <li><a href="editstudentdetails.html"><span>✏️</span> Edit Student Details</a></li>
+        <li><a href="sendnotification.html"><span>📨</span> Send Notification</a></li>
         <li><a href="updatefee.html"><span>💵</span> Update Fee</a></li>
         <li><a href="imposefines.html"><span>💰</span> Impose Fines</a></li>
+        <li><a href="addstudent.html"><span>➕</span> Add Student</a></li>
+        <li class="active"><a href="#"><span>📚</span> Find Backlogs</a></li>
+        <li><a href="addmycounselling.html"><span>👥</span> Assign Counselling</a></li>
+        <li><a href="mycounselling.html"><span>📋</span> View Counselling</a></li>
+        <li><a href="staffsettings.html"><span>⚙️</span> Settings</a></li>
       </ul>
       <button class="logout" onclick="logout()">Logout</button>
     </div>
