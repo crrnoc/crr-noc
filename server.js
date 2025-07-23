@@ -2819,6 +2819,10 @@ app.post('/staff/update-student', (req, res) => {
     counsellor_mobile
   } = req.body;
 
+  // ✅ Fix string "null" values to actual NULL
+  const safe_admission_type = (admission_type && admission_type !== "null") ? admission_type : null;
+  const safe_section = (section && section !== "null") ? section : null;
+
   const query = `
     UPDATE students SET
       name = ?, dob = ?, course = ?, semester = ?, section = ?, year = ?,
@@ -2828,8 +2832,8 @@ app.post('/staff/update-student', (req, res) => {
   `;
 
   const values = [
-    name, dob, course, semester, section, year,
-    father_name, father_mobile, mobile_no, email, admission_type,
+    name, dob, course, semester, safe_section, year,
+    father_name, father_mobile, mobile_no, email, safe_admission_type,
     counsellor_name, counsellor_mobile,
     userId
   ];
@@ -2843,3 +2847,4 @@ app.post('/staff/update-student', (req, res) => {
     res.json({ success: true, message: "Student profile updated successfully." });
   });
 });
+
