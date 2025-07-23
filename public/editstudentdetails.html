@@ -7,113 +7,109 @@
   <link rel="icon" href="crrengglogo.png" type="image/png" />
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;700&display=swap" rel="stylesheet" />
-<style>
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  }
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
 
-  body {
-    background-color: #1d1d1d;
-    color: #000;
-  }
+    body {
+      background-color: #1d1d1d;
+      color: #000;
+    }
 
-  .main-container {
-    display: flex;
-    height: 100vh;
-    flex-direction: row;
-  }
+    .main-container {
+      display: flex;
+      min-height: 100vh;
+      flex-direction: row;
+    }
 
-  .sidebar {
-    width: 270px;
-    background-color: rgb(247, 201, 155);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    padding: 20px;
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    z-index: 100;
-    overflow-y: auto;
-    transition: top 0.3s ease-in-out;
-  }
+    .sidebar {
+      width: 270px;
+      background-color: rgb(247, 201, 155);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 20px;
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      z-index: 100;
+      overflow-y: auto;
+      transition: top 0.3s ease-in-out;
+    }
 
-  .sidebar h2 {
-    margin: 40px 20px 20px 20px;
-    color: black;
-    font-size: 18px;
-  }
+    .sidebar h2 {
+      margin: 40px 20px 20px 20px;
+      color: black;
+      font-size: 18px;
+    }
 
-  .menu {
-    list-style-type: none;
-    padding: 0;
-  }
+    .menu {
+      list-style-type: none;
+      padding: 0;
+    }
 
-  .menu li {
-    margin-bottom: 15px;
-  }
+    .menu li {
+      margin-bottom: 15px;
+    }
 
-  .menu li a {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 16px;
-    color: black;
-    padding: 12px 20px;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-    text-decoration: none;
-  }
+    .menu li a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 16px;
+      color: black;
+      padding: 12px 20px;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+      text-decoration: none;
+    }
 
-  .menu li a:hover,
-  .menu li.active a {
-    background-color: #d4d4d4;
-    font-weight: bold;
-    transform: translateX(5px);
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
-  }
+    .menu li a:hover,
+    .menu li.active a {
+      background-color: #d4d4d4;
+      font-weight: bold;
+      transform: translateX(5px);
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+    }
 
-  .menu li a span {
-    font-size: 18px;
-    transition: transform 0.3s ease;
-  }
+    .logout {
+      background-color: #f09000;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 16px;
+      width: 50%;
+      margin: 20px auto;
+    }
 
-  .menu li a:hover span {
-    transform: scale(1.2);
-  }
+    .logout:hover {
+      background-color: #d07900;
+    }
 
-  .logout {
-    background-color: #f09000;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 20px;
-    cursor: pointer;
-    font-size: 16px;
-    width: 50%;
-    margin: 20px auto;
-    transition: background 0.3s ease;
-  }
+    .content {
+      flex-grow: 1;
+      background-color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+      margin-left: 270px;
+    }
 
-  .logout:hover {
-    background-color: #d07900;
-  }
-
-.content {
-  flex-grow: 1;
-  background-color: white;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  flex-direction: column;
-  margin-left: 270px;
-  padding: 40px 20px;
-}
-
+    #searchContainer {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      padding: 40px 0;
+    }
 
     .search-box {
       background: linear-gradient(to right, #67b26f, #4ca2cd);
@@ -123,7 +119,6 @@
       box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
       width: 100%;
       max-width: 500px;
-      margin-top: 40px;
       text-align: center;
     }
 
@@ -145,39 +140,35 @@
       cursor: pointer;
     }
 
-.edit-form {
-  margin-top: 40px;
-  background: #e0f7fa;
-  padding: 40px;
-  border-radius: 20px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
-  width: 100%;
-  max-width: 800px;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  transition: all 0.3s ease-in-out;
-}
-
+    .edit-form {
+      margin-top: 20px;
+      background: #e0f7fa;
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+      width: 100%;
+      max-width: 800px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
 
     .edit-form h3 {
       text-align: center;
-      margin-bottom: 20px;
+      margin-bottom: 10px;
     }
 
     .edit-form label {
       font-weight: bold;
-      margin-top: 10px;
       display: block;
     }
 
     .edit-form input,
     .edit-form select {
       width: 100%;
-      padding: 8px;
+      padding: 10px;
       border-radius: 8px;
       border: 1px solid #ccc;
-      margin-top: 5px;
     }
 
     .edit-form button {
@@ -185,7 +176,7 @@
       background-color: #007bff;
       color: white;
       border: none;
-      padding: 10px 20px;
+      padding: 12px;
       border-radius: 8px;
       cursor: pointer;
       width: 100%;
@@ -206,21 +197,6 @@
       cursor: pointer;
       box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
     }
-     @media (max-width: 768px) {
-  .edit-form {
-    padding: 20px;
-    max-width: 95%;
-  }
-
-  .search-box input {
-    width: 100%;
-  }
-
-  .search-box button {
-    width: 100%;
-    margin-top: 10px;
-  }
-}
 
     @media (max-width: 768px) {
       .main-container {
@@ -242,8 +218,18 @@
         padding: 20px;
       }
 
+      .edit-form {
+        max-width: 95%;
+        padding: 20px;
+      }
+
       .mobile-toggle {
         display: block;
+      }
+
+      .search-box input,
+      .search-box button {
+        width: 100%;
       }
     }
   </style>
@@ -253,30 +239,33 @@
     <!-- Sidebar -->
     <div class="sidebar">
       <h2><strong>ID:</strong> <span id="userId">Loading...</span></h2>
-<ul class="menu">
-  <li><a href="knowaboutstd1.html"><span>👤</span> Know about Student</a></li>
-  <li class="active"><a href="#"><span>✏️</span> Edit Student Details</a></li>
-  <li><a href="sendnotification.html"><span>📨</span> Send Notification</a></li>
-  <li><a href="updatefee.html"><span>💵</span> Update Fee</a></li>
-  <li><a href="imposefines.html"><span>💰</span> Impose Fines</a></li>
-  <li><a href="addstudent.html"><span>➕</span> Add Student</a></li>
-  <li><a href="addmycounselling.html"><span>👥</span> Assign Counselling</a></li>
-  <li><a href="mycounselling.html"><span>📋</span> View Counselling</a></li>
-  <li><a href="staffsettings.html"><span>⚙️</span> Settings</a></li>
-</ul>
-
+      <ul class="menu">
+        <li><a href="knowaboutstd1.html"><span>👤</span> Know about Student</a></li>
+        <li class="active"><a href="#"><span>✏️</span> Edit Student Details</a></li>
+        <li><a href="sendnotification.html"><span>📨</span> Send Notification</a></li>
+        <li><a href="updatefee.html"><span>💵</span> Update Fee</a></li>
+        <li><a href="imposefines.html"><span>💰</span> Impose Fines</a></li>
+        <li><a href="addstudent.html"><span>➕</span> Add Student</a></li>
+        <li><a href="addmycounselling.html"><span>👥</span> Assign Counselling</a></li>
+        <li><a href="mycounselling.html"><span>📋</span> View Counselling</a></li>
+        <li><a href="staffsettings.html"><span>⚙️</span> Settings</a></li>
+      </ul>
       <button class="logout" onclick="logout()">Logout</button>
     </div>
 
     <!-- Main Content -->
     <div class="content">
-      <div class="search-box">
-        <h2>Enter Student Reg. No to Edit</h2>
-        <input type="text" id="studentRegInput" placeholder="e.g., 22A91A05G5" />
-        <br />
-        <button onclick="fetchStudentData()">Fetch Student</button>
+      <!-- Centered search box -->
+      <div id="searchContainer">
+        <div class="search-box">
+          <h2>Enter Student Reg. No to Edit</h2>
+          <input type="text" id="studentRegInput" placeholder="e.g., 22A91A05G5" />
+          <br />
+          <button onclick="fetchStudentData()">Fetch Student</button>
+        </div>
       </div>
 
+      <!-- Dynamic form container -->
       <div id="editFormContainer"></div>
     </div>
   </div>
@@ -317,6 +306,8 @@
     }
 
     function displayEditForm(data) {
+      document.getElementById("searchContainer").style.display = "none";
+
       const formHtml = `
         <form class="edit-form" onsubmit="submitUpdate(event, '${data.userId}')">
           <h3>Edit Student Profile</h3>
@@ -363,7 +354,7 @@
           <label>Unique ID</label>
           <input type="text" id="uniqueId" value="${data.uniqueId}" required>
 
-          <br><button type="submit">Save Changes</button>
+          <button type="submit">Save Changes</button>
         </form>
       `;
       document.getElementById("editFormContainer").innerHTML = formHtml;
