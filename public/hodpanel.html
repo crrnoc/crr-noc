@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <title>HOD Dashboard | Students</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="icon" href="crrengglogo.png" type="image/png" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600&display=swap" rel="stylesheet" />
   <style>
     :root {
@@ -133,85 +132,90 @@
 </head>
 <body>
 
-<div class="sidebar">
-  <h2> HOD Panel</h2>
-  <a href="#" class="active">🎓 Students</a>
-  <a href="hodresults.html">📊 Results</a>
-</div>
-
-<div class="main-content">
-  <div class="welcome-box">
-    <h2 id="welcomeMsg">Welcome, HOD</h2>
+  <div class="sidebar">
+    <h2>🛡️ HOD Panel</h2>
+    <a href="#" class="active">🎓 Students</a>
+    <a href="hodresults.html">📊 Results</a>
   </div>
 
-  <div class="search-container">
-    <input type="text" id="searchInput" placeholder="🔍 Search by Reg No..." />
+  <div class="main-content">
+    <div class="welcome-box">
+      <h2 id="welcomeMsg">Welcome, HOD</h2>
+    </div>
+
+    <div class="search-container">
+      <input type="text" id="searchInput" placeholder="🔍 Search by Reg No..." />
+    </div>
+
+    <div class="student-grid" id="studentGrid"></div>
   </div>
 
-  <div class="student-grid" id="studentGrid"></div>
-</div>
+  <script>
+    const departmentNames = {
+      CSE: "Computer Science and Engineering",
+      MECH: "Mechanical Engineering",
+      ECE: "Electronics and Communication Engineering",
+      EEE: "Electrical and Electronics Engineering",
+      CIVIL: "Civil Engineering",
+      IT: "Information Technology"
+    };
 
-<script>
-  let studentsData = [];
-
-  const deptNames = {
-    CSE: "Computer Science and Engineering",
-    MECH: "Mechanical Engineering",
-    ECE: "Electronics and Communication Engineering",
-    EEE: "Electrical and Electronics Engineering",
-    CIVIL: "Civil Engineering",
-    IT: "Information Technology",
-    // Add more mappings as needed
-  };
-
-  function extractDept(userId) {
-    const match = userId.match(/HOD([A-Z]+)/);
-    return match ? match[1] : "CSE"; // default to CSE
-  }
-
-  async function loadStudents() {
-    const userId = localStorage.getItem("userId") || "HOD";
-    const deptCode = extractDept(userId);
-    const fullDeptName = deptNames[deptCode] || "Engineering Department";
-
-    document.getElementById("welcomeMsg").textContent = `Welcome, Head of the Department of ${fullDeptName}`;
-
-    try {
-      const res = await fetch(`https://crr-noc.onrender.com/hod/students?staffId=${userId}`);
-      const data = await res.json();
-      studentsData = data;
-      renderStudents(data);
-    } catch (err) {
-      console.error("❌ Failed to load students:", err);
+    function getDeptCode(staffId) {
+      if (!staffId.startsWith("HOD")) return null;
+      return staffId.replace("HOD", "").toUpperCase();
     }
-  }
 
-  function renderStudents(data) {
-    const container = document.getElementById("studentGrid");
-    container.innerHTML = "";
+    let studentsData = [];
 
-    data.forEach(student => {
-      const card = document.createElement("div");
-      card.className = "student-card";
-      card.innerHTML = `
-        <h3>👤 ${student.name}</h3>
-        <p><strong>Reg No:</strong> ${student.reg_no}</p>
-        <p><strong>Course:</strong> ${student.course}</p>
-        <p><strong>Year:</strong> ${student.year}</p>
-        <p><strong>Section:</strong> ${student.section}</p>
-      `;
-      container.appendChild(card);
+    async function loadStudents() {
+      const staffId = localStorage.getItem("userId") || "HODCSE123";
+      const deptCode = getDeptCode(staffId);
+      const deptName = departmentNames[deptCode] || "Engineering";
+
+      document.getElementById("welcomeMsg").textContent = `Welcome, Head of the Department of ${deptName}`;
+
+      try {
+        const res = await fetch(`https://crr-noc.onrender.com/hod/students?staffId=${staffId}`);
+        const data = await res.json();
+
+        if (!Array.isArray(data)) {
+          throw new Error(data.error || "Invalid response");
+        }
+
+        studentsData = data;
+        renderStudents(data);
+      } catch (err) {
+        console.error("❌ Failed to load students:", err);
+        document.getElementById("studentGrid").innerHTML = `<p style="color:#ff6666">⚠️ ${err.message}</p>`;
+      }
+    }
+
+    function renderStudents(data) {
+      const grid = document.getElementById("studentGrid");
+      grid.innerHTML = "";
+
+      data.forEach(student => {
+        const card = document.createElement("div");
+        card.className = "student-card";
+        card.innerHTML = `
+          <h3>👤 ${student.name}</h3>
+          <p><strong>Reg No:</strong> ${student.reg_no}</p>
+          <p><strong>Course:</strong> ${student.course}</p>
+          <p><strong>Year:</strong> ${student.year}</p>
+          <p><strong>Section:</strong> ${student.section}</p>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    document.getElementById("searchInput").addEventListener("input", (e) => {
+      const value = e.target.value.toLowerCase();
+      const filtered = studentsData.filter(s => s.reg_no.toLowerCase().includes(value));
+      renderStudents(filtered);
     });
-  }
 
-  document.getElementById("searchInput").addEventListener("input", (e) => {
-    const searchTerm = e.target.value.toLowerCase();
-    const filtered = studentsData.filter(s => s.reg_no.toLowerCase().includes(searchTerm));
-    renderStudents(filtered);
-  });
-
-  window.onload = loadStudents;
-</script>
+    window.onload = loadStudents;
+  </script>
 
 </body>
 </html>
