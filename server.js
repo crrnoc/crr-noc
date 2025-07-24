@@ -2866,3 +2866,42 @@ app.post('/staff/update-student', (req, res) => {
   });
 });
 
+// HOD course map based on department
+const HOD_COURSE_MAPPING = {
+  CSE: ['CSE', 'AIML', 'AIDS', 'CYBER SECURITY'],
+  MECH: ['MECH'],
+  EEE: ['EEE'],
+  ECE: ['ECE'],
+  CIVIL: ['CIVIL']
+};
+
+// API: GET /hod/students?staffId=HOD123&dept=CSE
+app.get('/hod/students', (req, res) => {
+  const { staffId, dept } = req.query;
+
+  if (!staffId || !dept) {
+    return res.status(400).json({ success: false, message: "Missing staffId or dept" });
+  }
+
+  const allowedCourses = HOD_COURSE_MAPPING[dept.toUpperCase()];
+  if (!allowedCourses) {
+    return res.status(400).json({ success: false, message: "Invalid department" });
+  }
+
+  const sql = `
+    SELECT name, reg_no, course, year, section,
+           mobile_no AS mobile, email, father_name, father_mobile
+    FROM students
+    WHERE course IN (?)
+    ORDER BY year, course, section
+  `;
+
+  db.query(sql, [allowedCourses], (err, results) => {
+    if (err) {
+      console.error("❌ Error fetching students for HOD:", err);
+      return res.status(500).json({ success: false, message: "Database error" });
+    }
+
+    res.json(results);
+  });
+});
