@@ -2905,18 +2905,39 @@ app.get('/hod/students', (req, res) => {
     res.json(results);
   });
 });
+
 //students retrival for hod page 
-router.get('/hod/students', async (req, res) => {
-  const { staffId, dept } = req.query;
+// GET /hod/students
+router.get('/students', async (req, res) => {
+  const { staffId } = req.query;
+  if (!staffId) return res.status(400).json({ error: 'Staff ID missing' });
+
+  // Extract dept from staffId (e.g., HODCSE123 => CSE)
+  const deptCode = staffId.replace('HOD', '').substring(0, 3);
+
+  // Define valid course filters for each dept
+  const courseMap = {
+    CSE: ['B.Tech-CSE', 'B.Tech-CSE(CYBER SECURITY)', 'CSE(AI&ML)', 'CSE(AI&DS)'],
+    ECE: ['ECE', 'ECE (Embedded Systems)'],
+    MECH: ['MECH'],
+    // Add more if needed
+  };
+
+  const allowedCourses = courseMap[deptCode] || [];
+
   try {
     const [students] = await db.query(
-      "SELECT * FROM students WHERE course LIKE ?",
-      [`%${dept.toUpperCase().includes("CSE") ? "CSE" : dept}%`]
+      `SELECT name, reg_no, year, course, section, mobile_no, email,
+              father_name, father_mobile
+       FROM students
+       WHERE course IN (?)`,
+      [allowedCourses]
     );
-    res.json(students);
+    res.json({ students });
   } catch (err) {
-    console.error("DB error:", err);
-    res.status(500).json({ error: "Failed to fetch students" });
+    console.error('HOD /students fetch error:', err);
+    res.status(500).json({ error: 'Server error' });
   }
 });
+
 
