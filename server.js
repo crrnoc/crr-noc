@@ -24,6 +24,7 @@ const axios = require("axios");
 const cloudinary = require("cloudinary").v2;
 const crypto = require('crypto');
 // DEPT CODES
+// ✅ Department to Course Mapping
 const departmentCourses = {
   CSE: [
     "B.Tech-CSE",
@@ -34,8 +35,10 @@ const departmentCourses = {
   ECE: ["B.Tech-ECE"],
   EEE: ["B.Tech-EEE"],
   MECH: ["B.Tech-MECH"],
-  CIVIL: ["B.Tech-CIVIL"]
+  CIVIL: ["B.Tech-CIVIL"],
+  IT: ["B.Tech-IT"]
 };
+
 
 
 const logoBase64 = fs.readFileSync('./public/crrengglogo.png', { encoding: 'base64' }); // rename your image to logo.png in public
@@ -2887,10 +2890,10 @@ app.get('/hod/students', async (req, res) => {
     return res.status(400).json({ error: "Invalid or missing staffId" });
   }
 
-  const deptCode = staffId.replace("HOD", "").toUpperCase().trim();
+  const deptCode = staffId.replace("HOD", "").toUpperCase(); // e.g. CSE from HODCSE
   const courseList = departmentCourses[deptCode];
 
-  if (!courseList) {
+  if (!courseList || courseList.length === 0) {
     return res.status(404).json({ error: "Department code not mapped to any courses" });
   }
 
@@ -2911,6 +2914,7 @@ app.get('/hod/students', async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
 
 
 
