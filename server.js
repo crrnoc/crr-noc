@@ -2908,36 +2908,48 @@ app.get('/hod/students', (req, res) => {
 
 //students retrival for hod page 
 // GET /hod/students
-router.get('/students', async (req, res) => {
+// Department → Courses Mapping
+const departmentCourses = {
+  CSE: [
+    "B.Tech- CSE",
+    "B.Tech- CSE (AI&ML)",
+    "B.Tech- CSE (AI&DS)",
+    "B.Tech- CSE (CYBER SECURITY)"
+  ],
+  MECH: ["B.Tech- MECH"],
+  ECE: ["B.Tech- ECE"],
+  EEE: ["B.Tech- EEE"],
+  CIVIL: ["B.Tech- CIVIL"]
+};
+
+// Route: HOD Get Students
+app.get('/hod/students', async (req, res) => {
   const { staffId } = req.query;
-  if (!staffId) return res.status(400).json({ error: 'Staff ID missing' });
 
-  // Extract dept from staffId (e.g., HODCSE123 => CSE)
-  const deptCode = staffId.replace('HOD', '').substring(0, 3);
+  if (!staffId || !staffId.startsWith("HOD")) {
+    return res.status(400).json({ error: "Invalid or missing staffId" });
+  }
 
-  // Define valid course filters for each dept
-  const courseMap = {
-    CSE: ['B.Tech-CSE', 'B.Tech-CSE(CYBER SECURITY)', 'CSE(AI&ML)', 'CSE(AI&DS)'],
-    ECE: ['ECE', 'ECE (Embedded Systems)'],
-    MECH: ['MECH'],
-    // Add more if needed
-  };
+  const deptCode = staffId.replace("HOD", "").toUpperCase();
+  const courseList = departmentCourses[deptCode];
 
-  const allowedCourses = courseMap[deptCode] || [];
+  if (!courseList) {
+    return res.status(404).json({ error: "Department code not mapped to any courses" });
+  }
 
   try {
-    const [students] = await db.query(
-      `SELECT name, reg_no, year, course, section, mobile_no, email,
-              father_name, father_mobile
-       FROM students
-       WHERE course IN (?)`,
-      [allowedCourses]
+    const conn = await mysql.createConnection(dbConfig);
+    const placeholders = courseList.map(() => '?').join(',');
+    const [rows] = await conn.execute(
+      `SELECT name, reg_no, course, year, section, mobile_no, email, father_name, father_mobile 
+       FROM students WHERE course IN (${placeholders})`,
+      courseList
     );
-    res.json({ students });
+    await conn.end();
+
+    res.json(rows);
   } catch (err) {
-    console.error('HOD /students fetch error:', err);
-    res.status(500).json({ error: 'Server error' });
+    console.error("Error fetching students:", err);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
-
-
