@@ -261,7 +261,7 @@
     </div>
 
     <h2 style="color: #3cb6ff; margin-bottom: 15px;">🎓 Students in Your Department</h2>
-    <div class="student-grid">
+    <div class="student-grid" id="studentGrid"></div>
       <div class="student-card">
         <h3>👤 Bhavana Kalla</h3>
         <p><strong>Reg No:</strong> CRR21CSE123</p>
@@ -324,27 +324,85 @@
 
   <!-- Scripts -->
   <script>
-    // Open modal on view
-    document.querySelectorAll('.view-btn').forEach(button => {
-      button.addEventListener('click', function () {
+  const studentGrid = document.getElementById('studentGrid');
+  let allStudents = [];
+
+  async function loadStudents() {
+    const staffId = localStorage.getItem("userId");
+    const dept = localStorage.getItem("adminRole"); // CSE, MECH, etc.
+
+    if (!staffId || !dept) {
+      console.error("Missing HOD login info");
+      return;
+    }
+
+    try {
+      const res = await fetch(`/hod/students?staffId=${staffId}&dept=${dept}`);
+      const data = await res.json();
+      allStudents = data;
+      studentGrid.innerHTML = '';
+
+      data.forEach((student, index) => {
+        const card = document.createElement('div');
+        card.className = 'student-card';
+        card.innerHTML = `
+          <h3>👤 ${student.name}</h3>
+          <p><strong>Reg No:</strong> ${student.reg_no}</p>
+          <p><strong>Course:</strong> ${student.course}</p>
+          <p><strong>Year:</strong> ${student.year}</p>
+          <p><strong>Section:</strong> ${student.section}</p>
+          <button class="view-btn" data-index="${index}">🔍 View More</button>
+        `;
+        studentGrid.appendChild(card);
+      });
+
+      attachModalListeners();
+    } catch (err) {
+      console.error("Failed to fetch students:", err);
+    }
+  }
+
+  function attachModalListeners() {
+    document.querySelectorAll('.view-btn').forEach(btn => {
+      btn.addEventListener('click', function () {
+        const index = this.dataset.index;
+        const s = allStudents[index];
+
+        document.getElementById('profileTab').innerHTML = `
+          <p><strong>Name:</strong> ${s.name}</p>
+          <p><strong>Reg No:</strong> ${s.reg_no}</p>
+          <p><strong>Course:</strong> ${s.course}</p>
+          <p><strong>Year:</strong> ${s.year}</p>
+          <p><strong>Section:</strong> ${s.section}</p>
+          <p><strong>Mobile:</strong> ${s.mobile}</p>
+          <p><strong>Email:</strong> ${s.email}</p>
+          <p><strong>Father Name:</strong> ${s.father_name}</p>
+          <p><strong>Father Mobile:</strong> ${s.father_mobile}</p>
+        `;
+
         document.getElementById('studentModal').style.display = 'flex';
+        openTab({ currentTarget: document.querySelector(".tab-link.active") }, 'profileTab');
       });
     });
+  }
 
-    // Close modal
-    function closeModal() {
-      document.getElementById('studentModal').style.display = 'none';
-    }
+  function closeModal() {
+    document.getElementById('studentModal').style.display = 'none';
+  }
 
-    // Tab switching
-    function openTab(evt, tabId) {
-      const allTabs = document.querySelectorAll('.tab-content');
-      const allButtons = document.querySelectorAll('.tab-link');
-      allTabs.forEach(tab => tab.classList.add('hidden'));
-      allButtons.forEach(btn => btn.classList.remove('active'));
-      document.getElementById(tabId).classList.remove('hidden');
-      evt.currentTarget.classList.add('active');
-    }
-  </script>
+  function openTab(evt, tabId) {
+    const allTabs = document.querySelectorAll('.tab-content');
+    const allButtons = document.querySelectorAll('.tab-link');
+
+    allTabs.forEach(tab => tab.classList.add('hidden'));
+    allButtons.forEach(btn => btn.classList.remove('active'));
+
+    document.getElementById(tabId).classList.remove('hidden');
+    evt.currentTarget.classList.add('active');
+  }
+
+  window.onload = loadStudents;
+</script>
+
 </body>
 </html>
