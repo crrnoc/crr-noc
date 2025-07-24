@@ -2897,11 +2897,12 @@ app.get('/hod/students', async (req, res) => {
     const conn = await mysql.createConnection(dbConfig);
     const placeholders = courseList.map(() => '?').join(',');
 
-    const [rows] = await conn.execute(
-      SELECT name, reg_no, course, year, section, mobile_no, email, father_name, father_mobile 
-       FROM students WHERE course IN (${placeholders}),
-      courseList
-    );
+const [rows] = await conn.execute(
+  `SELECT name, reg_no, course, year, section, mobile_no, email, father_name, father_mobile 
+   FROM students WHERE course IN (${placeholders})`,
+  courseList
+);
+
 
     await conn.end();
     res.json(rows);
