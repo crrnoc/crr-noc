@@ -2864,49 +2864,7 @@ app.post('/staff/update-student', (req, res) => {
   });
 });
 
-// HOD course map based on department
-const HOD_COURSE_MAPPING = {
-  CSE: ['CSE', 'AIML', 'AIDS', 'CYBER SECURITY'],
-  MECH: ['MECH'],
-  EEE: ['EEE'],
-  ECE: ['ECE'],
-  CIVIL: ['CIVIL']
-};
-
-// API: GET /hod/students?staffId=HOD123&dept=CSE
-app.get('/hod/students', (req, res) => {
-  const { staffId, dept } = req.query;
-
-  if (!staffId || !dept) {
-    return res.status(400).json({ success: false, message: "Missing staffId or dept" });
-  }
-
-  const allowedCourses = HOD_COURSE_MAPPING[dept.toUpperCase()];
-  if (!allowedCourses) {
-    return res.status(400).json({ success: false, message: "Invalid department" });
-  }
-
-  const sql = `
-    SELECT name, reg_no, course, year, section,
-           mobile_no AS mobile, email, father_name, father_mobile
-    FROM students
-    WHERE course IN (?)
-    ORDER BY year, course, section
-  `;
-
-  db.query(sql, [allowedCourses], (err, results) => {
-    if (err) {
-      console.error("❌ Error fetching students for HOD:", err);
-      return res.status(500).json({ success: false, message: "Database error" });
-    }
-
-    res.json(results);
-  });
-});
-
-//students retrival for hod page 
-// GET /hod/students
-// Department → Courses Mapping
+// ✅ Department to Course Mapping
 const departmentCourses = {
   CSE: [
     "B.Tech- CSE",
@@ -2920,7 +2878,7 @@ const departmentCourses = {
   CIVIL: ["B.Tech- CIVIL"]
 };
 
-// Route: HOD Get Students
+// ✅ HOD Students Route
 app.get('/hod/students', async (req, res) => {
   const { staffId } = req.query;
 
@@ -2938,16 +2896,17 @@ app.get('/hod/students', async (req, res) => {
   try {
     const conn = await mysql.createConnection(dbConfig);
     const placeholders = courseList.map(() => '?').join(',');
+
     const [rows] = await conn.execute(
-      `SELECT name, reg_no, course, year, section, mobile_no, email, father_name, father_mobile 
-       FROM students WHERE course IN (${placeholders})`,
+      SELECT name, reg_no, course, year, section, mobile_no, email, father_name, father_mobile 
+       FROM students WHERE course IN (${placeholders}),
       courseList
     );
-    await conn.end();
 
+    await conn.end();
     res.json(rows);
   } catch (err) {
-    console.error("Error fetching students:", err);
+    console.error("❌ Error fetching students:", err);
     res.status(500).json({ error: "Internal server error" });
   }
-});
+}); 
