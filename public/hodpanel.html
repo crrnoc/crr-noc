@@ -44,7 +44,7 @@
       font-size: 20px;
       margin-bottom: 30px;
       text-align: center;
-      color: #3cb6ff;
+      color: var(--accent);
     }
 
     .sidebar a {
@@ -57,10 +57,11 @@
       transition: 0.3s;
     }
 
-    .sidebar a:hover, .sidebar a.active {
+    .sidebar a:hover,
+    .sidebar a.active {
       background: rgba(255, 255, 255, 0.08);
-      color: #3cb6ff;
-      box-shadow: 0 0 12px #3cb6ff;
+      color: var(--accent);
+      box-shadow: 0 0 12px var(--accent);
     }
 
     .main-content {
@@ -83,6 +84,11 @@
       font-size: 26px;
       color: #00eaff;
       margin-bottom: 10px;
+    }
+
+    .dept-highlight {
+      color: #3cb6ff;
+      text-shadow: 0 0 8px #3cb6ff;
     }
 
     .search-container {
@@ -109,6 +115,13 @@
       border-radius: 16px;
       border: 1px solid var(--glass-border);
       backdrop-filter: blur(16px);
+      transition: 0.3s ease;
+    }
+
+    .student-card:hover {
+      transform: scale(1.03);
+      border: 1.5px solid var(--accent);
+      box-shadow: 0 0 12px var(--accent);
     }
 
     .student-card h3 {
@@ -124,12 +137,14 @@
 </head>
 <body>
 
+<!-- Sidebar -->
 <div class="sidebar">
   <h2>🛡️ HOD Panel</h2>
   <a href="#" class="active">🎓 Students</a>
   <a href="hodresults.html">📊 Results</a>
 </div>
 
+<!-- Main Content -->
 <div class="main-content">
   <div class="welcome-box">
     <h2 id="welcomeMsg">Welcome, HOD</h2>
@@ -145,11 +160,12 @@
 <script>
   let studentsData = [];
 
+  // Maps HOD userId to department name
   function parseDept(userId) {
     const deptMap = {
       CSE: "Computer Science and Engineering",
-      AIML: "Artificial Intelligence & ML",
-      AIDS: "Artificial Intelligence & DS",
+      AIML: "Artificial Intelligence and Machine Learning",
+      AIDS: "Artificial Intelligence and Data Science",
       CYBER: "Cyber Security"
     };
     for (const key in deptMap) {
@@ -161,22 +177,27 @@
   async function loadStudents() {
     const userId = localStorage.getItem("userId") || "HODCSE";
     const dept = parseDept(userId);
-
-    document.getElementById("welcomeMsg").textContent = `Welcome, Head of the Department of ${dept}`;
+    document.getElementById("welcomeMsg").innerHTML = `Welcome, Head of the Department of <span class="dept-highlight">${dept}</span>`;
 
     try {
-      const res = await fetch(`https://crr-noc.onrender.com/hod/students?staffId=${userId}&dept=${dept}`);
+      const res = await fetch(`https://crr-noc.onrender.com/hod/students?staffId=${userId}&dept=${encodeURIComponent(dept)}`);
       const data = await res.json();
-      studentsData = data;
-      renderStudents(data);
+      studentsData = Array.isArray(data) ? data : [];
+      renderStudents(studentsData);
     } catch (err) {
       console.error("Failed to load students:", err);
+      document.getElementById("studentGrid").innerHTML = `<p>Error loading student data. Please try again.</p>`;
     }
   }
 
   function renderStudents(data) {
     const container = document.getElementById("studentGrid");
     container.innerHTML = "";
+    if (!data.length) {
+      container.innerHTML = `<p>No students found.</p>`;
+      return;
+    }
+
     data.forEach(student => {
       const div = document.createElement("div");
       div.className = "student-card";
