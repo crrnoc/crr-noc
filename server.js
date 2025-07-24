@@ -2905,3 +2905,18 @@ app.get('/hod/students', (req, res) => {
     res.json(results);
   });
 });
+//students retrival for hod page 
+router.get('/hod/students', async (req, res) => {
+  const { staffId, dept } = req.query;
+  try {
+    const [students] = await db.query(
+      "SELECT * FROM students WHERE course LIKE ?",
+      [`%${dept.toUpperCase().includes("CSE") ? "CSE" : dept}%`]
+    );
+    res.json(students);
+  } catch (err) {
+    console.error("DB error:", err);
+    res.status(500).json({ error: "Failed to fetch students" });
+  }
+});
+
