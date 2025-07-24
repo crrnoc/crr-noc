@@ -2863,9 +2863,7 @@ app.post('/staff/update-student', (req, res) => {
     res.json({ success: true, message: "Student profile updated successfully." });
   });
 });
-
-// ✅ Department to Course Mapping
-// ✅ Department → Course Mapping (Updated)
+//DEPT CODES
 const departmentCourses = {
   CSE: [
     "B.Tech-CSE",
@@ -2879,8 +2877,6 @@ const departmentCourses = {
   CIVIL: ["B.Tech-CIVIL"]
 };
 
-
-// ✅ HOD Students Route
 app.get('/hod/students', async (req, res) => {
   const { staffId } = req.query;
 
@@ -2888,9 +2884,10 @@ app.get('/hod/students', async (req, res) => {
     return res.status(400).json({ error: "Invalid or missing staffId" });
   }
 
-  const deptCode = staffId.replace("HOD", "").toUpperCase();
-  const courseList = departmentCourses[deptCode];
+  // ✅ FIXED: Extract only the department code (e.g., 'CSE,MECH,CIVIL')
+  const deptCode = staffId.replace("HOD", "").toUpperCase().match(/[A-Z]+/)[0];
 
+  const courseList = departmentCourses[deptCode];
   if (!courseList) {
     return res.status(404).json({ error: "Department code not mapped to any courses" });
   }
@@ -2912,3 +2909,4 @@ app.get('/hod/students', async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
