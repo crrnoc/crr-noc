@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HOD Dashboard | CRR Engineering</title>
+  <link rel="icon" href="crrengglogo.png" type="image/png" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --main-bg: rgba(255, 255, 255, 0.05);
+      --glass-border: rgba(255, 255, 255, 0.15);
+      --sidebar-color: rgba(0, 0, 0, 0.6);
+      --accent: #3cb6ff;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(to right top, #0f2027, #203a43, #2c5364);
+      min-height: 100vh;
+      display: flex;
+      color: #fff;
+    }
+
+    .sidebar {
+      width: 240px;
+      height: 100vh;
+      position: fixed;
+      left: 0;
+      top: 0;
+      background: var(--sidebar-color);
+      backdrop-filter: blur(12px);
+      padding: 30px 20px;
+      border-right: 1px solid var(--glass-border);
+      box-shadow: 4px 0 15px rgba(0,0,0,0.3);
+    }
+
+    .sidebar h2 {
+      font-size: 20px;
+      margin-bottom: 30px;
+      text-align: center;
+      color: #3cb6ff;
+      text-shadow: 0 0 10px rgba(60, 182, 255, 0.5);
+    }
+
+    .sidebar a {
+      display: block;
+      color: #eee;
+      text-decoration: none;
+      margin: 12px 0;
+      padding: 10px 18px;
+      border-radius: 10px;
+      transition: 0.3s;
+    }
+
+    .sidebar a:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #3cb6ff;
+      box-shadow: 0 0 12px #3cb6ff;
+    }
+
+    .main-content {
+      margin-left: 240px;
+      padding: 40px;
+      flex: 1;
+    }
+
+    .welcome-box {
+      background: var(--main-bg);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(20px);
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 0 25px rgba(0, 191, 255, 0.1);
+      animation: fadeInUp 1s ease forwards;
+      max-width: 900px;
+      margin-bottom: 20px;
+    }
+
+    .welcome-box h2 {
+      font-size: 28px;
+      color: #00eaff;
+      margin-bottom: 10px;
+      text-shadow: 0 0 10px rgba(0, 234, 255, 0.5);
+    }
+
+    .welcome-box p {
+      font-size: 16px;
+      line-height: 1.6;
+      color: #d1f3ff;
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .student-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 25px;
+    }
+
+    .student-card {
+      background: var(--main-bg);
+      backdrop-filter: blur(16px);
+      padding: 20px;
+      border-radius: 16px;
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 0 20px rgba(0, 191, 255, 0.05);
+      transition: 0.4s ease;
+      position: relative;
+    }
+
+    .student-card:hover {
+      transform: translateY(-6px) scale(1.02);
+      box-shadow: 0 0 30px rgba(0, 191, 255, 0.3);
+      border: 1.5px solid #00eaff;
+    }
+
+    .student-card h3 {
+      color: #00eaff;
+      margin-bottom: 8px;
+    }
+
+    .student-card p {
+      font-size: 14.5px;
+      color: #f0f0f0;
+      margin-bottom: 5px;
+    }
+
+    .view-btn {
+      margin-top: 12px;
+      padding: 8px 16px;
+      background: linear-gradient(135deg, #3cb6ff, #00eaff);
+      color: white;
+      border: none;
+      border-radius: 30px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.3s ease;
+      box-shadow: 0 0 8px rgba(0, 234, 255, 0.4);
+    }
+
+    .view-btn:hover {
+      background: linear-gradient(135deg, #00eaff, #3cb6ff);
+      transform: scale(1.05);
+    }
+
+    .student-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(4px);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+
+    .modal-content {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(20px);
+      padding: 30px;
+      border-radius: 20px;
+      max-width: 600px;
+      width: 90%;
+      color: #fff;
+      box-shadow: 0 0 20px rgba(0, 234, 255, 0.3);
+      position: relative;
+      animation: fadeIn 0.5s ease-in-out;
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 12px;
+      right: 20px;
+      font-size: 26px;
+      cursor: pointer;
+      color: #fff;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+
+    .close-btn:hover {
+      color: #00eaff;
+    }
+
+    @keyframes fadeIn {
+      from { transform: scale(0.8); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .modal-tabs {
+      margin-top: 20px;
+    }
+
+    .tab-buttons {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .tab-link {
+      padding: 8px 18px;
+      border: none;
+      border-radius: 50px;
+      background: #222;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.3s ease;
+      box-shadow: 0 0 5px #00eaff55;
+    }
+
+    .tab-link:hover,
+    .tab-link.active {
+      background: linear-gradient(135deg, #00eaff, #3cb6ff);
+      box-shadow: 0 0 12px #00eaff;
+    }
+
+    .tab-content {
+      display: block;
+    }
+
+    .tab-content.hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <h2>🛡️ HOD Panel</h2>
+    <a href="#">🏠 Dashboard</a>
+    <a href="#">🎓 All Students</a>
+    <a href="#">📊 Results</a>
+    <a href="#">❌ Backlogs</a>
+    <a href="#">📅 Attendance</a>
+    <a href="#">⚙️ Profile</a>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <div class="welcome-box">
+      <h2>👋 Welcome, Dept of CSE</h2>
+      <p>You can view, manage, and edit students of CSE, AI&DS, AIML, and Cyber Security. Use the sidebar to navigate through results, backlogs, and attendance.</p>
+    </div>
+
+    <h2 style="color: #3cb6ff; margin-bottom: 15px;">🎓 Students in Your Department</h2>
+    <div class="student-grid">
+      <div class="student-card">
+        <h3>👤 Bhavana Kalla</h3>
+        <p><strong>Reg No:</strong> CRR21CSE123</p>
+        <p><strong>Course:</strong> CSE</p>
+        <p><strong>Year:</strong> 3rd</p>
+        <p><strong>Section:</strong> A</p>
+        <button class="view-btn">🔍 View More</button>
+      </div>
+
+      <div class="student-card">
+        <h3>👤 Uday Charan</h3>
+        <p><strong>Reg No:</strong> CRR21AIML456</p>
+        <p><strong>Course:</strong> AIML</p>
+        <p><strong>Year:</strong> 2nd</p>
+        <p><strong>Section:</strong> B</p>
+        <button class="view-btn">🔍 View More</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="student-modal" id="studentModal">
+    <div class="modal-content">
+      <span class="close-btn" onclick="closeModal()">×</span>
+      <h2>👤 Student Profile</h2>
+      <div class="modal-tabs">
+        <div class="tab-buttons">
+          <button class="tab-link active" onclick="openTab(event, 'profileTab')">👤 Profile</button>
+          <button class="tab-link" onclick="openTab(event, 'resultsTab')">📊 Results</button>
+          <button class="tab-link" onclick="openTab(event, 'backlogsTab')">❌ Backlogs</button>
+          <button class="tab-link" onclick="openTab(event, 'attendanceTab')">📅 Attendance</button>
+        </div>
+
+        <div class="tab-content" id="profileTab">
+          <p><strong>Name:</strong> Bhavana Kalla</p>
+          <p><strong>Reg No:</strong> CRR21CSE123</p>
+          <p><strong>Course:</strong> CSE</p>
+          <p><strong>Year:</strong> 3rd</p>
+          <p><strong>Section:</strong> A</p>
+          <p><strong>Mobile:</strong> 9876543210</p>
+          <p><strong>Email:</strong> bhavana@example.com</p>
+          <p><strong>Father Name:</strong> Kalla Ramesh</p>
+          <p><strong>Father Mobile:</strong> 9988776655</p>
+        </div>
+
+        <div class="tab-content hidden" id="resultsTab">
+          <p>📑 Semester-wise Results will come here...</p>
+        </div>
+
+        <div class="tab-content hidden" id="backlogsTab">
+          <p>🧾 Backlogs list & counts will be shown here...</p>
+        </div>
+
+        <div class="tab-content hidden" id="attendanceTab">
+          <p>📆 Attendance summary will be shown here...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script>
+    // Open modal on view
+    document.querySelectorAll('.view-btn').forEach(button => {
+      button.addEventListener('click', function () {
+        document.getElementById('studentModal').style.display = 'flex';
+      });
+    });
+
+    // Close modal
+    function closeModal() {
+      document.getElementById('studentModal').style.display = 'none';
+    }
+
+    // Tab switching
+    function openTab(evt, tabId) {
+      const allTabs = document.querySelectorAll('.tab-content');
+      const allButtons = document.querySelectorAll('.tab-link');
+      allTabs.forEach(tab => tab.classList.add('hidden'));
+      allButtons.forEach(btn => btn.classList.remove('active'));
+      document.getElementById(tabId).classList.remove('hidden');
+      evt.currentTarget.classList.add('active');
+    }
+  </script>
+</body>
+</html>
