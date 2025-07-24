@@ -152,45 +152,42 @@ app.use("/admin", adminRoutes);
 
 // 🔐 Login route
 app.post('/login', (req, res) => {
-  const { userId, password, role } = req.body;
+  const { userId, password, role, subRole } = req.body;
 
-  // Step 1: Get user by ID and role (not by password!)
-  connection.query(
-    'SELECT * FROM users WHERE userId = ? AND role = ?',
-    [userId, role],
-    (err, results) => {
-      if (err || results.length === 0) {
-        return res.status(401).json({ success: false, message: 'Invalid credentials or role mismatch' });
-      }
+  if (!userId || !password || !role) {
+    return res.status(400).json({ success: false, message: 'Missing login fields' });
+  }
 
-      const user = results[0];
+  let sql = `SELECT * FROM users WHERE userid = ? AND password = ? AND role = ?`;
+  const values = [userId, password, role];
 
-      // Step 2: Compare input password with hashed password
-      bcrypt.compare(password, user.password, (err2, isMatch) => {
-        if (err2 || !isMatch) {
-          return res.status(401).json({ success: false, message: 'Incorrect password' });
-        }
+  // If role is admin and subRole is sent, include sub_role in WHERE clause
+  if (role === 'admin' && subRole) {
+    sql += ` AND sub_role = ?`;
+    values.push(subRole);
+  }
 
-        // ✅ Password correct
-        req.session.userId = userId;
-        req.session.role = role;
-
-        let redirectTo = "";
-        if (role === "student") redirectTo = `/student/${userId}`;
-        else if (role === "staff") redirectTo = `/staff/${userId}`;
-        else if (role === "admin") redirectTo = `/admin/dashboard`;
-
-        res.status(200).json({
-          success: true,
-          message: 'Login successful',
-          userId,
-          role,
-          redirectTo
-        });
-      });
+  db.query(sql, values, (err, results) => {
+    if (err) {
+      console.error('Login DB error:', err);
+      return res.status(500).json({ success: false, message: 'Database error' });
     }
-  );
+
+    if (results.length === 0) {
+      return res.status(401).json({ success: false, message: 'Invalid credentials or role mismatch' });
+    }
+
+    const user = results[0];
+
+    res.json({
+      success: true,
+      userId: user.userid,
+      role: user.role,
+      subRole: user.sub_role || null
+    });
+  });
 });
+
 //email otp
 // Store OTPs temporarily in memory (for demo purpose only)
 const otpMap = new Map();
