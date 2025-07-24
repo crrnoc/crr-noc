@@ -12,21 +12,18 @@
       --sidebar-color: rgba(0, 0, 0, 0.6);
       --accent: #3cb6ff;
     }
-
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
       font-family: 'Poppins', sans-serif;
     }
-
     body {
       background: linear-gradient(to right top, #0f2027, #203a43, #2c5364);
       min-height: 100vh;
       display: flex;
       color: #fff;
     }
-
     .sidebar {
       width: 240px;
       height: 100vh;
@@ -38,14 +35,12 @@
       padding: 30px 20px;
       border-right: 1px solid var(--glass-border);
     }
-
     .sidebar h2 {
       font-size: 20px;
       margin-bottom: 30px;
       text-align: center;
-      color: #3cb6ff;
+      color: var(--accent);
     }
-
     .sidebar a {
       display: block;
       color: #eee;
@@ -55,20 +50,17 @@
       border-radius: 10px;
       transition: 0.3s;
     }
-
     .sidebar a:hover,
     .sidebar a.active {
       background: rgba(255, 255, 255, 0.08);
-      color: #3cb6ff;
-      box-shadow: 0 0 12px #3cb6ff;
+      color: var(--accent);
+      box-shadow: 0 0 12px var(--accent);
     }
-
     .main-content {
       margin-left: 240px;
       padding: 40px;
       flex: 1;
     }
-
     .welcome-box {
       background: var(--main-bg);
       border: 1px solid var(--glass-border);
@@ -78,18 +70,15 @@
       box-shadow: 0 0 25px rgba(0, 191, 255, 0.1);
       margin-bottom: 30px;
     }
-
     .welcome-box h2 {
       font-size: 26px;
       color: #00eaff;
       margin-bottom: 10px;
       text-shadow: 0 0 10px rgba(0, 234, 255, 0.5);
     }
-
     .search-container {
       margin-bottom: 25px;
     }
-
     .search-container input {
       padding: 10px 15px;
       width: 300px;
@@ -97,13 +86,11 @@
       border: none;
       font-size: 16px;
     }
-
     .student-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 25px;
     }
-
     .student-card {
       background: var(--main-bg);
       padding: 20px;
@@ -113,17 +100,14 @@
       box-shadow: 0 0 15px rgba(0, 191, 255, 0.05);
       transition: 0.3s ease;
     }
-
     .student-card:hover {
       transform: translateY(-5px);
       box-shadow: 0 0 25px rgba(0, 234, 255, 0.2);
     }
-
     .student-card h3 {
       color: #00eaff;
       margin-bottom: 6px;
     }
-
     .student-card p {
       font-size: 14px;
       margin: 4px 0;
@@ -161,8 +145,7 @@
     };
 
     function getDeptCode(staffId) {
-      if (!staffId.startsWith("HOD")) return null;
-      return staffId.replace("HOD", "").toUpperCase();
+      return staffId.startsWith("HOD") ? staffId.replace("HOD", "").toUpperCase() : null;
     }
 
     let studentsData = [];
@@ -178,9 +161,7 @@
         const res = await fetch(`https://crr-noc.onrender.com/hod/students?staffId=${staffId}`);
         const data = await res.json();
 
-        if (!Array.isArray(data)) {
-          throw new Error(data.error || "Invalid response");
-        }
+        if (!Array.isArray(data)) throw new Error(data.error || "Invalid response");
 
         studentsData = data;
         renderStudents(data);
@@ -203,6 +184,10 @@
           <p><strong>Course:</strong> ${student.course}</p>
           <p><strong>Year:</strong> ${student.year}</p>
           <p><strong>Section:</strong> ${student.section}</p>
+          <p><strong>Mobile:</strong> ${student.mobile_no}</p>
+          <p><strong>Email:</strong> ${student.email}</p>
+          <p><strong>Father:</strong> ${student.father_name}</p>
+          <p><strong>Father's Mobile:</strong> ${student.father_mobile}</p>
         `;
         grid.appendChild(card);
       });
