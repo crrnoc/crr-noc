@@ -165,7 +165,7 @@
     document.getElementById("welcomeMsg").textContent = `Welcome, Head of the Department of ${dept}`;
 
     try {
-      const res = await fetch(`http://localhost:3000/hod/students?staffId=${userId}&dept=${dept}`);
+      const res = await fetch(`https://crr-noc.onrender.com/hod/students?staffId=${userId}&dept=${dept}`);
       const data = await res.json();
       studentsData = data;
       renderStudents(data);
