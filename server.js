@@ -2865,18 +2865,20 @@ app.post('/staff/update-student', (req, res) => {
 });
 
 // ✅ Department to Course Mapping
+// ✅ Department → Course Mapping (Updated)
 const departmentCourses = {
   CSE: [
-    "B.Tech- CSE",
-    "B.Tech- CSE (AI&ML)",
-    "B.Tech- CSE (AI&DS)",
-    "B.Tech- CSE (CYBER SECURITY)"
+    "B.Tech-CSE",
+    "B.Tech-CSE(AI&ML)",
+    "B.Tech-CSE(AI&DS)",
+    "B.Tech-CSE(CYBER SECURITY)"
   ],
-  MECH: ["B.Tech- MECH"],
-  ECE: ["B.Tech- ECE"],
-  EEE: ["B.Tech- EEE"],
-  CIVIL: ["B.Tech- CIVIL"]
+  ECE: ["B.Tech-ECE"],
+  EEE: ["B.Tech-EEE"],
+  MECH: ["B.Tech-MECH"],
+  CIVIL: ["B.Tech-CIVIL"]
 };
+
 
 // ✅ HOD Students Route
 app.get('/hod/students', async (req, res) => {
@@ -2897,12 +2899,11 @@ app.get('/hod/students', async (req, res) => {
     const conn = await mysql.createConnection(dbConfig);
     const placeholders = courseList.map(() => '?').join(',');
 
-const [rows] = await conn.execute(
-  `SELECT name, reg_no, course, year, section, mobile_no, email, father_name, father_mobile 
-   FROM students WHERE course IN (${placeholders})`,
-  courseList
-);
-
+    const [rows] = await conn.execute(
+      `SELECT name, reg_no, course, year, section, mobile_no, email, father_name, father_mobile 
+       FROM students WHERE course IN (${placeholders})`,
+      courseList
+    );
 
     await conn.end();
     res.json(rows);
@@ -2910,4 +2911,4 @@ const [rows] = await conn.execute(
     console.error("❌ Error fetching students:", err);
     res.status(500).json({ error: "Internal server error" });
   }
-}); 
+});
