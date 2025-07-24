@@ -2863,20 +2863,8 @@ app.post('/staff/update-student', (req, res) => {
     res.json({ success: true, message: "Student profile updated successfully." });
   });
 });
-//DEPT CODES
-const departmentCourses = {
-  CSE: [
-    "B.Tech-CSE",
-    "B.Tech-CSE(AI&ML)",
-    "B.Tech-CSE(AI&DS)",
-    "B.Tech-CSE(CYBER SECURITY)"
-  ],
-  ECE: ["B.Tech-ECE"],
-  EEE: ["B.Tech-EEE"],
-  MECH: ["B.Tech-MECH"],
-  CIVIL: ["B.Tech-CIVIL"]
-};
 
+//hod students retrival
 app.get('/hod/students', async (req, res) => {
   const { staffId } = req.query;
 
@@ -2884,8 +2872,20 @@ app.get('/hod/students', async (req, res) => {
     return res.status(400).json({ error: "Invalid or missing staffId" });
   }
 
-  // ✅ FIXED: Extract only the department code (e.g., 'CSE,MECH,CIVIL')
-  const deptCode = staffId.replace("HOD", "").toUpperCase().match(/[A-Z]+/)[0];
+  const deptCode = staffId.replace("HOD", "").toUpperCase();
+
+  const departmentCourses = {
+    CSE: [
+      "B.Tech-CSE",
+      "B.Tech-CSE(AI&ML)",
+      "B.Tech-CSE(AI&DS)",
+      "B.Tech-CSE(CYBER SECURITY)"
+    ],
+    ECE: ["B.Tech-ECE"],
+    EEE: ["B.Tech-EEE"],
+    MECH: ["B.Tech-MECH"],
+    CIVIL: ["B.Tech-CIVIL"]
+  };
 
   const courseList = departmentCourses[deptCode];
   if (!courseList) {
@@ -2909,4 +2909,5 @@ app.get('/hod/students', async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
 
