@@ -357,118 +357,123 @@
   </div>
 
   <!-- ✅ Scripts -->
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script>
-    const buttons = document.querySelectorAll('.role-button');
-    const wrapper = document.getElementById('mainWrapper');
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+  const buttons = document.querySelectorAll('.role-button');
+  const wrapper = document.getElementById('mainWrapper');
 
-    const containers = {
-      student: document.getElementById("student-login"),
-      staff: document.getElementById("staff-login"),
-      admin: document.getElementById("admin-role-options")
-    };
+  const containers = {
+    student: document.getElementById("student-login"),
+    staff: document.getElementById("staff-login"),
+    admin: document.getElementById("admin-role-options")
+  };
 
-    const adminLoginContainer = document.getElementById("admin-login");
-    let selectedAdminSubrole = "";
+  const adminLoginContainer = document.getElementById("admin-login");
+  let selectedAdminRole = "";
 
-    function hideAll() {
-      Object.values(containers).forEach(el => {
-        el.classList.remove("show");
-        el.classList.add("hidden");
-      });
-      adminLoginContainer.classList.remove("show");
-      adminLoginContainer.classList.add("hidden");
-    }
+  function hideAll() {
+    Object.values(containers).forEach(el => {
+      el.classList.remove("show");
+      el.classList.add("hidden");
+    });
+    adminLoginContainer.classList.remove("show");
+    adminLoginContainer.classList.add("hidden");
+  }
 
-    buttons.forEach(btn => {
-      const role = btn.dataset.role;
-      const subrole = btn.dataset.subrole;
+  buttons.forEach(btn => {
+    const role = btn.dataset.role;
+    const subrole = btn.dataset.subrole;
 
-      btn.addEventListener("click", () => {
-        buttons.forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        wrapper.classList.add('shift-up');
-        document.getElementById("mission-vision").style.display = "none";
+    btn.addEventListener("click", () => {
+      buttons.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      wrapper.classList.add('shift-up');
+      document.getElementById("mission-vision").style.display = "none";
 
-        if (role === "admin") {
-          hideAll();
-          setTimeout(() => {
-            containers.admin.classList.remove("hidden");
-            containers.admin.classList.add("show");
-          }, 400);
-        } else if (role) {
-          hideAll();
-          setTimeout(() => {
-            containers[role].classList.remove("hidden");
-            containers[role].classList.add("show");
-          }, 400);
-        }
+      if (role === "admin") {
+        hideAll();
+        setTimeout(() => {
+          containers.admin.classList.remove("hidden");
+          containers.admin.classList.add("show");
+        }, 400);
+      } else if (role) {
+        hideAll();
+        setTimeout(() => {
+          containers[role].classList.remove("hidden");
+          containers[role].classList.add("show");
+        }, 400);
+      }
 
-        if (subrole) {
-          selectedAdminSubrole = subrole;
-          hideAll();
-          setTimeout(() => {
-            adminLoginContainer.classList.add("show");
-          }, 400);
-        }
-      });
+      if (subrole) {
+        selectedAdminRole = subrole; // now holds one of: 'admin', 'hod', 'exam', 'accounts'
+        hideAll();
+        setTimeout(() => {
+          adminLoginContainer.classList.add("show");
+        }, 400);
+      }
+    });
+  });
+
+  hideAll();
+
+  async function submitLogin(event, role) {
+    event.preventDefault();
+
+    const form = event.target;
+    const userId = form.querySelector('input[type="text"]').value.trim();
+    const password = form.querySelector('input[type="password"]').value.trim();
+
+    let actualRole = role;
+    if (role === "admin") actualRole = selectedAdminRole;
+
+    const payload = { userId, password, role: actualRole };
+
+    const response = await fetch("https://crr-noc.onrender.com/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
     });
 
-    hideAll();
+    const data = await response.json();
 
-    async function submitLogin(event, role) {
-      event.preventDefault();
+    if (data.success) {
+      localStorage.setItem("userId", data.userId);
+      localStorage.setItem("role", actualRole);
 
-      const form = event.target;
-      const userId = form.querySelector('input[type="text"]').value.trim();
-      const password = form.querySelector('input[type="password"]').value.trim();
-
-      const payload = { userId, password, role };
-      if (role === "admin") payload.subRole = selectedAdminSubrole;
-
-      const response = await fetch("https://crr-noc.onrender.com/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+      Swal.fire({
+        icon: 'success',
+        title: 'Login Successful',
+        text: `Welcome ${actualRole.toUpperCase()} - ${data.userId}`,
+        timer: 2000,
+        showConfirmButton: false
       });
 
-      const data = await response.json();
-
-      if (data.success) {
-        localStorage.setItem("userId", data.userId);
-        localStorage.setItem("role", role);
-        if (role === "admin") localStorage.setItem("adminRole", selectedAdminSubrole);
-        if (role === "student") localStorage.setItem("regno", data.userId);
-
-        Swal.fire({
-          icon: 'success',
-          title: 'Login Successful',
-          text: `Welcome ${role.toUpperCase()} - ${data.userId}`,
-          timer: 2000,
-          showConfirmButton: false
-        });
-
-        if (role === "admin") {
-          // Optional: redirect by subRole
-          if (selectedAdminSubrole === "administrator") window.location.href = "adminpanel";
-          else if (selectedAdminSubrole === "hod") window.location.href = "hodpanel.html";
-          else if (selectedAdminSubrole === "exam") window.location.href = "examcell.html";
-          else if (selectedAdminSubrole === "accounts") window.location.href = "accountspanel.html";
-        } else if (role === "student") {
-          window.location.href = "studentwelcome.html";
-        } else if (role === "staff") {
-          window.location.href = "knowaboutstd1.html";
-        }
-
-      } else {
-        Swal.fire({
-          icon: 'error',
-          title: 'Login Failed',
-          text: data.message || 'Invalid credentials.',
-          confirmButtonColor: '#d33'
-        });
+      // Redirect based on role
+      if (actualRole === "student") {
+        localStorage.setItem("regno", data.userId);
+        window.location.href = "studentwelcome.html";
+      } else if (actualRole === "staff") {
+        window.location.href = "knowaboutstd1.html";
+      } else if (actualRole === "admin") {
+        window.location.href = "adminpanel.html";
+      } else if (actualRole === "hod") {
+        window.location.href = "hodpanel.html";
+      } else if (actualRole === "exam") {
+        window.location.href = "examcell.html";
+      } else if (actualRole === "accounts") {
+        window.location.href = "accountspanel.html";
       }
+
+    } else {
+      Swal.fire({
+        icon: 'error',
+        title: 'Login Failed',
+        text: data.message || 'Invalid credentials. Please try again.',
+        confirmButtonColor: '#d33'
+      });
     }
-  </script>
+  }
+</script>
+
 </body>
 </html>
