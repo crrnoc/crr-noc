@@ -2862,39 +2862,44 @@ app.post('/staff/update-student', (req, res) => {
   });
 });
 
-// 🔹 HOD - Get Students of Same Department
+// 🔹 Route: Get all students in HOD's department
 app.get('/hod/students', async (req, res) => {
   const { staffId } = req.query;
 
-  // Validate staffId format
+  console.log("📥 Incoming request to /hod/students with staffId:", staffId);
+
   if (!staffId || !staffId.toUpperCase().startsWith("HOD")) {
+    console.warn("⚠️ Invalid or missing staffId");
     return res.status(400).json({ error: "Invalid or missing staffId" });
   }
 
-  // Extract department code (e.g., HODCSE → CSE)
   const deptCode = staffId.toUpperCase().replace("HOD", "");
+  console.log("🧩 Extracted deptCode:", deptCode);
 
   try {
     const conn = await mysql.createConnection(dbConfig);
+    console.log("✅ Connected to MySQL");
 
-    const [rows] = await conn.execute(
-      `SELECT name, reg_no, course, year, section, mobile_no, email, father_name, father_mobile 
-       FROM students 
-       WHERE dept_code = ?`,
-      [deptCode]
-    );
+    const query = `
+      SELECT name, reg_no, course, year, section, mobile_no, email, father_name, father_mobile
+      FROM students
+      WHERE dept_code = ?
+    `;
+
+    const [rows] = await conn.execute(query, [deptCode]);
+    console.log(`📊 Retrieved ${rows.length} students for dept ${deptCode}`);
 
     await conn.end();
-
-    res.json({
+    return res.json({
       status: "success",
       total: rows.length,
       students: rows,
     });
   } catch (err) {
-    console.error("❌ Error fetching students for HOD:", err);
-    res.status(500).json({ error: "Internal server error" });
+    console.error("❌ Database error in /hod/students:", err.message);
+    return res.status(500).json({ error: "Internal server error" });
   }
 });
+
 
 
