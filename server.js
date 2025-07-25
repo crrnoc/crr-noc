@@ -79,6 +79,12 @@ app.use(session({
   }
 }));
 
+app.use(cors({
+  origin: "https://crr-noc.onrender.com",  // 👉 replace with your real frontend Render URL
+  credentials: true
+}));
+
+
 cloudinary.config({
   cloud_name: "dn1c2f2bg",
   api_key: "284748761934616",
