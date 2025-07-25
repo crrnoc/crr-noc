@@ -2862,8 +2862,8 @@ app.post('/staff/update-student', (req, res) => {
   });
 });
 
-// 🔹 Route: Get all students in HOD's department
-app.get('/hod/students', async (req, res) => {
+// 🔹 Route: Get all students in HOD's department (callback version)
+app.get('/hod/students', (req, res) => {
   const { staffId } = req.query;
 
   console.log("📥 Incoming request to /hod/students with staffId:", staffId);
@@ -2876,26 +2876,24 @@ app.get('/hod/students', async (req, res) => {
   const deptCode = staffId.toUpperCase().replace("HOD", "");
   console.log("🧩 Extracted deptCode:", deptCode);
 
-  try {
-    const [rows] = await conn.query(
-      `SELECT name, reg_no, course, year, section, mobile_no, email, father_name, father_mobile
-       FROM students WHERE dept_code = ?`,
-      [deptCode]
-    );
+  const query = `
+    SELECT name, reg_no, course, year, section, mobile_no, email, father_name, father_mobile
+    FROM students
+    WHERE dept_code = ?
+  `;
 
-    console.log(`📊 Retrieved ${rows.length} students for dept ${deptCode}`);
+  conn.query(query, [deptCode], (err, results) => {
+    if (err) {
+      console.error("❌ Database error in /hod/students:", err.message);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+
+    console.log(`📊 Retrieved ${results.length} students for dept ${deptCode}`);
 
     return res.json({
       status: "success",
-      total: rows.length,
-      students: rows,
+      total: results.length,
+      students: results,
     });
-  } catch (err) {
-    console.error("❌ Database error in /hod/students:", err.message);
-    return res.status(500).json({ error: "Internal server error" });
-  }
+  });
 });
-
-
-
-
