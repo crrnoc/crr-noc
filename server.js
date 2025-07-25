@@ -23,23 +23,6 @@ require('dotenv').config();
 const axios = require("axios");
 const cloudinary = require("cloudinary").v2;
 const crypto = require('crypto');
-// DEPT CODES
-// ✅ Department to Course Mapping
-const departmentCourses = {
-  CSE: [
-    "B.Tech-CSE",
-    "B.Tech-CSE(AI&ML)",
-    "B.Tech-CSE(AI&DS)",
-    "B.Tech-CSE(CYBER SECURITY)"
-  ],
-  ECE: ["B.Tech-ECE"],
-  EEE: ["B.Tech-EEE"],
-  MECH: ["B.Tech-MECH"],
-  CIVIL: ["B.Tech-CIVIL"],
-  IT: ["B.Tech-IT"]
-};
-
-
 
 const logoBase64 = fs.readFileSync('./public/crrengglogo.png', { encoding: 'base64' }); // rename your image to logo.png in public
 // Configure the email transporter (use your App Password here)
@@ -2880,9 +2863,21 @@ app.post('/staff/update-student', (req, res) => {
     res.json({ success: true, message: "Student profile updated successfully." });
   });
 });
-
-//hod students retrival
-// ✅ HOD Students Route
+//dept map
+const departmentCourses = {
+  CSE: [
+    "B.Tech-CSE",
+    "B.Tech-CSE(AI&ML)",
+    "B.Tech-CSE(AI&DS)",
+    "B.Tech-CSE(CYBER SECURITY)"
+  ],
+  MECH: ["B.Tech-MECH"],
+  ECE: ["B.Tech-ECE"],
+  EEE: ["B.Tech-EEE"],
+  CIVIL: ["B.Tech-CIVIL"],
+  IT: ["B.Tech-IT"]
+};
+//route for to get students
 app.get('/hod/students', async (req, res) => {
   const { staffId } = req.query;
 
@@ -2890,10 +2885,10 @@ app.get('/hod/students', async (req, res) => {
     return res.status(400).json({ error: "Invalid or missing staffId" });
   }
 
-  const deptCode = staffId.replace("HOD", "").toUpperCase(); // e.g. CSE from HODCSE
+  const deptCode = staffId.replace("HOD", "").toUpperCase();
   const courseList = departmentCourses[deptCode];
 
-  if (!courseList || courseList.length === 0) {
+  if (!courseList) {
     return res.status(404).json({ error: "Department code not mapped to any courses" });
   }
 
@@ -2914,7 +2909,3 @@ app.get('/hod/students', async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
-
-
-
-
