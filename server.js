@@ -2863,21 +2863,8 @@ app.post('/staff/update-student', (req, res) => {
     res.json({ success: true, message: "Student profile updated successfully." });
   });
 });
-//dept map
-const departmentCourses = {
-  CSE: [
-    "B.Tech-CSE",
-    "B.Tech-CSE(AI&ML)",
-    "B.Tech-CSE(AI&DS)",
-    "B.Tech-CSE(CYBER SECURITY)"
-  ],
-  MECH: ["B.Tech-MECH"],
-  ECE: ["B.Tech-ECE"],
-  EEE: ["B.Tech-EEE"],
-  CIVIL: ["B.Tech-CIVIL"],
-  IT: ["B.Tech-IT"]
-};
-//route for to get students
+
+//hod students retrival
 app.get('/hod/students', async (req, res) => {
   const { staffId } = req.query;
 
@@ -2885,21 +2872,17 @@ app.get('/hod/students', async (req, res) => {
     return res.status(400).json({ error: "Invalid or missing staffId" });
   }
 
+  // Extract department code from staffId like HODCSE → CSE
   const deptCode = staffId.replace("HOD", "").toUpperCase();
-  const courseList = departmentCourses[deptCode];
-
-  if (!courseList) {
-    return res.status(404).json({ error: "Department code not mapped to any courses" });
-  }
 
   try {
     const conn = await mysql.createConnection(dbConfig);
-    const placeholders = courseList.map(() => '?').join(',');
 
     const [rows] = await conn.execute(
       `SELECT name, reg_no, course, year, section, mobile_no, email, father_name, father_mobile 
-       FROM students WHERE course IN (${placeholders})`,
-      courseList
+       FROM students 
+       WHERE dept_code = ?`,
+      [deptCode]
     );
 
     await conn.end();
@@ -2909,3 +2892,4 @@ app.get('/hod/students', async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
