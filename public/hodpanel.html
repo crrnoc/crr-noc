@@ -158,7 +158,7 @@
       document.getElementById("welcomeMsg").textContent = `Welcome, Head of the Department of ${deptName}`;
 
       try {
-        const res = await fetch(`https://crr-noc.onrender.com/hod/students?staffId=${staffId}`);
+        const res = await fetch(`https://crr-noc.onrender.com/hod/students?staffId=${encodeURIComponent(staffId)}`);
         const data = await res.json();
 
         if (!Array.isArray(data)) throw new Error(data.error || "Invalid response");
