@@ -34,7 +34,11 @@ const transporter = nodemailer.createTransport({
   }
 });
 // ✅ Middlewares (used only once)
-app.use(cors());
+app.use(cors({
+  origin: "https://crr-noc.onrender.com",  // ✨ replace with your real frontend URL
+  credentials: true
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -74,9 +78,11 @@ app.use(session({
   store: sessionStore,
   resave: false,
   saveUninitialized: false,
-  cookie: {
-    maxAge: 1000 * 60 * 60  // 1 hour
-  }
+cookie: {
+  maxAge: 1000 * 60 * 60,
+  sameSite: 'none',   // ✅ for cross-origin cookie
+  secure: true        // ✅ required for HTTPS (Render)
+}
 }));
 
 app.use(cors({
