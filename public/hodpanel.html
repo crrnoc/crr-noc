@@ -151,9 +151,9 @@
     let studentsData = [];
 
     async function loadStudents() {
-      const staffId = localStorage.getItem("userId") || "HODCSE123";
+      const staffId = localStorage.getItem("userId") || "HODCSE";
       const deptCode = getDeptCode(staffId);
-      const deptName = departmentNames[deptCode] || "Engineering";
+      const deptName = departmentNames[deptCode] || deptCode || "Engineering";
 
       document.getElementById("welcomeMsg").textContent = `Welcome, Head of the Department of ${deptName}`;
 
@@ -161,10 +161,10 @@
         const res = await fetch(`https://crr-noc.onrender.com/hod/students?staffId=${encodeURIComponent(staffId)}`);
         const data = await res.json();
 
-        if (!Array.isArray(data)) throw new Error(data.error || "Invalid response");
+        if (!data.students) throw new Error(data.error || "Invalid response");
 
-        studentsData = data;
-        renderStudents(data);
+        studentsData = data.students;
+        renderStudents(studentsData);
       } catch (err) {
         console.error("❌ Failed to load students:", err);
         document.getElementById("studentGrid").innerHTML = `<p style="color:#ff6666">⚠️ ${err.message}</p>`;
@@ -174,6 +174,11 @@
     function renderStudents(data) {
       const grid = document.getElementById("studentGrid");
       grid.innerHTML = "";
+
+      if (data.length === 0) {
+        grid.innerHTML = `<p style="color:#ffc107">⚠️ No students found for this department.</p>`;
+        return;
+      }
 
       data.forEach(student => {
         const card = document.createElement("div");
