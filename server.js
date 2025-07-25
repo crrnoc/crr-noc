@@ -2862,7 +2862,7 @@ app.post('/staff/update-student', (req, res) => {
   });
 });
 
-// 🔹 Route: Get all students in HOD's department (callback version)
+// 🔹 Route: Get all students in HOD's department
 app.get('/hod/students', (req, res) => {
   const { staffId } = req.query;
 
@@ -2876,24 +2876,25 @@ app.get('/hod/students', (req, res) => {
   const deptCode = staffId.toUpperCase().replace("HOD", "");
   console.log("🧩 Extracted deptCode:", deptCode);
 
-  const query = `
-    SELECT name, reg_no, course, year, section, mobile_no, email, father_name, father_mobile
-    FROM students
-    WHERE dept_code = ?
-  `;
+  // ✅ Use your existing MySQL connection (change `connection` to whatever you're using)
+  connection.query(
+    `SELECT name, reg_no, course, year, section, mobile_no, email, father_name, father_mobile
+     FROM students WHERE dept_code = ?`,
+    [deptCode],
+    (err, results) => {
+      if (err) {
+        console.error("❌ Database error in /hod/students:", err.message);
+        return res.status(500).json({ error: "Internal server error" });
+      }
 
-  conn.query(query, [deptCode], (err, results) => {
-    if (err) {
-      console.error("❌ Database error in /hod/students:", err.message);
-      return res.status(500).json({ error: "Internal server error" });
+      console.log(`📊 Retrieved ${results.length} students for dept ${deptCode}`);
+
+      return res.json({
+        status: "success",
+        total: results.length,
+        students: results,
+      });
     }
-
-    console.log(`📊 Retrieved ${results.length} students for dept ${deptCode}`);
-
-    return res.json({
-      status: "success",
-      total: results.length,
-      students: results,
-    });
-  });
+  );
 });
+
