@@ -2902,50 +2902,37 @@ app.get('/hod/students', (req, res) => {
 });
 
 app.get("/hod/pass-fail-stats", async (req, res) => {
-  const staffId = req.query.staffId;
+  const staffId = req.query.staffId; // e.g., HODCSE
+  if (!staffId.startsWith("HOD")) return res.status(400).json({ error: "Invalid HOD" });
 
-  if (!staffId || !staffId.startsWith("HOD_")) {
-    return res.status(400).json({ error: "Invalid HOD staffId" });
-  }
-
-  const dept = staffId.split("_")[1];
+  const deptCode = staffId.replace("HOD", ""); // CSE
 
   try {
-    const [students] = await db.query(
-      "SELECT course, result FROM students WHERE department LIKE ?",
-      [`%${dept}%`]
-    );
+    const [rows] = await db.query(`
+      SELECT s.course, s.section,
+        COUNT(DISTINCT s.reg_no) AS total_students,
+        SUM(
+          CASE 
+            WHEN EXISTS (
+              SELECT 1 FROM results r 
+              WHERE r.regno = s.reg_no 
+              AND r.grade IN ('F','Ab','NOT_COMPLETED','MP')
+            ) THEN 1 ELSE 0 END
+        ) AS failed_students
+      FROM students s
+      WHERE s.dept_code = ?
+      GROUP BY s.course, s.section
+    `, [deptCode]);
 
-    if (!students.length) {
-      return res.json({ stats: [] });
-    }
-
-    const statsMap = {};
-
-    students.forEach(({ course, result }) => {
-      if (!statsMap[course]) {
-        statsMap[course] = { pass: 0, fail: 0 };
-      }
-
-      if (result && result.toLowerCase() === "pass") {
-        statsMap[course].pass++;
-      } else {
-        statsMap[course].fail++;
-      }
-    });
-
-    const stats = Object.entries(statsMap).map(([course, { pass, fail }]) => {
-      const total = pass + fail || 1;
-      return {
-        course,
-        pass_percent: Math.round((pass / total) * 100),
-        fail_percent: Math.round((fail / total) * 100),
-      };
-    });
+    const stats = rows.map(r => ({
+      course: `${r.course} - ${r.section}`,
+      pass_percent: Math.round(((r.total_students - r.failed_students) / r.total_students) * 100),
+      fail_percent: Math.round((r.failed_students / r.total_students) * 100)
+    }));
 
     res.json({ stats });
   } catch (err) {
-    console.error("Failed to fetch pass/fail stats:", err);
-    res.status(500).json({ error: "Server error" });
+    console.error(err);
+    res.status(500).json({ error: "Server Error" });
   }
 });
