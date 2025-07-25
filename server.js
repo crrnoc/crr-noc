@@ -2877,19 +2877,14 @@ app.get('/hod/students', async (req, res) => {
   console.log("🧩 Extracted deptCode:", deptCode);
 
   try {
-    const conn = await mysql.createConnection(dbConfig);
-    console.log("✅ Connected to MySQL");
+    const [rows] = await conn.query(
+      `SELECT name, reg_no, course, year, section, mobile_no, email, father_name, father_mobile
+       FROM students WHERE dept_code = ?`,
+      [deptCode]
+    );
 
-    const query = `
-      SELECT name, reg_no, course, year, section, mobile_no, email, father_name, father_mobile
-      FROM students
-      WHERE dept_code = ?
-    `;
-
-    const [rows] = await conn.execute(query, [deptCode]);
     console.log(`📊 Retrieved ${rows.length} students for dept ${deptCode}`);
 
-    await conn.end();
     return res.json({
       status: "success",
       total: rows.length,
@@ -2900,6 +2895,7 @@ app.get('/hod/students', async (req, res) => {
     return res.status(500).json({ error: "Internal server error" });
   }
 });
+
 
 
 
