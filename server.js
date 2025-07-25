@@ -2901,38 +2901,39 @@ app.get('/hod/students', (req, res) => {
   );
 });
 
-app.get("/hod/pass-fail-stats", async (req, res) => {
+app.get("/hod/pass-fail-stats", (req, res) => {
   const staffId = req.query.staffId;
 
-  // Validate staffId
   if (!staffId || !staffId.startsWith("HOD")) {
     return res.status(400).json({ error: "Invalid HOD Staff ID" });
   }
 
-  // Extract department code from staffId
-  const deptCode = staffId.replace("HOD", ""); // e.g. HODCSE -> CSE
+  const deptCode = staffId.replace("HOD", ""); // HODCSE → CSE
 
-  try {
-    // Query: total students & how many have at least one fail
-    const [rows] = await db.query(`
-      SELECT s.course, s.section,
-        COUNT(DISTINCT s.reg_no) AS total_students,
-        SUM(
-          CASE WHEN failed_students.failed_count > 0 THEN 1 ELSE 0 END
-        ) AS failed_students
-      FROM students s
-      LEFT JOIN (
-        SELECT r.regno, COUNT(*) AS failed_count
-        FROM results r
-        WHERE r.grade IN ('F','Ab','NOT_COMPLETED','MP')
-        GROUP BY r.regno
+  const query = `
+    SELECT s.course, s.section,
+      COUNT(DISTINCT s.reg_no) AS total_students,
+      SUM(
+        CASE WHEN failed_students.failed_count > 0 THEN 1 ELSE 0 END
       ) AS failed_students
-      ON failed_students.regno = s.reg_no
-      WHERE s.dept_code = ?
-      GROUP BY s.course, s.section
-    `, [deptCode]);
+    FROM students s
+    LEFT JOIN (
+      SELECT r.regno, COUNT(*) AS failed_count
+      FROM results r
+      WHERE r.grade IN ('F','Ab','NOT_COMPLETED','MP')
+      GROUP BY r.regno
+    ) AS failed_students
+    ON failed_students.regno = s.reg_no
+    WHERE s.course LIKE ?
+    GROUP BY s.course, s.section
+  `;
 
-    // Transform into percentage stats for frontend
+  connection.query(query, [`%${deptCode}%`], (err, rows) => {
+    if (err) {
+      console.error("🔥 Error fetching pass/fail stats:", err);
+      return res.status(500).json({ error: "Internal Server Error" });
+    }
+
     const stats = rows.map(row => {
       const pass = row.total_students - row.failed_students;
       const pass_percent = row.total_students === 0 ? 0 : Math.round((pass / row.total_students) * 100);
@@ -2946,8 +2947,6 @@ app.get("/hod/pass-fail-stats", async (req, res) => {
     });
 
     res.json({ stats });
-  } catch (err) {
-    console.error("🔥 Error fetching pass/fail stats:", err);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
+  });
 });
+
