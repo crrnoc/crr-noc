@@ -59,15 +59,6 @@ const sessionStore = new MySQLStore({
   port: process.env.MYSQLPORT
 }); 
 
-const dbConfig = {
-  host: process.env.MYSQLHOST,
-  user: process.env.MYSQLUSER,
-  password: process.env.MYSQLPASSWORD,
-  database: process.env.MYSQLDATABASE,
-  port: process.env.MYSQLPORT
-};
-
-
 app.use(session({
   key: 'noc_sid',
   secret: 'sircrrengg@123',
@@ -2871,16 +2862,17 @@ app.post('/staff/update-student', (req, res) => {
   });
 });
 
-//hod students retrival
+// 🔹 HOD - Get Students of Same Department
 app.get('/hod/students', async (req, res) => {
   const { staffId } = req.query;
 
-  if (!staffId || !staffId.startsWith("HOD")) {
+  // Validate staffId format
+  if (!staffId || !staffId.toUpperCase().startsWith("HOD")) {
     return res.status(400).json({ error: "Invalid or missing staffId" });
   }
 
-  // Extract department code from staffId like HODCSE → CSE
-  const deptCode = staffId.replace("HOD", "").toUpperCase();
+  // Extract department code (e.g., HODCSE → CSE)
+  const deptCode = staffId.toUpperCase().replace("HOD", "");
 
   try {
     const conn = await mysql.createConnection(dbConfig);
@@ -2893,10 +2885,16 @@ app.get('/hod/students', async (req, res) => {
     );
 
     await conn.end();
-    res.json(rows);
+
+    res.json({
+      status: "success",
+      total: rows.length,
+      students: rows,
+    });
   } catch (err) {
-    console.error("❌ Error fetching students:", err);
+    console.error("❌ Error fetching students for HOD:", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
 
