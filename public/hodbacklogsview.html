@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>HOD Backlogs View</title>
-  <link rel="icon" href="crrengglogo.png" type="image/png"/>
+  <link rel="icon" href="crrengglogo.png" type="image/png" />
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
@@ -14,6 +14,7 @@
       min-height: 100vh;
       background: linear-gradient(to right, #e0eafc, #cfdef3);
       color: #222;
+      overflow-x: hidden;
     }
 
     /* Sidebar */
@@ -39,8 +40,8 @@
     .sidebar h4 {
       text-align: center;
       font-weight: bold;
-      margin-bottom: 30px;
       font-size: 16px;
+      margin-bottom: 30px;
     }
 
     .sidebar a {
@@ -70,11 +71,20 @@
       transition: background 0.3s ease;
     }
 
-    .logout:hover {
-      background-color: #CA6F1E;
-    }
+    .logout:hover { background-color: #CA6F1E; }
 
-    /* Toggle Button */
+    /* Overlay behind sidebar */
+    .overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.4);
+      z-index: 90;
+      transition: all 0.3s ease;
+    }
+    .overlay.active { display: block; }
+
+    /* Mobile toggle */
     .mobile-toggle {
       display: none;
       position: fixed;
@@ -93,6 +103,15 @@
       flex: 1;
       margin-left: 250px;
       padding: 40px;
+      transition: filter 0.3s ease;
+    }
+    .content.shifted { filter: blur(2px); pointer-events: none; }
+
+    h2 {
+      text-align: center;
+      font-weight: bold;
+      margin-bottom: 30px;
+      color: #2C3E50;
     }
 
     .form-section {
@@ -101,7 +120,7 @@
       border-radius: 20px;
       color: white;
       text-align: center;
-      box-shadow: 0 12px 20px rgba(0,0,0,0.2);
+      box-shadow: 0 12px 20px rgba(0, 0, 0, 0.2);
       max-width: 600px;
       margin: 0 auto;
     }
@@ -115,9 +134,7 @@
       width: 80%;
     }
 
-    .form-section input {
-      border: 1px solid #ccc;
-    }
+    .form-section input { border: 1px solid #ccc; }
 
     .form-section button {
       background-color: #007bff;
@@ -130,7 +147,7 @@
     .form-section button:hover {
       background-color: #0056b3;
       transform: scale(1.03);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     }
 
     .count {
@@ -138,7 +155,7 @@
       font-size: 18px;
       font-weight: bold;
       margin-top: 30px;
-      color: #d90000;
+      color: #E74C3C;
     }
 
     .backlog-container {
@@ -150,7 +167,7 @@
     }
 
     .backlog-card {
-      background-color: #fff;
+      background-color: white;
       padding: 20px;
       border-radius: 12px;
       box-shadow: 0 4px 8px rgba(0,0,0,0.15);
@@ -159,9 +176,7 @@
       animation: fadeIn 0.5s ease forwards;
     }
 
-    .backlog-card:hover {
-      transform: scale(1.03);
-    }
+    .backlog-card:hover { transform: scale(1.03); }
 
     .backlog-card h4 {
       margin-bottom: 10px;
@@ -173,30 +188,20 @@
       to {opacity: 1; transform: translateY(0);}
     }
 
-    /* Mobile */
     @media (max-width: 768px) {
-      .content {
-        margin-left: 0;
-        padding: 20px;
-      }
-      .sidebar {
-        left: -260px;
-      }
-      .sidebar.open {
-        left: 0;
-      }
-      .mobile-toggle {
-        display: block;
-      }
-      .backlog-card {
-        width: 90%;
-      }
+      .content { margin-left: 0; padding: 20px; }
+      .sidebar { left: -260px; }
+      .sidebar.open { left: 0; }
+      .mobile-toggle { display: block; }
+      .backlog-card { width: 90%; }
     }
   </style>
 </head>
 <body>
+  <!-- Overlay -->
+  <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
-  <!-- Toggle Button -->
+  <!-- Mobile toggle -->
   <div class="mobile-toggle" onclick="toggleSidebar()">☰ Menu</div>
 
   <!-- Sidebar -->
@@ -205,15 +210,16 @@
     <h4 id="welcomeText">Welcome HOD</h4>
     <a href="hodpanel.html">🏠 Dashboard</a>
     <a href="students.html">🎓 Students</a>
-    <a href="#" class="active">📚 Backlogs</a>
+    <a href="hodbacklogsview.html" class="active">📚 Backlogs</a>
     <button class="logout" onclick="logout()">Logout</button>
   </div>
 
   <!-- Main Content -->
-  <div class="content">
+  <div class="content" id="main-content">
+    <h2>📚 Check Student Backlogs</h2>
     <div class="form-section">
-      <h2>Check Student Total Backlogs</h2>
-      <input type="text" id="regno" placeholder="Enter Registration Number"/>
+      <h3>Enter Registration Number</h3>
+      <input type="text" id="regno" placeholder="Enter Registration Number" />
       <button onclick="fetchTotalBacklogs()">Check Backlogs</button>
     </div>
 
@@ -239,7 +245,12 @@
     }
 
     function toggleSidebar() {
-      document.getElementById("sidebar").classList.toggle("open");
+      const sidebar = document.getElementById("sidebar");
+      const overlay = document.getElementById("overlay");
+      const mainContent = document.getElementById("main-content");
+      sidebar.classList.toggle("open");
+      overlay.classList.toggle("active");
+      mainContent.classList.toggle("shifted");
     }
 
     function fetchTotalBacklogs() {
