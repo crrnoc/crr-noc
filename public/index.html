@@ -404,12 +404,14 @@
       const userId = form.querySelector('input[type="text"]').value.trim();
       const password = form.querySelector('input[type="password"]').value.trim();
       const role = roleOverride || selectedRole;
+      
+const res = await fetch("https://crr-noc.onrender.com/login", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  credentials: "include", // ✅ MOST IMPORTANT LINE!
+  body: JSON.stringify({ userId, password, role })
+});
 
-      const res = await fetch("/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, password, role })
-      });
 
       const data = await res.json();
 
