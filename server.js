@@ -152,7 +152,7 @@ app.use("/admin", adminRoutes);
 app.post('/login', (req, res) => {
   const { userId, password, role } = req.body;
 
-  // Step 1: Get user by ID and role (not by password!)
+  // Step 1: Get user by ID and role
   connection.query(
     'SELECT * FROM users WHERE userId = ? AND role = ?',
     [userId, role],
@@ -176,7 +176,10 @@ app.post('/login', (req, res) => {
         let redirectTo = "";
         if (role === "student") redirectTo = `/student/${userId}`;
         else if (role === "staff") redirectTo = `/staff/${userId}`;
-        else if (role === "admin") redirectTo = `/admin/dashboard`;
+        else if (role === "admin") redirectTo = `/adminpanel.html`;
+        else if (role === "hod") redirectTo = `/hodpanel.html`;
+        else if (role === "exam") redirectTo = `/examcell.html`;
+        else if (role === "accounts") redirectTo = `/accounts.html`;
 
         res.status(200).json({
           success: true,
