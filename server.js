@@ -34,11 +34,7 @@ const transporter = nodemailer.createTransport({
   }
 });
 // ✅ Middlewares (used only once)
-app.use(cors({
-  origin: "https://crr-noc.onrender.com",  // ✨ replace with your real frontend URL
-  credentials: true
-}));
-
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -78,18 +74,10 @@ app.use(session({
   store: sessionStore,
   resave: false,
   saveUninitialized: false,
-cookie: {
-  maxAge: 1000 * 60 * 60,
-  sameSite: 'none',   // ✅ for cross-origin cookie
-  secure: true        // ✅ required for HTTPS (Render)
-}
+  cookie: {
+    maxAge: 1000 * 60 * 60  // 1 hour
+  }
 }));
-
-app.use(cors({
-  origin: "https://crr-noc.onrender.com",  // 👉 replace with your real frontend Render URL
-  credentials: true
-}));
-
 
 cloudinary.config({
   cloud_name: "dn1c2f2bg",
@@ -169,46 +157,47 @@ setInterval(() => {
 // ✅ Admin routes
 app.use("/admin", adminRoutes);
 
+// 🔐 Login route
 app.post('/login', (req, res) => {
   const { userId, password, role } = req.body;
 
-  if (!userId || !password || !role) {
-    return res.status(400).json({ success: false, message: 'Missing fields' });
-  }
-
-  const query = 'SELECT * FROM users WHERE userid = ? AND role = ?';
-
-  connection.query(query, [userId, role], (err, results) => {
-    if (err) {
-      console.error("Database error:", err);
-      return res.status(500).json({ success: false, message: 'Internal server error' });
-    }
-
-    if (results.length === 0) {
-      return res.status(401).json({ success: false, message: 'Invalid user ID or role' });
-    }
-
-    const user = results[0];
-
-    bcrypt.compare(password, user.password, (bcryptErr, match) => {
-      if (bcryptErr || !match) {
-        return res.status(401).json({ success: false, message: 'Incorrect password' });
+  // Step 1: Get user by ID and role (not by password!)
+  connection.query(
+    'SELECT * FROM users WHERE userId = ? AND role = ?',
+    [userId, role],
+    (err, results) => {
+      if (err || results.length === 0) {
+        return res.status(401).json({ success: false, message: 'Invalid credentials or role mismatch' });
       }
 
-      // Store session
-      req.session.userId = user.userid;
-      req.session.role = user.role;
+      const user = results[0];
 
-      // Respond success
-      return res.status(200).json({
-        success: true,
-        userId: user.userid,
-        role: user.role
+      // Step 2: Compare input password with hashed password
+      bcrypt.compare(password, user.password, (err2, isMatch) => {
+        if (err2 || !isMatch) {
+          return res.status(401).json({ success: false, message: 'Incorrect password' });
+        }
+
+        // ✅ Password correct
+        req.session.userId = userId;
+        req.session.role = role;
+
+        let redirectTo = "";
+        if (role === "student") redirectTo = `/student/${userId}`;
+        else if (role === "staff") redirectTo = `/staff/${userId}`;
+        else if (role === "admin") redirectTo = `/admin/dashboard`;
+
+        res.status(200).json({
+          success: true,
+          message: 'Login successful',
+          userId,
+          role,
+          redirectTo
+        });
       });
-    });
-  });
+    }
+  );
 });
-
 //email otp
 // Store OTPs temporarily in memory (for demo purpose only)
 const otpMap = new Map();
