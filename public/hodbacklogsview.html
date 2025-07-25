@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Total Backlogs</title>
+  <title>HOD Backlogs View</title>
   <link rel="icon" href="crrengglogo.png" type="image/png" />
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
@@ -17,69 +17,78 @@
     body {
       display: flex;
       min-height: 100vh;
-      background: linear-gradient(to right, #141e30, #243b55);
+      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
       overflow-x: hidden;
       color: #fff;
     }
 
+    /* Sidebar */
     .sidebar {
-      width: 260px;
+      width: 250px;
       backdrop-filter: blur(15px);
-      background: rgba(255, 255, 255, 0.1);
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-      border-right: 1px solid rgba(255, 255, 255, 0.1);
-      padding: 30px 20px;
+      background: rgba(255, 255, 255, 0.08);
+      box-shadow: 2px 0 12px rgba(0,0,0,0.2);
+      padding: 20px;
       position: fixed;
       top: 0;
       bottom: 0;
       left: 0;
       z-index: 100;
       transition: 0.3s ease;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar img {
+      height: 50px;
+      margin: 0 auto 15px auto;
+      display: block;
     }
 
     .sidebar h2 {
+      text-align: center;
+      font-size: 16px;
       margin-bottom: 30px;
-      font-size: 20px;
     }
 
     .sidebar a {
       color: #fff;
       text-decoration: none;
       display: block;
-      padding: 12px 18px;
-      border-radius: 10px;
+      padding: 12px;
+      border-radius: 8px;
       transition: all 0.3s ease;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
 
     .sidebar a:hover,
-    .sidebar .active a {
+    .sidebar .active {
       background: rgba(255, 255, 255, 0.2);
       transform: translateX(5px);
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     }
 
     .logout {
-      background-color: #f09000;
-      color: white;
+      background-color: #ff6600;
       border: none;
-      padding: 12px 20px;
-      border-radius: 25px;
+      color: white;
+      padding: 12px;
+      border-radius: 20px;
       cursor: pointer;
       font-size: 16px;
-      width: 100%;
-      margin-top: 40px;
+      margin-top: auto;
       transition: background-color 0.3s ease;
     }
 
     .logout:hover {
-      background-color: #d07900;
+      background-color: #e65c00;
     }
 
+    /* Main Content */
     .content {
       flex: 1;
-      margin-left: 260px;
-      padding: 50px 30px;
+      margin-left: 250px;
+      padding: 40px;
       background: linear-gradient(to right top, #1c92d2, #f2fcfe);
       color: #222;
       min-height: 100vh;
@@ -157,16 +166,31 @@
       color: #d90000;
     }
 
+    /* Mobile */
     @media (max-width: 768px) {
       .sidebar {
+        position: relative;
+        width: 100%;
+        flex-direction: row;
+        align-items: center;
+        padding: 10px;
+      }
+      .sidebar img, .sidebar h2 {
         display: none;
       }
-
+      .sidebar a {
+        margin: 0 5px;
+        font-size: 14px;
+      }
+      .logout {
+        margin-left: auto;
+        font-size: 14px;
+        padding: 8px 12px;
+      }
       .content {
         margin-left: 0;
         padding: 20px;
       }
-
       .backlog-card {
         width: 90%;
       }
@@ -175,10 +199,11 @@
 </head>
 <body>
   <div class="sidebar">
+    <img src="crrengglogo.png" alt="College Logo"/>
     <h2><strong>ID:</strong> <span id="userId">Loading...</span></h2>
     <a href="hodpanel.html">🏠 Dashboard</a>
-    <a href="students.html" class="fw-bold">🎓 Students</a>
-    <a href="#" class="active">📚 Find Backlogs</a>
+    <a href="students.html">🎓 Students</a>
+    <a href="#" class="active">📚 Backlogs</a>
     <button class="logout" onclick="logout()">Logout</button>
   </div>
 
