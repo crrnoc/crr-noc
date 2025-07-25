@@ -353,7 +353,7 @@
 
   <!-- ✅ Footer (Don't forget it 😄) -->
   <div class="footer">
-    Developed by CSC 2023-2027 Batch Students | <a href="privacypolicy.html">Privacy Policy</a>
+    Developed by Cyber Security (2023-2027) Batch Students | <a href="privacypolicy.html">Privacy Policy</a>
   </div>
 
   <!-- ✅ Scripts -->
@@ -369,6 +369,8 @@
   };
 
   const adminLoginContainer = document.getElementById("admin-login");
+  const adminLoginHeading = adminLoginContainer.querySelector("h2");
+  const adminLoginButton = adminLoginContainer.querySelector("button");
   let selectedAdminRole = "";
 
   function hideAll() {
@@ -405,7 +407,20 @@
       }
 
       if (subrole) {
-        selectedAdminRole = subrole; // now holds one of: 'admin', 'hod', 'exam', 'accounts'
+        selectedAdminRole = subrole;
+
+        const roleNames = {
+          admin: "Administrator",
+          hod: "HOD",
+          exam: "Exam Cell",
+          accounts: "Accounts"
+        };
+
+        const displayRole = roleNames[selectedAdminRole] || "Admin";
+
+        adminLoginHeading.textContent = `${displayRole} Login`;
+        adminLoginButton.textContent = `Login as ${displayRole}`;
+
         hideAll();
         setTimeout(() => {
           adminLoginContainer.classList.add("show");
@@ -428,13 +443,38 @@
 
     const payload = { userId, password, role: actualRole };
 
-    const response = await fetch("https://crr-noc.onrender.com/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
+    // 🔄 Show "Logging in..." SweetAlert
+    Swal.fire({
+      title: "Logging in...",
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
     });
 
+    let response;
+    try {
+      response = await Promise.race([
+        fetch("https://crr-noc.onrender.com/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("Network Timeout")), 7000))
+      ]);
+    } catch (err) {
+      Swal.close();
+      Swal.fire({
+        icon: 'warning',
+        title: 'Network Issue',
+        text: 'Login is taking too long. Please check your internet and try again.',
+        confirmButtonColor: '#f39c12'
+      });
+      return;
+    }
+
     const data = await response.json();
+    Swal.close(); // ✅ Close loading alert
 
     if (data.success) {
       localStorage.setItem("userId", data.userId);
@@ -448,7 +488,6 @@
         showConfirmButton: false
       });
 
-      // Redirect based on role
       if (actualRole === "student") {
         localStorage.setItem("regno", data.userId);
         window.location.href = "studentwelcome.html";
@@ -474,6 +513,5 @@
     }
   }
 </script>
-
 </body>
 </html>
