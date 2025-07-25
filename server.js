@@ -2898,3 +2898,51 @@ app.get('/hod/students', (req, res) => {
   );
 });
 
+app.get("/hod/pass-fail-stats", async (req, res) => {
+  const staffId = req.query.staffId;
+
+  if (!staffId || !staffId.startsWith("HOD_")) {
+    return res.status(400).json({ error: "Invalid HOD staffId" });
+  }
+
+  const dept = staffId.split("_")[1];
+
+  try {
+    const [students] = await db.query(
+      "SELECT course, result FROM students WHERE department LIKE ?",
+      [`%${dept}%`]
+    );
+
+    if (!students.length) {
+      return res.json({ stats: [] });
+    }
+
+    const statsMap = {};
+
+    students.forEach(({ course, result }) => {
+      if (!statsMap[course]) {
+        statsMap[course] = { pass: 0, fail: 0 };
+      }
+
+      if (result && result.toLowerCase() === "pass") {
+        statsMap[course].pass++;
+      } else {
+        statsMap[course].fail++;
+      }
+    });
+
+    const stats = Object.entries(statsMap).map(([course, { pass, fail }]) => {
+      const total = pass + fail || 1;
+      return {
+        course,
+        pass_percent: Math.round((pass / total) * 100),
+        fail_percent: Math.round((fail / total) * 100),
+      };
+    });
+
+    res.json({ stats });
+  } catch (err) {
+    console.error("Failed to fetch pass/fail stats:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
