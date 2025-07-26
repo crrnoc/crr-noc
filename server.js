@@ -2982,3 +2982,88 @@ app.get("/hod/backlog-summary", (req, res) => {
     res.json(summary);
   });
 });
+
+const multer = require("multer");
+const xlsx = require("xlsx");
+const path = require("path");
+const express = require("express");
+
+const app = express();
+
+// Multer setup
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
+
+// Add this route to handle file upload
+app.post("/admin/uploadstudents", upload.single("studentfile"), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ success: false, message: "No file uploaded" });
+  }
+
+  try {
+    const workbook = xlsx.read(req.file.buffer, { type: "buffer" });
+    const sheetName = workbook.SheetNames[0];
+    const sheetData = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
+
+    sheetData.forEach((student) => {
+      const {
+        userId,
+        name,
+        dob,
+        reg_no,
+        uniqueId,
+        year,
+        course,
+        dept_code,
+        semester,
+        aadhar_no,
+        mobile_no,
+        email,
+        father_name,
+        father_mobile,
+        admission_type,
+        photo_url,
+        photo_public_id,
+        section,
+        counsellor_name,
+        counsellor_mobile,
+        counsellor_id
+      } = student;
+
+      // 1. Insert into users table
+      const userQuery = `INSERT IGNORE INTO users (userid, password, role) VALUES (?, ?, 'student')`;
+      db.query(userQuery, [userId, userId], (err, result) => {
+        if (err) {
+          console.error("Error inserting into users:", err);
+        }
+      });
+
+      // 2. Insert into students table
+      const studentQuery = `
+        INSERT INTO students (
+          userId, name, dob, reg_no, uniqueId, year, course, dept_code,
+          semester, aadhar_no, mobile_no, email, father_name, father_mobile,
+          admission_type, photo_url, photo_public_id, section, counsellor_name,
+          counsellor_mobile, counsellor_id
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `;
+      const values = [
+        userId, name, dob, reg_no, uniqueId, year, course, dept_code,
+        semester, aadhar_no, mobile_no, email, father_name, father_mobile,
+        admission_type, photo_url, photo_public_id, section, counsellor_name,
+        counsellor_mobile, counsellor_id
+      ];
+
+      db.query(studentQuery, values, (err, result) => {
+        if (err) {
+          console.error("Error inserting into students:", err);
+        }
+      });
+    });
+
+    return res.json({ success: true, message: "Students uploaded successfully" });
+  } catch (error) {
+    console.error("Upload Error:", error);
+    return res.status(500).json({ success: false, message: "Server error during upload" });
+  }
+});
