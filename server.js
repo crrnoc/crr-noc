@@ -23,6 +23,8 @@ require('dotenv').config();
 const axios = require("axios");
 const cloudinary = require("cloudinary").v2;
 const crypto = require('crypto');
+const xlsx = require("xlsx");
+
 
 
 const logoBase64 = fs.readFileSync('./public/crrengglogo.png', { encoding: 'base64' }); // rename your image to logo.png in public
