@@ -2989,76 +2989,57 @@ app.get("/hod/backlog-summary", (req, res) => {
 });
 
 
-// Add this route to handle file upload
-app.post("/admin/uploadstudents", upload.single("studentfile"), (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ success: false, message: "No file uploaded" });
-  }
 
-  try {
-    const workbook = xlsx.read(req.file.buffer, { type: "buffer" });
-    const sheetName = workbook.SheetNames[0];
-    const sheetData = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
+app.post("/admin/upload-students", upload.single("file"), (req, res) => {
+  if (!req.file) return res.status(400).json({ success: false, message: "No file uploaded" });
 
-    sheetData.forEach((student) => {
-      const {
-        userId,
-        name,
-        dob,
-        reg_no,
-        uniqueId,
-        year,
-        course,
-        dept_code,
-        semester,
-        aadhar_no,
-        mobile_no,
-        email,
-        father_name,
-        father_mobile,
-        admission_type,
-        photo_url,
-        photo_public_id,
-        section,
-        counsellor_name,
-        counsellor_mobile,
-        counsellor_id
-      } = student;
+  const results = [];
 
-      // 1. Insert into users table
-      const userQuery = `INSERT IGNORE INTO users (userid, password, role) VALUES (?, ?, 'student')`;
-      db.query(userQuery, [userId, userId], (err, result) => {
-        if (err) {
-          console.error("Error inserting into users:", err);
+  fs.createReadStream(req.file.path)
+    .pipe(csv())
+    .on("data", (row) => results.push(row))
+    .on("end", () => {
+      let successCount = 0;
+
+      results.forEach((student) => {
+        const {
+          userId, name, dob, reg_no, uniqueId,
+          year, course, semester, aadhar_no, mobile_no,
+          email, section, counsellor_name, counsellor_mobile,
+          admission_type
+        } = student;
+
+        if (!userId || !reg_no || !uniqueId || !year || !course || !semester || !section || !counsellor_name || !counsellor_mobile) {
+          return;
         }
+
+        connection.query(
+          "INSERT IGNORE INTO users (userid, password, role) VALUES (?, ?, 'student')",
+          [userId, userId],
+          (err1) => {
+            if (err1) return;
+
+            const sql = `
+              INSERT INTO students (
+                userId, name, dob, reg_no, uniqueId, year, course, semester,
+                aadhar_no, mobile_no, email, section, counsellor_name,
+                counsellor_mobile, admission_type
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `;
+            const values = [
+              userId, name || '', dob || null, reg_no, uniqueId, year, course, semester,
+              aadhar_no || '', mobile_no || '', email || '', section, counsellor_name,
+              counsellor_mobile, admission_type || ''
+            ];
+
+            connection.query(sql, values, (err2) => {
+              if (!err2) successCount++;
+            });
+          }
+        );
       });
 
-      // 2. Insert into students table
-      const studentQuery = `
-        INSERT INTO students (
-          userId, name, dob, reg_no, uniqueId, year, course, dept_code,
-          semester, aadhar_no, mobile_no, email, father_name, father_mobile,
-          admission_type, photo_url, photo_public_id, section, counsellor_name,
-          counsellor_mobile, counsellor_id
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `;
-      const values = [
-        userId, name, dob, reg_no, uniqueId, year, course, dept_code,
-        semester, aadhar_no, mobile_no, email, father_name, father_mobile,
-        admission_type, photo_url, photo_public_id, section, counsellor_name,
-        counsellor_mobile, counsellor_id
-      ];
-
-      db.query(studentQuery, values, (err, result) => {
-        if (err) {
-          console.error("Error inserting into students:", err);
-        }
-      });
+      fs.unlinkSync(req.file.path);
+      res.json({ success: true, message: `✅ Uploaded ${successCount} students successfully.` });
     });
-
-    return res.json({ success: true, message: "Students uploaded successfully" });
-  } catch (error) {
-    console.error("Upload Error:", error);
-    return res.status(500).json({ success: false, message: "Server error during upload" });
-  }
 });
