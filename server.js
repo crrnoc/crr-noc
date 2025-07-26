@@ -3104,7 +3104,6 @@ const storage = multer.diskStorage({
     cb(null, "mid_marks_" + Date.now() + path.extname(file.originalname));
   },
 });
-const upload = multer({ storage });
 
 // Route: Upload CSV file
 app.post("/upload-midmarks", upload.single("file"), (req, res) => {
