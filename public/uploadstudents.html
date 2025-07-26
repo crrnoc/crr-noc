@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Upload Student Data</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron&family=Poppins:wght@300;500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root { --main-color: #3cb6ff; --accent-color: #ff3d3d; }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+    body { display: flex; min-height: 100vh; background: linear-gradient(to right, #0f2027, #203a43, #2c5364); color: white; }
+
+    .sidebar {
+      width: 260px;
+      background: rgba(60, 66, 84, 0.5);
+      backdrop-filter: blur(8px);
+      padding: 30px 20px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 4px 0 25px rgba(0, 0, 0, 0.4);
+      position: fixed;
+      height: 100vh;
+      left: 0;
+      top: 0;
+      z-index: 10;
+    }
+
+    .sidebar h2 {
+      text-align: center;
+      font-size: 24px;
+      color: var(--main-color);
+      margin-bottom: 30px;
+    }
+
+    .sidebar ul {
+      list-style: none;
+    }
+
+    .sidebar li {
+      padding: 12px 18px;
+      margin: 12px 0;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: 0.3s ease;
+    }
+
+    .sidebar li:hover {
+      background: var(--main-color);
+      box-shadow: 0 0 12px var(--main-color);
+    }
+
+    .sidebar button {
+      margin-top: auto;
+      padding: 10px 20px;
+      border: none;
+      background: linear-gradient(to right, #ff416c, #ff4b2b);
+      color: white;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: bold;
+      box-shadow: 0 0 10px rgba(255, 65, 108, 0.5);
+      transition: 0.3s ease;
+    }
+
+    .sidebar button:hover {
+      transform: scale(1.05);
+    }
+
+    .main {
+      margin-left: 260px;
+      padding: 70px;
+      flex: 1;
+      animation: slideIn 1s ease forwards;
+    }
+
+    .upload-container {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(10px);
+      padding: 40px;
+      border-radius: 16px;
+      max-width: 600px;
+      margin: auto;
+      box-shadow: 0 0 25px rgba(0, 0, 0, 0.3);
+      animation: fadeIn 1s ease;
+    }
+
+    .upload-container h2 {
+      text-align: center;
+      color: #00d4ff;
+      margin-bottom: 25px;
+    }
+
+    .upload-container input[type="file"] {
+      display: block;
+      margin: 20px auto;
+      border: 2px dashed #00d4ff;
+      padding: 14px;
+      width: 100%;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      cursor: pointer;
+      color: white;
+      transition: 0.3s ease;
+    }
+
+    .upload-container input[type="file"]:hover {
+      background: rgba(0, 212, 255, 0.1);
+    }
+
+    .upload-container button {
+      display: block;
+      margin: 30px auto 0;
+      padding: 12px 28px;
+      background: linear-gradient(to right, #00d4ff, #004e92);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 0 12px rgba(0, 212, 255, 0.4);
+      transition: 0.3s ease;
+    }
+
+    .upload-container button:hover {
+      transform: scale(1.05);
+    }
+
+    .mobile-toggle {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      font-size: 26px;
+      z-index: 20;
+      cursor: pointer;
+      display: none;
+      color: white;
+    }
+
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); transition: 0.4s ease; }
+      .sidebar.open { transform: translateX(0); }
+      .mobile-toggle { display: block; }
+      .main { margin-left: 0; padding: 80px 20px 20px; }
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(50px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <h2>Admin Panel</h2>
+    <ul>
+      <li onclick="navigateTo('/uploadresults')">📥 Upload Results</li>
+      <li onclick="navigateTo('/uploadattendance')">🗓 Upload Attendance</li>
+      <li onclick="navigateTo('/upload-sbi')">📤 Upload SBI References</li>
+      <li onclick="navigateTo('/dumatch')">📊 DU Match Status</li>
+      <li onclick="navigateTo('/nocstatus')">📜 NOC Status</li>
+      <li onclick="navigateTo('/removestudents')">🗑️ Delete Students</li>
+      <li onclick="navigateTo('/createnoc')">📝 Create NOC</li>
+      <li onclick="navigateTo('/uploadstudents')">📚 Upload Student Data</li>
+    </ul>
+    <button onclick="logout()">🚪 Logout</button>
+  </div>
+
+  <div class="mobile-toggle" onclick="toggleSidebar()">☰</div>
+
+  <div class="main">
+    <div class="upload-container">
+      <h2>📚 Upload Student Data (CSV/XLSX)</h2>
+      <form id="uploadForm" enctype="multipart/form-data">
+        <input type="file" name="studentfile" accept=".csv, .xlsx" required />
+        <button type="submit">📤 Upload</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function navigateTo(route) {
+      window.location.href = route;
+    }
+
+    function toggleSidebar() {
+      document.querySelector('.sidebar').classList.toggle('open');
+    }
+
+    function logout() {
+      fetch("/logout")
+        .then(() => {
+          localStorage.removeItem("userId");
+          window.location.replace("index.html");
+        })
+        .catch((err) => {
+          console.error("Logout failed:", err);
+          alert("Logout failed. Try again.");
+        });
+    }
+
+    window.onload = function () {
+      fetch('/check-session')
+        .then(res => {
+          if (!res.ok) throw new Error("Unauthorized");
+        })
+        .catch(err => {
+          localStorage.removeItem("userId");
+          window.location.replace("index.html");
+        });
+
+      window.history.pushState(null, "", window.location.href);
+      window.onpopstate = function () {
+        window.history.pushState(null, "", window.location.href);
+      };
+    };
+
+    document.getElementById("uploadForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const form = e.target;
+      const formData = new FormData(form);
+
+      try {
+        const response = await fetch("/admin/uploadstudents", {
+          method: "POST",
+          body: formData
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          alert("✅ Upload successful! Students inserted into the database.");
+        } else {
+          alert("❌ Upload failed: " + result.message);
+        }
+      } catch (err) {
+        console.error("Upload error:", err);
+        alert("🚨 Something went wrong while uploading!");
+      }
+    });
+  </script>
+</body>
+</html>
