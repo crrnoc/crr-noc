@@ -23,6 +23,7 @@ require('dotenv').config();
 const axios = require("axios");
 const cloudinary = require("cloudinary").v2;
 const crypto = require('crypto');
+const multer = require("multer");
 
 const logoBase64 = fs.readFileSync('./public/crrengglogo.png', { encoding: 'base64' }); // rename your image to logo.png in public
 // Configure the email transporter (use your App Password here)
