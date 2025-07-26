@@ -184,67 +184,67 @@
     </div>
   </div>
 
-  <script>
-    function navigateTo(route) {
-      window.location.href = route;
-    }
+ <script>
+  function navigateTo(route) {
+    window.location.href = route;
+  }
 
-    function toggleSidebar() {
-      document.querySelector('.sidebar').classList.toggle('open');
-    }
+  function toggleSidebar() {
+    document.querySelector('.sidebar').classList.toggle('open');
+  }
 
-    function logout() {
-      fetch("/logout")
-        .then(() => {
-          localStorage.removeItem("userId");
-          window.location.replace("index.html");
-        })
-        .catch((err) => {
-          console.error("Logout failed:", err);
-          alert("Logout failed. Try again.");
-        });
-    }
+  function logout() {
+    fetch("/logout")
+      .then(() => {
+        localStorage.removeItem("userId");
+        window.location.replace("index.html");
+      })
+      .catch((err) => {
+        console.error("Logout failed:", err);
+        alert("Logout failed. Try again.");
+      });
+  }
 
-    window.onload = function () {
-      fetch('/check-session')
-        .then(res => {
-          if (!res.ok) throw new Error("Unauthorized");
-        })
-        .catch(err => {
-          localStorage.removeItem("userId");
-          window.location.replace("index.html");
-        });
+  window.onload = function () {
+    fetch('/check-session')
+      .then(res => {
+        if (!res.ok) throw new Error("Unauthorized");
+      })
+      .catch(err => {
+        localStorage.removeItem("userId");
+        window.location.replace("index.html");
+      });
 
+    window.history.pushState(null, "", window.location.href);
+    window.onpopstate = function () {
       window.history.pushState(null, "", window.location.href);
-      window.onpopstate = function () {
-        window.history.pushState(null, "", window.location.href);
-      };
     };
+  };
 
-    document.getElementById("uploadForm").addEventListener("submit", async function (e) {
-      e.preventDefault();
+  document.getElementById("uploadForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
 
-      const form = e.target;
-      const formData = new FormData(form);
+    const form = e.target;
+    const formData = new FormData(form);
 
-      try {
-        const response = await fetch("/admin/uploadstudents", {
-          method: "POST",
-          body: formData
-        });
+    try {
+      const response = await fetch("/admin/upload-students", {
+        method: "POST",
+        body: formData
+      });
 
-        const result = await response.json();
+      const result = await response.json();
 
-        if (result.success) {
-          alert("✅ Upload successful! Students inserted into the database.");
-        } else {
-          alert("❌ Upload failed: " + result.message);
-        }
-      } catch (err) {
-        console.error("Upload error:", err);
-        alert("🚨 Something went wrong while uploading!");
+      if (result.success) {
+        alert("✅ Upload successful! Students inserted into the database.");
+      } else {
+        alert("❌ Upload failed: " + (result.message || "Unknown error."));
       }
-    });
-  </script>
+    } catch (err) {
+      console.error("Upload error:", err);
+      alert("🚨 Something went wrong while uploading!");
+    }
+  });
+</script>
 </body>
 </html>
