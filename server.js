@@ -2996,71 +2996,83 @@ app.post('/admin/upload-students', upload.single("studentfile"), (req, res) => {
     return res.status(400).json({ success: false, message: "No file uploaded" });
   }
 
-  const results = [];
+  const fileExt = path.extname(req.file.originalname).toLowerCase();
+  let results = [];
 
-  fs.createReadStream(req.file.path)
-    .pipe(csv())
-    .on("data", (row) => results.push(row))
-    .on("end", () => {
-      console.log("✅ CSV Parsed. Rows:", results.length);
-      let insertCount = 0;
+  // ✨ Helper to insert data after parsing
+  const insertStudents = (rows) => {
+    let insertCount = 0;
 
-      results.forEach((student) => {
-        const {
-          userId, name, dob, reg_no, uniqueId,
-          year, course, dept_code = '',
-          semester, aadhar_no = '', mobile_no = '', email = '',
-          father_name = '', father_mobile = '',
-          admission_type = '', photo_url = '', photo_public_id = '',
-          section, counsellor_name, counsellor_mobile, counsellor_id
-        } = student;
+    rows.forEach((student) => {
+      const {
+        userId, name, dob, reg_no, uniqueId,
+        year, course, dept_code = '',
+        semester, aadhar_no = '', mobile_no = '', email = '',
+        father_name = '', father_mobile = '',
+        admission_type = '', photo_url = '', photo_public_id = '',
+        section, counsellor_name, counsellor_mobile, counsellor_id
+      } = student;
 
-        // Validation
-        if (!userId || !reg_no || !uniqueId || !year || !course || !semester || !section || !counsellor_name || !counsellor_mobile) {
-          console.warn("⚠️ Skipped incomplete row:", student);
+      if (!userId || !reg_no || !uniqueId || !year || !course || !semester || !section || !counsellor_name || !counsellor_mobile) {
+        console.warn("⚠️ Skipped incomplete row:", student);
+        return;
+      }
+
+      // Insert into users
+      const userQuery = "INSERT IGNORE INTO users (userid, password, role) VALUES (?, ?, 'student')";
+      connection.query(userQuery, [userId, userId], (userErr) => {
+        if (userErr) {
+          console.error("❌ User insert failed:", userErr);
           return;
         }
 
-        // 1. Insert into users table
-        const userQuery = "INSERT IGNORE INTO users (userid, password, role) VALUES (?, ?, 'student')";
-        connection.query(userQuery, [userId, userId], (userErr) => {
-          if (userErr) {
-            console.error("❌ User insert failed:", userErr);
-            return;
-          }
-
-          // 2. Insert into students table
-          const studentQuery = `
-            INSERT INTO students (
-              userId, name, dob, reg_no, uniqueId, year, course, dept_code, semester,
-              aadhar_no, mobile_no, email, father_name, father_mobile,
-              admission_type, photo_url, photo_public_id, section,
-              counsellor_name, counsellor_mobile, counsellor_id
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-          `;
-
-          const values = [
-            userId, name || '', dob || null, reg_no, uniqueId, year, course, dept_code, semester,
+        const studentQuery = `
+          INSERT INTO students (
+            userId, name, dob, reg_no, uniqueId, year, course, dept_code, semester,
             aadhar_no, mobile_no, email, father_name, father_mobile,
             admission_type, photo_url, photo_public_id, section,
-            counsellor_name, counsellor_mobile, counsellor_id || ''
-          ];
+            counsellor_name, counsellor_mobile, counsellor_id
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `;
 
-          connection.query(studentQuery, values, (studentErr) => {
-            if (studentErr) {
-              console.error("❌ Student insert failed:", studentErr);
-            } else {
-              insertCount++;
-            }
-          });
+        const values = [
+          userId, name || '', dob || null, reg_no, uniqueId, year, course, dept_code, semester,
+          aadhar_no, mobile_no, email, father_name, father_mobile,
+          admission_type, photo_url, photo_public_id, section,
+          counsellor_name, counsellor_mobile, counsellor_id || ''
+        ];
+
+        connection.query(studentQuery, values, (studentErr) => {
+          if (studentErr) {
+            console.error("❌ Student insert failed:", studentErr);
+          } else {
+            insertCount++;
+          }
         });
       });
-
-      fs.unlinkSync(req.file.path); // Clean up uploaded file
-
-      // Give time for inserts to complete (MySQL is async)
-      setTimeout(() => {
-        res.json({ success: true, message: `✅ Upload complete! Inserted ${insertCount} students.` });
-      }, 1500);
     });
+
+    fs.unlinkSync(req.file.path); // 🧹 Delete uploaded file after processing
+
+    // Allow time for async inserts
+    setTimeout(() => {
+      res.json({ success: true, message: `✅ Upload complete! ${insertCount} students inserted.` });
+    }, 1500);
+  };
+
+  // 📂 Handle CSV and XLSX
+  if (fileExt === ".csv") {
+    fs.createReadStream(req.file.path)
+      .pipe(csv())
+      .on("data", (row) => results.push(row))
+      .on("end", () => insertStudents(results));
+  } else if (fileExt === ".xlsx") {
+    const workbook = xlsx.readFile(req.file.path);
+    const sheetName = workbook.SheetNames[0];
+    results = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
+    insertStudents(results);
+  } else {
+    fs.unlinkSync(req.file.path);
+    return res.status(400).json({ success: false, message: "Unsupported file format. Please upload .csv or .xlsx only." });
+  }
 });
