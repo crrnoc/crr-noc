@@ -2984,16 +2984,6 @@ app.get("/hod/backlog-summary", (req, res) => {
   });
 });
 
-const multer = require("multer");
-const xlsx = require("xlsx");
-const path = require("path");
-const express = require("express");
-
-const app = express();
-
-// Multer setup
-const storage = multer.memoryStorage();
-const upload = multer({ storage });
 
 // Add this route to handle file upload
 app.post("/admin/uploadstudents", upload.single("studentfile"), (req, res) => {
