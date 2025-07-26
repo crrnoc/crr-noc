@@ -161,6 +161,45 @@
       color: #E74C3C;
     }
 
+    /* Backlog Summary Cards */
+    .backlog-summary {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
+    .summary-card {
+      background: white;
+      padding: 20px;
+      border-radius: 15px;
+      width: 250px;
+      text-align: center;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+      transition: all 0.3s ease;
+      animation: fadeIn 0.5s ease forwards;
+    }
+
+    .summary-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    }
+
+    .summary-card h3 {
+      margin-bottom: 10px;
+      font-size: 20px;
+    }
+
+    .summary-card p {
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .summary-card.zero h3, .summary-card.zero p { color: #27AE60; }
+    .summary-card.low h3, .summary-card.low p { color: #F39C12; }
+    .summary-card.high h3, .summary-card.high p { color: #E74C3C; }
+
     @keyframes fadeIn {
       from {opacity: 0; transform: translateY(20px);}
       to {opacity: 1; transform: translateY(0);}
@@ -196,8 +235,25 @@
 
   <!-- Main Content -->
   <div class="main-content" id="main-content">
-    <h2>📊 Department-wise Pass/Fail Statistics</h2>
+    <h2> Department-wise Pass/Fail Statistics</h2>
     <div class="row" id="statsCards"></div>
+
+    <!-- Backlog Summary -->
+    <h2 style="margin-top:40px;">📚 Backlog Summary</h2>
+    <div class="backlog-summary" id="backlogSummary">
+      <div class="summary-card zero">
+        <h3>0 Backlogs</h3>
+        <p id="zeroBacklogs">0 Students</p>
+      </div>
+      <div class="summary-card low">
+        <h3>1-2 Backlogs</h3>
+        <p id="lowBacklogs">0 Students</p>
+      </div>
+      <div class="summary-card high">
+        <h3>3+ Backlogs</h3>
+        <p id="highBacklogs">0 Students</p>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -226,7 +282,7 @@
       mainContent.classList.toggle("shifted");
     }
 
-    // Fetch stats from backend
+    // Fetch Pass/Fail stats
     fetch(`/hod/pass-fail-stats?staffId=${userId}`)
       .then(res => res.json())
       .then(data => {
@@ -257,6 +313,20 @@
         console.error("Error fetching stats:", err);
         document.getElementById("statsCards").innerHTML = 
           `<p class='text-center text-danger'>Failed to load data!</p>`;
+      });
+
+    // Fetch Backlog Summary
+    fetch(`/hod/backlog-summary?staffId=${userId}`)
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById("zeroBacklogs").innerText = `${data.zero || 0} Students`;
+        document.getElementById("lowBacklogs").innerText = `${data.low || 0} Students`;
+        document.getElementById("highBacklogs").innerText = `${data.high || 0} Students`;
+      })
+      .catch(err => {
+        console.error("Error fetching backlog summary:", err);
+        document.getElementById("backlogSummary").innerHTML = 
+          `<p class="text-center text-danger">⚠️ Failed to load backlog summary</p>`;
       });
 
     // Draw Circle Progress
