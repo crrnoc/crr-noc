@@ -1,1 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Upload Mid Marks CSV</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 2rem;
+    }
+    input[type="file"] {
+      margin: 1rem 0;
+    }
+  </style>
+</head>
+<body>
+  <h2>📤 Upload Mid Internal Marks (CSV Only)</h2>
+  <form id="uploadForm">
+    <input type="file" name="file" id="file" accept=".csv" required />
+    <button type="submit">Upload</button>
+  </form>
+  <div id="response"></div>
+
+  <script>
+    document.getElementById("uploadForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const fileInput = document.getElementById("file");
+      const formData = new FormData();
+      formData.append("file", fileInput.files[0]);
+
+      const res = await fetch("https://crr-noc.onrender.com/upload-midmarks", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      document.getElementById("response").innerText = data.message || "Something went wrong!";
+    });
+  </script>
+</body>
+</html>
+
 
