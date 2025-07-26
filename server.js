@@ -88,7 +88,7 @@ app.get("/adminpanel", requireAdminSession, (req, res) => {
 app.get("/uploadresults", requireAdminSession, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "uploadresultsAd.html"));
 });
-app.get("/upload-sbi", requireAdminSession, (req, res) => {
+app.get("/uploadsbi", requireAdminSession, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "upload-sbi.html"));
 });
 app.get("/dumatch", requireAdminSession, (req, res) => {
@@ -2992,29 +2992,32 @@ app.get("/hod/backlog-summary", (req, res) => {
 
 app.post('/admin/upload-students', upload.single("studentfile"), (req, res) => {
   if (!req.file) {
-    console.error("❌ No file received");
     return res.status(400).json({ success: false, message: "No file uploaded" });
   }
 
   const fileExt = path.extname(req.file.originalname).toLowerCase();
   let results = [];
 
-  // ✨ Helper to insert data after parsing
   const insertStudents = (rows) => {
     let insertCount = 0;
 
     rows.forEach((student) => {
-      const {
-        userId, name, dob, reg_no, uniqueId,
-        year, course, dept_code = '',
-        semester, aadhar_no = '', mobile_no = '', email = '',
-        father_name = '', father_mobile = '',
-        admission_type = '', photo_url = '', photo_public_id = '',
-        section, counsellor_name, counsellor_mobile, counsellor_id
-      } = student;
+      // ✅ Handle weird BOM characters in userId
+      let userId = student.userId || student["﻿userId"] || "";
+      userId = userId.trim();
 
+      const reg_no = student.reg_no || "";
+      const uniqueId = student.uniqueId || "";
+      const year = student.year || "";
+      const course = student.course || "";
+      const semester = student.semester || "";
+      const section = student.section || "";
+      const counsellor_name = student.counsellor_name || "";
+      const counsellor_mobile = student.counsellor_mobile || "";
+
+      // ❗ Minimum required to insert
       if (!userId || !reg_no || !uniqueId || !year || !course || !semester || !section || !counsellor_name || !counsellor_mobile) {
-        console.warn("⚠️ Skipped incomplete row:", student);
+        console.warn("❌ Skipping row due to missing critical fields:", student);
         return;
       }
 
@@ -3036,10 +3039,27 @@ app.post('/admin/upload-students', upload.single("studentfile"), (req, res) => {
         `;
 
         const values = [
-          userId, name || '', dob || null, reg_no, uniqueId, year, course, dept_code, semester,
-          aadhar_no, mobile_no, email, father_name, father_mobile,
-          admission_type, photo_url, photo_public_id, section,
-          counsellor_name, counsellor_mobile, counsellor_id || ''
+          userId,
+          student.name || '',
+          student.dob || null,
+          reg_no,
+          uniqueId,
+          year,
+          course,
+          student.dept_code || '',
+          semester,
+          student.aadhar_no || '',
+          student.mobile_no || '',
+          student.email || '',
+          student.father_name || '',
+          student.father_mobile || '',
+          student.admission_type || '',
+          student.photo_url || '',
+          student.photo_public_id || '',
+          section,
+          counsellor_name,
+          counsellor_mobile,
+          student.counsellor_id || ''
         ];
 
         connection.query(studentQuery, values, (studentErr) => {
@@ -3052,15 +3072,14 @@ app.post('/admin/upload-students', upload.single("studentfile"), (req, res) => {
       });
     });
 
-    fs.unlinkSync(req.file.path); // 🧹 Delete uploaded file after processing
+    fs.unlinkSync(req.file.path); // Clean up uploaded file
 
-    // Allow time for async inserts
     setTimeout(() => {
       res.json({ success: true, message: `✅ Upload complete! ${insertCount} students inserted.` });
     }, 1500);
   };
 
-  // 📂 Handle CSV and XLSX
+  // Detect and parse file
   if (fileExt === ".csv") {
     fs.createReadStream(req.file.path)
       .pipe(csv())
@@ -3073,6 +3092,6 @@ app.post('/admin/upload-students', upload.single("studentfile"), (req, res) => {
     insertStudents(results);
   } else {
     fs.unlinkSync(req.file.path);
-    return res.status(400).json({ success: false, message: "Unsupported file format. Please upload .csv or .xlsx only." });
+    return res.status(400).json({ success: false, message: "Unsupported file format." });
   }
 });
