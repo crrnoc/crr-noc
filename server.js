@@ -2950,3 +2950,35 @@ app.get("/hod/pass-fail-stats", (req, res) => {
   });
 });
 
+// Backlog Summary Route
+app.get("/hod/backlog-summary", (req, res) => {
+  const staffId = req.query.staffId;
+  if (!staffId) return res.status(400).json({ error: "Staff ID required" });
+
+  const deptCode = staffId.replace("HOD", ""); // e.g., HODCSE → CSE
+
+  const query = `
+    SELECT s.uniqueId, COUNT(r.id) AS backlog_count
+    FROM students s
+    LEFT JOIN results r ON s.reg_no = r.regno 
+      AND r.grade IN ('F','Ab','NOT_COMPLETED','MP')
+    WHERE s.dept_code = ?
+    GROUP BY s.uniqueId;
+  `;
+
+  connection.query(query, [deptCode], (err, rows) => {
+    if (err) {
+      console.error("DB Error:", err);
+      return res.status(500).json({ error: "Database error" });
+    }
+
+    const summary = { zero: 0, low: 0, high: 0 };
+    rows.forEach(row => {
+      if (row.backlog_count === 0) summary.zero++;
+      else if (row.backlog_count <= 2) summary.low++;
+      else summary.high++;
+    });
+
+    res.json(summary);
+  });
+});
