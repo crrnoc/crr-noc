@@ -3080,6 +3080,7 @@ app.post('/admin/upload-students', upload.single("studentfile"), (req, res) => {
   };
 
   // Detect and parse file
+  //mid marks
   if (fileExt === ".csv") {
     fs.createReadStream(req.file.path)
       .pipe(csv())
@@ -3094,4 +3095,51 @@ app.post('/admin/upload-students', upload.single("studentfile"), (req, res) => {
     fs.unlinkSync(req.file.path);
     return res.status(400).json({ success: false, message: "Unsupported file format." });
   }
+});
+
+// Setup for CSV file upload
+const storage = multer.diskStorage({
+  destination: "uploads/",
+  filename: (req, file, cb) => {
+    cb(null, "mid_marks_" + Date.now() + path.extname(file.originalname));
+  },
+});
+const upload = multer({ storage });
+
+// Route: Upload CSV file
+app.post("/upload-midmarks", upload.single("file"), (req, res) => {
+  const filePath = req.file.path;
+  const results = [];
+
+  fs.createReadStream(filePath)
+    .pipe(csv())
+    .on("data", (row) => {
+      results.push([
+        row["CC"],
+        row["HALLTICKET"],
+        row["SUB CODE"],
+        row["MID1"],
+        row["A1"],
+        row["Q1"],
+        row["MID2"],
+        row["A2"],
+        row["Q2"],
+        row["LDS / STATUS"],
+        row["REGULATION"],
+        row["YEAR"],
+        row["SEMESTER"],
+      ]);
+    })
+    .on("end", () => {
+      const sql = `
+        INSERT INTO mid_internal_marks
+        (cc, hallticket, sub_code, mid1, a1, q1, mid2, a2, q2, lds_or_status, regulation, year, semester)
+        VALUES ?
+      `;
+      connection.query(sql, [results], (err) => {
+        fs.unlinkSync(filePath);
+        if (err) return res.status(500).json({ error: err });
+        res.json({ message: "✅ CSV Data inserted", count: results.length });
+      });
+    });
 });
