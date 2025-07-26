@@ -2990,7 +2990,7 @@ app.get("/hod/backlog-summary", (req, res) => {
 
 
 
-app.post('/admin/upload-students', upload.single("file"), (req, res) => {
+app.post('/admin/upload-students', upload.single("studentfile"), (req, res) => {
   if (!req.file) {
     console.error("❌ No file received");
     return res.status(400).json({ success: false, message: "No file uploaded" });
