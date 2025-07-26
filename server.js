@@ -2990,8 +2990,11 @@ app.get("/hod/backlog-summary", (req, res) => {
 
 
 
-app.post("/admin/upload-students", upload.single("file"), (req, res) => {
-  if (!req.file) return res.status(400).json({ success: false, message: "No file uploaded" });
+app.post('/admin/upload-students', upload.single("file"), (req, res) => {
+  if (!req.file) {
+    console.error("❌ No file received");
+    return res.status(400).json({ success: false, message: "No file uploaded" });
+  }
 
   const results = [];
 
@@ -2999,47 +3002,65 @@ app.post("/admin/upload-students", upload.single("file"), (req, res) => {
     .pipe(csv())
     .on("data", (row) => results.push(row))
     .on("end", () => {
-      let successCount = 0;
+      console.log("✅ CSV Parsed. Rows:", results.length);
+      let insertCount = 0;
 
       results.forEach((student) => {
         const {
           userId, name, dob, reg_no, uniqueId,
-          year, course, semester, aadhar_no, mobile_no,
-          email, section, counsellor_name, counsellor_mobile,
-          admission_type
+          year, course, dept_code = '',
+          semester, aadhar_no = '', mobile_no = '', email = '',
+          father_name = '', father_mobile = '',
+          admission_type = '', photo_url = '', photo_public_id = '',
+          section, counsellor_name, counsellor_mobile, counsellor_id
         } = student;
 
+        // Validation
         if (!userId || !reg_no || !uniqueId || !year || !course || !semester || !section || !counsellor_name || !counsellor_mobile) {
+          console.warn("⚠️ Skipped incomplete row:", student);
           return;
         }
 
-        connection.query(
-          "INSERT IGNORE INTO users (userid, password, role) VALUES (?, ?, 'student')",
-          [userId, userId],
-          (err1) => {
-            if (err1) return;
-
-            const sql = `
-              INSERT INTO students (
-                userId, name, dob, reg_no, uniqueId, year, course, semester,
-                aadhar_no, mobile_no, email, section, counsellor_name,
-                counsellor_mobile, admission_type
-              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            `;
-            const values = [
-              userId, name || '', dob || null, reg_no, uniqueId, year, course, semester,
-              aadhar_no || '', mobile_no || '', email || '', section, counsellor_name,
-              counsellor_mobile, admission_type || ''
-            ];
-
-            connection.query(sql, values, (err2) => {
-              if (!err2) successCount++;
-            });
+        // 1. Insert into users table
+        const userQuery = "INSERT IGNORE INTO users (userid, password, role) VALUES (?, ?, 'student')";
+        connection.query(userQuery, [userId, userId], (userErr) => {
+          if (userErr) {
+            console.error("❌ User insert failed:", userErr);
+            return;
           }
-        );
+
+          // 2. Insert into students table
+          const studentQuery = `
+            INSERT INTO students (
+              userId, name, dob, reg_no, uniqueId, year, course, dept_code, semester,
+              aadhar_no, mobile_no, email, father_name, father_mobile,
+              admission_type, photo_url, photo_public_id, section,
+              counsellor_name, counsellor_mobile, counsellor_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `;
+
+          const values = [
+            userId, name || '', dob || null, reg_no, uniqueId, year, course, dept_code, semester,
+            aadhar_no, mobile_no, email, father_name, father_mobile,
+            admission_type, photo_url, photo_public_id, section,
+            counsellor_name, counsellor_mobile, counsellor_id || ''
+          ];
+
+          connection.query(studentQuery, values, (studentErr) => {
+            if (studentErr) {
+              console.error("❌ Student insert failed:", studentErr);
+            } else {
+              insertCount++;
+            }
+          });
+        });
       });
 
-      fs.unlinkSync(req.file.path);
-      res.json({ success: true, message: `✅ Uploaded ${successCount} students successfully.` });
+      fs.unlinkSync(req.file.path); // Clean up uploaded file
+
+      // Give time for inserts to complete (MySQL is async)
+      setTimeout(() => {
+        res.json({ success: true, message: `✅ Upload complete! Inserted ${insertCount} students.` });
+      }, 1500);
     });
 });
