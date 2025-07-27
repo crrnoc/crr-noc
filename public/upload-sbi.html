@@ -143,7 +143,7 @@
       const routes = {
         'uploadresultsAd.html': '/uploadresults',
         'uploadattendanceAd.html': '/uploadattendance',
-        'upload-sbi.html': '/upload-sbi',
+        'upload-sbi.html': '/uploadsbi',
         'du-match-status.html': '/dumatch',
         'noc-status.html': '/nocstatus',
         'removestudents.html': '/removestudents',
@@ -188,7 +188,7 @@
       const formData = new FormData();
       formData.append("sbiFile", file);
 
-      fetch("https://crr-noc.onrender.com/admin/upload-sbi", {
+      fetch("https://crr-noc.onrender.com/admin/uploadsbi", {
         method: "POST",
         body: formData
       })
