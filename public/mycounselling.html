@@ -344,34 +344,59 @@
 
         <button onclick="saveFatherDetails()">Save Changes</button>
 
-        <div style="margin: 20px 0; display: flex; gap: 10px; flex-wrap: wrap;">
-          <button onclick="showTab('attendance')" id="btnAttendance">📊 Attendance</button>
-          <button onclick="showTab('results')" id="btnResults">📚 Results</button>
-        </div>
+<!-- Tab Buttons -->
+<div style="margin: 20px 0; display: flex; gap: 10px; flex-wrap: wrap;">
+  <button onclick="showTab('attendance')" id="btnAttendance">📊 Attendance</button>
+  <button onclick="showTab('results')" id="btnResults">📚 Results</button>
+  <button onclick="showTab('midmarks')" id="btnMidMarks">📝 Mid Marks</button>
+</div>
 
-        <div id="attendanceTab" style="display: none;">
-          <h3 style="margin-top: 20px; border-bottom: 1px solid #ddd; padding-bottom: 6px;">📊 Attendance Details</h3>
-          <div id="attendanceContent"></div>
-        </div>
+<!-- Attendance Section -->
+<div id="attendanceTab" style="display: none;">
+  <h3 style="margin-top: 20px; border-bottom: 1px solid #ddd; padding-bottom: 6px;">📊 Attendance Details</h3>
+  <div id="attendanceContent"></div>
+</div>
 
-        <div id="resultsTab" style="display: none;">
-          <h3 style="margin-top: 20px; border-bottom: 1px solid #ddd; padding-bottom: 6px;">📚 Results Overview</h3>
-          <h4 style="margin-bottom: 8px;">🎓 Select Semester to View Results:</h4>
-          <select id="semesterSelect">
-            <option value="">-- Select --</option>
-            <option value="1-1">1-1</option>
-            <option value="1-2">1-2</option>
-            <option value="2-1">2-1</option>
-            <option value="2-2">2-2</option>
-            <option value="3-1">3-1</option>
-            <option value="3-2">3-2</option>
-            <option value="4-1">4-1</option>
-            <option value="4-2">4-2</option>
-          </select>
-          <div id="resultsContent"></div>
-        </div>
+<!-- Results Section -->
+<div id="resultsTab" style="display: none;">
+  <h3 style="margin-top: 20px; border-bottom: 1px solid #ddd; padding-bottom: 6px;">📚 Results Overview</h3>
+  <h4 style="margin-bottom: 8px;">🎓 Select Semester to View Results:</h4>
+  <select id="semesterSelect">
+    <option value="">-- Select --</option>
+    <option value="1-1">1-1</option>
+    <option value="1-2">1-2</option>
+    <option value="2-1">2-1</option>
+    <option value="2-2">2-2</option>
+    <option value="3-1">3-1</option>
+    <option value="3-2">3-2</option>
+    <option value="4-1">4-1</option>
+    <option value="4-2">4-2</option>
+  </select>
+  <div id="resultsContent"></div>
+</div>
 
-        <button class="modal-close" onclick="closeModal()">✖</button>
+<!-- Mid Marks Section -->
+<div id="midmarksTab" style="display: none;">
+  <h3 style="margin-top: 20px; border-bottom: 1px solid #ddd; padding-bottom: 6px;">📝 Mid Marks</h3>
+  <h4 style="margin-bottom: 8px;">📅 Select Semester to View Mid Marks:</h4>
+  <select id="midmarksSemesterSelect">
+    <option value="">-- Select --</option>
+    <option value="1-1">1-1</option>
+    <option value="1-2">1-2</option>
+    <option value="2-1">2-1</option>
+    <option value="2-2">2-2</option>
+    <option value="3-1">3-1</option>
+    <option value="3-2">3-2</option>
+    <option value="4-1">4-1</option>
+    <option value="4-2">4-2</option>
+  </select>
+  <div id="midmarksContent"></div>
+</div>
+
+
+<!-- Close Button -->
+<button class="modal-close" onclick="closeModal()">✖</button>
+
       </div>
     </div>
   </div>
