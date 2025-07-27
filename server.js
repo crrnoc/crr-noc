@@ -3144,16 +3144,18 @@ app.post("/upload-midmarks", upload.single("file"), (req, res) => {
 });
 // get mid marks
 app.get("/get-midmarks", (req, res) => {
-  const { userId, year, semester } = req.query;
+  const { regno, year, semester } = req.query;
+
   const sql = `
     SELECT sub_code, mid1, a1, q1, mid2, a2, q2, lds_or_status 
     FROM mid_internal_marks 
     WHERE hallticket = ? AND year = ? AND semester = ?
   `;
-  connection.query(sql, [userId, year, semester], (err, rows) => {
+  connection.query(sql, [regno, year, semester], (err, rows) => {
     if (err) return res.status(500).json({ error: err });
     res.json(rows);
   });
 });
+
 
 
