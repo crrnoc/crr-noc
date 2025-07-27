@@ -3009,12 +3009,11 @@ app.get("/hod/backlog-summary", (req, res) => {
 function cleanRow(row) {
   const cleaned = {};
   for (let key in row) {
-    const cleanKey = key.replace(/\uFEFF/g, '').trim(); // Remove BOM and trim
-    cleaned[cleanKey] = typeof row[key] === 'string' ? row[key].trim() : row[key];
+    const cleanKey = key.replace(/\uFEFF/g, "").trim(); // Remove BOM + trim
+    cleaned[cleanKey] = typeof row[key] === "string" ? row[key].trim() : row[key];
   }
   return cleaned;
 }
-
 
 app.post('/admin/upload-students', upload.single("studentfile"), (req, res) => {
   if (!req.file) return res.status(400).json({ success: false, message: "No file uploaded" });
@@ -3026,22 +3025,22 @@ app.post('/admin/upload-students', upload.single("studentfile"), (req, res) => {
     let insertCount = 0;
     let updateCount = 0;
 
-    rows.forEach((student) => {
-      student = cleanRow(student);
+    rows.forEach((rawRow) => {
+      const student = cleanRow(rawRow);
 
-      const userId = student.userId?.trim();
-      const reg_no = student.reg_no?.trim();
-      const uniqueId = student.uniqueId?.trim();
+      const userId = student.userId || student["﻿userId"];
+      const reg_no = student.reg_no;
+      const uniqueId = student.uniqueId;
 
-      // Minimum check: only these 3
       if (!userId || !reg_no || !uniqueId) {
         console.warn("❌ Skipping row due to missing critical fields:", student);
         return;
       }
 
-      // Insert or ignore user
+      // Insert or update in users
       const userQuery = `
-        INSERT INTO users (userid, password, role) VALUES (?, ?, 'student')
+        INSERT INTO users (userid, password, role)
+        VALUES (?, ?, 'student')
         ON DUPLICATE KEY UPDATE password = VALUES(password)
       `;
 
@@ -3114,7 +3113,7 @@ app.post('/admin/upload-students', upload.single("studentfile"), (req, res) => {
     }, 1500);
   };
 
-  // Handle file parsing
+  // Handle file
   if (fileExt === ".csv") {
     fs.createReadStream(req.file.path)
       .pipe(csv())
