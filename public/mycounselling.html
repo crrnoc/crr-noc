@@ -347,6 +347,7 @@
         <div style="margin: 20px 0; display: flex; gap: 10px; flex-wrap: wrap;">
           <button onclick="showTab('attendance')" id="btnAttendance">📊 Attendance</button>
           <button onclick="showTab('results')" id="btnResults">📚 Results</button>
+          <button onclick="showTab('midmarks')" id="btnMidMarks">📝 Mid Marks</button>
         </div>
 
         <div id="attendanceTab" style="display: none;">
@@ -370,6 +371,45 @@
           </select>
           <div id="resultsContent"></div>
         </div>
+        <div id="midmarks" style="display: none;">
+  <h3>📑 Mid Marks</h3>
+  <div>
+    <label for="yearSelect">Year:</label>
+    <select id="yearSelect">
+      <option value="">Select Year</option>
+      <option value="1">1st Year</option>
+      <option value="2">2nd Year</option>
+      <option value="3">3rd Year</option>
+      <option value="4">4th Year</option>
+    </select>
+
+    <label for="semSelect">Semester:</label>
+    <select id="semSelect">
+      <option value="">Select Semester</option>
+      <option value="1">1st Sem</option>
+      <option value="2">2nd Sem</option>
+    </select>
+
+    <button onclick="fetchMidMarks()">🔍 View</button>
+  </div>
+
+  <table id="midmarksTable" border="1" style="margin-top: 15px; width: 100%; display: none;">
+    <thead>
+      <tr>
+        <th>Sub Code</th>
+        <th>Mid 1</th>
+        <th>A1</th>
+        <th>Q1</th>
+        <th>Mid 2</th>
+        <th>A2</th>
+        <th>Q2</th>
+        <th>LDS / Status</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
 
         <button class="modal-close" onclick="closeModal()">✖</button>
       </div>
