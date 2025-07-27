@@ -184,15 +184,18 @@
     </div>
   </div>
 
- <script>
+<script>
+  // 🔁 Page navigation handler
   function navigateTo(route) {
     window.location.href = route;
   }
 
+  // 📱 Toggle sidebar on mobile
   function toggleSidebar() {
     document.querySelector('.sidebar').classList.toggle('open');
   }
 
+  // 🚪 Logout logic
   function logout() {
     fetch("/logout")
       .then(() => {
@@ -205,6 +208,7 @@
       });
   }
 
+  // 🔐 Session check on page load
   window.onload = function () {
     fetch('/check-session')
       .then(res => {
@@ -215,12 +219,14 @@
         window.location.replace("index.html");
       });
 
+    // 🚫 Disable back button
     window.history.pushState(null, "", window.location.href);
     window.onpopstate = function () {
       window.history.pushState(null, "", window.location.href);
     };
   };
 
+  // 📤 Student Upload Handler
   document.getElementById("uploadForm").addEventListener("submit", async function (e) {
     e.preventDefault();
 
@@ -236,9 +242,10 @@
       const result = await response.json();
 
       if (result.success) {
-        alert("✅ Upload successful! Students inserted into the database.");
+        alert(`✅ Upload successful! ${result.message || "Students inserted into the database."}`);
+        form.reset(); // Optional: clear file input after upload
       } else {
-        alert("❌ Upload failed: " + (result.message || "Unknown error."));
+        alert(`❌ Upload failed: ${result.message || "Unknown error."}`);
       }
     } catch (err) {
       console.error("Upload error:", err);
