@@ -3006,6 +3006,15 @@ app.get("/hod/backlog-summary", (req, res) => {
   });
 });
 
+function cleanRow(row) {
+  const cleaned = {};
+  for (let key in row) {
+    const cleanKey = key.replace(/\uFEFF/g, '').trim(); // Remove BOM and trim
+    cleaned[cleanKey] = typeof row[key] === 'string' ? row[key].trim() : row[key];
+  }
+  return cleaned;
+}
+
 
 app.post('/admin/upload-students', upload.single("studentfile"), (req, res) => {
   if (!req.file) return res.status(400).json({ success: false, message: "No file uploaded" });
