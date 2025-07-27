@@ -3149,11 +3149,12 @@ app.get("/student/midmarks/:regno", (req, res) => {
 
   console.log("📥 Incoming Mid Marks Request:", { regno, year, semester });
 
-  const sql = `
-    SELECT sub_code, mid1, a1, q1, mid2, a2, q2, lds_or_status 
-    FROM mid_internal_marks 
-    WHERE hallticket = ? AND year = ? AND semester = ?
-  `;
+const sql = `
+  SELECT sub_code, mid1, a1, q1, mid2, a2, q2, lds_or_status 
+  FROM mid_internal_marks 
+  WHERE hallticket = ? AND TRIM(year) = ? AND TRIM(semester) = ?
+`;
+
 
   connection.query(sql, [regno, year, semester], (err, rows) => {
     if (err) {
