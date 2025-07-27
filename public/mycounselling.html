@@ -546,8 +546,70 @@
             document.getElementById("resultsContent").innerHTML = "No result data for selected semester.";
           }
         });
-    };
   }
+
+  // ✅ Mid Marks Fetching Logic
+  document.getElementById("midmarksYear").value = "";
+  document.getElementById("midmarksSem").value = "";
+  document.getElementById("midmarksContent").innerHTML = "";
+
+  document.getElementById("midmarksFetchBtn").onclick = () => {
+    const year = document.getElementById("midmarksYear").value;
+    const semester = document.getElementById("midmarksSem").value;
+
+    if (!year || !semester || !currentStudent) {
+      Swal.fire("Missing Info", "Please select both year and semester", "warning");
+      return;
+    }
+
+    fetch(`/get-midmarks`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        regno: currentStudent.reg_no,
+        year,
+        semester
+      })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (Array.isArray(data) && data.length > 0) {
+        const rows = data.map(row => `
+          <tr>
+            <td>${row.sub_code}</td>
+            <td>${row.mid1 || "-"}</td>
+            <td>${row.a1 || "-"}</td>
+            <td>${row.q1 || "-"}</td>
+            <td>${row.mid2 || "-"}</td>
+            <td>${row.a2 || "-"}</td>
+            <td>${row.q2 || "-"}</td>
+            <td>${row.lds_or_status || "-"}</td>
+          </tr>`).join("");
+
+        document.getElementById("midmarksContent").innerHTML = `
+          <table>
+            <tr>
+              <th>Sub Code</th>
+              <th>Mid 1</th>
+              <th>A1</th>
+              <th>Q1</th>
+              <th>Mid 2</th>
+              <th>A2</th>
+              <th>Q2</th>
+              <th>LDS / Status</th>
+            </tr>
+            ${rows}
+          </table>
+        `;
+      } else {
+        document.getElementById("midmarksContent").innerHTML = "No mid marks data found.";
+      }
+    })
+    .catch(() => {
+      document.getElementById("midmarksContent").innerHTML = "Failed to fetch mid marks.";
+    });
+  });
+}
 
   function closeModal() {
     document.getElementById("studentModal").style.display = "none";
@@ -557,8 +619,11 @@
   function showTab(tabName) {
     document.getElementById("attendanceTab").style.display = tabName === "attendance" ? "block" : "none";
     document.getElementById("resultsTab").style.display = tabName === "results" ? "block" : "none";
+    document.getElementById("midmarksTab").style.display = tabName === "midmarks" ? "block" : "none";
+
     document.getElementById("btnAttendance").style.backgroundColor = tabName === "attendance" ? "#ddd" : "#f0f0f0";
     document.getElementById("btnResults").style.backgroundColor = tabName === "results" ? "#ddd" : "#f0f0f0";
+    document.getElementById("btnMidMarks").style.backgroundColor = tabName === "midmarks" ? "#ddd" : "#f0f0f0";
   }
 
   function logout() {
@@ -601,7 +666,6 @@
     }
   }
 
-  // ✅ CLOSE MODAL on outside click
   document.addEventListener("click", function (e) {
     const modalBox = document.querySelector(".modal-box");
     const modal = document.getElementById("studentModal");
