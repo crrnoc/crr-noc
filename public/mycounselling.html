@@ -435,7 +435,7 @@
       window.location.href = "index.html";
     });
   } else {
-    fetch(`/my-counselling-students/${userId}`)
+    fetch(/my-counselling-students/${userId})
       .then(res => res.json())
       .then(data => {
         const container = document.getElementById("cardContainer");
@@ -444,7 +444,7 @@
           data.students.forEach(std => {
             const card = document.createElement("div");
             card.className = "student-card";
-            card.innerHTML = `
+            card.innerHTML = 
               <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
                 <img src="https://ui-avatars.com/api/?name=${std.name}&background=random&rounded=true" style="width:40px; height:40px; border-radius:50%;">
                 <h3 style="margin:0;">${std.name}</h3>
@@ -455,12 +455,12 @@
               <p><strong>Section:</strong> ${std.section}</p>
               <p><strong>Email:</strong> ${std.email}</p>
               <p><strong>Mobile:</strong> ${std.mobile_no}</p>
-            `;
+            ;
             card.onclick = () => openModal(std);
             container.appendChild(card);
           });
         } else {
-          container.innerHTML = `<p style="text-align:center; color:#666;">No students assigned yet.</p>`;
+          container.innerHTML = <p style="text-align:center; color:#666;">No students assigned yet.</p>;
         }
       })
       .catch(err => {
@@ -480,18 +480,18 @@
     document.body.style.overflow = "hidden"; // ✅ prevent background scroll
     showTab("attendance");
 
-    fetch(`/student-attendance/${student.reg_no}`)
+    fetch(/student-attendance/${student.reg_no})
       .then(res => res.json())
       .then(data => {
         if (data.success && data.data.length > 0) {
-          const rows = data.data.map(row => `
+          const rows = data.data.map(row => 
             <tr>
               <td>${row.semester}</td>
               <td>${row.total_classes}</td>
               <td>${row.attended_classes}</td>
               <td>${row.percentage}%</td>
-            </tr>`).join("");
-          document.getElementById("attendanceContent").innerHTML = `
+            </tr>).join("");
+          document.getElementById("attendanceContent").innerHTML = 
             <table>
               <tr>
                 <th>Semester</th>
@@ -501,7 +501,7 @@
               </tr>
               ${rows}
             </table>
-          `;
+          ;
         } else {
           document.getElementById("attendanceContent").innerHTML = "No attendance data available.";
         }
@@ -515,18 +515,18 @@
       const semester = semesterDropdown.value;
       if (!semester) return;
 
-      fetch(`/student/results/${student.reg_no}?semester=${semester}`)
+      fetch(/student/results/${student.reg_no}?semester=${semester})
         .then(res => res.json())
         .then(data => {
           if (data.results && data.results.length > 0) {
-            const subjectRows = data.results.map(r => `
+            const subjectRows = data.results.map(r => 
               <tr>
                 <td>${r.subcode}</td>
                 <td>${r.subname}</td>
                 <td>${r.grade}</td>
                 <td>${r.credits}</td>
-              </tr>`).join("");
-            document.getElementById("resultsContent").innerHTML = `
+              </tr>).join("");
+            document.getElementById("resultsContent").innerHTML = 
               <table>
                 <tr>
                   <th>Sub Code</th>
@@ -541,75 +541,13 @@
                 <p><strong>CGPA:</strong> ${data.cgpa}</p>
                 <p><strong>Percentage:</strong> ${data.percentage}%</p>
               </div>
-            `;
+            ;
           } else {
             document.getElementById("resultsContent").innerHTML = "No result data for selected semester.";
           }
         });
+    };
   }
-
-  // ✅ Mid Marks Fetching Logic
-  document.getElementById("midmarksYear").value = "";
-  document.getElementById("midmarksSem").value = "";
-  document.getElementById("midmarksContent").innerHTML = "";
-
-  document.getElementById("midmarksFetchBtn").onclick = () => {
-    const year = document.getElementById("midmarksYear").value;
-    const semester = document.getElementById("midmarksSem").value;
-
-    if (!year || !semester || !currentStudent) {
-      Swal.fire("Missing Info", "Please select both year and semester", "warning");
-      return;
-    }
-
-    fetch(`/get-midmarks`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        regno: currentStudent.reg_no,
-        year,
-        semester
-      })
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (Array.isArray(data) && data.length > 0) {
-        const rows = data.map(row => `
-          <tr>
-            <td>${row.sub_code}</td>
-            <td>${row.mid1 || "-"}</td>
-            <td>${row.a1 || "-"}</td>
-            <td>${row.q1 || "-"}</td>
-            <td>${row.mid2 || "-"}</td>
-            <td>${row.a2 || "-"}</td>
-            <td>${row.q2 || "-"}</td>
-            <td>${row.lds_or_status || "-"}</td>
-          </tr>`).join("");
-
-        document.getElementById("midmarksContent").innerHTML = `
-          <table>
-            <tr>
-              <th>Sub Code</th>
-              <th>Mid 1</th>
-              <th>A1</th>
-              <th>Q1</th>
-              <th>Mid 2</th>
-              <th>A2</th>
-              <th>Q2</th>
-              <th>LDS / Status</th>
-            </tr>
-            ${rows}
-          </table>
-        `;
-      } else {
-        document.getElementById("midmarksContent").innerHTML = "No mid marks data found.";
-      }
-    })
-    .catch(() => {
-      document.getElementById("midmarksContent").innerHTML = "Failed to fetch mid marks.";
-    });
-  });
-}
 
   function closeModal() {
     document.getElementById("studentModal").style.display = "none";
@@ -619,11 +557,8 @@
   function showTab(tabName) {
     document.getElementById("attendanceTab").style.display = tabName === "attendance" ? "block" : "none";
     document.getElementById("resultsTab").style.display = tabName === "results" ? "block" : "none";
-    document.getElementById("midmarksTab").style.display = tabName === "midmarks" ? "block" : "none";
-
     document.getElementById("btnAttendance").style.backgroundColor = tabName === "attendance" ? "#ddd" : "#f0f0f0";
     document.getElementById("btnResults").style.backgroundColor = tabName === "results" ? "#ddd" : "#f0f0f0";
-    document.getElementById("btnMidMarks").style.backgroundColor = tabName === "midmarks" ? "#ddd" : "#f0f0f0";
   }
 
   function logout() {
@@ -666,6 +601,7 @@
     }
   }
 
+  // ✅ CLOSE MODAL on outside click
   document.addEventListener("click", function (e) {
     const modalBox = document.querySelector(".modal-box");
     const modal = document.getElementById("studentModal");
@@ -679,6 +615,6 @@
       closeModal();
     }
   });
-</script>
+</script> 
 </body>
 </html>
