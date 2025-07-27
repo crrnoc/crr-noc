@@ -557,19 +557,19 @@
     };
 
     // Mid Marks
-    document.getElementById("yearSelect").value = "";
+    document.getElementById("midYearSelect").value = "";
     document.getElementById("midSemesterSelect").value = "";
     document.getElementById("midMarksContent").innerHTML = "";
 
     // Attach listeners for midmarks dropdowns
-    document.getElementById("yearSelect").onchange = fetchMidMarks;
+    document.getElementById("midYearSelect").onchange = fetchMidMarks;
     document.getElementById("midSemesterSelect").onchange = fetchMidMarks;
   }
 
   function fetchMidMarks() {
     if (!currentStudent) return;
 
-    const year = document.getElementById("yearSelect").value;
+    const year = document.getElementById("midYearSelect").value;
     const semester = document.getElementById("midSemesterSelect").value;
 
     if (!year || !semester) {
