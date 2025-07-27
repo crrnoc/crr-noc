@@ -205,31 +205,45 @@ const otpMap = new Map();
 app.post('/send-otp', (req, res) => {
   const { userId, email } = req.body;
 
+  // First try from students
   connection.query('SELECT email FROM students WHERE userId = ?', [userId], (err, results) => {
-    if (err || results.length === 0 || results[0].email !== email) {
-      return res.json({ success: false, message: "User ID and email don't match." });
+    if (err) return res.json({ success: false, message: "Server error" });
+
+    if (results.length > 0 && results[0].email === email) {
+      return sendOtpToEmail(userId, email, res); // student match
     }
 
-    const otp = Math.floor(100000 + Math.random() * 900000);
-    otpMap.set(userId, otp.toString());
+    // Try from staff
+    connection.query('SELECT staff_email FROM staff WHERE staff_id = ?', [userId], (err2, results2) => {
+      if (err2 || results2.length === 0 || results2[0].staff_email !== email) {
+        return res.json({ success: false, message: "User ID and email don't match." });
+      }
 
-    const mailOptions = {
-      from: '"CRR NOC Team" <crrenoccertificate@gmail.com>',
-      to: email,
-      subject: "Your OTP for Password Reset",
-      text: `Your OTP is ${otp}. It will expire in 10 minutes.`,
-    };
-
-    transporter.sendMail(mailOptions, (err) => {
-      if (err) return res.json({ success: false, message: "Failed to send email." });
-
-      // Optionally, set timeout to auto-delete OTP
-      setTimeout(() => otpMap.delete(userId), 10 * 60 * 1000);
-
-      res.json({ success: true });
+      // staff match
+      return sendOtpToEmail(userId, email, res);
     });
   });
 });
+
+function sendOtpToEmail(userId, email, res) {
+  const otp = Math.floor(100000 + Math.random() * 900000);
+  otpMap.set(userId, otp.toString());
+
+  const mailOptions = {
+    from: '"CRR NOC Team" <crrenoccertificate@gmail.com>',
+    to: email,
+    subject: "Your OTP for Password Reset",
+    text: `Your OTP is ${otp}. It will expire in 10 minutes.`,
+  };
+
+  transporter.sendMail(mailOptions, (err) => {
+    if (err) return res.json({ success: false, message: "Failed to send email." });
+
+    setTimeout(() => otpMap.delete(userId), 10 * 60 * 1000); // expire OTP after 10 minutes
+    res.json({ success: true });
+  });
+}
+
 
 // 2️⃣ Verify OTP
 app.post('/verify-otp', (req, res) => {
@@ -242,18 +256,22 @@ app.post('/verify-otp', (req, res) => {
   }
 });
 
+
 // 3️⃣ Reset Password with hashing
 app.post('/reset-password', async (req, res) => {
   const { userId, newPassword } = req.body;
 
   try {
-    const hashedPassword = await bcrypt.hash(newPassword, 10); // 10 = salt rounds
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
 
     connection.query(
       'UPDATE users SET password = ? WHERE userId = ?',
       [hashedPassword, userId],
-      (err) => {
-        if (err) return res.json({ success: false });
+      (err, result) => {
+        if (err || result.affectedRows === 0) {
+          return res.json({ success: false, message: "User not found or update failed." });
+        }
+
         otpMap.delete(userId);
         res.json({ success: true });
       }
