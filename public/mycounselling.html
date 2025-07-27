@@ -347,7 +347,6 @@
         <div style="margin: 20px 0; display: flex; gap: 10px; flex-wrap: wrap;">
           <button onclick="showTab('attendance')" id="btnAttendance">📊 Attendance</button>
           <button onclick="showTab('results')" id="btnResults">📚 Results</button>
-          <button onclick="showTab('midmarks')" id="btnMidMarks">📝 Mid Marks</button>
         </div>
 
         <div id="attendanceTab" style="display: none;">
@@ -371,45 +370,6 @@
           </select>
           <div id="resultsContent"></div>
         </div>
-        <div id="midmarks" style="display: none;">
-  <h3>📑 Mid Marks</h3>
-  <div>
-    <label for="yearSelect">Year:</label>
-    <select id="yearSelect">
-      <option value="">Select Year</option>
-      <option value="1">1st Year</option>
-      <option value="2">2nd Year</option>
-      <option value="3">3rd Year</option>
-      <option value="4">4th Year</option>
-    </select>
-
-    <label for="semSelect">Semester:</label>
-    <select id="semSelect">
-      <option value="">Select Semester</option>
-      <option value="1">1st Sem</option>
-      <option value="2">2nd Sem</option>
-    </select>
-
-    <button onclick="fetchMidMarks()">🔍 View</button>
-  </div>
-
-  <table id="midmarksTable" border="1" style="margin-top: 15px; width: 100%; display: none;">
-    <thead>
-      <tr>
-        <th>Sub Code</th>
-        <th>Mid 1</th>
-        <th>A1</th>
-        <th>Q1</th>
-        <th>Mid 2</th>
-        <th>A2</th>
-        <th>Q2</th>
-        <th>LDS / Status</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-</div>
-
 
         <button class="modal-close" onclick="closeModal()">✖</button>
       </div>
@@ -435,7 +395,7 @@
       window.location.href = "index.html";
     });
   } else {
-    fetch(/my-counselling-students/${userId})
+    fetch(`/my-counselling-students/${userId}`)
       .then(res => res.json())
       .then(data => {
         const container = document.getElementById("cardContainer");
@@ -444,7 +404,7 @@
           data.students.forEach(std => {
             const card = document.createElement("div");
             card.className = "student-card";
-            card.innerHTML = 
+            card.innerHTML = `
               <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
                 <img src="https://ui-avatars.com/api/?name=${std.name}&background=random&rounded=true" style="width:40px; height:40px; border-radius:50%;">
                 <h3 style="margin:0;">${std.name}</h3>
@@ -455,12 +415,12 @@
               <p><strong>Section:</strong> ${std.section}</p>
               <p><strong>Email:</strong> ${std.email}</p>
               <p><strong>Mobile:</strong> ${std.mobile_no}</p>
-            ;
+            `;
             card.onclick = () => openModal(std);
             container.appendChild(card);
           });
         } else {
-          container.innerHTML = <p style="text-align:center; color:#666;">No students assigned yet.</p>;
+          container.innerHTML = `<p style="text-align:center; color:#666;">No students assigned yet.</p>`;
         }
       })
       .catch(err => {
@@ -480,18 +440,18 @@
     document.body.style.overflow = "hidden"; // ✅ prevent background scroll
     showTab("attendance");
 
-    fetch(/student-attendance/${student.reg_no})
+    fetch(`/student-attendance/${student.reg_no}`)
       .then(res => res.json())
       .then(data => {
         if (data.success && data.data.length > 0) {
-          const rows = data.data.map(row => 
+          const rows = data.data.map(row => `
             <tr>
               <td>${row.semester}</td>
               <td>${row.total_classes}</td>
               <td>${row.attended_classes}</td>
               <td>${row.percentage}%</td>
-            </tr>).join("");
-          document.getElementById("attendanceContent").innerHTML = 
+            </tr>`).join("");
+          document.getElementById("attendanceContent").innerHTML = `
             <table>
               <tr>
                 <th>Semester</th>
@@ -501,7 +461,7 @@
               </tr>
               ${rows}
             </table>
-          ;
+          `;
         } else {
           document.getElementById("attendanceContent").innerHTML = "No attendance data available.";
         }
@@ -515,18 +475,18 @@
       const semester = semesterDropdown.value;
       if (!semester) return;
 
-      fetch(/student/results/${student.reg_no}?semester=${semester})
+      fetch(`/student/results/${student.reg_no}?semester=${semester}`)
         .then(res => res.json())
         .then(data => {
           if (data.results && data.results.length > 0) {
-            const subjectRows = data.results.map(r => 
+            const subjectRows = data.results.map(r => `
               <tr>
                 <td>${r.subcode}</td>
                 <td>${r.subname}</td>
                 <td>${r.grade}</td>
                 <td>${r.credits}</td>
-              </tr>).join("");
-            document.getElementById("resultsContent").innerHTML = 
+              </tr>`).join("");
+            document.getElementById("resultsContent").innerHTML = `
               <table>
                 <tr>
                   <th>Sub Code</th>
@@ -541,7 +501,7 @@
                 <p><strong>CGPA:</strong> ${data.cgpa}</p>
                 <p><strong>Percentage:</strong> ${data.percentage}%</p>
               </div>
-            ;
+            `;
           } else {
             document.getElementById("resultsContent").innerHTML = "No result data for selected semester.";
           }
@@ -615,6 +575,6 @@
       closeModal();
     }
   });
-</script> 
+</script>
 </body>
 </html>
