@@ -3143,19 +3143,38 @@ app.post("/upload-midmarks", upload.single("file"), (req, res) => {
     });
 });
 // get mid marks
-app.get("/get-midmarks", (req, res) => {
-  const { regno, year, semester } = req.query;
+app.get("/student/midmarks/:regno", (req, res) => {
+  const { regno } = req.params;
+  const { year, semester } = req.query;
+
+  console.log("📥 Incoming Mid Marks Request:", { regno, year, semester });
 
   const sql = `
     SELECT sub_code, mid1, a1, q1, mid2, a2, q2, lds_or_status 
     FROM mid_internal_marks 
     WHERE hallticket = ? AND year = ? AND semester = ?
   `;
+
   connection.query(sql, [regno, year, semester], (err, rows) => {
-    if (err) return res.status(500).json({ error: err });
-    res.json(rows);
+    if (err) {
+      console.error("❌ Error fetching mid marks:", err);
+      return res.status(500).json({ error: "DB error while fetching mid marks" });
+    }
+
+    if (rows.length === 0) {
+      console.warn("⚠️ No mid marks found for:", { regno, year, semester });
+      return res.json({ regno, year, semester, midmarks: [] });
+    }
+
+    res.json({
+      regno,
+      year,
+      semester,
+      midmarks: rows,
+    });
   });
 });
+
 
 
 
