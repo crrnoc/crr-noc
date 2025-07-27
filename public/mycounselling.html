@@ -405,7 +405,7 @@
   <div class="modal-content" style="background: white; padding: 20px; border-radius: 10px;">
     <span class="modal-close" onclick="closeModal()" style="float: right; cursor: pointer; font-size: 20px;">✖</span>
     <h2 style="margin-top: 0;">📊 Mid Marks Details</h2>
-    <div id="modalMidMarksContent">
+    <div id="modalmidmarksContent">
       <!-- Mid marks will be injected here -->
     </div>
   </div>
@@ -559,7 +559,7 @@
     // Mid Marks
     document.getElementById("midYearSelect").value = "";
     document.getElementById("midSemesterSelect").value = "";
-    document.getElementById("midMarksContent").innerHTML = "";
+    document.getElementById("midmarksContent").innerHTML = "";
 
     // Attach listeners for midmarks dropdowns
     document.getElementById("midYearSelect").onchange = fetchMidMarks;
@@ -580,7 +580,7 @@
     fetch(`/student/midmarks/${currentStudent.reg_no}?year=${year}&semester=${semester}`)
       .then(res => res.json())
       .then(data => {
-        const container = document.getElementById("midMarksContent");
+        const container = document.getElementById("midmarksContent");
         if (!data.length) {
           container.innerHTML = "<p>No mid marks found for selected year and semester.</p>";
           return;
@@ -618,7 +618,7 @@
       })
       .catch(err => {
         console.error("Error fetching mid marks:", err);
-        document.getElementById("midMarksContent").innerHTML = "<p>Error loading mid marks.</p>";
+        document.getElementById("midmarksContent").innerHTML = "<p>Error loading mid marks.</p>";
       });
   }
 
