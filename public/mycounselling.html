@@ -376,28 +376,41 @@
 </div>
 
 <!-- Mid Marks Section -->
+<!-- Mid Marks Tab -->
 <div id="midmarksTab" style="display: none;">
   <h3 style="margin-top: 20px; border-bottom: 1px solid #ddd; padding-bottom: 6px;">📝 Mid Marks</h3>
-<h4 style="margin-bottom: 8px;">📅 Select Year and Semester to View Mid Marks:</h4>
+  <h4 style="margin-bottom: 8px;">📅 Select Year and Semester to View Mid Marks:</h4>
 
-<label for="midYearSelect">Year:</label>
-<select id="yearSelect">
-  <option value="">Select Year</option>
-  <option value="1">1st Year</option>
-  <option value="2">2nd Year</option>
-  <option value="3">3rd Year</option>
-  <option value="4">4th Year</option>
-</select>
+  <label for="midYearSelect">Year:</label>
+  <select id="midYearSelect">
+    <option value="">Select Year</option>
+    <option value="1">1st Year</option>
+    <option value="2">2nd Year</option>
+    <option value="3">3rd Year</option>
+    <option value="4">4th Year</option>
+  </select>
 
-<label for="midSemesterSelect" style="margin-left: 15px;">Semester:</label>
-<select id="midSemesterSelect">
-  <option value="">Select Semester</option>
-  <option value="1">1</option>
-  <option value="2">2</option>
-</select>
+  <label for="midSemesterSelect" style="margin-left: 15px;">Semester:</label>
+  <select id="midSemesterSelect">
+    <option value="">Select Semester</option>
+    <option value="1">1</option>
+    <option value="2">2</option>
+  </select>
 
-  <div id="midmarksContent"></div>
+  <div id="midmarksContent" style="margin-top: 20px;"></div>
 </div>
+
+<!-- 🪟 Modal for Mid Marks -->
+<div id="midMarksModal" class="modal" style="display: none;">
+  <div class="modal-content" style="background: white; padding: 20px; border-radius: 10px;">
+    <span class="modal-close" onclick="closeModal()" style="float: right; cursor: pointer; font-size: 20px;">✖</span>
+    <h2 style="margin-top: 0;">📊 Mid Marks Details</h2>
+    <div id="modalMidMarksContent">
+      <!-- Mid marks will be injected here -->
+    </div>
+  </div>
+</div>
+
 
 
 <!-- Close Button -->
@@ -471,9 +484,11 @@
     document.body.style.overflow = "hidden";
     showTab("attendance");
 
+    // Attendance
     fetch(`/student-attendance/${student.reg_no}`)
       .then(res => res.json())
       .then(data => {
+        const container = document.getElementById("attendanceContent");
         if (data.success && data.data.length > 0) {
           const rows = data.data.map(row => `
             <tr>
@@ -482,7 +497,7 @@
               <td>${row.attended_classes}</td>
               <td>${row.percentage}%</td>
             </tr>`).join("");
-          document.getElementById("attendanceContent").innerHTML = `
+          container.innerHTML = `
             <table>
               <tr>
                 <th>Semester</th>
@@ -494,7 +509,7 @@
             </table>
           `;
         } else {
-          document.getElementById("attendanceContent").innerHTML = "No attendance data available.";
+          container.innerHTML = "No attendance data available.";
         }
       });
 
@@ -510,6 +525,7 @@
       fetch(`/student/results/${student.reg_no}?semester=${semester}`)
         .then(res => res.json())
         .then(data => {
+          const container = document.getElementById("resultsContent");
           if (data.results && data.results.length > 0) {
             const subjectRows = data.results.map(r => `
               <tr>
@@ -518,7 +534,7 @@
                 <td>${r.grade}</td>
                 <td>${r.credits}</td>
               </tr>`).join("");
-            document.getElementById("resultsContent").innerHTML = `
+            container.innerHTML = `
               <table>
                 <tr>
                   <th>Sub Code</th>
@@ -535,7 +551,7 @@
               </div>
             `;
           } else {
-            document.getElementById("resultsContent").innerHTML = "No result data for selected semester.";
+            container.innerHTML = "No result data for selected semester.";
           }
         });
     };
@@ -544,63 +560,67 @@
     document.getElementById("yearSelect").value = "";
     document.getElementById("midSemesterSelect").value = "";
     document.getElementById("midMarksContent").innerHTML = "";
+
+    // Attach listeners for midmarks dropdowns
+    document.getElementById("yearSelect").onchange = fetchMidMarks;
+    document.getElementById("midSemesterSelect").onchange = fetchMidMarks;
   }
 
-function fetchMidMarks() {
-  if (!currentStudent) return;
+  function fetchMidMarks() {
+    if (!currentStudent) return;
 
-  const year = document.getElementById("yearSelect").value;
-  const semester = document.getElementById("midSemesterSelect").value;
+    const year = document.getElementById("yearSelect").value;
+    const semester = document.getElementById("midSemesterSelect").value;
 
-  if (!year || !semester) {
-    Swal.fire("Select Year & Semester", "", "warning");
-    return;
-  }
+    if (!year || !semester) {
+      Swal.fire("Select Year & Semester", "", "warning");
+      return;
+    }
 
-  fetch(`/student/midmarks/${currentStudent.reg_no}?year=${year}&semester=${semester}`)
-    .then(res => res.json())
-    .then(data => {
-      const container = document.getElementById("midMarksContent");
-      if (!data.length) {
-        container.innerHTML = "<p>No mid marks found for selected year and semester.</p>";
-        return;
-      }
+    fetch(`/student/midmarks/${currentStudent.reg_no}?year=${year}&semester=${semester}`)
+      .then(res => res.json())
+      .then(data => {
+        const container = document.getElementById("midMarksContent");
+        if (!data.length) {
+          container.innerHTML = "<p>No mid marks found for selected year and semester.</p>";
+          return;
+        }
 
-      let html = `
-        <table border="1" cellpadding="8" cellspacing="0">
-          <tr>
-            <th>Subject Code</th>
-            <th>Mid 1</th>
-            <th>A1</th>
-            <th>Q1</th>
-            <th>Mid 2</th>
-            <th>A2</th>
-            <th>Q2</th>
-            <th>Status</th>
-          </tr>
-      `;
-      data.forEach(row => {
-        html += `
-          <tr>
-            <td>${row.sub_code}</td>
-            <td>${row.mid1}</td>
-            <td>${row.a1}</td>
-            <td>${row.q1}</td>
-            <td>${row.mid2}</td>
-            <td>${row.a2}</td>
-            <td>${row.q2}</td>
-            <td>${row.lds_or_status}</td>
-          </tr>
+        let html = `
+          <table border="1" cellpadding="8" cellspacing="0">
+            <tr>
+              <th>Subject Code</th>
+              <th>Mid 1</th>
+              <th>A1</th>
+              <th>Q1</th>
+              <th>Mid 2</th>
+              <th>A2</th>
+              <th>Q2</th>
+              <th>Status</th>
+            </tr>
         `;
+        data.forEach(row => {
+          html += `
+            <tr>
+              <td>${row.sub_code}</td>
+              <td>${row.mid1}</td>
+              <td>${row.a1}</td>
+              <td>${row.q1}</td>
+              <td>${row.mid2}</td>
+              <td>${row.a2}</td>
+              <td>${row.q2}</td>
+              <td>${row.lds_or_status}</td>
+            </tr>
+          `;
+        });
+        html += `</table>`;
+        container.innerHTML = html;
+      })
+      .catch(err => {
+        console.error("Error fetching mid marks:", err);
+        document.getElementById("midMarksContent").innerHTML = "<p>Error loading mid marks.</p>";
       });
-      html += `</table>`;
-      container.innerHTML = html;
-    })
-    .catch(err => {
-      console.error("Error fetching mid marks:", err);
-      document.getElementById("midMarksContent").innerHTML = "<p>Error loading mid marks.</p>";
-    });
-}
+  }
 
   function showTab(tabName) {
     const tabs = ['attendance', 'results', 'midmarks'];
