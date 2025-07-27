@@ -557,7 +557,7 @@ function fetchMidMarks() {
     return;
   }
 
-  fetch(`/get-midmarks?regno=${currentStudent.reg_no}&year=${year}&semester=${semester}`)
+  fetch(`/student/midmarks/${currentStudent.reg_no}?year=${year}&semester=${semester}`)
     .then(res => res.json())
     .then(data => {
       const container = document.getElementById("midMarksContent");
