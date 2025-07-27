@@ -83,22 +83,21 @@
       margin: auto;
       box-shadow: 0 0 25px rgba(0, 0, 0, 0.3);
       animation: fadeIn 1s ease;
+      text-align: center;
     }
 
     .upload-container h2 {
-      text-align: center;
       color: #00d4ff;
       margin-bottom: 25px;
     }
 
     .upload-container input[type="file"] {
-      display: block;
-      margin: 20px auto;
-      border: 2px dashed #00d4ff;
+      margin: 20px 0;
       padding: 14px;
       width: 100%;
       border-radius: 12px;
       background: rgba(255, 255, 255, 0.05);
+      border: 2px dashed #00d4ff;
       cursor: pointer;
       color: white;
       transition: 0.3s ease;
@@ -109,8 +108,7 @@
     }
 
     .upload-container button {
-      display: block;
-      margin: 30px auto 0;
+      margin-top: 20px;
       padding: 12px 28px;
       background: linear-gradient(to right, #00d4ff, #004e92);
       color: white;
@@ -178,80 +176,74 @@
     <div class="upload-container">
       <h2>📚 Upload Student Data (CSV/XLSX)</h2>
       <form id="uploadForm" enctype="multipart/form-data">
-        <input type="file" name="studentfile" accept=".csv, .xlsx" required />
+        <input type="file" name="studentfile" accept=".csv,.xlsx" required />
         <button type="submit">📤 Upload</button>
       </form>
     </div>
   </div>
 
-<script>
-  // 🔁 Page navigation handler
-  function navigateTo(route) {
-    window.location.href = route;
-  }
-
-  // 📱 Toggle sidebar on mobile
-  function toggleSidebar() {
-    document.querySelector('.sidebar').classList.toggle('open');
-  }
-
-  // 🚪 Logout logic
-  function logout() {
-    fetch("/logout")
-      .then(() => {
-        localStorage.removeItem("userId");
-        window.location.replace("index.html");
-      })
-      .catch((err) => {
-        console.error("Logout failed:", err);
-        alert("Logout failed. Try again.");
-      });
-  }
-
-  // 🔐 Session check on page load
-  window.onload = function () {
-    fetch('/check-session')
-      .then(res => {
-        if (!res.ok) throw new Error("Unauthorized");
-      })
-      .catch(err => {
-        localStorage.removeItem("userId");
-        window.location.replace("index.html");
-      });
-
-    // 🚫 Disable back button
-    window.history.pushState(null, "", window.location.href);
-    window.onpopstate = function () {
-      window.history.pushState(null, "", window.location.href);
-    };
-  };
-
-  // 📤 Student Upload Handler
-  document.getElementById("uploadForm").addEventListener("submit", async function (e) {
-    e.preventDefault();
-
-    const form = e.target;
-    const formData = new FormData(form);
-
-    try {
-      const response = await fetch("/admin/upload-students", {
-        method: "POST",
-        body: formData
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        alert(`✅ Upload successful! ${result.message || "Students inserted into the database."}`);
-        form.reset(); // Optional: clear file input after upload
-      } else {
-        alert(`❌ Upload failed: ${result.message || "Unknown error."}`);
-      }
-    } catch (err) {
-      console.error("Upload error:", err);
-      alert("🚨 Something went wrong while uploading!");
+  <script>
+    function navigateTo(route) {
+      window.location.href = route;
     }
-  });
-</script>
+
+    function toggleSidebar() {
+      document.querySelector('.sidebar').classList.toggle('open');
+    }
+
+    function logout() {
+      fetch("/logout")
+        .then(() => {
+          localStorage.removeItem("userId");
+          window.location.replace("index.html");
+        })
+        .catch((err) => {
+          console.error("Logout failed:", err);
+          alert("Logout failed. Try again.");
+        });
+    }
+
+    window.onload = function () {
+      fetch('/check-session')
+        .then(res => {
+          if (!res.ok) throw new Error("Unauthorized");
+        })
+        .catch(err => {
+          localStorage.removeItem("userId");
+          window.location.replace("index.html");
+        });
+
+      window.history.pushState(null, "", window.location.href);
+      window.onpopstate = function () {
+        window.history.pushState(null, "", window.location.href);
+      };
+    };
+
+    document.getElementById("uploadForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const form = e.target;
+      const formData = new FormData(form);
+
+      try {
+        const response = await fetch("/admin/upload-students", {
+          method: "POST",
+          body: formData
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          alert(`✅ Upload successful!\n\n${result.message || "Students inserted."}`);
+          form.reset();
+        } else {
+          alert(`❌ Upload failed:\n\n${result.message || "Unknown error."}`);
+        }
+      } catch (err) {
+        console.error("Upload error:", err);
+        alert("🚨 Something went wrong while uploading!");
+      }
+    });
+  </script>
 </body>
 </html>
