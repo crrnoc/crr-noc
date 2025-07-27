@@ -3007,40 +3007,35 @@ app.get("/hod/backlog-summary", (req, res) => {
 });
 
 
-
 app.post('/admin/upload-students', upload.single("studentfile"), (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ success: false, message: "No file uploaded" });
-  }
+  if (!req.file) return res.status(400).json({ success: false, message: "No file uploaded" });
 
   const fileExt = path.extname(req.file.originalname).toLowerCase();
   let results = [];
 
   const insertStudents = (rows) => {
     let insertCount = 0;
+    let updateCount = 0;
 
     rows.forEach((student) => {
-      // ✅ Handle weird BOM characters in userId
-      let userId = student.userId || student["﻿userId"] || "";
-      userId = userId.trim();
+      student = cleanRow(student);
 
-      const reg_no = student.reg_no || "";
-      const uniqueId = student.uniqueId || "";
-      const year = student.year || "";
-      const course = student.course || "";
-      const semester = student.semester || "";
-      const section = student.section || "";
-      const counsellor_name = student.counsellor_name || "";
-      const counsellor_mobile = student.counsellor_mobile || "";
+      const userId = student.userId?.trim();
+      const reg_no = student.reg_no?.trim();
+      const uniqueId = student.uniqueId?.trim();
 
-      // ❗ Minimum required to insert
-      if (!userId || !reg_no || !uniqueId || !year || !course || !semester || !section || !counsellor_name || !counsellor_mobile) {
+      // Minimum check: only these 3
+      if (!userId || !reg_no || !uniqueId) {
         console.warn("❌ Skipping row due to missing critical fields:", student);
         return;
       }
 
-      // Insert into users
-      const userQuery = "INSERT IGNORE INTO users (userid, password, role) VALUES (?, ?, 'student')";
+      // Insert or ignore user
+      const userQuery = `
+        INSERT INTO users (userid, password, role) VALUES (?, ?, 'student')
+        ON DUPLICATE KEY UPDATE password = VALUES(password)
+      `;
+
       connection.query(userQuery, [userId, userId], (userErr) => {
         if (userErr) {
           console.error("❌ User insert failed:", userErr);
@@ -3054,74 +3049,78 @@ app.post('/admin/upload-students', upload.single("studentfile"), (req, res) => {
             admission_type, photo_url, photo_public_id, section,
             counsellor_name, counsellor_mobile, counsellor_id
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          ON DUPLICATE KEY UPDATE
+            name = VALUES(name), dob = VALUES(dob), year = VALUES(year),
+            course = VALUES(course), dept_code = VALUES(dept_code), semester = VALUES(semester),
+            aadhar_no = VALUES(aadhar_no), mobile_no = VALUES(mobile_no), email = VALUES(email),
+            father_name = VALUES(father_name), father_mobile = VALUES(father_mobile),
+            admission_type = VALUES(admission_type), photo_url = VALUES(photo_url),
+            photo_public_id = VALUES(photo_public_id), section = VALUES(section),
+            counsellor_name = VALUES(counsellor_name), counsellor_mobile = VALUES(counsellor_mobile),
+            counsellor_id = VALUES(counsellor_id)
         `;
 
         const values = [
           userId,
-          student.name || '',
+          student.name || null,
           student.dob || null,
           reg_no,
           uniqueId,
-          year,
-          course,
-          student.dept_code || '',
-          semester,
-          student.aadhar_no || '',
-          student.mobile_no || '',
-          student.email || '',
-          student.father_name || '',
-          student.father_mobile || '',
-          student.admission_type || '',
-          student.photo_url || '',
-          student.photo_public_id || '',
-          section,
-          counsellor_name,
-          counsellor_mobile,
-          student.counsellor_id || ''
+          student.year || null,
+          student.course || null,
+          student.dept_code || null,
+          student.semester || null,
+          student.aadhar_no || null,
+          student.mobile_no || null,
+          student.email || null,
+          student.father_name || null,
+          student.father_mobile || null,
+          student.admission_type || null,
+          student.photo_url || null,
+          student.photo_public_id || null,
+          student.section || null,
+          student.counsellor_name || null,
+          student.counsellor_mobile || null,
+          student.counsellor_id || null
         ];
 
-        connection.query(studentQuery, values, (studentErr) => {
+        connection.query(studentQuery, values, (studentErr, result) => {
           if (studentErr) {
-            console.error("❌ Student insert failed:", studentErr);
+            console.error("❌ Student insert/update failed:", studentErr);
           } else {
-            insertCount++;
+            if (result.affectedRows === 1) insertCount++;
+            else if (result.affectedRows === 2) updateCount++;
           }
         });
       });
     });
 
-    fs.unlinkSync(req.file.path); // Clean up uploaded file
+    fs.unlinkSync(req.file.path);
 
     setTimeout(() => {
-      res.json({ success: true, message: `✅ Upload complete! ${insertCount} students inserted.` });
+      res.json({
+        success: true,
+        message: `✅ Upload complete! ${insertCount} inserted, ${updateCount} updated.`,
+      });
     }, 1500);
   };
 
-  // Detect and parse file
-  //mid marks
+  // Handle file parsing
   if (fileExt === ".csv") {
     fs.createReadStream(req.file.path)
       .pipe(csv())
-      .on("data", (row) => results.push(row))
+      .on("data", (row) => results.push(cleanRow(row)))
       .on("end", () => insertStudents(results));
   } else if (fileExt === ".xlsx") {
     const workbook = xlsx.readFile(req.file.path);
     const sheetName = workbook.SheetNames[0];
     results = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
+    results = results.map(cleanRow);
     insertStudents(results);
   } else {
     fs.unlinkSync(req.file.path);
     return res.status(400).json({ success: false, message: "Unsupported file format." });
   }
-});
-
-//upload mid marks
-// Setup for CSV file upload
-const storage = multer.diskStorage({
-  destination: "uploads/",
-  filename: (req, file, cb) => {
-    cb(null, "mid_marks_" + Date.now() + path.extname(file.originalname));
-  },
 });
 
 app.post("/upload-midmarks", upload.single("file"), (req, res) => {
