@@ -579,12 +579,13 @@
 
     fetch(`/student/midmarks/${currentStudent.reg_no}?year=${year}&semester=${semester}`)
       .then(res => res.json())
-      .then(data => {
-        const container = document.getElementById("midmarksContent");
-        if (!data.length) {
-          container.innerHTML = "<p>No mid marks found for selected year and semester.</p>";
-          return;
-        }
+    .then(data => {
+  const container = document.getElementById("midmarksContent");
+  if (!data.midmarks || data.midmarks.length === 0) {
+    container.innerHTML = "<p>No mid marks found for selected year and semester.</p>";
+    return;
+  }
+
 
         let html = `
           <table border="1" cellpadding="8" cellspacing="0">
@@ -599,7 +600,7 @@
               <th>Status</th>
             </tr>
         `;
-        data.forEach(row => {
+       data.midmarks.forEach(row => {
           html += `
             <tr>
               <td>${row.sub_code}</td>
