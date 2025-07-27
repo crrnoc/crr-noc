@@ -3097,6 +3097,7 @@ app.post('/admin/upload-students', upload.single("studentfile"), (req, res) => {
   }
 });
 
+//upload mid marks
 // Setup for CSV file upload
 const storage = multer.diskStorage({
   destination: "uploads/",
@@ -3105,7 +3106,6 @@ const storage = multer.diskStorage({
   },
 });
 
-// Route: Upload CSV file
 app.post("/upload-midmarks", upload.single("file"), (req, res) => {
   const filePath = req.file.path;
   const results = [];
@@ -3117,16 +3117,16 @@ app.post("/upload-midmarks", upload.single("file"), (req, res) => {
         row["CC"],
         row["HALLTICKET"],
         row["SUB CODE"],
-        row["MID1"],
-        row["A1"],
-        row["Q1"],
-        row["MID2"],
-        row["A2"],
-        row["Q2"],
-        row["LDS / STATUS"],
-        row["REGULATION"],
+        row["MID-1 (15M)"],
+        row["A-1(5M)"],
+        row["Q-1(20M)"],
+        row["MID-2(15M)"],
+        row["A-2(5M)"],
+        row["Q-2(20M)"],
+        row["LDS(30)/STATUS"],
+        row["REG"],
         row["YEAR"],
-        row["SEMESTER"],
+        row["SEM"],
       ]);
     })
     .on("end", () => {
@@ -3142,3 +3142,4 @@ app.post("/upload-midmarks", upload.single("file"), (req, res) => {
       });
     });
 });
+
