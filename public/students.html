@@ -176,80 +176,92 @@
     <div class="row" id="studentCards"></div>
   </div>
 
-  <script>
-    const staffId = localStorage.getItem("userId");
-    const welcomeText = document.getElementById("welcomeHOD");
+<script>
+  const staffId = localStorage.getItem("userId");
+  const welcomeText = document.getElementById("welcomeHOD");
 
-    if (!staffId || !staffId.startsWith("HOD")) {
-      alert("❌ You must be logged in as HOD");
-      window.location.href = "index.html";
-    } else {
-      const dept = staffId.replace("HOD", "");
-      welcomeText.textContent = `Welcome Head of Department - ${dept}`;
+  // 🔒 Authentication Check
+  if (!staffId || !staffId.startsWith("HOD")) {
+    alert("❌ You must be logged in as HOD");
+    window.location.href = "index.html";
+  } else {
+    const dept = staffId.replace("HOD", "");
+    welcomeText.textContent = `Welcome Head of Department - ${dept}`;
+  }
+
+  // 🔓 Logout
+  function logout() {
+    localStorage.clear();
+    window.location.href = "index.html";
+  }
+
+  // 📱 Sidebar Toggle
+  function toggleSidebar() {
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.getElementById("overlay");
+    const mainContent = document.getElementById("main-content");
+    sidebar.classList.toggle("open");
+    overlay.classList.toggle("active");
+    mainContent.classList.toggle("shifted");
+  }
+
+  let allStudents = [];
+
+  // 📦 Render Student Cards
+  function renderCards(students) {
+    const container = document.getElementById("studentCards");
+    container.innerHTML = "";
+
+    if (students.length === 0) {
+      container.innerHTML = `<p class="text-center text-muted">No matching students found.</p>`;
+      return;
     }
 
-    function logout() {
-      localStorage.clear();
-      window.location.href = "index.html";
-    }
-
-    function toggleSidebar() {
-      const sidebar = document.getElementById("sidebar");
-      const overlay = document.getElementById("overlay");
-      const mainContent = document.getElementById("main-content");
-      sidebar.classList.toggle("open");
-      overlay.classList.toggle("active");
-      mainContent.classList.toggle("shifted");
-    }
-
-    let allStudents = [];
-
-    function renderCards(students) {
-      const container = document.getElementById("studentCards");
-      container.innerHTML = "";
-      students.forEach((student) => {
-        const col = document.createElement("div");
-        col.className = "col-md-6 col-lg-4 mb-4";
-        col.innerHTML = `
-          <div class="card shadow-sm">
-            <div class="card-body">
-              <h5 class="card-title fw-bold">${student.name}</h5>
-              <p class="card-text">
-                <strong>Reg No:</strong> ${student.reg_no}<br>
-                <strong>Course:</strong> ${student.course}<br>
-                <strong>Year:</strong> ${student.year}, Section: ${student.section}<br>
-                <strong>Mobile:</strong> ${student.mobile_no}<br>
-                <strong>Email:</strong> ${student.email}<br>
-                <strong>Father:</strong> ${student.father_name}, ${student.father_mobile}
-              </p>
-            </div>
+    students.forEach((student) => {
+      const col = document.createElement("div");
+      col.className = "col-md-6 col-lg-4 mb-4";
+      col.innerHTML = `
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <h5 class="card-title fw-bold">${student.name || 'N/A'}</h5>
+            <p class="card-text">
+              <strong>Reg No:</strong> ${student.reg_no || 'N/A'}<br>
+              <strong>Course:</strong> ${student.course || 'N/A'}<br>
+              <strong>Year:</strong> ${student.year || 'N/A'}, Section: ${student.section || 'N/A'}<br>
+              <strong>Mobile:</strong> ${student.mobile_no || 'N/A'}<br>
+              <strong>Email:</strong> ${student.email || 'N/A'}<br>
+              <strong>Father:</strong> ${student.father_name || 'N/A'}, ${student.father_mobile || 'N/A'}
+            </p>
           </div>
-        `;
-        container.appendChild(col);
-      });
-    }
-
-    fetch(`/hod/students?staffId=${staffId}`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (!data.students) throw new Error(data.error || "Invalid response");
-        allStudents = data.students;
-        renderCards(allStudents);
-      })
-      .catch((err) => {
-        console.error("❌ Failed to load students:", err);
-        Swal.fire("Error", "Failed to load students.", "error");
-      });
-
-    document.getElementById("searchInput").addEventListener("input", (e) => {
-      const q = e.target.value.toLowerCase();
-      const filtered = allStudents.filter((s) =>
-        s.name.toLowerCase().includes(q) ||
-        s.reg_no.toLowerCase().includes(q) ||
-        s.course.toLowerCase().includes(q)
-      );
-      renderCards(filtered);
+        </div>
+      `;
+      container.appendChild(col);
     });
-  </script>
+  }
+
+  // 🔄 Fetch Students on Page Load
+  fetch(`/hod/students?staffId=${staffId}`)
+    .then((res) => res.json())
+    .then((data) => {
+      if (!data.students) throw new Error(data.error || "Invalid response");
+      allStudents = data.students;
+      renderCards(allStudents);
+    })
+    .catch((err) => {
+      console.error("❌ Failed to load students:", err);
+      Swal.fire("Error", "Failed to load students.", "error");
+    });
+
+  // 🔍 Live Search with Safe Checks
+  document.getElementById("searchInput").addEventListener("input", (e) => {
+    const q = e.target.value.toLowerCase();
+    const filtered = allStudents.filter((s) =>
+      (s.name?.toLowerCase() || "").includes(q) ||
+      (s.reg_no?.toLowerCase() || "").includes(q) ||
+      (s.course?.toLowerCase() || "").includes(q)
+    );
+    renderCards(filtered);
+  });
+</script>
 </body>
 </html>
