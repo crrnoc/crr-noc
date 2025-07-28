@@ -2,44 +2,60 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>HOD - View Student Mid Marks</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mid Marks Search</title>
   <style>
     body {
       font-family: Arial, sans-serif;
+      margin: 20px;
+      background: #f2f2f2;
+    }
+
+    h1 {
+      color: #333;
+    }
+
+    form {
+      background: #fff;
       padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      margin-bottom: 30px;
+      max-width: 600px;
     }
 
-    h2 {
-      text-align: center;
-      margin-bottom: 20px;
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: bold;
     }
 
-    .form-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 15px;
-      justify-content: center;
-      margin-bottom: 20px;
-    }
-
-    select, input, button {
-      padding: 8px 12px;
-      font-size: 16px;
+    select, input[type="text"] {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 15px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
     }
 
     button {
       background-color: #007bff;
-      color: white;
+      color: #fff;
+      padding: 10px 15px;
       border: none;
-      cursor: pointer;
       border-radius: 4px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 20px;
+      background: #fff;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
     }
 
     th, td {
@@ -49,105 +65,106 @@
     }
 
     th {
-      background-color: #f2f2f2;
+      background-color: #007bff;
+      color: white;
     }
 
-    #noData {
-      text-align: center;
-      color: #888;
-      margin-top: 20px;
+    #resultTable {
+      display: none;
+    }
+
+    .no-results {
+      color: red;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
-  <h2>🔍 HOD - View Student Mid Marks</h2>
 
-  <div class="form-container">
-    <input type="text" id="regnoInput" placeholder="Enter RegNo or Name" />
-    <select id="yearSelect" onchange="updateSemesterOptions()">
-      <option value="">Select Year</option>
+  <h1>Search Student Mid Marks</h1>
+
+  <form id="searchForm" onsubmit="searchMidmarks(event)">
+    <label for="year">Select Year:</label>
+    <select id="year" name="year" required>
+      <option value="" disabled selected>Select Year</option>
       <option value="1">1st Year</option>
       <option value="2">2nd Year</option>
       <option value="3">3rd Year</option>
       <option value="4">4th Year</option>
     </select>
 
-    <select id="semSelect">
-      <option value="">Select Semester</option>
+    <label for="semester">Select Semester:</label>
+    <select id="semester" name="semester" required>
+      <option value="" disabled selected>Select Semester</option>
+      <option value="1">1</option>
+      <option value="2">2</option>
     </select>
 
-    <button onclick="fetchMidMarks()">Search</button>
+    <label for="query">Search Reg No or Name:</label>
+    <input type="text" id="query" name="query" placeholder="Enter Reg No or Name" required />
+
+    <button type="submit">Search</button>
+  </form>
+
+  <div id="resultSection">
+    <table id="resultTable">
+      <thead>
+        <tr>
+          <th>Reg No</th>
+          <th>Name</th>
+          <th>Subject</th>
+          <th>Mid I</th>
+          <th>Mid II</th>
+          <th>Average</th>
+        </tr>
+      </thead>
+      <tbody id="resultBody">
+        <!-- Results will appear here -->
+      </tbody>
+    </table>
+    <p class="no-results" id="noResults" style="display: none;">No records found.</p>
   </div>
 
-  <table id="marksTable" style="display:none">
-    <thead>
-      <tr>
-        <th>Subject Code</th>
-        <th>Subject Name</th>
-        <th>Mid 1</th>
-        <th>Mid 2</th>
-        <th>Average</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-
-  <div id="noData"></div>
-
   <script>
-    function updateSemesterOptions() {
-      const semSelect = document.getElementById("semSelect");
-      semSelect.innerHTML = `
-        <option value="">Select Semester</option>
-        <option value="1">Semester 1</option>
-        <option value="2">Semester 2</option>
-      `;
-    }
+    async function searchMidmarks(event) {
+      event.preventDefault();
 
-    async function fetchMidMarks() {
-      const regno = document.getElementById("regnoInput").value.trim();
-      const year = document.getElementById("yearSelect").value;
-      const semester = document.getElementById("semSelect").value;
-      const table = document.getElementById("marksTable");
-      const tbody = table.querySelector("tbody");
-      const noData = document.getElementById("noData");
+      const year = document.getElementById("year").value;
+      const semester = document.getElementById("semester").value;
+      const query = document.getElementById("query").value;
 
-      table.style.display = "none";
-      noData.innerText = "";
-      tbody.innerHTML = "";
+      const response = await fetch(`/api/midmarks/search?query=${encodeURIComponent(query)}&year=${year}&semester=${semester}`);
+      const data = await response.json();
 
-      if (!regno || !year || !semester) {
-        alert("Please fill all fields.");
+      const table = document.getElementById("resultTable");
+      const tbody = document.getElementById("resultBody");
+      const noResults = document.getElementById("noResults");
+
+      tbody.innerHTML = ""; // Clear previous results
+
+      if (data.length === 0) {
+        table.style.display = "none";
+        noResults.style.display = "block";
         return;
       }
 
-      try {
-        const res = await fetch(`/student/midmarks/${regno}?year=${year}&semester=${semester}`);
-        const data = await res.json();
+      noResults.style.display = "none";
+      table.style.display = "table";
 
-        if (!data || data.length === 0) {
-          noData.innerText = "No mid marks found for this student.";
-          return;
-        }
-
-        data.forEach((row) => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${row.subcode}</td>
-            <td>${row.subname}</td>
-            <td>${row.mid1 ?? '-'}</td>
-            <td>${row.mid2 ?? '-'}</td>
-            <td>${row.average ?? '-'}</td>
-          `;
-          tbody.appendChild(tr);
-        });
-
-        table.style.display = "table";
-      } catch (error) {
-        console.error("Error fetching data", error);
-        noData.innerText = "Something went wrong while fetching data.";
-      }
+      data.forEach(entry => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${entry.regno}</td>
+          <td>${entry.name}</td>
+          <td>${entry.subcode}</td>
+          <td>${entry.mid1}</td>
+          <td>${entry.mid2}</td>
+          <td>${entry.average}</td>
+        `;
+        tbody.appendChild(row);
+      });
     }
   </script>
+
 </body>
 </html>
