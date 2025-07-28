@@ -3219,8 +3219,12 @@ app.get("/api/midmarks/search", (req, res) => {
       s.name,
       m.sub_code AS subcode,
       m.mid1,
+      m.a1,
+      m.q1,
       m.mid2,
-      ROUND((IFNULL(m.mid1, 0) + IFNULL(m.mid2, 0)) / 2, 1) AS average
+      m.a2,
+      m.q2,
+      m.lds_or_status
     FROM mid_internal_marks m
     JOIN student_info s ON m.hallticket = s.hallticket
     WHERE 
@@ -3240,6 +3244,7 @@ app.get("/api/midmarks/search", (req, res) => {
     res.json(results);
   });
 });
+
 
 
 
