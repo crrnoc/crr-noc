@@ -109,6 +109,9 @@ app.get("/createnoc", requireAdminSession, (req, res) => {
 app.get("/uploadstudents", requireAdminSession, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "uploadstudents.html"));
 });
+app.get("/uploadmidmarks", requireAdminSession, (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "uploadmid-marks.html"));
+});
 app.use("/uploads", express.static(path.join(__dirname, "uploads"))); // for previews
 
 // ✅ MySQL connection
