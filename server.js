@@ -3204,49 +3204,39 @@ const sql = `
   });
 });
 //hod mid marks 
-app.get("/api/midmarks/search", (req, res) => {
+app.get('/api/midmarks/search', async (req, res) => {
   const { query, year, semester } = req.query;
 
   if (!query || !year || !semester) {
-    return res.status(400).json({ error: "Missing required query parameters" });
+    return res.status(400).json({ error: 'Missing query, year, or semester' });
   }
 
-  console.log("🔍 Mid Marks Search:", { query, year, semester });
+  try {
+    const [rows] = await db.execute(
+      `SELECT 
+         hallticket AS regno,
+         sub_code AS subcode,
+         mid1,
+         a1,
+         q1,
+         mid2,
+         a2,
+         q2,
+         lds_or_status
+       FROM mid_internal_marks
+       WHERE hallticket = ?
+         AND year = ?
+         AND semester = ?`,
+      [query, year, semester]
+    );
 
-  const sql = `
-    SELECT 
-      m.hallticket AS regno,
-      s.name,
-      m.sub_code AS subcode,
-      m.mid1,
-      m.a1,
-      m.q1,
-      m.mid2,
-      m.a2,
-      m.q2,
-      m.lds_or_status
-    FROM mid_internal_marks m
-    JOIN student_info s ON m.hallticket = s.hallticket
-    WHERE 
-      (m.hallticket LIKE ? OR s.name LIKE ?)
-      AND TRIM(m.year) = ?
-      AND TRIM(m.semester) = ?
-  `;
-
-  const likeQuery = `%${query}%`;
-
-  connection.query(sql, [likeQuery, likeQuery, year, semester], (err, results) => {
-    if (err) {
-      console.error("❌ DB Error:", err);
-      return res.status(500).json({ error: "Internal Server Error" });
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'No data found' });
     }
 
-    res.json(results);
-  });
+    res.json(rows);
+  } catch (err) {
+    console.error('❌ Error fetching mid marks:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
-
-
-
-
-
-
