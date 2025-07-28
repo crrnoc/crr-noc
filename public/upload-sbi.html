@@ -109,6 +109,7 @@
       <li onclick="navigateTo('noc-status.html')">📜 NOC Status</li>
       <li onclick="navigateTo('removestudents.html')">🗑️ Delete Students</li>
       <li onclick="navigateTo('createnocAd.html')">📝 Create NOC</li>
+      <li onclick="navigateTo('uploadstudents.html')">📚 Upload Student Data</li>
     </ul>
     <button onclick="logout()">🚪 Logout</button>
   </div>
@@ -147,7 +148,8 @@
         'du-match-status.html': '/dumatch',
         'noc-status.html': '/nocstatus',
         'removestudents.html': '/removestudents',
-        'createnocAd.html': '/createnoc'
+        'createnocAd.html': '/createnoc',
+        'uploadstudents.html':'/uploadstudents'
       };
       window.location.href = routes[route] || '/adminpanel';
     }
