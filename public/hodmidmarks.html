@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>HOD - View Student Mid Marks</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .form-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    select, input, button {
+      padding: 8px 12px;
+      font-size: 16px;
+    }
+
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: center;
+    }
+
+    th {
+      background-color: #f2f2f2;
+    }
+
+    #noData {
+      text-align: center;
+      color: #888;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h2>🔍 HOD - View Student Mid Marks</h2>
+
+  <div class="form-container">
+    <input type="text" id="regnoInput" placeholder="Enter RegNo or Name" />
+    <select id="yearSelect" onchange="updateSemesterOptions()">
+      <option value="">Select Year</option>
+      <option value="1">1st Year</option>
+      <option value="2">2nd Year</option>
+      <option value="3">3rd Year</option>
+      <option value="4">4th Year</option>
+    </select>
+
+    <select id="semSelect">
+      <option value="">Select Semester</option>
+    </select>
+
+    <button onclick="fetchMidMarks()">Search</button>
+  </div>
+
+  <table id="marksTable" style="display:none">
+    <thead>
+      <tr>
+        <th>Subject Code</th>
+        <th>Subject Name</th>
+        <th>Mid 1</th>
+        <th>Mid 2</th>
+        <th>Average</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <div id="noData"></div>
+
+  <script>
+    function updateSemesterOptions() {
+      const semSelect = document.getElementById("semSelect");
+      semSelect.innerHTML = `
+        <option value="">Select Semester</option>
+        <option value="1">Semester 1</option>
+        <option value="2">Semester 2</option>
+      `;
+    }
+
+    async function fetchMidMarks() {
+      const regno = document.getElementById("regnoInput").value.trim();
+      const year = document.getElementById("yearSelect").value;
+      const semester = document.getElementById("semSelect").value;
+      const table = document.getElementById("marksTable");
+      const tbody = table.querySelector("tbody");
+      const noData = document.getElementById("noData");
+
+      table.style.display = "none";
+      noData.innerText = "";
+      tbody.innerHTML = "";
+
+      if (!regno || !year || !semester) {
+        alert("Please fill all fields.");
+        return;
+      }
+
+      try {
+        const res = await fetch(`/student/midmarks/${regno}?year=${year}&semester=${semester}`);
+        const data = await res.json();
+
+        if (!data || data.length === 0) {
+          noData.innerText = "No mid marks found for this student.";
+          return;
+        }
+
+        data.forEach((row) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${row.subcode}</td>
+            <td>${row.subname}</td>
+            <td>${row.mid1 ?? '-'}</td>
+            <td>${row.mid2 ?? '-'}</td>
+            <td>${row.average ?? '-'}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        table.style.display = "table";
+      } catch (error) {
+        console.error("Error fetching data", error);
+        noData.innerText = "Something went wrong while fetching data.";
+      }
+    }
+  </script>
+</body>
+</html>
