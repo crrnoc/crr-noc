@@ -3203,6 +3203,44 @@ const sql = `
     });
   });
 });
+//hod mid marks 
+app.get("/api/midmarks/search", (req, res) => {
+  const { query, year, semester } = req.query;
+
+  if (!query || !year || !semester) {
+    return res.status(400).json({ error: "Missing required query parameters" });
+  }
+
+  console.log("🔍 Mid Marks Search:", { query, year, semester });
+
+  const sql = `
+    SELECT 
+      m.hallticket AS regno,
+      s.name,
+      m.sub_code AS subcode,
+      m.mid1,
+      m.mid2,
+      ROUND((IFNULL(m.mid1, 0) + IFNULL(m.mid2, 0)) / 2, 1) AS average
+    FROM mid_internal_marks m
+    JOIN student_info s ON m.hallticket = s.hallticket
+    WHERE 
+      (m.hallticket LIKE ? OR s.name LIKE ?)
+      AND TRIM(m.year) = ?
+      AND TRIM(m.semester) = ?
+  `;
+
+  const likeQuery = `%${query}%`;
+
+  connection.query(sql, [likeQuery, likeQuery, year, semester], (err, results) => {
+    if (err) {
+      console.error("❌ DB Error:", err);
+      return res.status(500).json({ error: "Internal Server Error" });
+    }
+
+    res.json(results);
+  });
+});
+
 
 
 
