@@ -127,35 +127,19 @@
     max-width: 1200px;
   }
 
+  /* Updated student-card design */
   .student-card {
-    background: #ffffff;
-    border-radius: 18px;
+    background: #fff;
+    border-radius: 12px;
     padding: 20px;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
     transition: all 0.3s ease;
-    border: 2px solid transparent;
-    background-clip: padding-box;
-    position: relative;
-    overflow: hidden;
     cursor: pointer;
   }
 
-  .student-card::before {
-    content: "";
-    position: absolute;
-    top: -2px;
-    left: -2px;
-    right: -2px;
-    bottom: -2px;
-    background: linear-gradient(45deg, #00b894, #6c5ce7, #00cec9);
-    z-index: -1;
-    border-radius: 20px;
-    animation: borderShift 5s linear infinite;
-  }
-
-  @keyframes borderShift {
-    0% { background-position: 0% 50%; }
-    100% { background-position: 100% 50%; }
+  .student-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
   }
 
   .student-card h3 {
@@ -171,27 +155,23 @@
     color: #555;
   }
 
-  .student-card:hover {
-    transform: translateY(-8px) scale(1.01);
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+  .mobile-toggle {
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #1f75cb;
+    color: white;
+    font-size: 24px;
+    padding: 12px 18px;
+    border-radius: 50px;
+    z-index: 10001;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
   }
 
-.mobile-toggle {
-  display: none;
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: #1f75cb;
-  color: white;
-  font-size: 24px;
-  padding: 12px 18px;
-  border-radius: 50px;
-  z-index: 10001; /* ✅ on top of sidebar */
-  cursor: pointer;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-}
-  /* Centered Modal Overlay */
+  /* Modal Overlay */
   #modalOverlay {
     position: fixed;
     top: 0;
@@ -240,21 +220,39 @@
     transform: scale(1.1);
   }
 
-  /* ✅ Stylish Buttons in Modal */
+  /* Tabs & Table Styling */
   .modal-box button {
-    background: linear-gradient(135deg, #6c5ce7, #00cec9);
+    background: #f6f6f6;
     border: none;
-    color: white;
+    color: #333;
     padding: 10px 16px;
     border-radius: 8px;
-    font-weight: bold;
+    font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
   }
 
   .modal-box button:hover {
-    transform: scale(1.05);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    background: #ddd;
+  }
+
+  .modal-box table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+    font-size: 14px;
+  }
+
+  .modal-box table th,
+  .modal-box table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+  }
+
+  .modal-box table th {
+    background: #f6f6f6;
+    font-weight: bold;
   }
 
   @keyframes modalFadeIn {
@@ -281,7 +279,7 @@
       height: auto;
       max-height: 90vh;
       overflow-y: auto;
-      z-index: 10000; /* ✅ fix: above modal */
+      z-index: 10000;
       transition: top 0.4s ease;
     }
 
@@ -303,7 +301,7 @@
 </head>
 <body>
   <div class="main-container">
-    <!-- 🧊 Sidebar -->
+    <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
       <h2>ID: <span id="userId">Loading...</span></h2>
       <ul class="menu">
@@ -320,7 +318,7 @@
       <button class="logout" onclick="logout()">Logout</button>
     </div>
 
-    <!-- 📋 Main Content -->
+    <!-- Main Content -->
     <div class="content">
       <div class="header">My Counselling Students</div>
       <div class="card-container" id="cardContainer">
@@ -329,98 +327,77 @@
     </div>
   </div>
 
-  <!-- 📦 Modal -->
+  <!-- Modal -->
   <div id="studentModal" style="display: none;">
     <div id="modalOverlay">
       <div class="modal-box">
         <h2 id="modalName">Student Name</h2>
+        <p><strong>Father Name:</strong> <span id="modalFatherName"></span></p>
+        <p><strong>Father Mobile:</strong> <span id="modalFatherMobile"></span></p>
 
-        <label>Father Name</label>
-        <input type="text" id="modalFatherInput" />
+        <!-- Tab Buttons -->
+        <div style="margin: 20px 0; display: flex; gap: 10px; flex-wrap: wrap;">
+          <button onclick="showTab('attendance')" id="btnAttendance">📊 Attendance</button>
+          <button onclick="showTab('results')" id="btnResults">📚 Results</button>
+          <button onclick="showTab('midmarks')" id="btnMidMarks">📝 Mid Marks</button>
+        </div>
 
-        <label>Father Mobile</label>
-        <input type="text" id="modalMobileInput" maxlength="10" pattern="\d{10}" />
+        <!-- Attendance Section -->
+        <div id="attendanceTab" style="display: none;">
+          <h3 style="margin-top: 20px; border-bottom: 1px solid #ddd; padding-bottom: 6px;">📊 Attendance Details</h3>
+          <div id="attendanceContent"></div>
+        </div>
 
-        <button onclick="saveFatherDetails()">Save Changes</button>
+        <!-- Results Section -->
+        <div id="resultsTab" style="display: none;">
+          <h3 style="margin-top: 20px; border-bottom: 1px solid #ddd; padding-bottom: 6px;">📚 Results Overview</h3>
+          <h4 style="margin-bottom: 8px;">🎓 Select Semester to View Results:</h4>
+          <select id="semesterSelect">
+            <option value="">-- Select --</option>
+            <option value="1-1">1-1</option>
+            <option value="1-2">1-2</option>
+            <option value="2-1">2-1</option>
+            <option value="2-2">2-2</option>
+            <option value="3-1">3-1</option>
+            <option value="3-2">3-2</option>
+            <option value="4-1">4-1</option>
+            <option value="4-2">4-2</option>
+          </select>
+          <div id="resultsContent"></div>
+        </div>
 
-<!-- Tab Buttons -->
-<div style="margin: 20px 0; display: flex; gap: 10px; flex-wrap: wrap;">
-  <button onclick="showTab('attendance')" id="btnAttendance">📊 Attendance</button>
-  <button onclick="showTab('results')" id="btnResults">📚 Results</button>
-  <button onclick="showTab('midmarks')" id="btnMidMarks">📝 Mid Marks</button>
-</div>
+        <!-- Mid Marks Section -->
+        <div id="midmarksTab" style="display: none;">
+          <h3 style="margin-top: 20px; border-bottom: 1px solid #ddd; padding-bottom: 6px;">📝 Mid Marks</h3>
+          <h4 style="margin-bottom: 8px;">📅 Select Year and Semester to View Mid Marks:</h4>
 
-<!-- Attendance Section -->
-<div id="attendanceTab" style="display: none;">
-  <h3 style="margin-top: 20px; border-bottom: 1px solid #ddd; padding-bottom: 6px;">📊 Attendance Details</h3>
-  <div id="attendanceContent"></div>
-</div>
+          <label for="midYearSelect">Year:</label>
+          <select id="midYearSelect">
+            <option value="">Select Year</option>
+            <option value="1">1st Year</option>
+            <option value="2">2nd Year</option>
+            <option value="3">3rd Year</option>
+            <option value="4">4th Year</option>
+          </select>
 
-<!-- Results Section -->
-<div id="resultsTab" style="display: none;">
-  <h3 style="margin-top: 20px; border-bottom: 1px solid #ddd; padding-bottom: 6px;">📚 Results Overview</h3>
-  <h4 style="margin-bottom: 8px;">🎓 Select Semester to View Results:</h4>
-  <select id="semesterSelect">
-    <option value="">-- Select --</option>
-    <option value="1-1">1-1</option>
-    <option value="1-2">1-2</option>
-    <option value="2-1">2-1</option>
-    <option value="2-2">2-2</option>
-    <option value="3-1">3-1</option>
-    <option value="3-2">3-2</option>
-    <option value="4-1">4-1</option>
-    <option value="4-2">4-2</option>
-  </select>
-  <div id="resultsContent"></div>
-</div>
+          <label for="midSemesterSelect" style="margin-left: 15px;">Semester:</label>
+          <select id="midSemesterSelect">
+            <option value="">Select Semester</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+          </select>
 
-<!-- Mid Marks Section -->
-<!-- Mid Marks Tab -->
-<div id="midmarksTab" style="display: none;">
-  <h3 style="margin-top: 20px; border-bottom: 1px solid #ddd; padding-bottom: 6px;">📝 Mid Marks</h3>
-  <h4 style="margin-bottom: 8px;">📅 Select Year and Semester to View Mid Marks:</h4>
+          <div id="midmarksContent" style="margin-top: 20px;"></div>
+        </div>
 
-  <label for="midYearSelect">Year:</label>
-  <select id="midYearSelect">
-    <option value="">Select Year</option>
-    <option value="1">1st Year</option>
-    <option value="2">2nd Year</option>
-    <option value="3">3rd Year</option>
-    <option value="4">4th Year</option>
-  </select>
-
-  <label for="midSemesterSelect" style="margin-left: 15px;">Semester:</label>
-  <select id="midSemesterSelect">
-    <option value="">Select Semester</option>
-    <option value="1">1</option>
-    <option value="2">2</option>
-  </select>
-
-  <div id="midmarksContent" style="margin-top: 20px;"></div>
-</div>
-
-<!-- 🪟 Modal for Mid Marks -->
-<div id="midMarksModal" class="modal" style="display: none;">
-  <div class="modal-content" style="background: white; padding: 20px; border-radius: 10px;">
-    <span class="modal-close" onclick="closeModal()" style="float: right; cursor: pointer; font-size: 20px;">✖</span>
-    <h2 style="margin-top: 0;">📊 Mid Marks Details</h2>
-    <div id="modalmidmarksContent">
-      <!-- Mid marks will be injected here -->
-    </div>
-  </div>
-</div>
-
-
-
-<!-- Close Button -->
-<button class="modal-close" onclick="closeModal()">✖</button>
-
+        <button class="modal-close" onclick="closeModal()">✖</button>
       </div>
     </div>
   </div>
 
-  <!-- 📱 Mobile Toggle -->
+  <!-- Mobile Toggle -->
   <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
+
 <script>
   const userId = localStorage.getItem("userId");
   const role = localStorage.getItem("role");
@@ -476,8 +453,8 @@
     currentStudent = student;
 
     document.getElementById("modalName").textContent = student.name;
-    document.getElementById("modalFatherInput").value = student.father_name || "";
-    document.getElementById("modalMobileInput").value = student.father_mobile || "";
+    document.getElementById("modalFatherName").textContent = student.father_name || "N/A";
+    document.getElementById("modalFatherMobile").textContent = student.father_mobile || "N/A";
 
     document.getElementById("studentModal").style.display = "block";
     document.body.style.overflow = "hidden";
@@ -560,7 +537,6 @@
     document.getElementById("midSemesterSelect").value = "";
     document.getElementById("midmarksContent").innerHTML = "";
 
-    // Attach listeners for midmarks dropdowns
     document.getElementById("midYearSelect").onchange = fetchMidMarks;
     document.getElementById("midSemesterSelect").onchange = fetchMidMarks;
   }
@@ -578,16 +554,15 @@
 
     fetch(`/student/midmarks/${currentStudent.reg_no}?year=${year}&semester=${semester}`)
       .then(res => res.json())
-    .then(data => {
-  const container = document.getElementById("midmarksContent");
-  if (!data.midmarks || data.midmarks.length === 0) {
-    container.innerHTML = "<p>No mid marks found for selected year and semester.</p>";
-    return;
-  }
-
+      .then(data => {
+        const container = document.getElementById("midmarksContent");
+        if (!data.midmarks || data.midmarks.length === 0) {
+          container.innerHTML = "<p>No mid marks found for selected year and semester.</p>";
+          return;
+        }
 
         let html = `
-          <table border="1" cellpadding="8" cellspacing="0">
+          <table>
             <tr>
               <th>Subject Code</th>
               <th>Mid 1</th>
@@ -599,7 +574,7 @@
               <th>Status</th>
             </tr>
         `;
-       data.midmarks.forEach(row => {
+        data.midmarks.forEach(row => {
           html += `
             <tr>
               <td>${row.sub_code}</td>
@@ -628,7 +603,7 @@
       document.getElementById(t + 'Tab').style.display = (t === tabName) ? 'block' : 'none';
       const btn = document.getElementById('btn' + t.charAt(0).toUpperCase() + t.slice(1));
       if (btn) {
-        btn.style.backgroundColor = (t === tabName) ? '#ddd' : '#f0f0f0';
+        btn.style.backgroundColor = (t === tabName) ? '#ddd' : '#f6f6f6';
       }
     });
   }
@@ -647,37 +622,7 @@
     document.querySelector('.sidebar').classList.toggle('open');
   }
 
-  async function saveFatherDetails() {
-    if (!currentStudent) return;
-
-    const father_name = document.getElementById("modalFatherInput").value.trim();
-    const father_mobile = document.getElementById("modalMobileInput").value.trim();
-
-    if (!/^\d{10}$/.test(father_mobile)) {
-      Swal.fire("Invalid Mobile", "Please enter a valid 10-digit number.", "error");
-      return;
-    }
-
-    const res = await fetch("/update-father-details", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        reg_no: currentStudent.reg_no,
-        father_name,
-        father_mobile
-      })
-    }).catch(() => null);
-
-    const out = await (res?.json() ?? { success: false, message: "Server error" });
-
-    Swal.fire(out.success ? "✅ Updated" : "❌ Failed", out.message, out.success ? "success" : "error");
-
-    if (out.success) {
-      currentStudent.father_name = father_name;
-      currentStudent.father_mobile = father_mobile;
-    }
-  }
-
+  // Close modal when clicked outside
   document.addEventListener("click", function (e) {
     const modalBox = document.querySelector(".modal-box");
     const modal = document.getElementById("studentModal");
