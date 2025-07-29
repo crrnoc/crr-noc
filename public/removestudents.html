@@ -1,88 +1,102 @@
-<!DOCTYPE html>
-<html lang="en">
+<!-- ⬇️ HEAD SECTION: uses admin colors and fonts -->
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Remove Students</title>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron&family=Poppins:wght@300;500;700&display=swap" rel="stylesheet" />
+  <title>🗑️ Remove Students</title>
+  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
-    :root { --main-color: #3cb6ff; --accent-color: #ff3d3d; }
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+    :root {
+      --main-color: #3cb6ff;
+      --accent-color: #ff3d3d;
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
+    }
     body {
       display: flex;
       min-height: 100vh;
-      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
-      color: white;
+      background: linear-gradient(to right, #e0eafc, #cfdef3);
+      color: #222;
     }
     .sidebar {
-      width: 260px;
-      background: rgba(60, 66, 84, 0.5);
-      backdrop-filter: blur(8px);
-      padding: 30px 20px;
+      width: 250px;
+      background: linear-gradient(180deg, #2C3E50, #34495E);
+      padding: 20px;
       display: flex;
       flex-direction: column;
-      box-shadow: 4px 0 25px rgba(0, 0, 0, 0.4);
       position: fixed;
-      height: 100vh;
-      left: 0;
-      top: 0;
-      z-index: 10;
+      top: 0; left: 0; bottom: 0;
+      color: white;
+      z-index: 100;
     }
     .sidebar h2 {
       text-align: center;
-      font-size: 24px;
+      font-size: 20px;
       color: var(--main-color);
       margin-bottom: 30px;
     }
     .sidebar ul {
       list-style: none;
+      padding-left: 0;
     }
     .sidebar li {
-      padding: 12px 18px;
-      margin: 12px 0;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 10px;
+      padding: 12px;
+      margin: 8px 0;
+      border-radius: 8px;
       cursor: pointer;
-      transition: 0.3s ease;
+      transition: 0.3s;
+      background: rgba(255, 255, 255, 0.1);
     }
     .sidebar li:hover {
-      background: var(--main-color);
-      box-shadow: 0 0 12px var(--main-color);
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateX(5px);
     }
     .sidebar button {
-      margin-top: auto;
-      padding: 10px 20px;
+      background-color: #E67E22;
       border: none;
-      background: linear-gradient(to right, #ff416c, #ff4b2b);
       color: white;
-      border-radius: 12px;
+      padding: 12px;
+      border-radius: 20px;
+      margin-top: auto;
       cursor: pointer;
-      font-weight: bold;
-      box-shadow: 0 0 10px rgba(255, 65, 108, 0.5);
-      transition: 0.3s ease;
+      transition: background 0.3s ease;
     }
     .sidebar button:hover {
-      transform: scale(1.05);
+      background-color: #CA6F1E;
     }
-
+    .mobile-toggle {
+      display: none;
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      background: #2C3E50;
+      color: white;
+      padding: 10px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      z-index: 200;
+    }
     .main {
-      margin-left: 260px;
-      padding: 70px 40px;
       flex: 1;
-      animation: slideIn 1s ease forwards;
+      margin-left: 250px;
+      padding: 60px 20px;
     }
-
     .card {
-      background: rgba(255, 255, 255, 0.08);
-      backdrop-filter: blur(6px);
-      padding: 25px;
+      background: white;
+      padding: 30px;
+      max-width: 700px;
+      margin: 0 auto 30px;
       border-radius: 16px;
-      margin-bottom: 30px;
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      animation: fadeUp 0.6s ease forwards;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
     }
-
+    h3 {
+      margin-bottom: 20px;
+      color: #333;
+    }
     label {
       font-weight: 600;
       display: block;
@@ -96,6 +110,15 @@
       border: 1px solid #ccc;
       font-size: 15px;
     }
+    .student-info {
+      background: #f2f9ff;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      margin-bottom: 15px;
+      font-size: 14px;
+      color: #222;
+    }
     button {
       background: linear-gradient(135deg, var(--main-color), var(--accent-color));
       padding: 10px 18px;
@@ -105,259 +128,205 @@
       font-weight: bold;
       cursor: pointer;
       transition: all 0.3s ease;
-      box-shadow: 0 0 12px rgba(60, 182, 255, 0.3);
     }
     button:hover {
       transform: scale(1.05);
-      box-shadow: 0 0 18px rgba(255, 61, 61, 0.5);
-    }
-    .student-info {
-      margin-bottom: 20px;
-      background: rgba(255, 255, 255, 0.05);
-      padding: 15px;
-      border-radius: 10px;
-      font-size: 14px;
-      color: white;
-      border: 1px solid rgba(255,255,255,0.15);
-    }
-    .mobile-toggle {
-      position: fixed;
-      top: 15px;
-      left: 15px;
-      font-size: 26px;
-      z-index: 20;
-      cursor: pointer;
-      display: none;
-      color: white;
+      box-shadow: 0 0 12px rgba(60, 182, 255, 0.3);
     }
 
     @media (max-width: 768px) {
-      .sidebar { transform: translateX(-100%); transition: 0.4s ease; }
-      .sidebar.open { transform: translateX(0); }
+      .sidebar { left: -250px; transition: 0.4s ease; }
+      .sidebar.open { left: 0; }
       .mobile-toggle { display: block; }
       .main { margin-left: 0; padding: 80px 20px 20px; }
     }
-
-    @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
-    @keyframes slideIn { from { opacity: 0; transform: translateX(50px); } to { opacity: 1; transform: translateX(0); } }
   </style>
 </head>
+
 <body>
+  <div class="mobile-toggle" onclick="toggleSidebar()">☰</div>
 
-<div class="sidebar">
-  <h2>Admin Panel</h2>
-<ul>
-  <li onclick="navigateTo('uploadresultsAd.html')">📥 Upload Results</li>
-  <li onclick="navigateTo('uploadattendanceAd.html')">🗓 Upload Attendance</li>
-  <li onclick="navigateTo('upload-sbi.html')">📤 Upload SBI References</li>
-  <li onclick="navigateTo('upload-midmarks.html')">📊 Upload Mid Marks</li>
-  <li onclick="navigateTo('du-match-status.html')">📊 DU Match Status</li>
-  <li onclick="navigateTo('noc-status.html')">📜 NOC Status</li>
-  <li onclick="navigateTo('removestudents.html')">🗑️ Delete Students</li>
-  <li onclick="navigateTo('createnocAd.html')">📝 Create NOC</li>
-  <li onclick="navigateTo('uploadstudents.html')">📚 Upload Student Data</li>
-</ul>
-  <button onclick="logout()">🚪 Logout</button>
-</div>
-
-<div class="mobile-toggle" onclick="toggleSidebar()">☰</div>
-
-<div class="main">
-  <div class="card">
-    <h3>🧍 Delete a Specific Student</h3>
-    <label for="regNo">Enter Registration Number</label>
-    <input type="text" id="regNo" placeholder="e.g., 23B81A1234" />
-    <div id="studentInfo" class="student-info" style="display:none;"></div>
-    <button onclick="fetchStudentDetails()">Get Student</button>
-    <button onclick="confirmDelete()" style="background: linear-gradient(to right, #e74c3c, #c0392b);">Delete Student</button>
+  <div class="sidebar" id="sidebar">
+    <h2>Admin Panel</h2>
+    <ul>
+      <li onclick="navigateTo('/uploadattendance')">🗓 Upload Attendance</li>
+      <li onclick="navigateTo('/uploadmidmarks')">📊 Upload Mid Marks</li>
+      <li onclick="navigateTo('/addmycounselling')">👥 Assign Counselling</li>
+      <li onclick="navigateTo('/dumatch')">📊 DU Match Status</li>
+      <li onclick="navigateTo('/removestudents')">🗑️ Delete Students</li>
+      <li onclick="navigateTo('/uploadstudents')">📚 Upload Student Data</li>
+    </ul>
+    <button onclick="logout()">🚪 Logout</button>
   </div>
 
-  <div class="card">
-    <h3>📦 Delete Batch of Students</h3>
-    <label for="batchPrefix">Enter Batch Prefix</label>
-    <input type="text" id="batchPrefix" placeholder="e.g., 23B8" />
-    <label for="batchBranch">Select Branch</label>
-    <select id="batchBranch">
-      <option value="">-- Select Branch --</option>
-      <option>CIVIL</option><option>MECH</option><option>EEE</option><option>ECE</option>
-      <option>CSE</option><option>CSD</option><option>CSM</option><option>CSC</option><option>IT</option>
-    </select>
-    <button onclick="filterBatch()">View Batch Students</button>
-    <div id="batchList" class="student-info" style="display:none;"></div>
-    <button onclick="confirmBatchDelete()" style="background: linear-gradient(to right, #c0392b, #8e44ad);">Delete Batch</button>
+  <div class="main">
+    <div class="card">
+      <h3>🧍 Delete a Specific Student</h3>
+      <label for="regNo">Enter Registration Number</label>
+      <input type="text" id="regNo" placeholder="e.g., 23B81A1234" />
+      <div id="studentInfo" class="student-info" style="display:none;"></div>
+      <button onclick="fetchStudentDetails()">Get Student</button>
+      <button onclick="confirmDelete()" style="background: linear-gradient(to right, #e74c3c, #c0392b);">Delete Student</button>
+    </div>
+
+    <div class="card">
+      <h3>📦 Delete Batch of Students</h3>
+      <label for="batchPrefix">Enter Batch Prefix</label>
+      <input type="text" id="batchPrefix" placeholder="e.g., 23B8" />
+      <label for="batchBranch">Select Branch</label>
+      <select id="batchBranch">
+        <option value="">-- Select Branch --</option>
+        <option>CIVIL</option><option>MECH</option><option>EEE</option><option>ECE</option>
+        <option>CSE</option><option>CSD</option><option>CSM</option><option>CSC</option><option>IT</option>
+      </select>
+      <button onclick="filterBatch()">View Batch Students</button>
+      <div id="batchList" class="student-info" style="display:none;"></div>
+      <button onclick="confirmBatchDelete()" style="background: linear-gradient(to right, #c0392b, #8e44ad);">Delete Batch</button>
+    </div>
   </div>
-</div>
 
-<script>
-// ✅ Session Protection
-(async () => {
-  try {
-    const res = await fetch("/check-session");
-    if (!res.ok) throw new Error("Unauthorized");
-  } catch (err) {
-    localStorage.removeItem("userId");
-    window.location.replace("index.html");
-  }
-})();
+  <script>
+    async function checkSession() {
+      try {
+        const res = await fetch("/check-session");
+        if (!res.ok) throw new Error("Unauthorized");
+      } catch {
+        localStorage.removeItem("userId");
+        window.location.replace("index.html");
+      }
+    }
+    checkSession();
 
-// 🧭 Smart Navigation
-function navigateTo(route) {
-  const routes = {
-    'uploadresultsAd.html': '/uploadresults',
-    'uploadattendanceAd.html': '/uploadattendance',
-    'upload-sbi.html': '/uploadsbi',
-    'upload-midmarks.html': '/uploadmidmarks',
-    'du-match-status.html': '/dumatch',
-    'noc-status.html': '/nocstatus',
-    'removestudents.html': '/removestudents',
-    'createnocAd.html': '/createnoc',
-    'uploadstudents.html':'/uploadstudents'
-  };
-  window.location.href = routes[route] || '/adminpanel';
-}
+    function navigateTo(route) {
+      window.location.href = route;
+    }
 
-// 🚪 Logout Handler
-function logout() {
-  fetch("/logout").then(() => {
-    localStorage.removeItem("userId");
-    window.location.replace("index.html");
-  });
-}
+    function logout() {
+      fetch("/logout").then(() => {
+        localStorage.removeItem("userId");
+        window.location.replace("index.html");
+      });
+    }
 
-// 📱 Mobile Sidebar
-function toggleSidebar() {
-  document.querySelector('.sidebar').classList.toggle('open');
-}
+    function toggleSidebar() {
+      document.getElementById("sidebar").classList.toggle("open");
+    }
 
-// 🔒 Block Back/Forward Nav
-window.addEventListener("pageshow", (event) => {
-  if (event.persisted) window.location.reload();
-});
-window.history.pushState(null, "", window.location.href);
-window.onpopstate = function () {
-  window.history.pushState(null, "", window.location.href);
-};
-  
-let fetchedReg = "";
+    let fetchedReg = "";
 
-function fetchStudentDetails() {
-  const regNo = document.getElementById("regNo").value.trim();
-  if (!regNo) return Swal.fire("Error", "Please enter a registration number", "warning");
+    function fetchStudentDetails() {
+      const regNo = document.getElementById("regNo").value.trim();
+      if (!regNo) return Swal.fire("Error", "Please enter a registration number", "warning");
 
-  fetch("/get-student-details", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ reg_no: regNo })
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (!data.success) return Swal.fire("Not Found", data.message, "error");
-    fetchedReg = data.student.reg_no;
-    const infoBox = document.getElementById("studentInfo");
-    infoBox.innerHTML = `
-      <strong>Name:</strong> ${data.student.name}<br>
-      <strong>Reg No:</strong> ${data.student.reg_no}<br>
-      <strong>Course:</strong> ${data.student.course}<br>
-      <strong>Section:</strong> ${data.student.section}
-    `;
-    infoBox.style.display = "block";
-  })
-  .catch(() => Swal.fire("Error", "Failed to fetch student data", "error"));
-}
-
-function confirmDelete() {
-  if (!fetchedReg) return Swal.fire("No Student", "Please fetch a student first.", "warning");
-
-  Swal.fire({
-    title: `Are you sure?`,
-    text: `Delete student ${fetchedReg}?`,
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonText: "Yes, delete"
-  }).then((result) => {
-    if (result.isConfirmed) {
-      fetch("/delete-student", {
+      fetch("/get-student-details", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reg_no: fetchedReg })
+        body: JSON.stringify({ reg_no: regNo })
       })
       .then(res => res.json())
       .then(data => {
-        // After student deletion, now delete photo too
-        fetch("/admin/delete-photos", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prefix: fetchedReg })
-        }).then(() => {
-          Swal.fire("Deleted", data.message + " and photo removed!", "success");
-        });
+        if (!data.success) return Swal.fire("Not Found", data.message, "error");
+        fetchedReg = data.student.reg_no;
+        const infoBox = document.getElementById("studentInfo");
+        infoBox.innerHTML = `
+          <strong>Name:</strong> ${data.student.name}<br>
+          <strong>Reg No:</strong> ${data.student.reg_no}<br>
+          <strong>Course:</strong> ${data.student.course}<br>
+          <strong>Section:</strong> ${data.student.section}
+        `;
+        infoBox.style.display = "block";
       })
-      .catch(() => Swal.fire("Error", "Failed to delete student", "error"));
+      .catch(() => Swal.fire("Error", "Failed to fetch student data", "error"));
     }
-  });
-}
 
-function filterBatch() {
-  const prefix = document.getElementById("batchPrefix").value.trim();
-  const branch = document.getElementById("batchBranch").value;
+    function confirmDelete() {
+      if (!fetchedReg) return Swal.fire("No Student", "Please fetch a student first.", "warning");
 
-  if (!prefix || !branch) return Swal.fire("Missing", "Please enter both prefix and branch", "warning");
-
-  fetch("/filter-batch", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ batchPrefix: prefix, branch })
-  })
-  .then(res => res.json())
-  .then(data => {
-    const list = document.getElementById("batchList");
-    if (!data.success || data.students.length === 0) {
-      list.innerHTML = "No students found.";
-      list.style.display = "block";
-      return;
+      Swal.fire({
+        title: `Are you sure?`,
+        text: `Delete student ${fetchedReg}?`,
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Yes, delete"
+      }).then((result) => {
+        if (result.isConfirmed) {
+          fetch("/delete-student", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ reg_no: fetchedReg })
+          })
+          .then(res => res.json())
+          .then(data => {
+            fetch("/admin/delete-photos", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ prefix: fetchedReg })
+            }).then(() => {
+              Swal.fire("Deleted", data.message + " and photo removed!", "success");
+            });
+          })
+          .catch(() => Swal.fire("Error", "Failed to delete student", "error"));
+        }
+      });
     }
-    list.innerHTML = data.students.map(s => `${s.reg_no} - ${s.name}`).join("<br>");
-    list.style.display = "block";
-  })
-  .catch(() => Swal.fire("Error", "Failed to fetch batch data", "error"));
-}
 
-function confirmBatchDelete() {
-  const prefix = document.getElementById("batchPrefix").value.trim();
-  const branch = document.getElementById("batchBranch").value;
+    function filterBatch() {
+      const prefix = document.getElementById("batchPrefix").value.trim();
+      const branch = document.getElementById("batchBranch").value;
 
-  if (!prefix || !branch) return Swal.fire("Missing Info", "Prefix and branch required", "warning");
+      if (!prefix || !branch) return Swal.fire("Missing", "Please enter both prefix and branch", "warning");
 
-  Swal.fire({
-    title: "Delete Entire Batch?",
-    text: `This will delete all students starting with ${prefix} from ${branch}.`,
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonText: "Yes, delete batch"
-  }).then(result => {
-    if (result.isConfirmed) {
-      fetch("/delete-batch", {
+      fetch("/filter-batch", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ batchPrefix: prefix, branch })
       })
       .then(res => res.json())
       .then(data => {
-        // Also delete all matching photos by prefix
-        fetch("/admin/delete-photos", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prefix })
-        }).then(() => {
-          Swal.fire("Deleted", data.message + " and photos removed!", "success");
-        });
+        const list = document.getElementById("batchList");
+        if (!data.success || data.students.length === 0) {
+          list.innerHTML = "No students found.";
+          list.style.display = "block";
+          return;
+        }
+        list.innerHTML = data.students.map(s => `${s.reg_no} - ${s.name}`).join("<br>");
+        list.style.display = "block";
       })
-      .catch(() => Swal.fire("Error", "Failed to delete batch", "error"));
+      .catch(() => Swal.fire("Error", "Failed to fetch batch data", "error"));
     }
-  });
-}
 
-</script>
+    function confirmBatchDelete() {
+      const prefix = document.getElementById("batchPrefix").value.trim();
+      const branch = document.getElementById("batchBranch").value;
 
+      if (!prefix || !branch) return Swal.fire("Missing Info", "Prefix and branch required", "warning");
+
+      Swal.fire({
+        title: "Delete Entire Batch?",
+        text: `This will delete all students starting with ${prefix} from ${branch}.`,
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Yes, delete batch"
+      }).then(result => {
+        if (result.isConfirmed) {
+          fetch("/delete-batch", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ batchPrefix: prefix, branch })
+          })
+          .then(res => res.json())
+          .then(data => {
+            fetch("/admin/delete-photos", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ prefix })
+            }).then(() => {
+              Swal.fire("Deleted", data.message + " and photos removed!", "success");
+            });
+          })
+          .catch(() => Swal.fire("Error", "Failed to delete batch", "error"));
+        }
+      });
+    }
+  </script>
 </body>
-</html>
