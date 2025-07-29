@@ -26,8 +26,10 @@
   .main-container {
     display: flex;
     min-height: 100vh;
+    flex-direction: row;
   }
 
+  /* Sidebar same as mycounselling - NOT fixed */
   .sidebar {
     width: 270px;
     background-color: rgb(247, 201, 155);
@@ -35,12 +37,6 @@
     flex-direction: column;
     justify-content: space-between;
     padding: 20px;
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    z-index: 1000;
-    transition: all 0.3s ease-in-out;
   }
 
   .sidebar h2 {
@@ -110,7 +106,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-left: 270px;
+    margin-left: 270px; /* Same left margin as mycounselling */
     transition: margin-left 0.3s ease;
   }
 
@@ -200,11 +196,12 @@
     }
 
     .sidebar {
-      top: -100%;
       width: 100%;
-      height: 90vh;
+      top: -100%;
       position: fixed;
+      height: 90vh;
       transition: top 0.3s ease-in-out;
+      z-index: 1000;
     }
 
     .sidebar.open {
@@ -243,7 +240,6 @@
         <li><a href="backlogs.html"><span>📚</span> Find Backlogs</a></li>
         <li><a href="mycounselling.html"><span>📋</span> View Counselling</a></li>
         <li class="active"><a href="#"><span>⚙️</span> Settings</a></li>
-
       </ul>
       <button class="logout" onclick="logout()">Logout</button>
     </div>
@@ -262,31 +258,32 @@
       </div>
     </div>
   </div>
-<div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
+
+  <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
+  
   <script>
     const userId = localStorage.getItem("userId");
     document.getElementById("userId").textContent = userId;
 
     function toggleMobileMenu() {
-  document.querySelector('.sidebar').classList.toggle('open');
-}
-
-document.querySelectorAll(".menu li a").forEach(link => {
-  link.addEventListener("click", () => {
-    if (window.innerWidth <= 768) {
-      document.querySelector('.sidebar').classList.remove('open');
+      document.querySelector('.sidebar').classList.toggle('open');
     }
-  });
-});
 
+    document.querySelectorAll(".menu li a").forEach(link => {
+      link.addEventListener("click", () => {
+        if (window.innerWidth <= 768) {
+          document.querySelector('.sidebar').classList.remove('open');
+        }
+      });
+    });
 
     function logout() {
-    localStorage.removeItem("userId");
-    if ("caches" in window) {
-      caches.keys().then((names) => names.forEach((name) => caches.delete(name)));
+      localStorage.removeItem("userId");
+      if ("caches" in window) {
+        caches.keys().then((names) => names.forEach((name) => caches.delete(name)));
+      }
+      window.location.replace("index.html");
     }
-    window.location.replace("index.html");
-  }
   </script>
 </body>
 </html>
