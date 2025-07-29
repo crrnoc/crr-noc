@@ -112,6 +112,9 @@ app.get("/uploadstudents", requireAdminSession, (req, res) => {
 app.get("/uploadmidmarks", requireAdminSession, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "uploadmid-marks.html"));
 });
+app.get("/addmycounselling", requireAdminSession, (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "addmycounselling.html"));
+});
 app.use("/uploads", express.static(path.join(__dirname, "uploads"))); // for previews
 
 // ✅ MySQL connection
