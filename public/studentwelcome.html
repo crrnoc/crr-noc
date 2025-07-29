@@ -106,33 +106,47 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 40px;
+  gap: 25px;
 }
 
+/* Updated Welcome Card Size */
 .welcome-card {
   background: linear-gradient(135deg, rgba(255, 165, 0, 0.9), rgba(255, 110, 0, 0.9));
   color: white;
-  padding: 50px 30px;
+  padding: 30px 20px;
   border-radius: 20px;
   text-align: center;
   width: 90%;
-  max-width: 600px;
+  max-width: 500px;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
 }
 
 .welcome-card h1 {
-  font-size: 32px;
-  margin-bottom: 15px;
+  font-size: 28px;
+  margin-bottom: 10px;
 }
 
 .welcome-card p {
-  font-size: 18px;
+  font-size: 16px;
+}
+
+/* Notifications */
+.notifications {
+  background: #fff3e0;
+  border: 1px solid #ffcc80;
+  color: #d35400;
+  padding: 10px;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 800px;
+  text-align: center;
+  font-weight: bold;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
 }
 
 .slideshow-container {
   width: 100%;
   max-width: 1000px;
-  margin-top: 40px;
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
@@ -150,6 +164,21 @@ body {
 .slide.active {
   display: block;
   opacity: 1;
+}
+
+.college-info {
+  background: #fff;
+  padding: 30px;
+  border-radius: 16px;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+  line-height: 1.8;
+  color: #333;
+  max-width: 1000px;
+}
+
+.college-info h2 {
+  color: #ff6600;
+  margin-bottom: 20px;
 }
 
 .mobile-toggle {
@@ -195,7 +224,7 @@ body {
 
   .welcome-card {
     width: 100%;
-    padding: 30px 20px;
+    padding: 25px 15px;
   }
 
   .slideshow-container {
@@ -203,7 +232,6 @@ body {
     height: auto;
   }
 }
-
   </style>
 </head>
 <body>
@@ -230,8 +258,24 @@ body {
           Use the sidebar to navigate through your academic dashboard.</p>
       </div>
 
-      <div style="background: #fff; padding: 30px; border-radius: 16px; box-shadow: 0 6px 15px rgba(0,0,0,0.1); line-height: 1.8; color: #333; max-width: 1000px;">
-        <h2 style="color: #ff6600; margin-bottom: 20px;">Welcome to Sir C. R. Reddy College of Engineering (AUTONOMOUS)</h2>
+      <!-- Notifications -->
+      <div class="notifications">
+        <marquee behavior="scroll" direction="left" scrollamount="5">
+          🔔 Upcoming mid-semester exams start from 15th August | Fee due date is 20th August | CRR Fest registrations are open now!
+        </marquee>
+      </div>
+
+      <!-- Slideshow -->
+      <div class="slideshow-container">
+        <img class="slide active" src="img1.jpg" alt="College Image 1">
+        <img class="slide" src="img2.jpg" alt="College Image 2">
+        <img class="slide" src="img3.jpg" alt="College Image 3">
+        <img class="slide" src="img4.jpg" alt="College Image 4">
+      </div>
+
+      <!-- College Info -->
+      <div class="college-info">
+        <h2>Welcome to Sir C. R. Reddy College of Engineering (AUTONOMOUS)</h2>
         <p>
           Sir C.R. Reddy College of Engineering(A) is the first Engineering College in Andhra Pradesh sanctioned and recognized by All India Council for Technical Education (AICTE). This College is permanently affiliated to JNTUK from the Academic Year 2017-18.
           <br><br>
@@ -245,13 +289,6 @@ body {
           <br><br>
           The Campus at Vatluru is a place where students from all walks of life are under a single umbrella pursuing their BE/B.Tech, M.Tech, and MBA courses.
         </p>
-      </div>
-
-      <div class="slideshow-container">
-        <img class="slide active" src="img1.jpg" alt="College Image 1">
-        <img class="slide" src="img2.jpg" alt="College Image 2">
-        <img class="slide" src="img3.jpg" alt="College Image 3">
-        <img class="slide" src="img4.jpg" alt="College Image 4">
       </div>
     </div>
   </div>
@@ -297,24 +334,24 @@ body {
     });
 
     // Slideshow
-  let currentSlide = 0;
-  const slides = document.querySelectorAll('.slide');
-  const totalSlides = slides.length;
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
 
-  function showSlide(index) {
-    slides.forEach((slide, i) => {
-      slide.classList.remove('active');
-    });
-    slides[index].classList.add('active');
-  }
+    function showSlide(index) {
+      slides.forEach((slide, i) => {
+        slide.classList.remove('active');
+      });
+      slides[index].classList.add('active');
+    }
 
-  function nextSlide() {
-    currentSlide = (currentSlide + 1) % totalSlides;
-    showSlide(currentSlide);
-  }
+    function nextSlide() {
+      currentSlide = (currentSlide + 1) % totalSlides;
+      showSlide(currentSlide);
+    }
 
-  setInterval(nextSlide, 5000); // 5 seconds
-  showSlide(currentSlide); // Show first slide on load
+    setInterval(nextSlide, 5000); // 5 seconds
+    showSlide(currentSlide); // Show first slide on load
   </script>
 </body>
 </html>
