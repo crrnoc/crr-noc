@@ -2,176 +2,165 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Upload Student Data</title>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron&family=Poppins:wght@300;500;700&display=swap" rel="stylesheet" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>📚 Upload Student Data</title>
+  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI&display=swap" rel="stylesheet"/>
   <style>
-    :root { --main-color: #3cb6ff; --accent-color: #ff3d3d; }
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
-    body { display: flex; min-height: 100vh; background: linear-gradient(to right, #0f2027, #203a43, #2c5364); color: white; }
-
+    :root {
+      --main-color: #3cb6ff;
+      --accent-color: #ff3d3d;
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    body {
+      display: flex;
+      min-height: 100vh;
+      background: linear-gradient(to right, #e0eafc, #cfdef3);
+      color: #222;
+    }
     .sidebar {
-      width: 260px;
-      background: rgba(60, 66, 84, 0.5);
-      backdrop-filter: blur(8px);
-      padding: 30px 20px;
+      width: 250px;
+      background: linear-gradient(180deg, #2C3E50, #34495E);
+      padding: 20px;
       display: flex;
       flex-direction: column;
-      box-shadow: 4px 0 25px rgba(0, 0, 0, 0.4);
       position: fixed;
-      height: 100vh;
-      left: 0;
       top: 0;
-      z-index: 10;
+      left: 0;
+      bottom: 0;
+      color: white;
+      z-index: 100;
     }
-
     .sidebar h2 {
       text-align: center;
-      font-size: 24px;
+      font-size: 20px;
       color: var(--main-color);
       margin-bottom: 30px;
     }
-
     .sidebar ul {
       list-style: none;
+      padding-left: 0;
     }
-
     .sidebar li {
-      padding: 12px 18px;
-      margin: 12px 0;
+      padding: 12px;
+      margin: 8px 0;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.3s;
       background: rgba(255, 255, 255, 0.1);
-      border-radius: 10px;
-      cursor: pointer;
-      transition: 0.3s ease;
     }
-
     .sidebar li:hover {
-      background: var(--main-color);
-      box-shadow: 0 0 12px var(--main-color);
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateX(5px);
     }
-
     .sidebar button {
-      margin-top: auto;
-      padding: 10px 20px;
+      background-color: #E67E22;
       border: none;
-      background: linear-gradient(to right, #ff416c, #ff4b2b);
       color: white;
-      border-radius: 12px;
+      padding: 12px;
+      border-radius: 20px;
+      margin-top: auto;
       cursor: pointer;
-      font-weight: bold;
-      box-shadow: 0 0 10px rgba(255, 65, 108, 0.5);
-      transition: 0.3s ease;
+      transition: background 0.3s ease;
+    }
+    .sidebar button:hover {
+      background-color: #CA6F1E;
     }
 
-    .sidebar button:hover {
-      transform: scale(1.05);
+    .mobile-toggle {
+      display: none;
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      background: #2C3E50;
+      color: white;
+      padding: 10px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      z-index: 200;
     }
 
     .main {
-      margin-left: 260px;
-      padding: 70px;
       flex: 1;
-      animation: slideIn 1s ease forwards;
+      margin-left: 250px;
+      padding: 60px 20px;
     }
 
     .upload-container {
-      background: rgba(255, 255, 255, 0.08);
-      backdrop-filter: blur(10px);
-      padding: 40px;
+      background: white;
+      padding: 30px;
       border-radius: 16px;
       max-width: 600px;
       margin: auto;
-      box-shadow: 0 0 25px rgba(0, 0, 0, 0.3);
-      animation: fadeIn 1s ease;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
       text-align: center;
     }
 
     .upload-container h2 {
-      color: #00d4ff;
       margin-bottom: 25px;
+      color: var(--main-color);
     }
 
     .upload-container input[type="file"] {
       margin: 20px 0;
-      padding: 14px;
+      padding: 12px;
       width: 100%;
       border-radius: 12px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 2px dashed #00d4ff;
+      border: 2px dashed var(--main-color);
+      background: #f8faff;
       cursor: pointer;
-      color: white;
       transition: 0.3s ease;
     }
 
     .upload-container input[type="file"]:hover {
-      background: rgba(0, 212, 255, 0.1);
+      background: #eef6ff;
     }
 
     .upload-container button {
-      margin-top: 20px;
       padding: 12px 28px;
-      background: linear-gradient(to right, #00d4ff, #004e92);
+      background: linear-gradient(to right, var(--main-color), var(--accent-color));
       color: white;
       border: none;
       border-radius: 12px;
       font-size: 16px;
       font-weight: bold;
       cursor: pointer;
-      box-shadow: 0 0 12px rgba(0, 212, 255, 0.4);
       transition: 0.3s ease;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     }
 
     .upload-container button:hover {
       transform: scale(1.05);
     }
 
-    .mobile-toggle {
-      position: fixed;
-      top: 15px;
-      left: 15px;
-      font-size: 26px;
-      z-index: 20;
-      cursor: pointer;
-      display: none;
-      color: white;
-    }
-
     @media (max-width: 768px) {
-      .sidebar { transform: translateX(-100%); transition: 0.4s ease; }
-      .sidebar.open { transform: translateX(0); }
+      .sidebar { left: -250px; transition: 0.4s ease; }
+      .sidebar.open { left: 0; }
       .mobile-toggle { display: block; }
       .main { margin-left: 0; padding: 80px 20px 20px; }
-    }
-
-    @keyframes slideIn {
-      from { opacity: 0; transform: translateX(50px); }
-      to { opacity: 1; transform: translateX(0); }
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
 <body>
-  <div class="sidebar">
+
+  <div class="mobile-toggle" onclick="toggleSidebar()">☰</div>
+
+  <div class="sidebar" id="sidebar">
     <h2>Admin Panel</h2>
     <ul>
-      <li onclick="navigateTo('/uploadresults')">📥 Upload Results</li>
       <li onclick="navigateTo('/uploadattendance')">🗓 Upload Attendance</li>
-      <li onclick="navigateTo('/uploadsbi')">📤 Upload SBI References</li>
-      <li onclick="navigateTo('/upload-midmarks')">📊 Upload Mid Marks</li>
+      <li onclick="navigateTo('/uploadmidmarks')">📊 Upload Mid Marks</li>
+      <li onclick="navigateTo('/addmycounselling')">👥 Assign Counselling</li>
       <li onclick="navigateTo('/dumatch')">📊 DU Match Status</li>
-      <li onclick="navigateTo('/nocstatus')">📜 NOC Status</li>
       <li onclick="navigateTo('/removestudents')">🗑️ Delete Students</li>
-      <li onclick="navigateTo('/createnoc')">📝 Create NOC</li>
       <li onclick="navigateTo('/uploadstudents')">📚 Upload Student Data</li>
     </ul>
     <button onclick="logout()">🚪 Logout</button>
   </div>
-
-  <div class="mobile-toggle" onclick="toggleSidebar()">☰</div>
 
   <div class="main">
     <div class="upload-container">
@@ -189,7 +178,7 @@
     }
 
     function toggleSidebar() {
-      document.querySelector('.sidebar').classList.toggle('open');
+      document.getElementById("sidebar").classList.toggle("open");
     }
 
     function logout() {
