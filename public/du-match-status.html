@@ -2,130 +2,183 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <title>📊 Upload Mid Marks</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DU Match Status</title>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron&family=Poppins:wght@300;500;700&display=swap" rel="stylesheet" />
+  <link rel="icon" href="crrengglogo.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
-    :root { --main-color: #3cb6ff; --accent-color: #ff3d3d; }
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
-    body { display: flex; min-height: 100vh; background: linear-gradient(to right, #0f2027, #203a43, #2c5364); color: white; }
-    .sidebar { width: 260px; background: rgba(60, 66, 84, 0.5); backdrop-filter: blur(8px); padding: 30px 20px; display: flex; flex-direction: column; box-shadow: 4px 0 25px rgba(0, 0, 0, 0.4); position: fixed; height: 100vh; left: 0; top: 0; z-index: 10; }
-    .sidebar h2 { text-align: center; font-size: 24px; color: var(--main-color); margin-bottom: 30px; }
-    .sidebar ul { list-style: none; }
-    .sidebar li { padding: 12px 18px; margin: 12px 0; background: rgba(255, 255, 255, 0.1); border-radius: 10px; cursor: pointer; transition: 0.3s ease; }
-    .sidebar li:hover { background: var(--main-color); box-shadow: 0 0 12px var(--main-color); }
-    .sidebar button { margin-top: auto; padding: 10px 20px; border: none; background: linear-gradient(to right, #ff416c, #ff4b2b); color: white; border-radius: 12px; cursor: pointer; font-weight: bold; box-shadow: 0 0 10px rgba(255, 65, 108, 0.5); transition: 0.3s ease; }
-    .sidebar button:hover { transform: scale(1.05); }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
 
-    .main { margin-left: 260px; padding: 70px; flex: 1; animation: slideIn 1s ease forwards; }
-    .banner { background: rgba(255, 255, 255, 0.08); border-radius: 14px; padding: 16px; font-size: 18px; text-align: center; margin-bottom: 30px; box-shadow: 0 0 15px rgba(0, 191, 255, 0.3); }
-    .card { background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(6px); padding: 25px; border-radius: 16px; margin-bottom: 30px; border: 1px solid rgba(255, 255, 255, 0.15); animation: fadeUp 0.6s ease forwards; }
-
-    table { border-collapse: collapse; width: 100%; min-width: 700px; color: white; }
-    th, td { padding: 12px; text-align: left; border-bottom: 1px solid rgba(255, 255, 255, 0.15); }
-    tbody tr:hover { background-color: rgba(255, 255, 255, 0.08); transition: 0.3s ease; }
-
-    select {
-      padding: 10px 14px;
-      border-radius: 10px;
-      background: rgba(0, 0, 0, 0.1);
-      color: black;
-      font-size: 15px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      box-shadow: inset 0 0 8px rgba(111, 180, 218, 0.708);
-      transition: all 0.3s ease;
-      backdrop-filter: blur(4px);
-    }
-    select:hover, select:focus {
-      border-color: var(--main-color);
-      box-shadow: 0 0 10px var(--main-color);
-      background: rgba(255, 255, 255, 0.15);
-      outline: none;
+    body {
+      display: flex;
+      min-height: 100vh;
+      background: linear-gradient(to right, #e0eafc, #cfdef3);
+      color: #222;
     }
 
-    button {
-      background: linear-gradient(135deg, var(--main-color), var(--accent-color));
-      padding: 10px 18px;
-      border-radius: 10px;
+    .sidebar {
+      width: 250px;
+      background: linear-gradient(180deg, #2C3E50, #34495E);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      color: white;
+      z-index: 100;
+    }
+
+    .sidebar h2 {
+      text-align: center;
+      font-weight: bold;
+      font-size: 20px;
+      margin-bottom: 30px;
+      color: #3cb6ff;
+    }
+
+    .sidebar ul { list-style: none; padding-left: 0; }
+    .sidebar li {
+      padding: 12px;
+      margin: 8px 0;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.3s;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .sidebar li:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateX(5px);
+    }
+
+    .sidebar button {
+      background-color: #E67E22;
       border: none;
       color: white;
-      font-weight: bold;
+      padding: 12px;
+      border-radius: 20px;
+      margin-top: auto;
       cursor: pointer;
-      transition: all 0.3s ease;
-      box-shadow: 0 0 12px rgba(60, 182, 255, 0.3);
+      transition: background 0.3s ease;
     }
-    button:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 18px rgba(255, 61, 61, 0.5);
+
+    .sidebar button:hover {
+      background-color: #CA6F1E;
     }
 
     .mobile-toggle {
+      display: none;
       position: fixed;
       top: 15px;
       left: 15px;
-      font-size: 26px;
-      z-index: 20;
-      cursor: pointer;
-      display: none;
+      background: #2C3E50;
       color: white;
+      padding: 10px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      z-index: 200;
+    }
+
+    .main {
+      flex: 1;
+      margin-left: 250px;
+      padding: 60px 20px;
+    }
+
+    .banner {
+      background: linear-gradient(135deg, #5bc0de, #3c96c8);
+      padding: 20px;
+      border-radius: 12px;
+      color: white;
+      text-align: center;
+      margin-bottom: 30px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+      font-size: 18px;
+    }
+
+    .card {
+      background: white;
+      max-width: 480px;
+      margin: auto;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+
+    input[type="file"], button {
+      display: block;
+      width: 100%;
+      margin: 16px 0;
+      padding: 12px;
+      font-size: 15px;
+      border-radius: 10px;
+    }
+
+    input[type="file"] {
+      border: 1px solid #ccc;
+    }
+
+    input[type="file"]::file-selector-button {
+      background: #3cb6ff;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button {
+      background: linear-gradient(to right, #3cb6ff, #ff3d3d);
+      color: white;
+      font-weight: bold;
+      border: none;
+      transition: 0.3s;
+      cursor: pointer;
+    }
+
+    button:hover {
+      transform: scale(1.03);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     }
 
     @media (max-width: 768px) {
-      .sidebar { transform: translateX(-100%); transition: 0.4s ease; }
-      .sidebar.open { transform: translateX(0); }
+      .sidebar { left: -250px; transition: 0.4s ease; }
+      .sidebar.open { left: 0; }
       .mobile-toggle { display: block; }
       .main { margin-left: 0; padding: 80px 20px 20px; }
     }
-
-    @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
-    @keyframes slideIn { from { opacity: 0; transform: translateX(50px); } to { opacity: 1; transform: translateX(0); } }
   </style>
 </head>
 <body>
 
-  <div class="sidebar">
+  <div class="mobile-toggle" onclick="toggleSidebar()">☰</div>
+
+  <div class="sidebar" id="sidebar">
     <h2>Admin Panel</h2>
     <ul>
-      <li onclick="navigateTo('uploadresultsAd.html')">📥 Upload Results</li>
-      <li onclick="navigateTo('uploadattendanceAd.html')">🗓 Upload Attendance</li>
-      <li onclick="navigateTo('upload-sbi.html')">📤 Upload SBI References</li>
-      <li onclick="navigateTo('upload-midmarks.html')">📊 Upload Mid Marks</li>
-      <li onclick="navigateTo('du-match-status.html')">📊 DU Match Status</li>
-      <li onclick="navigateTo('noc-status.html')">📜 NOC Status</li>
-      <li onclick="navigateTo('removestudents.html')">🗑️ Delete Students</li>
-      <li onclick="navigateTo('createnocAd.html')">📝 Create NOC</li>
-      <li onclick="navigateTo('uploadstudents.html')">📚 Upload Student Data</li>
+      <li onclick="navigateTo('/uploadattendance')">🗓 Upload Attendance</li>
+      <li onclick="navigateTo('/uploadmidmarks')">📊 Upload Mid Marks</li>
+      <li onclick="navigateTo('/addmycounselling')">👥 Assign Counselling</li>
+      <li onclick="navigateTo('/dumatch')">📊 DU Match Status</li>
+      <li onclick="navigateTo('/removestudents')">🗑️ Delete Students</li>
+      <li onclick="navigateTo('/uploadstudents')">📚 Upload Student Data</li>
     </ul>
     <button onclick="logout()">🚪 Logout</button>
   </div>
 
-  <div class="mobile-toggle" onclick="toggleSidebar()">☰</div>
-
   <div class="main">
-    <div class="banner">📊 DU Match Status</div>
+    <div class="banner">📊 Upload Mid Marks (CSV Format)</div>
     <div class="card">
-      <div style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center;">
-        <input type="text" id="searchInput" placeholder="Search by Reg No or Name"
-          style="padding: 10px 14px; border-radius: 10px; width: 100%; max-width: 350px;
-                 background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
-                 color: white; box-shadow: inset 0 0 8px rgba(111,180,218,0.708); outline: none;"
-          oninput="searchDU()" />
-        <button onclick="loadMatches()">Reset</button>
-      </div>
-
-      <div style="overflow-x: auto;">
-        <table id="matchTable">
-          <thead>
-            <tr><th>User ID</th><th>Fee Type</th><th>DU Number</th><th>Status</th><th>Matched On</th></tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
+      <form id="midForm">
+        <input type="file" id="midMarksFile" accept=".csv" required />
+        <button type="submit" id="uploadBtn">Upload</button>
+      </form>
     </div>
   </div>
 
   <script>
-    // 🔐 Session check
     (async () => {
       try {
         const res = await fetch("/check-session");
@@ -136,99 +189,63 @@
       }
     })();
 
-    // 🔁 Navigation routing
     function navigateTo(route) {
-      const routes = {
-        'uploadresultsAd.html': '/uploadresults',
-        'uploadattendanceAd.html': '/uploadattendance',
-        'upload-sbi.html': '/uploadsbi',
-        'upload-midmarks.html': '/uploadmidmarks',
-        'du-match-status.html': '/dumatch',
-        'noc-status.html': '/nocstatus',
-        'removestudents.html': '/removestudents',
-        'createnocAd.html': '/createnoc'
-        'uploadstudents.html':'/uploadstudents'
-      };
-      window.location.href = routes[route] || '/adminpanel';
+      window.location.href = route;
     }
 
-    // 🚪 Logout
     function logout() {
       fetch("/logout").then(() => {
         localStorage.removeItem("userId");
         window.location.replace("index.html");
+      }).catch(() => {
+        Swal.fire("Logout Failed", "Please try again", "error");
       });
     }
 
-    // 📱 Sidebar
     function toggleSidebar() {
-      document.querySelector('.sidebar').classList.toggle('open');
+      document.getElementById("sidebar").classList.toggle("open");
     }
 
-    // 🔙 Block browser nav
     window.addEventListener("pageshow", (event) => {
       if (event.persisted) window.location.reload();
     });
     window.history.pushState(null, "", window.location.href);
-    window.onpopstate = function () {
-      window.history.pushState(null, "", window.location.href);
-    };
+    window.onpopstate = () => window.history.pushState(null, "", window.location.href);
 
-    // 🔃 Load full DU match status
-    function loadMatches() {
-      fetch("https://crr-noc.onrender.com/admin/matches")
-        .then(res => res.json())
-        .then(data => {
-          const tbody = document.querySelector("#matchTable tbody");
-          tbody.innerHTML = data.map(row => `
-            <tr>
-              <td>${row.userId}</td>
-              <td>${row.fee_type}</td>
-              <td>${row.sbi_ref_no}</td>
-              <td>${row.matched ? '✅' : '❌'}</td>
-              <td>${row.matched_on || '-'}</td>
-            </tr>
-          `).join("");
-        });
-    }
-
-    // 🔍 Search DU Matches
-    function searchDU() {
-      const query = document.getElementById("searchInput").value.trim();
-
-      if (!query) {
-        loadMatches(); return;
+    document.getElementById("midForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const file = document.getElementById("midMarksFile").files[0];
+      if (!file) {
+        return Swal.fire("No File Selected", "Please choose a CSV file.", "warning");
       }
 
-      fetch("https://crr-noc.onrender.com/admin/search-student-sbi", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query })
-      })
-        .then(res => res.json())
-        .then(data => {
-          const tbody = document.querySelector("#matchTable tbody");
-          if (data.success && data.data.length) {
-            tbody.innerHTML = data.data.map(row => `
-              <tr>
-                <td>${row.userId}</td>
-                <td>${row.fee_type || '-'}</td>
-                <td>${row.sbi_ref_no || '-'}</td>
-                <td>${row.matched ? '✅' : '❌'}</td>
-                <td>${row.matched_on || '-'}</td>
-              </tr>
-            `).join("");
-          } else {
-            tbody.innerHTML = `<tr><td colspan="5">No matching records found.</td></tr>`;
-          }
-        })
-        .catch(() => {
-          Swal.fire("Error", "Search failed. Please try again.", "error");
-        });
-    }
+      const formData = new FormData();
+      formData.append("file", file);
 
-    // 🚀 Initial data load
-    loadMatches();
+      document.getElementById("uploadBtn").disabled = true;
+
+      Swal.fire({
+        title: "Uploading...",
+        html: "Please wait while mid marks are being uploaded...",
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+      });
+
+      try {
+        const res = await fetch("https://crr-noc.onrender.com/upload-midmarks", {
+          method: "POST",
+          body: formData
+        });
+
+        const data = await res.json();
+        Swal.fire("Upload Successful ✅", data.message || "Marks uploaded.", "success");
+        e.target.reset();
+      } catch (err) {
+        Swal.fire("Upload Failed ❌", err.message || "Something went wrong.", "error");
+      } finally {
+        document.getElementById("uploadBtn").disabled = false;
+      }
+    });
   </script>
 
 </body>
