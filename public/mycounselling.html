@@ -547,11 +547,6 @@
     const year = document.getElementById("midYearSelect").value;
     const semester = document.getElementById("midSemesterSelect").value;
 
-    if (!year || !semester) {
-      Swal.fire("Select Year & Semester", "", "warning");
-      return;
-    }
-
     fetch(`/student/midmarks/${currentStudent.reg_no}?year=${year}&semester=${semester}`)
       .then(res => res.json())
       .then(data => {
