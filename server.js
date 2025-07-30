@@ -3351,8 +3351,8 @@ app.post('/api/notifications/send', async (req, res) => {
 
   try {
     await db.query(
-      'INSERT INTO notifications (staffId, message, userId) VALUES (?, ?, ?)',
-      [userId, message, userId]
+      'INSERT INTO notifications (staffId, message) VALUES (?, ?)',
+      [userId, message]
     );
     res.json({ success: true });
   } catch (error) {
