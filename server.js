@@ -181,6 +181,7 @@ setInterval(() => {
 app.use("/admin", adminRoutes);
 
 // 🔐 Login route
+// 🔐 Login route
 app.post('/login', (req, res) => {
   const { userId, password, role } = req.body;
 
@@ -205,12 +206,13 @@ app.post('/login', (req, res) => {
         req.session.userId = userId;
         req.session.role = role;
 
+        // ✅ Correct redirect paths
         let redirectTo = "";
         if (role === "student") redirectTo = `/student/${userId}`;
         else if (role === "staff") redirectTo = `/staff/${userId}`;
-        else if (role === "admin") redirectTo = `/adminpanel.html`;
+        else if (role === "admin") redirectTo = `/adminpanel`;
         else if (role === "hod") redirectTo = `/hodpanel.html`;
-        else if (role === "exam") redirectTo = `/examcell.html`;
+        else if (role === "exam") redirectTo = `/examcell`;   // ✅ FIXED
         else if (role === "accounts") redirectTo = `/accounts.html`;
 
         res.status(200).json({
@@ -224,6 +226,7 @@ app.post('/login', (req, res) => {
     }
   );
 });
+
 //email otp
 // Store OTPs temporarily in memory (for demo purpose only)
 const otpMap = new Map();
