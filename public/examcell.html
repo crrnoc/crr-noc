@@ -139,7 +139,7 @@
       window.location.href = routes[page] || page;
     }
 
-    // Logout
+    // Logout (also clear session)
     function logout() {
       fetch("/logout", { credentials: "include" })
         .then(() => {
@@ -150,19 +150,6 @@
           Swal.fire("Logout Failed", "Please try again", "error");
         });
     }
-
-    // ✅ Session Check (with cookies)
-    window.addEventListener("load", () => {
-      setTimeout(async () => {
-        try {
-          const res = await fetch("/check-session", { credentials: "include" });
-          if (!res.ok) throw new Error("Unauthorized");
-        } catch (err) {
-          localStorage.removeItem("userId");
-          window.location.replace("index.html");
-        }
-      }, 200); // delay 200ms for session to be ready
-    });
 
     // Prevent back button after logout
     window.history.pushState(null, "", window.location.href);
