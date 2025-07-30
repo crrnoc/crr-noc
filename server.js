@@ -2940,7 +2940,7 @@ app.get("/hod/pass-fail-stats", (req, res) => {
   const deptCode = staffId.replace("HOD", ""); // HODCSE → CSE
 
   const query = `
-    SELECT s.course, s.section,
+    SELECT s.year, s.course, s.section,
       COUNT(DISTINCT s.reg_no) AS total_students,
       SUM(
         CASE WHEN failed_students.failed_count > 0 THEN 1 ELSE 0 END
@@ -2954,7 +2954,8 @@ app.get("/hod/pass-fail-stats", (req, res) => {
     ) AS failed_students
     ON failed_students.regno = s.reg_no
     WHERE s.course LIKE ?
-    GROUP BY s.course, s.section
+    GROUP BY s.year, s.course, s.section
+    ORDER BY s.year ASC, s.section ASC
   `;
 
   connection.query(query, [`%${deptCode}%`], (err, rows) => {
@@ -2969,7 +2970,9 @@ app.get("/hod/pass-fail-stats", (req, res) => {
       const fail_percent = row.total_students === 0 ? 0 : Math.round((row.failed_students / row.total_students) * 100);
 
       return {
-        course: `${row.course} - ${row.section}`,
+        year: row.year,                     // 🔹 Now returning year also
+        course: row.course,
+        section: row.section,
         pass_percent,
         fail_percent
       };
