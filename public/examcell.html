@@ -112,23 +112,26 @@
   <div class="sidebar" id="sidebar">
     <h2>Exam Cell</h2>
     <ul>
-      <li onclick="navigateTo('/uploadresultsAd')">📥 Upload Results</li>
+      <li onclick="navigateTo('uploadresultsAd.html')">📥 Upload Results</li>
     </ul>
     <button onclick="logout()">🚪 Logout</button>
   </div>
 
   <div class="main">
     <div class="banner">📥 Welcome to Exam Cell Dashboard</div>
-    <!-- You can add more UI here later if needed -->
+    <!-- Optional: Add dashboard content -->
   </div>
 
   <script>
-    function navigateTo(route) {
-      window.location.href = route;
-    }
-
     function toggleSidebar() {
       document.getElementById("sidebar").classList.toggle("open");
+    }
+
+    function navigateTo(page) {
+      const routes = {
+        'uploadresultsAd.html': 'uploadresultsAd.html'
+      };
+      window.location.href = routes[page] || page;
     }
 
     function logout() {
@@ -158,4 +161,3 @@
 
 </body>
 </html>
-
