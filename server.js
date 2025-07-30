@@ -3356,10 +3356,8 @@ app.post('/api/notifications/send', async (req, res) => {
     );
     res.json({ success: true });
   } catch (error) {
-    console.error('❌ Notification insert error:', error);
+    console.error('❌ DB Error:', error);
     res.status(500).json({ success: false, message: 'Database error' });
   }
 });
-
-
 
