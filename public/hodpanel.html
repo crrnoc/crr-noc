@@ -1,16 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>HOD Dashboard</title>
-  <link rel="icon" href="crrengglogo.png" type="image/png"/>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="icon" href="crrengglogo.png" type="image/png" />
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  />
+
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
     body {
-      font-family: 'Segoe UI', sans-serif;
+      font-family: "Segoe UI", sans-serif;
       background: linear-gradient(to right, #e0eafc, #cfdef3);
       display: flex;
       min-height: 100vh;
@@ -21,12 +29,14 @@
     /* Sidebar */
     .sidebar {
       width: 250px;
-      background: linear-gradient(180deg, #2C3E50, #34495E);
+      background: linear-gradient(180deg, #2c3e50, #34495e);
       padding: 20px;
       display: flex;
       flex-direction: column;
       position: fixed;
-      top: 0; left: 0; bottom: 0;
+      top: 0;
+      left: 0;
+      bottom: 0;
       color: white;
       transition: all 0.3s ease;
       z-index: 100;
@@ -57,12 +67,12 @@
 
     .menu a:hover,
     .menu .active {
-      background: rgba(255,255,255,0.2);
+      background: rgba(255, 255, 255, 0.2);
       transform: translateX(5px);
     }
 
     .logout {
-      background-color: #E67E22;
+      background-color: #e67e22;
       border: none;
       color: white;
       padding: 12px;
@@ -72,31 +82,8 @@
       transition: background 0.3s ease;
     }
 
-    .logout:hover { background-color: #CA6F1E; }
-
-    /* Overlay behind sidebar */
-    .overlay {
-      display: none;
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.4);
-      z-index: 90;
-      transition: all 0.3s ease;
-    }
-    .overlay.active { display: block; }
-
-    /* Toggle Button (Mobile) */
-    .mobile-toggle {
-      display: none;
-      position: fixed;
-      top: 15px;
-      left: 15px;
-      background: #2C3E50;
-      color: white;
-      padding: 10px 15px;
-      border-radius: 8px;
-      cursor: pointer;
-      z-index: 200;
+    .logout:hover {
+      background-color: #ca6f1e;
     }
 
     /* Main Content */
@@ -105,31 +92,43 @@
       flex: 1;
       padding: 40px;
       transition: filter 0.3s ease;
-      margin-top: 36px;
+      margin-top: 20px;
+      width: 100%;
     }
-    .main-content.shifted { filter: blur(2px); pointer-events: none; }
 
     h2 {
       text-align: center;
-      margin-bottom: 30px;
+      margin-bottom: 20px;
       font-weight: bold;
-      color: #2C3E50;
+      color: #2c3e50;
     }
 
-    /* Card Styles */
+    /* Filters */
+    .filters {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 25px;
+      flex-wrap: wrap;
+    }
+    select.form-select {
+      width: 220px;
+      border-radius: 10px;
+    }
+
+    /* Card Box */
     .card-box {
       background: white;
       border-radius: 18px;
       padding: 25px;
       text-align: center;
       transition: all 0.3s ease;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
       margin-bottom: 20px;
-      animation: fadeIn 0.6s ease forwards;
     }
     .card-box:hover {
       transform: translateY(-5px) scale(1.02);
-      box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
     }
 
     /* Circle Progress */
@@ -139,13 +138,11 @@
       height: 130px;
       margin: 0 auto;
     }
-
     .circle-container canvas {
       position: absolute;
       top: 0;
       left: 0;
     }
-
     .circle-container .percent-text {
       position: absolute;
       top: 50%;
@@ -153,120 +150,124 @@
       transform: translate(-50%, -50%);
       font-size: 22px;
       font-weight: bold;
-      color: #27AE60;
+      color: #27ae60;
     }
-
     .fail-text {
       margin-top: 12px;
       font-weight: bold;
-      color: #E74C3C;
+      color: #e74c3c;
     }
-
-    /* Backlog Summary Cards */
-    .backlog-summary {
-      display: flex;
+    #statsContainer {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
       gap: 20px;
-      justify-content: center;
-      margin-top: 20px;
-      flex-wrap: wrap;
     }
 
-    .summary-card {
-      background: white;
-      padding: 20px;
-      border-radius: 15px;
-      width: 250px;
-      text-align: center;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    /* Overlay */
+    .overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 90;
       transition: all 0.3s ease;
-      animation: fadeIn 0.5s ease forwards;
+    }
+    .overlay.active {
+      display: block;
     }
 
-    .summary-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    /* Mobile Toggle Button */
+    .mobile-toggle {
+      display: none;
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      background: #2c3e50;
+      color: white;
+      padding: 10px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      z-index: 200;
+      user-select: none;
     }
 
-    .summary-card h3 {
-      margin-bottom: 10px;
-      font-size: 20px;
-    }
-
-    .summary-card p {
-      font-size: 18px;
-      font-weight: bold;
-    }
-
-    .summary-card.zero h3, .summary-card.zero p { color: #27AE60; }
-    .summary-card.low h3, .summary-card.low p { color: #F39C12; }
-    .summary-card.high h3, .summary-card.high p { color: #E74C3C; }
-
-    @keyframes fadeIn {
-      from {opacity: 0; transform: translateY(20px);}
-      to {opacity: 1; transform: translateY(0);}
-    }
-
+    /* Responsive */
     @media (max-width: 768px) {
-      .main-content { margin-left: 0; padding: 20px; }
-      .sidebar { left: -260px; }
-      .sidebar.open { left: 0; }
-      .mobile-toggle { display: block; }
+      .main-content {
+        margin-left: 0;
+        padding: 20px;
+      }
+      .sidebar {
+        left: -260px;
+        position: fixed;
+        transition: left 0.3s ease;
+      }
+      .sidebar.open {
+        left: 0;
+      }
+      .mobile-toggle {
+        display: block;
+      }
     }
   </style>
 </head>
 <body>
-
   <!-- Overlay -->
   <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
-  <!-- Mobile toggle -->
-  <div class="mobile-toggle" onclick="toggleSidebar()">☰ Menu</div>
+  <!-- Mobile Toggle -->
+  <div class="mobile-toggle" id="mobileToggle" onclick="toggleSidebar()">☰ Menu</div>
 
   <!-- Sidebar -->
   <div class="sidebar" id="sidebar">
-    <img src="crrengglogo.png" alt="College Logo"/>
+    <img src="crrengglogo.png" alt="College Logo" />
     <h4 id="welcomeText">Welcome HOD</h4>
     <div class="menu">
       <a href="hodpanel.html" class="active">🏠 Dashboard</a>
       <a href="students.html">🎓 Students</a>
       <a href="hodbacklogsview.html">📚 Backlogs</a>
-       <a href="hodmidmarks.html">📝 Mid Marks</a>
+      <a href="hodmidmarks.html">📝 Mid Marks</a>
     </div>
     <button class="logout" onclick="logout()">Logout</button>
   </div>
 
   <!-- Main Content -->
   <div class="main-content" id="main-content">
-    <h2> Department-wise Pass/Fail Statistics</h2>
-    <div class="row" id="statsCards"></div>
+    <h2>Year, Course & Section Wise Pass/Fail Statistics</h2>
 
-    <!-- Backlog Summary -->
-    <h2 style="margin-top:40px;"> Backlog Summary</h2>
-    <div class="backlog-summary" id="backlogSummary">
-      <div class="summary-card zero">
-        <h3>0 Backlogs</h3>
-        <p id="zeroBacklogs">0 Students</p>
-      </div>
-      <div class="summary-card low">
-        <h3>1-2 Backlogs</h3>
-        <p id="lowBacklogs">0 Students</p>
-      </div>
-      <div class="summary-card high">
-        <h3>3+ Backlogs</h3>
-        <p id="highBacklogs">0 Students</p>
-      </div>
+    <!-- Filters -->
+    <div class="filters">
+      <select id="yearSelect" class="form-select" onchange="fetchCourses()">
+        <option value="">-- Select Year --</option>
+      </select>
+      <select id="courseSelect" class="form-select" onchange="fetchSections()" disabled>
+        <option value="">-- Select Course --</option>
+      </select>
+      <select id="sectionSelect" class="form-select" onchange="fetchStats()" disabled>
+        <option value="">-- Select Section --</option>
+      </select>
     </div>
+
+    <!-- Cards Container -->
+    <div id="statsContainer"></div>
   </div>
 
   <script>
-    const userId = localStorage.getItem("userId");
+    const staffId = localStorage.getItem("userId");
     const welcomeText = document.getElementById("welcomeText");
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.getElementById("overlay");
+    const mainContent = document.getElementById("main-content");
 
-    if (!userId || !userId.startsWith("HOD")) {
+    // Validate login
+    if (!staffId || !staffId.startsWith("HOD")) {
       alert("Please login as HOD");
       window.location.href = "index.html";
     } else {
-      const dept = userId.replace("HOD", "");
+      const dept = staffId.replace("HOD", "");
       welcomeText.textContent = `Welcome Head of Department - ${dept}`;
     }
 
@@ -276,62 +277,100 @@
     }
 
     function toggleSidebar() {
-      const sidebar = document.getElementById("sidebar");
-      const overlay = document.getElementById("overlay");
-      const mainContent = document.getElementById("main-content");
       sidebar.classList.toggle("open");
       overlay.classList.toggle("active");
       mainContent.classList.toggle("shifted");
     }
 
-    // Fetch Pass/Fail stats
-    fetch(`/hod/pass-fail-stats?staffId=${userId}`)
-      .then(res => res.json())
-      .then(data => {
-        const container = document.getElementById("statsCards");
-        if (!data.stats || data.stats.length === 0) {
-          container.innerHTML = `<p class="text-center text-secondary">No data available!</p>`;
-          return;
-        }
+    // Load all Years on page load
+    async function loadYears() {
+      const res = await fetch(`/hod/pass-fail-stats?staffId=${staffId}`);
+      const data = await res.json();
 
-        data.stats.forEach((branch, i) => {
-          const col = document.createElement("div");
-          col.className = "col-md-6 col-lg-3";
-          col.innerHTML = `
-            <div class="card-box">
-              <h5 class="mb-3 text-dark">${branch.course}</h5>
-              <div class="circle-container">
-                <canvas id="circle${i}" width="130" height="130"></canvas>
-                <div class="percent-text">${branch.pass_percent}%</div>
-              </div>
-              <div class="fail-text">Fail: ${branch.fail_percent}%</div>
-            </div>
-          `;
-          container.appendChild(col);
-          drawCircle(`circle${i}`, branch.pass_percent);
-        });
-      })
-      .catch(err => {
-        console.error("Error fetching stats:", err);
-        document.getElementById("statsCards").innerHTML = 
-          `<p class='text-center text-danger'>Failed to load data!</p>`;
+      const years = [...new Set(data.stats.map((s) => s.year))];
+      const yearSelect = document.getElementById("yearSelect");
+      yearSelect.innerHTML = `<option value="">-- Select Year --</option>`;
+      years.forEach((y) => {
+        yearSelect.innerHTML += `<option value="${y}">${y} Year</option>`;
+      });
+    }
+
+    async function fetchCourses() {
+      const year = document.getElementById("yearSelect").value;
+      if (!year) return;
+
+      const res = await fetch(`/hod/pass-fail-stats?staffId=${staffId}&year=${year}`);
+      const data = await res.json();
+
+      const courses = [...new Set(data.stats.map((s) => s.course))];
+      const courseSelect = document.getElementById("courseSelect");
+      courseSelect.disabled = false;
+      courseSelect.innerHTML = `<option value="">-- Select Course --</option>`;
+      courses.forEach((c) => {
+        courseSelect.innerHTML += `<option value="${c}">${c}</option>`;
       });
 
-    // Fetch Backlog Summary
-    fetch(`/hod/backlog-summary?staffId=${userId}`)
-      .then(res => res.json())
-      .then(data => {
-        document.getElementById("zeroBacklogs").innerText = `${data.zero || 0} Students`;
-        document.getElementById("lowBacklogs").innerText = `${data.low || 0} Students`;
-        document.getElementById("highBacklogs").innerText = `${data.high || 0} Students`;
-      })
-      .catch(err => {
-        console.error("Error fetching backlog summary:", err);
-        document.getElementById("backlogSummary").innerHTML = 
-          `<p class="text-center text-danger">⚠️ Failed to load backlog summary</p>`;
+      // Reset section + stats
+      document.getElementById("sectionSelect").disabled = true;
+      document.getElementById("statsContainer").innerHTML = "";
+    }
+
+    async function fetchSections() {
+      const year = document.getElementById("yearSelect").value;
+      const course = document.getElementById("courseSelect").value;
+      if (!course) return;
+
+      const res = await fetch(
+        `/hod/pass-fail-stats?staffId=${staffId}&year=${year}&course=${course}`
+      );
+      const data = await res.json();
+
+      const sections = [...new Set(data.stats.map((s) => s.section))];
+      const sectionSelect = document.getElementById("sectionSelect");
+      sectionSelect.disabled = false;
+      sectionSelect.innerHTML = `<option value="">-- Select Section --</option>`;
+      sections.forEach((sec) => {
+        sectionSelect.innerHTML += `<option value="${sec}">Section ${sec}</option>`;
       });
 
-    // Draw Circle Progress
+      document.getElementById("statsContainer").innerHTML = "";
+    }
+
+    async function fetchStats() {
+      const year = document.getElementById("yearSelect").value;
+      const course = document.getElementById("courseSelect").value;
+      const section = document.getElementById("sectionSelect").value;
+
+      const res = await fetch(
+        `/hod/pass-fail-stats?staffId=${staffId}&year=${year}&course=${course}&section=${section}`
+      );
+      const data = await res.json();
+
+      const container = document.getElementById("statsContainer");
+      container.innerHTML = "";
+
+      if (data.stats.length === 0) {
+        container.innerHTML = `<p class="text-center text-secondary">No data available</p>`;
+        return;
+      }
+
+      data.stats.forEach((record, i) => {
+        const card = document.createElement("div");
+        card.className = "card-box";
+        card.innerHTML = `
+          <h5>${record.course} - Section ${record.section}</h5>
+          <div class="circle-container">
+            <canvas id="circle${i}" width="130" height="130"></canvas>
+            <div class="percent-text">${record.pass_percent}%</div>
+          </div>
+          <div class="fail-text">Fail: ${record.fail_percent}%</div>
+        `;
+        container.appendChild(card);
+
+        drawCircle(`circle${i}`, record.pass_percent);
+      });
+    }
+
     function drawCircle(id, percent) {
       const canvas = document.getElementById(id);
       const ctx = canvas.getContext("2d");
@@ -339,17 +378,22 @@
       const startAngle = -0.5 * Math.PI;
       const endAngle = (percent / 100) * 2 * Math.PI + startAngle;
 
+      // Background Circle
       ctx.lineWidth = 10;
       ctx.strokeStyle = "#d6eaf8";
       ctx.beginPath();
       ctx.arc(radius, radius, radius - 10, 0, 2 * Math.PI);
       ctx.stroke();
 
-      ctx.strokeStyle = "#27AE60";
+      // Progress Circle
+      ctx.strokeStyle = "#27ae60";
       ctx.beginPath();
       ctx.arc(radius, radius, radius - 10, startAngle, endAngle);
       ctx.stroke();
     }
+
+    // Initialize Years on load
+    loadYears();
   </script>
 </body>
 </html>
