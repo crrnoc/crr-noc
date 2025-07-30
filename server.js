@@ -55,6 +55,16 @@ app.get('/check-session', (req, res) => {
   }
 });
 
+function requireAdminSession(req, res, next) {
+  if (
+    req.session.userId &&
+    (req.session.role === 'admin' || req.session.role === 'exam' || req.session.role === 'accounts')
+  ) {
+    return next();
+  }
+  res.redirect('/index.html');
+}
+
 
 const MySQLStore = require('express-mysql-session')(session);
 
