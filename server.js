@@ -3343,16 +3343,16 @@ app.get("/api/midmarks/search", (req, res) => {
 
 //hod send notifications
 app.post('/api/notifications/send', async (req, res) => {
-  const { staffId, message } = req.body;
+  const { userId, message } = req.body;
 
-  if (!staffId || !message || !staffId.startsWith("HOD")) {
+  if (!userId || !message || !userId.startsWith("HOD")) {
     return res.status(400).json({ success: false, message: 'Invalid input' });
   }
 
   try {
     await db.query(
-      'INSERT INTO notifications (staffId, message) VALUES (?, ?)',
-      [staffId, message]
+      'INSERT INTO notifications (staffId, message, userId) VALUES (?, ?, ?)',
+      [userId, message, userId]
     );
     res.json({ success: true });
   } catch (error) {
@@ -3360,5 +3360,6 @@ app.post('/api/notifications/send', async (req, res) => {
     res.status(500).json({ success: false, message: 'Database error' });
   }
 });
+
 
 
