@@ -135,6 +135,9 @@ app.get("/addmycounselling", requireAdminSession, (req, res) => {
 app.get("/examcell", requireAdminSession, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "examcell.html"));
 });
+app.get("/studentfeesearch", requireAdminSession, (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "studentfeesearch.html"));
+});
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads"))); // for previews
 
