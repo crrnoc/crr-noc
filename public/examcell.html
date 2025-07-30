@@ -107,8 +107,10 @@
 </head>
 <body>
 
+  <!-- Mobile toggle -->
   <div class="mobile-toggle" onclick="toggleSidebar()">☰</div>
 
+  <!-- Sidebar -->
   <div class="sidebar" id="sidebar">
     <h2>Exam Cell</h2>
     <ul>
@@ -117,16 +119,19 @@
     <button onclick="logout()">🚪 Logout</button>
   </div>
 
+  <!-- Main content -->
   <div class="main">
     <div class="banner">📥 Welcome to Exam Cell Dashboard</div>
-    <!-- Optional: Add dashboard content -->
+    <!-- You can add dashboard content here -->
   </div>
 
   <script>
+    // Sidebar toggle for mobile
     function toggleSidebar() {
       document.getElementById("sidebar").classList.toggle("open");
     }
 
+    // Navigate to pages
     function navigateTo(page) {
       const routes = {
         'uploadresultsAd.html': 'uploadresultsAd.html'
@@ -134,8 +139,9 @@
       window.location.href = routes[page] || page;
     }
 
+    // Logout
     function logout() {
-      fetch("/logout")
+      fetch("/logout", { credentials: "include" })
         .then(() => {
           localStorage.removeItem("userId");
           window.location.replace("index.html");
@@ -145,16 +151,20 @@
         });
     }
 
-    (async () => {
-      try {
-        const res = await fetch("/check-session");
-        if (!res.ok) throw new Error("Unauthorized");
-      } catch (err) {
-        localStorage.removeItem("userId");
-        window.location.replace("index.html");
-      }
-    })();
+    // ✅ Session Check (with cookies)
+    window.addEventListener("load", () => {
+      setTimeout(async () => {
+        try {
+          const res = await fetch("/check-session", { credentials: "include" });
+          if (!res.ok) throw new Error("Unauthorized");
+        } catch (err) {
+          localStorage.removeItem("userId");
+          window.location.replace("index.html");
+        }
+      }, 200); // delay 200ms for session to be ready
+    });
 
+    // Prevent back button after logout
     window.history.pushState(null, "", window.location.href);
     window.onpopstate = () => window.history.pushState(null, "", window.location.href);
   </script>
