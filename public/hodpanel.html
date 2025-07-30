@@ -274,7 +274,37 @@
 </div>
 
 <script>
-  // ... earlier code ...
+  // ===== HOD Login Validation & staffId setup =====
+  const userId = localStorage.getItem("userId");
+  const welcomeText = document.getElementById("welcomeText");
+
+  if (!userId || !userId.startsWith("HOD")) {
+    alert("Please login as HOD");
+    window.location.href = "index.html";
+  } else {
+    const dept = userId.replace("HOD", "");
+    welcomeText.textContent = `Welcome Head of Department - ${dept}`;
+  }
+
+  // staffId for backend calls
+  const staffId = userId;
+
+  // ===== Sidebar Toggle & Logout =====
+  function logout() {
+    localStorage.clear();
+    window.location.href = "index.html";
+  }
+
+  function toggleSidebar() {
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.getElementById("overlay");
+    const mainContent = document.getElementById("main-content");
+    sidebar.classList.toggle("open");
+    overlay.classList.toggle("active");
+    mainContent.classList.toggle("shifted");
+  }
+
+  // ===== Dropdown & Stats Functions =====
 
   // Load Years on page load
   async function loadYears() {
@@ -300,9 +330,7 @@
     }
 
     // Fetch all courses dynamically from backend based on year and dept (staffId)
-    const res = await fetch(
-      `/hod/courses?staffId=${staffId}&year=${year}`
-    );
+    const res = await fetch(`/hod/courses?staffId=${staffId}&year=${year}`);
     const courses = await res.json();
 
     const courseSelect = document.getElementById("courseSelect");
@@ -399,23 +427,25 @@
     }
   }
 
-  // Helper reset functions
+  // ===== Helper reset functions =====
   function resetDropdown(id) {
     const el = document.getElementById(id);
     el.innerHTML = `<option value="">-- Select ${id.replace("Select", "")} --</option>`;
     el.disabled = true;
   }
+
   function clearStatsAndBacklogs() {
     document.getElementById("statsContainer").innerHTML = "";
     resetBacklogSummary();
   }
+
   function resetBacklogSummary() {
     document.getElementById("zeroBacklogs").innerText = "0 Students";
     document.getElementById("lowBacklogs").innerText = "0 Students";
     document.getElementById("highBacklogs").innerText = "0 Students";
   }
 
-  // drawCircle function unchanged
+  // ===== Draw Circle function =====
   function drawCircle(id, percent) {
     const canvas = document.getElementById(id);
     const ctx = canvas.getContext("2d");
@@ -423,19 +453,21 @@
     const startAngle = -0.5 * Math.PI;
     const endAngle = (percent / 100) * 2 * Math.PI + startAngle;
 
+    // Background
     ctx.lineWidth = 10;
     ctx.strokeStyle = "#d6eaf8";
     ctx.beginPath();
     ctx.arc(radius, radius, radius - 10, 0, 2 * Math.PI);
     ctx.stroke();
 
+    // Progress
     ctx.strokeStyle = "#27ae60";
     ctx.beginPath();
     ctx.arc(radius, radius, radius - 10, startAngle, endAngle);
     ctx.stroke();
   }
 
-  // Load years on page load
+  // ===== Load years on page load =====
   loadYears();
 </script>
 </body>
