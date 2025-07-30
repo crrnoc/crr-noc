@@ -193,17 +193,20 @@
     </div>
   </div>
 
-  <script>
+<script>
+    // Toggle sidebar for mobile
     function toggleSidebar() {
       document.getElementById("sidebar").classList.toggle("open");
     }
 
+    // Navigate to pages
     function navigateTo(route) {
       window.location.href = route;
     }
 
+    // Logout
     function logout() {
-      fetch("/logout")
+      fetch("/logout", { credentials: "include" })
         .then(() => {
           localStorage.removeItem("userId");
           window.location.replace("index.html");
@@ -213,19 +216,13 @@
         });
     }
 
-    (async () => {
-      try {
-        const res = await fetch("/check-session");
-        if (!res.ok) throw new Error("Unauthorized");
-      } catch (err) {
-        localStorage.removeItem("userId");
-        window.location.replace("index.html");
-      }
-    })();
+    // 🔹 Removed check-session block (backend handles session)
 
+    // Prevent back button after logout
     window.history.pushState(null, "", window.location.href);
     window.onpopstate = () => window.history.pushState(null, "", window.location.href);
 
+    // Handle Upload Form
     document.getElementById("uploadForm").addEventListener("submit", async function (e) {
       e.preventDefault();
 
@@ -275,6 +272,6 @@
         document.getElementById("submitBtn").disabled = false;
       }
     });
-  </script>
+</script>
 </body>
 </html>
