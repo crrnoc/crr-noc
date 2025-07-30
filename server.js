@@ -44,13 +44,17 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // 🔐 Middleware to protect admin-only pages
-function requireAdminSession(req, res, next) {
-  if (req.session.userId && req.session.role === 'admin') {
-    next(); // allow access
+app.get('/check-session', (req, res) => {
+  if (
+    req.session.userId &&
+    (req.session.role === 'admin' || req.session.role === 'exam' || req.session.role ==='accounts')
+  ) {
+    res.json({ success: true });
   } else {
-    res.redirect('/index.html'); // redirect to login if not authorized
+    res.status(401).json({ success: false });
   }
-}
+});
+
 
 const MySQLStore = require('express-mysql-session')(session);
 
@@ -2846,7 +2850,10 @@ app.get('/logout', (req, res) => {
   });
 });
 app.get('/check-session', (req, res) => {
-  if (req.session.userId && req.session.role === 'admin') {
+  if (
+    req.session.userId &&
+    (req.session.role === 'admin' || req.session.role === 'exam' || req.session.role ==='accounts')
+  ) {
     res.json({ success: true });
   } else {
     res.status(401).json({ success: false });
