@@ -1,101 +1,96 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>📢 HOD Notifications</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="icon" href="crrengglogo.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI&display=swap" rel="stylesheet">
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
-      background-color: #f1f5f9;
+      background: #f0f0f0;
       margin: 0;
-      padding: 0;
-    }
-    .container {
-      max-width: 700px;
-      margin: 50px auto;
-      background-color: #ffffff;
       padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     }
+
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: #fff;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
     h2 {
+      margin-top: 0;
       text-align: center;
-      color: #1e293b;
     }
+
     label {
       display: block;
-      margin-top: 20px;
-      font-weight: 500;
-      color: #334155;
+      margin: 15px 0 5px;
     }
-    input[type="text"], textarea {
+
+    input, textarea {
       width: 100%;
-      padding: 12px;
-      margin-top: 8px;
-      border: 1px solid #cbd5e1;
-      border-radius: 8px;
+      padding: 10px;
       font-size: 16px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
     }
-    textarea {
-      resize: vertical;
-      height: 120px;
-    }
+
     button {
-      margin-top: 25px;
-      width: 100%;
-      padding: 12px;
+      margin-top: 20px;
+      padding: 10px 15px;
       font-size: 16px;
-      background-color: #0284c7;
-      color: white;
+      background-color: #0066cc;
+      color: #fff;
       border: none;
-      border-radius: 8px;
+      border-radius: 6px;
       cursor: pointer;
     }
+
     button:hover {
-      background-color: #0369a1;
+      background-color: #004999;
     }
+
     .status {
-      margin-top: 20px;
+      margin-top: 15px;
       font-weight: bold;
-      text-align: center;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>📢 Send Notification</h2>
-    <form id="notificationForm">
-      <label for="userId">HOD User ID (e.g., HODCSE):</label>
-      <input type="text" id="userId" name="userId" required />
+    <h2>Send Notification</h2>
+    
+    <label for="userId">HOD User ID (e.g. HODCSE)</label>
+    <input type="text" id="userId" placeholder="Enter your HOD User ID" />
 
-      <label for="message">Notification Message:</label>
-      <textarea id="message" name="message" required></textarea>
+    <label for="message">Notification Message</label>
+    <textarea id="message" rows="5" placeholder="Enter your message here..."></textarea>
 
-      <button type="submit">Send Notification</button>
-    </form>
-    <div class="status" id="statusMsg"></div>
+    <button onclick="sendNotification()">Send</button>
+
+    <div class="status" id="status"></div>
   </div>
 
   <script>
-    const form = document.getElementById('notificationForm');
-    const statusMsg = document.getElementById('statusMsg');
-
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-
+    async function sendNotification() {
       const userId = document.getElementById('userId').value.trim();
       const message = document.getElementById('message').value.trim();
+      const statusEl = document.getElementById('status');
 
       if (!userId || !message) {
-        statusMsg.textContent = "Please fill in all fields.";
-        statusMsg.style.color = "red";
+        statusEl.textContent = '❌ Please fill all fields.';
+        statusEl.style.color = 'red';
         return;
       }
 
       try {
-        const response = await fetch('/api/notifications/send', {
+        const res = await fetch('/api/notifications/send', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -103,22 +98,23 @@
           body: JSON.stringify({ userId, message })
         });
 
-        const result = await response.json();
+        const data = await res.json();
 
-        if (result.success) {
-          statusMsg.textContent = "✅ Notification sent successfully!";
-          statusMsg.style.color = "green";
-          form.reset();
+        if (data.success) {
+          statusEl.textContent = '✅ Notification sent successfully!';
+          statusEl.style.color = 'green';
+          document.getElementById('message').value = '';
         } else {
-          statusMsg.textContent = "❌ Failed to send notification.";
-          statusMsg.style.color = "red";
+          statusEl.textContent = '❌ Failed to send: ' + (data.message || 'Unknown error');
+          statusEl.style.color = 'red';
         }
       } catch (err) {
-        console.error('Request error:', err);
-        statusMsg.textContent = "❌ Error sending notification.";
-        statusMsg.style.color = "red";
+        console.error('Error sending notification:', err);
+        statusEl.textContent = '❌ Server error. Please try again.';
+        statusEl.style.color = 'red';
       }
-    });
+    }
   </script>
 </body>
 </html>
+
