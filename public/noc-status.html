@@ -190,7 +190,7 @@
 
   <script>
     // 🔐 Session Check
-    (async () => {
+/*    (async () => {
       try {
         const res = await fetch("/check-session");
         if (!res.ok) throw new Error("Unauthorized");
@@ -198,7 +198,7 @@
         localStorage.removeItem("userId");
         window.location.replace("index.html");
       }
-    })();
+    })();*/
 
     // 🔁 Navigation Logic
     function navigateTo(route) {
