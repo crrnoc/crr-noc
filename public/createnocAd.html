@@ -263,7 +263,7 @@
 
 <script>
 // ✅ SESSION CHECK - prevent unauthorized access
-(async () => {
+/*  (async () => {
   try {
     const res = await fetch("/check-session");
     if (!res.ok) throw new Error("Unauthorized");
@@ -271,7 +271,7 @@
     localStorage.removeItem("userId");
     window.location.replace("index.html");
   }
-})();
+})();  */
 
 // 🧭 INTERNAL NAVIGATION ROUTES
 function navigateTo(route) {
