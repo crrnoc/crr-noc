@@ -3339,17 +3339,17 @@ app.get("/api/midmarks/search", (req, res) => {
 });
 
 //hod send notifications
-router.post('/send', async (req, res) => {
-  const { userId, message } = req.body;
+app.post('/api/notifications/send', async (req, res) => {
+  const { staffId, message } = req.body;
 
-  if (!userId || !message || !userId.startsWith("HOD")) {
+  if (!staffId || !message || !staffId.startsWith("HOD")) {
     return res.status(400).json({ success: false, message: 'Invalid input' });
   }
 
   try {
     await db.query(
-      'INSERT INTO notifications (userId, staffId, message) VALUES (?, ?, ?)',
-      [userId, userId, message]
+      'INSERT INTO notifications (staffId, message) VALUES (?, ?)',
+      [staffId, message]
     );
     res.json({ success: true });
   } catch (error) {
@@ -3357,4 +3357,5 @@ router.post('/send', async (req, res) => {
     res.status(500).json({ success: false, message: 'Database error' });
   }
 });
+
 
