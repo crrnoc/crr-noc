@@ -2986,6 +2986,62 @@ app.get("/hod/pass-fail-stats", (req, res) => {
   });
 });
 
+app.get("/hod/courses", (req, res) => {
+  const { staffId, year } = req.query;
+  if (!staffId || !staffId.startsWith("HOD")) {
+    return res.status(400).json({ error: "Invalid HOD Staff ID" });
+  }
+  if (!year) {
+    return res.status(400).json({ error: "Year parameter is required" });
+  }
+
+  const deptCode = staffId.replace("HOD", "");
+
+  const query = `
+    SELECT DISTINCT course FROM students
+    WHERE course LIKE ? AND year = ?
+    ORDER BY course
+  `;
+
+  connection.query(query, [`%${deptCode}%`, year], (err, results) => {
+    if (err) {
+      console.error("Error fetching courses:", err);
+      return res.status(500).json({ error: "Internal Server Error" });
+    }
+
+    const courses = results.map(row => row.course);
+    res.json(courses);
+  });
+});
+
+app.get("/hod/sections", (req, res) => {
+  const { staffId, year, course } = req.query;
+  if (!staffId || !staffId.startsWith("HOD")) {
+    return res.status(400).json({ error: "Invalid HOD Staff ID" });
+  }
+  if (!year || !course) {
+    return res.status(400).json({ error: "Year and course parameters are required" });
+  }
+
+  const deptCode = staffId.replace("HOD", "");
+
+  const query = `
+    SELECT DISTINCT section FROM students
+    WHERE course = ? AND year = ? AND course LIKE ?
+    ORDER BY section
+  `;
+
+  connection.query(query, [course, year, `%${deptCode}%`], (err, results) => {
+    if (err) {
+      console.error("Error fetching sections:", err);
+      return res.status(500).json({ error: "Internal Server Error" });
+    }
+
+    const sections = results.map(row => row.section);
+    res.json(sections);
+  });
+});
+
 
 // Backlog Summary Route
 app.get("/hod/backlog-summary", (req, res) => {
