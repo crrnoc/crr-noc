@@ -1,91 +1,78 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>📢 HOD Notifications</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f0f0f0;
-      margin: 0;
-      padding: 30px;
+      font-family: Arial, sans-serif;
+      background: #f1f1f1;
+      padding: 20px;
     }
-
     .container {
-      max-width: 600px;
-      margin: auto;
       background: #fff;
-      padding: 25px;
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 30px;
       border-radius: 10px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
-
     h2 {
-      margin-top: 0;
       text-align: center;
+      margin-bottom: 25px;
     }
-
-    label {
-      display: block;
-      margin: 15px 0 5px;
-    }
-
-    input, textarea {
+    input, textarea, button {
       width: 100%;
       padding: 10px;
-      font-size: 16px;
-      border-radius: 6px;
+      margin-top: 10px;
+      border-radius: 5px;
       border: 1px solid #ccc;
-      box-sizing: border-box;
     }
-
     button {
-      margin-top: 20px;
-      padding: 10px 15px;
-      font-size: 16px;
-      background-color: #0066cc;
-      color: #fff;
-      border: none;
-      border-radius: 6px;
+      background-color: #1976d2;
+      color: white;
+      font-weight: bold;
       cursor: pointer;
     }
-
-    button:hover {
-      background-color: #004999;
-    }
-
-    .status {
+    .message {
+      text-align: center;
       margin-top: 15px;
       font-weight: bold;
+    }
+    .error {
+      color: red;
+    }
+    .success {
+      color: green;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>Send Notification</h2>
-    
-    <label for="userId">HOD User ID (e.g. HODCSE)</label>
-    <input type="text" id="userId" placeholder="Enter your HOD User ID" />
+    <h2>📢 Send Notification</h2>
+    <label for="userId">HOD User ID (e.g., HODCSE)</label>
+    <input type="text" id="userId" placeholder="Enter your User ID" />
 
     <label for="message">Notification Message</label>
-    <textarea id="message" rows="5" placeholder="Enter your message here..."></textarea>
+    <textarea id="message" rows="5" placeholder="Enter your message here"></textarea>
 
     <button onclick="sendNotification()">Send</button>
 
-    <div class="status" id="status"></div>
+    <div id="responseMsg" class="message"></div>
   </div>
 
   <script>
     async function sendNotification() {
       const userId = document.getElementById('userId').value.trim();
       const message = document.getElementById('message').value.trim();
-      const statusEl = document.getElementById('status');
+      const responseMsg = document.getElementById('responseMsg');
+      responseMsg.textContent = '';
+      responseMsg.className = 'message';
 
       if (!userId || !message) {
-        statusEl.textContent = '❌ Please fill all fields.';
-        statusEl.style.color = 'red';
+        responseMsg.textContent = 'Please fill in all fields.';
+        responseMsg.classList.add('error');
         return;
       }
 
@@ -100,21 +87,20 @@
 
         const data = await res.json();
 
-        if (data.success) {
-          statusEl.textContent = '✅ Notification sent successfully!';
-          statusEl.style.color = 'green';
+        if (res.ok && data.success) {
+          responseMsg.textContent = '✅ Notification sent successfully!';
+          responseMsg.classList.add('success');
           document.getElementById('message').value = '';
         } else {
-          statusEl.textContent = '❌ Failed to send: ' + (data.message || 'Unknown error');
-          statusEl.style.color = 'red';
+          responseMsg.textContent = data.message || '❌ Failed to send notification.';
+          responseMsg.classList.add('error');
         }
       } catch (err) {
         console.error('Error sending notification:', err);
-        statusEl.textContent = '❌ Server error. Please try again.';
-        statusEl.style.color = 'red';
+        responseMsg.textContent = '❌ Server error. Try again later.';
+        responseMsg.classList.add('error');
       }
     }
   </script>
 </body>
 </html>
-
