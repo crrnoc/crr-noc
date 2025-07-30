@@ -2938,28 +2938,28 @@ app.get("/hod/pass-fail-stats", (req, res) => {
   }
 
   const deptCode = staffId.replace("HOD", "");
+  const filters = ["s.dept_code = ?"];
+  const params = [deptCode];
 
-  let filter = "WHERE s.course LIKE ?";
-  const params = [`%${deptCode}%`];
-
-  if (year) { filter += " AND s.year = ?"; params.push(year); }
-  if (course) { filter += " AND s.course = ?"; params.push(course); }
-  if (section) { filter += " AND s.section = ?"; params.push(section); }
+  if (year) { filters.push("s.year = ?"); params.push(year); }
+  if (course) { filters.push("s.course = ?"); params.push(course); }
+  if (section) { filters.push("s.section = ?"); params.push(section); }
 
   const query = `
     SELECT s.year, s.course, s.section,
       COUNT(DISTINCT s.reg_no) AS total_students,
-      SUM(CASE WHEN failed_students.failed_count > 0 THEN 1 ELSE 0 END) AS failed_students
+      SUM(CASE WHEN failed.failed_count > 0 THEN 1 ELSE 0 END) AS failed_students
     FROM students s
     LEFT JOIN (
-      SELECT r.regno, COUNT(*) AS failed_count
-      FROM results r
-      WHERE r.grade IN ('F','Ab','NOT_COMPLETED','MP')
-      GROUP BY r.regno
-    ) failed_students ON failed_students.regno = s.reg_no
-    ${filter}
+      SELECT regno, COUNT(*) AS failed_count
+      FROM results
+      WHERE grade IN ('F','Ab','NOT_COMPLETED','MP')
+      GROUP BY regno
+    ) AS failed
+    ON failed.regno = s.reg_no
+    WHERE ${filters.join(" AND ")}
     GROUP BY s.year, s.course, s.section
-    ORDER BY s.year ASC, s.course ASC, s.section ASC
+    ORDER BY s.year, s.course, s.section
   `;
 
   connection.query(query, params, (err, rows) => {
@@ -2970,15 +2970,12 @@ app.get("/hod/pass-fail-stats", (req, res) => {
 
     const stats = rows.map(row => {
       const pass = row.total_students - row.failed_students;
-      const pass_percent = row.total_students === 0 ? 0 : Math.round((pass / row.total_students) * 100);
-      const fail_percent = row.total_students === 0 ? 0 : Math.round((row.failed_students / row.total_students) * 100);
-
       return {
         year: row.year,
         course: row.course,
         section: row.section,
-        pass_percent,
-        fail_percent
+        pass_percent: row.total_students === 0 ? 0 : Math.round((pass / row.total_students) * 100),
+        fail_percent: row.total_students === 0 ? 0 : Math.round((row.failed_students / row.total_students) * 100)
       };
     });
 
@@ -2988,91 +2985,101 @@ app.get("/hod/pass-fail-stats", (req, res) => {
 
 app.get("/hod/courses", (req, res) => {
   const { staffId, year } = req.query;
+
   if (!staffId || !staffId.startsWith("HOD")) {
     return res.status(400).json({ error: "Invalid HOD Staff ID" });
   }
   if (!year) {
-    return res.status(400).json({ error: "Year parameter is required" });
+    return res.status(400).json({ error: "Year is required" });
   }
 
   const deptCode = staffId.replace("HOD", "");
 
   const query = `
     SELECT DISTINCT course FROM students
-    WHERE course LIKE ? AND year = ?
+    WHERE dept_code = ? AND year = ?
     ORDER BY course
   `;
 
-  connection.query(query, [`%${deptCode}%`, year], (err, results) => {
+  connection.query(query, [deptCode, year], (err, rows) => {
     if (err) {
-      console.error("Error fetching courses:", err);
+      console.error("🔥 Error fetching courses:", err);
       return res.status(500).json({ error: "Internal Server Error" });
     }
 
-    const courses = results.map(row => row.course);
-    res.json(courses);
+    res.json(rows.map(r => r.course));
   });
 });
 
+
 app.get("/hod/sections", (req, res) => {
   const { staffId, year, course } = req.query;
+
   if (!staffId || !staffId.startsWith("HOD")) {
     return res.status(400).json({ error: "Invalid HOD Staff ID" });
   }
   if (!year || !course) {
-    return res.status(400).json({ error: "Year and course parameters are required" });
+    return res.status(400).json({ error: "Year and Course required" });
   }
 
   const deptCode = staffId.replace("HOD", "");
 
   const query = `
     SELECT DISTINCT section FROM students
-    WHERE course = ? AND year = ? AND course LIKE ?
+    WHERE dept_code = ? AND year = ? AND course = ?
     ORDER BY section
   `;
 
-  connection.query(query, [course, year, `%${deptCode}%`], (err, results) => {
+  connection.query(query, [deptCode, year, course], (err, rows) => {
     if (err) {
-      console.error("Error fetching sections:", err);
+      console.error("🔥 Error fetching sections:", err);
       return res.status(500).json({ error: "Internal Server Error" });
     }
 
-    const sections = results.map(row => row.section);
-    res.json(sections);
+    res.json(rows.map(r => r.section));
   });
 });
 
 
 // Backlog Summary Route
 app.get("/hod/backlog-summary", (req, res) => {
-  const staffId = req.query.staffId;
-  if (!staffId) return res.status(400).json({ error: "Staff ID required" });
+  const { staffId, year, course, section } = req.query;
 
-  const deptCode = staffId.replace("HOD", ""); // e.g., HODCSE → CSE
+  if (!staffId || !staffId.startsWith("HOD")) {
+    return res.status(400).json({ error: "Invalid HOD Staff ID" });
+  }
+
+  const deptCode = staffId.replace("HOD", "");
+  const filters = ["s.dept_code = ?"];
+  const params = [deptCode];
+
+  if (year) { filters.push("s.year = ?"); params.push(year); }
+  if (course) { filters.push("s.course = ?"); params.push(course); }
+  if (section) { filters.push("s.section = ?"); params.push(section); }
 
   const query = `
-    SELECT s.uniqueId, COUNT(r.id) AS backlog_count
+    SELECT s.reg_no,
+      SUM(CASE WHEN r.grade IN ('F','Ab','NOT_COMPLETED','MP') THEN 1 ELSE 0 END) AS backlogs
     FROM students s
-    LEFT JOIN results r ON s.reg_no = r.regno 
-      AND r.grade IN ('F','Ab','NOT_COMPLETED','MP')
-    WHERE s.dept_code = ?
-    GROUP BY s.uniqueId;
+    LEFT JOIN results r ON r.regno = s.reg_no
+    WHERE ${filters.join(" AND ")}
+    GROUP BY s.reg_no
   `;
 
-  connection.query(query, [deptCode], (err, rows) => {
+  connection.query(query, params, (err, rows) => {
     if (err) {
-      console.error("DB Error:", err);
-      return res.status(500).json({ error: "Database error" });
+      console.error("🔥 Error fetching backlog summary:", err);
+      return res.status(500).json({ error: "Internal Server Error" });
     }
 
-    const summary = { zero: 0, low: 0, high: 0 };
-    rows.forEach(row => {
-      if (row.backlog_count === 0) summary.zero++;
-      else if (row.backlog_count <= 2) summary.low++;
-      else summary.high++;
+    let zero = 0, low = 0, high = 0;
+    rows.forEach(r => {
+      if (r.backlogs === 0) zero++;
+      else if (r.backlogs <= 2) low++;
+      else high++;
     });
 
-    res.json(summary);
+    res.json({ zero, low, high });
   });
 });
 
