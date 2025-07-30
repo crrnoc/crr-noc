@@ -149,18 +149,20 @@
       <p>Please choose a task from the sidebar.</p>
     </div>
   </div>
-
-  <script>
+<script>
+    // Sidebar toggle for mobile
     function toggleSidebar() {
       document.getElementById("sidebar").classList.toggle("open");
     }
 
+    // Navigate to any page
     function navigateTo(path) {
       window.location.href = path;
     }
 
+    // Logout and clear session
     function logout() {
-      fetch("/logout")
+      fetch("/logout", { credentials: "include" }) // ✅ include cookies
         .then(() => {
           localStorage.removeItem("userId");
           window.location.replace("index.html");
@@ -170,21 +172,9 @@
         });
     }
 
-    // ✅ Session check
-    (async () => {
-      try {
-        const res = await fetch("/check-session");
-        if (!res.ok) throw new Error("Unauthorized");
-      } catch (err) {
-        localStorage.removeItem("userId");
-        window.location.replace("index.html");
-      }
-    })();
-
-    // ⛔ Prevent Back Button
+    // ⛔ Prevent Back Button Navigation
     window.history.pushState(null, "", window.location.href);
     window.onpopstate = () => window.history.pushState(null, "", window.location.href);
-  </script>
-
+</script>
 </body>
 </html>
