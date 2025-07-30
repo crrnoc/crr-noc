@@ -8,7 +8,12 @@
   <link href="https://fonts.googleapis.com/css2?family=Segoe+UI&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
+    }
 
     body {
       display: flex;
@@ -24,7 +29,9 @@
       display: flex;
       flex-direction: column;
       position: fixed;
-      top: 0; left: 0; bottom: 0;
+      top: 0;
+      left: 0;
+      bottom: 0;
       color: white;
       z-index: 100;
     }
@@ -37,7 +44,11 @@
       color: #3cb6ff;
     }
 
-    .sidebar ul { list-style: none; padding-left: 0; }
+    .sidebar ul {
+      list-style: none;
+      padding-left: 0;
+    }
+
     .sidebar li {
       padding: 12px;
       margin: 8px 0;
@@ -97,10 +108,23 @@
     }
 
     @media (max-width: 768px) {
-      .sidebar { left: -250px; transition: 0.4s ease; }
-      .sidebar.open { left: 0; }
-      .mobile-toggle { display: block; }
-      .main { margin-left: 0; padding: 80px 20px 20px; }
+      .sidebar {
+        left: -250px;
+        transition: 0.4s ease;
+      }
+
+      .sidebar.open {
+        left: 0;
+      }
+
+      .mobile-toggle {
+        display: block;
+      }
+
+      .main {
+        margin-left: 0;
+        padding: 80px 20px 20px;
+      }
     }
   </style>
 </head>
@@ -111,10 +135,10 @@
   <div class="sidebar" id="sidebar">
     <h2>Accounts Panel</h2>
     <ul>
-      <li onclick="navigateTo('upload-sbi.html')">🏦 Upload SBI References</li>
-      <li onclick="navigateTo('noc-status.html')">📄 NOC Status</li>
-      <li onclick="navigateTo('createnocAd.html')">🧾 Create NOC</li>
-      <li onclick="navigateTo('studentfeesearch.html')">🔍 Student Fee Search</li>
+      <li onclick="navigateTo('/uploadsbi')">🏦 Upload SBI References</li>
+      <li onclick="navigateTo('/nocstatus')">📄 NOC Status</li>
+      <li onclick="navigateTo('/createnoc')">🧾 Create NOC</li>
+      <li onclick="navigateTo('/studentfeesearch')">🔍 Student Fee Search</li>
     </ul>
     <button onclick="logout()">🚪 Logout</button>
   </div>
@@ -131,14 +155,8 @@
       document.getElementById("sidebar").classList.toggle("open");
     }
 
-    function navigateTo(page) {
-      const routes = {
-        'upload-sbi.html': '/uploadsbi',
-        'noc-status.html': '/nocstatus',
-        'createnocAd.html': '/createnoc',
-        'studentfeesearch.html': '/studentfeesearch'
-      };
-      window.location.href = routes[page] || '/';
+    function navigateTo(path) {
+      window.location.href = path;
     }
 
     function logout() {
@@ -152,7 +170,7 @@
         });
     }
 
-    // 🛡 Session Check
+    // ✅ Session check
     (async () => {
       try {
         const res = await fetch("/check-session");
@@ -163,7 +181,7 @@
       }
     })();
 
-    // ⛔ Prevent Back Navigation
+    // ⛔ Prevent Back Button
     window.history.pushState(null, "", window.location.href);
     window.onpopstate = () => window.history.pushState(null, "", window.location.href);
   </script>
