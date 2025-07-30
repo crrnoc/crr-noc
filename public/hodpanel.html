@@ -239,161 +239,204 @@
     <h2>Year, Course & Section Wise Pass/Fail Statistics</h2>
 
     <!-- Filters -->
-    <div class="filters">
-      <select id="yearSelect" class="form-select" onchange="fetchCourses()">
-        <option value="">-- Select Year --</option>
-      </select>
-      <select id="courseSelect" class="form-select" onchange="fetchSections()" disabled>
-        <option value="">-- Select Course --</option>
-      </select>
-      <select id="sectionSelect" class="form-select" onchange="fetchStats()" disabled>
-        <option value="">-- Select Section --</option>
-      </select>
-    </div>
+  <!-- ... previous HTML unchanged ... -->
 
-    <!-- Cards Container -->
-    <div id="statsContainer"></div>
+<div class="filters">
+  <select id="yearSelect" class="form-select" onchange="fetchCourses()">
+    <option value="">-- Select Year --</option>
+  </select>
+  <select id="courseSelect" class="form-select" onchange="fetchSections()" disabled>
+    <option value="">-- Select Course --</option>
+  </select>
+  <select id="sectionSelect" class="form-select" onchange="fetchStats()" disabled>
+    <option value="">-- Select Section --</option>
+  </select>
+</div>
+
+<!-- Cards Container -->
+<div id="statsContainer"></div>
+
+<!-- Backlog Summary -->
+<h2 style="margin-top:40px; text-align:center;">Backlog Summary</h2>
+<div class="backlog-summary" id="backlogSummary">
+  <div class="summary-card zero">
+    <h3>0 Backlogs</h3>
+    <p id="zeroBacklogs">0 Students</p>
   </div>
+  <div class="summary-card low">
+    <h3>1-2 Backlogs</h3>
+    <p id="lowBacklogs">0 Students</p>
+  </div>
+  <div class="summary-card high">
+    <h3>3+ Backlogs</h3>
+    <p id="highBacklogs">0 Students</p>
+  </div>
+</div>
 
-  <script>
-    const staffId = localStorage.getItem("userId");
-    const welcomeText = document.getElementById("welcomeText");
-    const sidebar = document.getElementById("sidebar");
-    const overlay = document.getElementById("overlay");
-    const mainContent = document.getElementById("main-content");
+<script>
+  // ... earlier code ...
 
-    // Validate login
-    if (!staffId || !staffId.startsWith("HOD")) {
-      alert("Please login as HOD");
-      window.location.href = "index.html";
-    } else {
-      const dept = staffId.replace("HOD", "");
-      welcomeText.textContent = `Welcome Head of Department - ${dept}`;
+  // Load Years on page load
+  async function loadYears() {
+    const res = await fetch(`/hod/pass-fail-stats?staffId=${staffId}`);
+    const data = await res.json();
+
+    // Extract unique years from data.stats
+    const years = [...new Set(data.stats.map((s) => s.year))].sort();
+    const yearSelect = document.getElementById("yearSelect");
+    yearSelect.innerHTML = `<option value="">-- Select Year --</option>`;
+    years.forEach((y) => {
+      yearSelect.innerHTML += `<option value="${y}">${y} Year</option>`;
+    });
+  }
+
+  async function fetchCourses() {
+    const year = document.getElementById("yearSelect").value;
+    if (!year) {
+      resetDropdown("courseSelect");
+      resetDropdown("sectionSelect");
+      clearStatsAndBacklogs();
+      return;
     }
 
-    function logout() {
-      localStorage.clear();
-      window.location.href = "index.html";
+    // Fetch all courses dynamically from backend based on year and dept (staffId)
+    const res = await fetch(
+      `/hod/courses?staffId=${staffId}&year=${year}`
+    );
+    const courses = await res.json();
+
+    const courseSelect = document.getElementById("courseSelect");
+    courseSelect.disabled = false;
+    courseSelect.innerHTML = `<option value="">-- Select Course --</option>`;
+    courses.forEach((c) => {
+      courseSelect.innerHTML += `<option value="${c}">${c}</option>`;
+    });
+
+    resetDropdown("sectionSelect");
+    clearStatsAndBacklogs();
+  }
+
+  async function fetchSections() {
+    const year = document.getElementById("yearSelect").value;
+    const course = document.getElementById("courseSelect").value;
+    if (!course) {
+      resetDropdown("sectionSelect");
+      clearStatsAndBacklogs();
+      return;
     }
 
-    function toggleSidebar() {
-      sidebar.classList.toggle("open");
-      overlay.classList.toggle("active");
-      mainContent.classList.toggle("shifted");
+    const res = await fetch(
+      `/hod/sections?staffId=${staffId}&year=${year}&course=${encodeURIComponent(course)}`
+    );
+    const sections = await res.json();
+
+    const sectionSelect = document.getElementById("sectionSelect");
+    sectionSelect.disabled = false;
+    sectionSelect.innerHTML = `<option value="">-- Select Section --</option>`;
+    sections.forEach((sec) => {
+      sectionSelect.innerHTML += `<option value="${sec}">Section ${sec}</option>`;
+    });
+
+    clearStatsAndBacklogs();
+  }
+
+  async function fetchStats() {
+    const year = document.getElementById("yearSelect").value;
+    const course = document.getElementById("courseSelect").value;
+    const section = document.getElementById("sectionSelect").value;
+
+    if (!year || !course || !section) {
+      clearStatsAndBacklogs();
+      return;
     }
 
-    // Load all Years on page load
-    async function loadYears() {
-      const res = await fetch(`/hod/pass-fail-stats?staffId=${staffId}`);
-      const data = await res.json();
+    const res = await fetch(
+      `/hod/pass-fail-stats?staffId=${staffId}&year=${year}&course=${encodeURIComponent(course)}&section=${section}`
+    );
+    const data = await res.json();
 
-      const years = [...new Set(data.stats.map((s) => s.year))];
-      const yearSelect = document.getElementById("yearSelect");
-      yearSelect.innerHTML = `<option value="">-- Select Year --</option>`;
-      years.forEach((y) => {
-        yearSelect.innerHTML += `<option value="${y}">${y} Year</option>`;
-      });
+    const container = document.getElementById("statsContainer");
+    container.innerHTML = "";
+
+    if (!data.stats || data.stats.length === 0) {
+      container.innerHTML = `<p class="text-center text-secondary">No data available</p>`;
+      resetBacklogSummary();
+      return;
     }
 
-    async function fetchCourses() {
-      const year = document.getElementById("yearSelect").value;
-      if (!year) return;
+    data.stats.forEach((record, i) => {
+      const card = document.createElement("div");
+      card.className = "card-box";
+      card.innerHTML = `
+        <h5>${record.course} - Section ${record.section}</h5>
+        <div class="circle-container">
+          <canvas id="circle${i}" width="130" height="130"></canvas>
+          <div class="percent-text">${record.pass_percent}%</div>
+        </div>
+        <div class="fail-text">Fail: ${record.fail_percent}%</div>
+      `;
+      container.appendChild(card);
+      drawCircle(`circle${i}`, record.pass_percent);
+    });
 
-      const res = await fetch(`/hod/pass-fail-stats?staffId=${staffId}&year=${year}`);
-      const data = await res.json();
+    // Also fetch backlog summary for this filter
+    fetchBacklogSummary(year, course, section);
+  }
 
-      const courses = [...new Set(data.stats.map((s) => s.course))];
-      const courseSelect = document.getElementById("courseSelect");
-      courseSelect.disabled = false;
-      courseSelect.innerHTML = `<option value="">-- Select Course --</option>`;
-      courses.forEach((c) => {
-        courseSelect.innerHTML += `<option value="${c}">${c}</option>`;
-      });
-
-      // Reset section + stats
-      document.getElementById("sectionSelect").disabled = true;
-      document.getElementById("statsContainer").innerHTML = "";
-    }
-
-    async function fetchSections() {
-      const year = document.getElementById("yearSelect").value;
-      const course = document.getElementById("courseSelect").value;
-      if (!course) return;
-
+  async function fetchBacklogSummary(year, course, section) {
+    try {
       const res = await fetch(
-        `/hod/pass-fail-stats?staffId=${staffId}&year=${year}&course=${course}`
+        `/hod/backlog-summary?staffId=${staffId}&year=${year}&course=${encodeURIComponent(course)}&section=${section}`
       );
       const data = await res.json();
 
-      const sections = [...new Set(data.stats.map((s) => s.section))];
-      const sectionSelect = document.getElementById("sectionSelect");
-      sectionSelect.disabled = false;
-      sectionSelect.innerHTML = `<option value="">-- Select Section --</option>`;
-      sections.forEach((sec) => {
-        sectionSelect.innerHTML += `<option value="${sec}">Section ${sec}</option>`;
-      });
-
-      document.getElementById("statsContainer").innerHTML = "";
+      document.getElementById("zeroBacklogs").innerText = `${data.zero || 0} Students`;
+      document.getElementById("lowBacklogs").innerText = `${data.low || 0} Students`;
+      document.getElementById("highBacklogs").innerText = `${data.high || 0} Students`;
+    } catch (err) {
+      console.error("Error fetching backlog summary:", err);
+      resetBacklogSummary();
     }
+  }
 
-    async function fetchStats() {
-      const year = document.getElementById("yearSelect").value;
-      const course = document.getElementById("courseSelect").value;
-      const section = document.getElementById("sectionSelect").value;
+  // Helper reset functions
+  function resetDropdown(id) {
+    const el = document.getElementById(id);
+    el.innerHTML = `<option value="">-- Select ${id.replace("Select", "")} --</option>`;
+    el.disabled = true;
+  }
+  function clearStatsAndBacklogs() {
+    document.getElementById("statsContainer").innerHTML = "";
+    resetBacklogSummary();
+  }
+  function resetBacklogSummary() {
+    document.getElementById("zeroBacklogs").innerText = "0 Students";
+    document.getElementById("lowBacklogs").innerText = "0 Students";
+    document.getElementById("highBacklogs").innerText = "0 Students";
+  }
 
-      const res = await fetch(
-        `/hod/pass-fail-stats?staffId=${staffId}&year=${year}&course=${course}&section=${section}`
-      );
-      const data = await res.json();
+  // drawCircle function unchanged
+  function drawCircle(id, percent) {
+    const canvas = document.getElementById(id);
+    const ctx = canvas.getContext("2d");
+    const radius = 60;
+    const startAngle = -0.5 * Math.PI;
+    const endAngle = (percent / 100) * 2 * Math.PI + startAngle;
 
-      const container = document.getElementById("statsContainer");
-      container.innerHTML = "";
+    ctx.lineWidth = 10;
+    ctx.strokeStyle = "#d6eaf8";
+    ctx.beginPath();
+    ctx.arc(radius, radius, radius - 10, 0, 2 * Math.PI);
+    ctx.stroke();
 
-      if (data.stats.length === 0) {
-        container.innerHTML = `<p class="text-center text-secondary">No data available</p>`;
-        return;
-      }
+    ctx.strokeStyle = "#27ae60";
+    ctx.beginPath();
+    ctx.arc(radius, radius, radius - 10, startAngle, endAngle);
+    ctx.stroke();
+  }
 
-      data.stats.forEach((record, i) => {
-        const card = document.createElement("div");
-        card.className = "card-box";
-        card.innerHTML = `
-          <h5>${record.course} - Section ${record.section}</h5>
-          <div class="circle-container">
-            <canvas id="circle${i}" width="130" height="130"></canvas>
-            <div class="percent-text">${record.pass_percent}%</div>
-          </div>
-          <div class="fail-text">Fail: ${record.fail_percent}%</div>
-        `;
-        container.appendChild(card);
-
-        drawCircle(`circle${i}`, record.pass_percent);
-      });
-    }
-
-    function drawCircle(id, percent) {
-      const canvas = document.getElementById(id);
-      const ctx = canvas.getContext("2d");
-      const radius = 60;
-      const startAngle = -0.5 * Math.PI;
-      const endAngle = (percent / 100) * 2 * Math.PI + startAngle;
-
-      // Background Circle
-      ctx.lineWidth = 10;
-      ctx.strokeStyle = "#d6eaf8";
-      ctx.beginPath();
-      ctx.arc(radius, radius, radius - 10, 0, 2 * Math.PI);
-      ctx.stroke();
-
-      // Progress Circle
-      ctx.strokeStyle = "#27ae60";
-      ctx.beginPath();
-      ctx.arc(radius, radius, radius - 10, startAngle, endAngle);
-      ctx.stroke();
-    }
-
-    // Initialize Years on load
-    loadYears();
-  </script>
+  // Load years on page load
+  loadYears();
+</script>
 </body>
 </html>
