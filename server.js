@@ -2931,34 +2931,38 @@ app.get('/hod/students', (req, res) => {
 });
 
 app.get("/hod/pass-fail-stats", (req, res) => {
-  const staffId = req.query.staffId;
+  const { staffId, year, course, section } = req.query;
 
   if (!staffId || !staffId.startsWith("HOD")) {
     return res.status(400).json({ error: "Invalid HOD Staff ID" });
   }
 
-  const deptCode = staffId.replace("HOD", ""); // HODCSE → CSE
+  const deptCode = staffId.replace("HOD", "");
+
+  let filter = "WHERE s.course LIKE ?";
+  const params = [`%${deptCode}%`];
+
+  if (year) { filter += " AND s.year = ?"; params.push(year); }
+  if (course) { filter += " AND s.course = ?"; params.push(course); }
+  if (section) { filter += " AND s.section = ?"; params.push(section); }
 
   const query = `
     SELECT s.year, s.course, s.section,
       COUNT(DISTINCT s.reg_no) AS total_students,
-      SUM(
-        CASE WHEN failed_students.failed_count > 0 THEN 1 ELSE 0 END
-      ) AS failed_students
+      SUM(CASE WHEN failed_students.failed_count > 0 THEN 1 ELSE 0 END) AS failed_students
     FROM students s
     LEFT JOIN (
       SELECT r.regno, COUNT(*) AS failed_count
       FROM results r
       WHERE r.grade IN ('F','Ab','NOT_COMPLETED','MP')
       GROUP BY r.regno
-    ) AS failed_students
-    ON failed_students.regno = s.reg_no
-    WHERE s.course LIKE ?
+    ) failed_students ON failed_students.regno = s.reg_no
+    ${filter}
     GROUP BY s.year, s.course, s.section
-    ORDER BY s.year ASC, s.section ASC
+    ORDER BY s.year ASC, s.course ASC, s.section ASC
   `;
 
-  connection.query(query, [`%${deptCode}%`], (err, rows) => {
+  connection.query(query, params, (err, rows) => {
     if (err) {
       console.error("🔥 Error fetching pass/fail stats:", err);
       return res.status(500).json({ error: "Internal Server Error" });
@@ -2970,7 +2974,7 @@ app.get("/hod/pass-fail-stats", (req, res) => {
       const fail_percent = row.total_students === 0 ? 0 : Math.round((row.failed_students / row.total_students) * 100);
 
       return {
-        year: row.year,                     // 🔹 Now returning year also
+        year: row.year,
         course: row.course,
         section: row.section,
         pass_percent,
@@ -2981,6 +2985,7 @@ app.get("/hod/pass-fail-stats", (req, res) => {
     res.json({ stats });
   });
 });
+
 
 // Backlog Summary Route
 app.get("/hod/backlog-summary", (req, res) => {
