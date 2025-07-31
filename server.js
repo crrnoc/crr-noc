@@ -3371,7 +3371,7 @@ app.post('/api/notifications/send', (req, res) => {
 app.get('/student/notifications/:regno', (req, res) => {
   const { regno } = req.params;
 
-  const deptQuery = 'SELECT dept_code FROM students WHERE regno = ?';
+  const deptQuery = 'SELECT dept_code FROM students WHERE reg_no = ?';
   connection.query(deptQuery, [regno], (err, results) => {
     if (err) return res.status(500).json({ error: 'Database error' });
     if (results.length === 0) return res.status(404).json({ error: 'Student not found' });
