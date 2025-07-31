@@ -2,134 +2,156 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Manual NOC Generator</title>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron&family=Poppins:wght@300;500;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI&display=swap" rel="stylesheet">
   <style>
     :root {
       --main-color: #3cb6ff;
       --accent-color: #ff3d3d;
     }
+
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
-      font-family: 'Poppins', sans-serif;
+      font-family: 'Segoe UI', sans-serif;
     }
+
     body {
       display: flex;
       min-height: 100vh;
-      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
-      color: white;
+      background: linear-gradient(to right, #e0eafc, #cfdef3);
+      color: #222;
     }
+
     .sidebar {
-      width: 260px;
-      background: rgba(60, 66, 84, 0.5);
-      backdrop-filter: blur(8px);
-      padding: 30px 20px;
+      width: 250px;
+      background: linear-gradient(180deg, #2C3E50, #34495E);
+      padding: 20px;
       display: flex;
       flex-direction: column;
-      box-shadow: 4px 0 25px rgba(0, 0, 0, 0.4);
       position: fixed;
-      height: 100vh;
-      left: 0;
       top: 0;
-      z-index: 10;
+      left: 0;
+      bottom: 0;
+      color: white;
+      z-index: 100;
     }
+
     .sidebar h2 {
       text-align: center;
-      font-size: 24px;
-      color: var(--main-color);
+      font-weight: bold;
+      font-size: 20px;
       margin-bottom: 30px;
+      color: var(--main-color);
     }
+
     .sidebar ul {
       list-style: none;
+      padding-left: 0;
     }
+
     .sidebar li {
-      padding: 12px 18px;
-      margin: 12px 0;
+      padding: 12px;
+      margin: 8px 0;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.3s;
       background: rgba(255, 255, 255, 0.1);
-      border-radius: 10px;
-      cursor: pointer;
-      transition: 0.3s ease;
     }
+
     .sidebar li:hover {
-      background: var(--main-color);
-      box-shadow: 0 0 12px var(--main-color);
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateX(5px);
     }
+
     .sidebar button {
-      margin-top: auto;
-      padding: 10px 20px;
+      background-color: #E67E22;
       border: none;
-      background: linear-gradient(to right, #ff416c, #ff4b2b);
       color: white;
-      border-radius: 12px;
+      padding: 12px;
+      border-radius: 20px;
+      margin-top: auto;
       cursor: pointer;
-      font-weight: bold;
-      box-shadow: 0 0 10px rgba(255, 65, 108, 0.5);
-      transition: 0.3s ease;
+      transition: background 0.3s ease;
     }
+
     .sidebar button:hover {
-      transform: scale(1.05);
+      background-color: #CA6F1E;
     }
+
+    .mobile-toggle {
+      display: none;
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      background: #2C3E50;
+      color: white;
+      padding: 10px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      z-index: 200;
+    }
+
     .main {
-      margin-left: 260px;
-      padding: 70px;
       flex: 1;
-      animation: slideIn 1s ease forwards;
+      margin-left: 250px;
+      padding: 60px 20px;
     }
+
     .noc-card {
-      background: rgba(255, 255, 255, 0.08);
-      backdrop-filter: blur(8px);
+      background: white;
+      max-width: 700px;
+      margin: auto;
       padding: 30px;
       border-radius: 16px;
-      max-width: 720px;
-      margin: auto;
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      box-shadow: 0 0 15px rgba(0, 191, 255, 0.3);
-      animation: fadeUp 0.6s ease forwards;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
     }
+
     h2 {
       text-align: center;
       margin-bottom: 25px;
       color: var(--main-color);
-      font-family: 'Orbitron', sans-serif;
     }
+
     .form-group {
       margin-bottom: 16px;
     }
+
     label {
       display: block;
       margin-bottom: 6px;
       font-weight: 500;
-      color: #fff;
+      color: #333;
     }
+
     input, select {
       width: 100%;
       padding: 10px;
-      border: none;
+      border: 1px solid #ccc;
       border-radius: 8px;
-      background: rgba(255, 255, 255, 0.2);
-      color: BLACK;
+      background: #f9f9f9;
       font-size: 14px;
       outline: none;
     }
-    input::placeholder {
-      color: #eee;
-    }
+
     .fee-section {
       margin-top: 20px;
     }
+
     .fee-type-row {
       display: flex;
       gap: 10px;
       margin-bottom: 10px;
     }
+
     .fee-type-row select,
     .fee-type-row input {
       flex: 1;
     }
+
     button[type="submit"] {
       width: 100%;
       margin-top: 20px;
@@ -144,58 +166,47 @@
       box-shadow: 0 0 12px rgba(60, 182, 255, 0.3);
       transition: all 0.3s ease;
     }
+
     button[type="submit"]:hover {
       transform: scale(1.05);
       box-shadow: 0 0 18px rgba(255, 61, 61, 0.5);
     }
 
-    .mobile-toggle {
-      position: fixed;
-      top: 15px;
-      left: 15px;
-      font-size: 26px;
-      z-index: 20;
-      cursor: pointer;
-      display: none;
-      color: white;
-    }
-
-    @keyframes fadeUp {
-      0% { transform: translateY(30px); opacity: 0; }
-      100% { transform: translateY(0); opacity: 1; }
-    }
-    @keyframes slideIn {
-      from { opacity: 0; transform: translateX(50px); }
-      to { opacity: 1; transform: translateX(0); }
-    }
-
     @media (max-width: 768px) {
-      .sidebar { transform: translateX(-100%); transition: 0.4s ease; }
-      .sidebar.open { transform: translateX(0); }
-      .mobile-toggle { display: block; }
-      .main { margin-left: 0; padding: 80px 20px 20px; }
+      .sidebar {
+        left: -250px;
+        transition: 0.4s ease;
+      }
+
+      .sidebar.open {
+        left: 0;
+      }
+
+      .mobile-toggle {
+        display: block;
+      }
+
+      .main {
+        margin-left: 0;
+        padding: 80px 20px 20px;
+      }
     }
   </style>
 </head>
 <body>
 
-  <div class="sidebar">
+  <div class="mobile-toggle" onclick="toggleSidebar()">☰</div>
+
+  <div class="sidebar" id="sidebar">
     <h2>Admin Panel</h2>
-   <ul>
-  <li onclick="navigateTo('uploadresultsAd.html')">📥 Upload Results</li>
-  <li onclick="navigateTo('uploadattendanceAd.html')">🗓 Upload Attendance</li>
-  <li onclick="navigateTo('upload-sbi.html')">📤 Upload SBI References</li>
-  <li onclick="navigateTo('upload-midmarks.html')">📊 Upload Mid Marks</li>
-  <li onclick="navigateTo('du-match-status.html')">📊 DU Match Status</li>
-  <li onclick="navigateTo('noc-status.html')">📜 NOC Status</li>
-  <li onclick="navigateTo('removestudents.html')">🗑️ Delete Students</li>
-  <li onclick="navigateTo('createnocAd.html')">📝 Create NOC</li>
-  <li onclick="navigateTo('uploadstudents.html')">📚 Upload Student Data</li>
-</ul>
+    <ul>
+      <li onclick="navigateTo('upload-sbi.html')">🏦 Upload SBI References</li>
+      <li onclick="navigateTo('noc-status.html')">📄 NOC Status</li>
+      <li onclick="navigateTo('createnocAd.html')">🧾 Create NOC</li>
+      <li onclick="navigateTo('studentfeesearch.html')">🔍 Student Fee Search</li>
+    </ul>
     <button onclick="logout()">🚪 Logout</button>
   </div>
-
-  <div class="mobile-toggle" onclick="toggleSidebar()">☰</div>
 
   <div class="main">
     <div class="noc-card">
@@ -262,18 +273,6 @@
   </div>
 
 <script>
-// ✅ SESSION CHECK - prevent unauthorized access
-/*  (async () => {
-  try {
-    const res = await fetch("/check-session");
-    if (!res.ok) throw new Error("Unauthorized");
-  } catch (err) {
-    localStorage.removeItem("userId");
-    window.location.replace("index.html");
-  }
-})();  */
-
-// 🧭 INTERNAL NAVIGATION ROUTES
 function navigateTo(route) {
   const routes = {
     'uploadresultsAd.html': '/uploadresults',
@@ -289,7 +288,6 @@ function navigateTo(route) {
   window.location.href = routes[route] || '/adminpanel';
 }
 
-// 🚪 LOGOUT WITH SESSION DESTROY
 function logout() {
   fetch("/logout").then(() => {
     localStorage.removeItem("userId");
@@ -297,56 +295,26 @@ function logout() {
   });
 }
 
-// 📱 SIDEBAR TOGGLE
 function toggleSidebar() {
-  document.querySelector('.sidebar').classList.toggle('open');
+  document.getElementById("sidebar").classList.toggle("open");
 }
 
-// ⛔ BLOCK BACK/FORWARD BROWSER NAV
-window.addEventListener("pageshow", (event) => {
-  if (event.persisted) window.location.reload();
-});
 window.history.pushState(null, "", window.location.href);
-window.onpopstate = function () {
-  window.history.pushState(null, "", window.location.href);
-};
+window.onpopstate = () => window.history.pushState(null, "", window.location.href);
 
-// 📝 FORM SUBMIT FOR MANUAL NOC
 document.getElementById("manualNocForm").addEventListener("submit", async function (e) {
   e.preventDefault();
 
   const regno = document.getElementById("regno").value.trim();
   const year = document.getElementById("year").value;
-
   const feeStatus = {
-    tuition: {
-      status: e.target.tuitionStatus.value || "Not Specified",
-      amount: e.target.tuitionAmount.value || "-"
-    },
-    hostel: {
-      status: e.target.hostelStatus.value || "Not Specified",
-      amount: e.target.hostelAmount.value || "-"
-    },
-    bus: {
-      status: e.target.busStatus.value || "Not Specified",
-      amount: e.target.busAmount.value || "-"
-    },
-    university: {
-      status: e.target.universityStatus.value || "Not Specified",
-      amount: e.target.universityAmount.value || "-"
-    },
-    semester: {
-      status: e.target.examStatus.value || "Not Specified",
-      amount: e.target.examAmount.value || "-"
-    },
-    library: {
-      status: e.target.libraryStatus.value || "Not Specified",
-      amount: e.target.libraryAmount.value || "-"
-    },
-    fines: {
-      status: e.target.fineStatus.value || "Not Specified",
-      amount: e.target.fineAmount.value || "-"
-    }
+    tuition: { status: e.target.tuitionStatus.value || "Not Specified", amount: e.target.tuitionAmount.value || "-" },
+    hostel: { status: e.target.hostelStatus.value || "Not Specified", amount: e.target.hostelAmount.value || "-" },
+    bus: { status: e.target.busStatus.value || "Not Specified", amount: e.target.busAmount.value || "-" },
+    university: { status: e.target.universityStatus.value || "Not Specified", amount: e.target.universityAmount.value || "-" },
+    semester: { status: e.target.examStatus.value || "Not Specified", amount: e.target.examAmount.value || "-" },
+    library: { status: e.target.libraryStatus.value || "Not Specified", amount: e.target.libraryAmount.value || "-" },
+    fines: { status: e.target.fineStatus.value || "Not Specified", amount: e.target.fineAmount.value || "-" }
   };
 
   try {
@@ -357,11 +325,7 @@ document.getElementById("manualNocForm").addEventListener("submit", async functi
     });
 
     if (!response.ok) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Failed',
-        text: 'NOC generation failed. Please try again.'
-      });
+      Swal.fire({ icon: 'error', title: 'Failed', text: 'NOC generation failed. Please try again.' });
       return;
     }
 
@@ -374,19 +338,11 @@ document.getElementById("manualNocForm").addEventListener("submit", async functi
     link.click();
     document.body.removeChild(link);
 
-    Swal.fire({
-      icon: 'success',
-      title: 'Downloaded',
-      text: 'NOC PDF has been downloaded successfully!'
-    });
+    Swal.fire({ icon: 'success', title: 'Downloaded', text: 'NOC PDF has been downloaded successfully!' });
 
   } catch (err) {
     console.error("Error during NOC generation:", err);
-    Swal.fire({
-      icon: 'error',
-      title: 'Error',
-      text: 'An error occurred while generating the NOC.'
-    });
+    Swal.fire({ icon: 'error', title: 'Error', text: 'An error occurred while generating the NOC.' });
   }
 });
 </script>
