@@ -3367,24 +3367,44 @@ app.post('/api/notifications/send', (req, res) => {
     res.json({ success: true, message: 'Notification sent' });
   });
 });
+
 //get dept wise notifications
-app.get('/student/notifications/:regno', (req, res) => {
-  const { regno } = req.params;
+app.get('/student/notifications/:userId', (req, res) => {
+  const userId = req.params.userId;
 
-  const deptQuery = 'SELECT dept_code FROM students WHERE reg_no = ?';
-  connection.query(deptQuery, [regno], (err, results) => {
-    if (err) return res.status(500).json({ error: 'Database error' });
-    if (results.length === 0) return res.status(404).json({ error: 'Student not found' });
+  const getDeptQuery = `SELECT dept_code FROM students WHERE userId = ?`;
 
-    const deptCode = results[0].dept_code;
-    const staffId = `HOD${deptCode.toUpperCase()}`;
+  connection.query(getDeptQuery, [userId], (err, deptResult) => {
+    if (err) {
+      console.error('❌ Error fetching department:', err);
+      return res.status(500).json({ error: 'Database error' });
+    }
 
-    const notifQuery = 'SELECT * FROM notifications WHERE staffId = ? ORDER BY createdAt DESC';
-    connection.query(notifQuery, [staffId], (err2, notifResults) => {
-      if (err2) return res.status(500).json({ error: 'Error fetching notifications' });
-      res.json(notifResults);
+    if (deptResult.length === 0) {
+      return res.status(404).json({ error: 'Student not found' });
+    }
+
+    const deptCode = deptResult[0].dept_code;
+
+    // HOD notification format: HODCSE, HODIT, etc.
+    const deptHOD = 'HOD' + deptCode;
+
+    const getNotificationsQuery = `
+      SELECT * FROM notifications
+      WHERE staffId = ? OR staffId = 'ALL'
+      ORDER BY date_sent DESC
+    `;
+
+    connection.query(getNotificationsQuery, [deptHOD], (err, notificationsResult) => {
+      if (err) {
+        console.error('❌ Error fetching notifications:', err);
+        return res.status(500).json({ error: 'Database error' });
+      }
+
+      res.json(notificationsResult);
     });
   });
 });
+
 
 
