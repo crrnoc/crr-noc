@@ -233,7 +233,7 @@
         const tbody = document.querySelector("#matchTable tbody");
 tbody.innerHTML = data.map(row => `
   <tr>
-    <td>${row.userid}</td>
+    <td>${row.userId}</td>
     <td>${row.name}</td>
     <td>${row.academic_year || row.year || '-'}</td>
     <td>${row.fee_type}</td>
@@ -263,7 +263,7 @@ tbody.innerHTML = data.map(row => `
        
 tbody.innerHTML = data.map(row => `
   <tr>
-    <td>${row.userid}</td>
+    <td>${row.userId}</td>
     <td>${row.name}</td>
     <td>${row.academic_year || row.year || '-'}</td>
     <td>${row.fee_type}</td>
