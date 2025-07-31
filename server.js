@@ -3367,4 +3367,34 @@ app.post('/api/notifications/send', (req, res) => {
     res.json({ success: true, message: 'Notification sent' });
   });
 });
+//get dept wise notifications
+app.get('/api/student/notifications/:userId', async (req, res) => {
+  const userId = req.params.userId;
+
+  try {
+    // Step 1: Get dept_code of the student
+    const [studentResult] = await db.query(
+      'SELECT dept_code FROM students WHERE userId = ?',
+      [userId]
+    );
+
+    if (studentResult.length === 0) {
+      return res.status(404).json({ error: 'Student not found' });
+    }
+
+    const deptCode = studentResult[0].dept_code.toUpperCase(); // e.g., 'CSE'
+
+    // Step 2: Fetch notifications where staffId is like `HOD${deptCode}`
+    const [notifications] = await db.query(
+      'SELECT * FROM notifications WHERE staffId = ? ORDER BY timestamp DESC',
+      [`HOD${deptCode}`]
+    );
+
+    res.json(notifications);
+  } catch (err) {
+    console.error('❌ Error fetching notifications:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 
