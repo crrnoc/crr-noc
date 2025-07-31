@@ -255,12 +255,22 @@
     </div>
   </div>
 <div class="mobile-toggle" onclick="toggleSidebar()">☰</div>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+  // 🔐 Unauthorized login check
   const userId = localStorage.getItem("userId");
-  document.getElementById("userId").textContent = userId || "Unknown";
+  if (!userId) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Login Required',
+      text: 'Please login to access this page.'
+    }).then(() => {
+      window.location.href = "index.html";
+    });
+  } else {
+    document.getElementById("userId").textContent = userId || "Unknown";
 
-  // ✅ Load sidebar photo
-  if (userId) {
+    // ✅ Load sidebar photo
     fetch(`https://crr-noc.onrender.com/student/${userId}`)
       .then(res => res.json())
       .then(data => {
@@ -273,38 +283,34 @@
       .catch(err => {
         console.warn("⚠️ Failed to load photo:", err.message);
       });
-  }
 
-  if (!userId) {
-    document.getElementById("notificationList").innerHTML = "<p style='color:red;'>User not logged in.</p>";
-    throw new Error("User ID not found in localStorage");
-  }
+    // ✅ Load notifications
+    fetch(`https://crr-noc.onrender.com/notifications/${userId}`)
+      .then(res => res.json())
+      .then(data => {
+        const list = document.getElementById("notificationList");
+        if (!data.success || data.notifications.length === 0) {
+          list.innerHTML = "<p>No notifications found.</p>";
+          return;
+        }
 
-  fetch(`https://crr-noc.onrender.com/notifications/${userId}`)
-    .then(res => res.json())
-    .then(data => {
-      const list = document.getElementById("notificationList");
-      if (!data.success || data.notifications.length === 0) {
-        list.innerHTML = "<p>No notifications found.</p>";
-        return;
-      }
-
-      list.innerHTML = "";
-      data.notifications.forEach(note => {
-        const div = document.createElement("div");
-        div.classList.add("notification");
-div.innerHTML = `
-  <strong>From: ${note.staff_name || "System"}</strong><br>
-  ${note.message}
-  <time>${new Date(note.date_sent).toLocaleString()}</time>
-`;
-        list.appendChild(div);
+        list.innerHTML = "";
+        data.notifications.forEach(note => {
+          const div = document.createElement("div");
+          div.classList.add("notification");
+          div.innerHTML = `
+            <strong>From: ${note.staff_name || "System"}</strong><br>
+            ${note.message}
+            <time>${new Date(note.date_sent).toLocaleString()}</time>
+          `;
+          list.appendChild(div);
+        });
+      })
+      .catch(err => {
+        console.error("Error fetching notifications:", err);
+        document.getElementById("notificationList").innerHTML = "<p>Error loading notifications.</p>";
       });
-    })
-    .catch(err => {
-      console.error("Error fetching notifications:", err);
-      document.getElementById("notificationList").innerHTML = "<p>Error loading notifications.</p>";
-    });
+  }
 
   function toggleSidebar() {
     document.querySelector('.sidebar').classList.toggle('open');
