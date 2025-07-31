@@ -898,7 +898,12 @@ app.post('/admin/upload-sbi', upload.single('sbiFile'), (req, res) => {
 
 
 app.get('/admin/matches', (req, res) => {
-  connection.query('SELECT * FROM student_fee_payments', (err, results) => {
+  const sql = `
+    SELECT s.name, s.reg_no AS userId, f.fee_type, f.sbi_ref_no, f.amount_paid, f.matched, f.matched_on
+    FROM student_fee_payments f
+    JOIN students s ON f.userId = s.reg_no
+  `;
+  connection.query(sql, (err, results) => {
     if (err) {
       console.error('Error fetching matches:', err);
       return res.status(500).json([]);
@@ -906,6 +911,7 @@ app.get('/admin/matches', (req, res) => {
     res.json(results);
   });
 });
+
 
 app.post('/admin/search-noc-status', (req, res) => {
   const { query } = req.body;
