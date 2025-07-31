@@ -1,106 +1,131 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>📢 HOD Notifications</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <title>📢 Send Notification</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="crrengglogo.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI&display=swap" rel="stylesheet">
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #f1f1f1;
-      padding: 20px;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f4f8;
+      margin: 0;
+      padding: 0;
     }
     .container {
-      background: #fff;
       max-width: 600px;
-      margin: 40px auto;
+      margin: 80px auto;
+      background: white;
       padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
     h2 {
       text-align: center;
+      color: #333;
       margin-bottom: 25px;
     }
-    input, textarea, button {
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #444;
+    }
+    input, textarea {
       width: 100%;
       padding: 10px;
-      margin-top: 10px;
-      border-radius: 5px;
+      margin-bottom: 18px;
       border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 16px;
     }
     button {
-      background-color: #1976d2;
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      background-color: #2d89ef;
       color: white;
-      font-weight: bold;
+      border: none;
+      border-radius: 6px;
       cursor: pointer;
+      transition: background 0.3s ease;
     }
-    .message {
-      text-align: center;
+    button:hover {
+      background-color: #1b5cb8;
+    }
+    .alert {
       margin-top: 15px;
-      font-weight: bold;
+      padding: 10px;
+      border-radius: 6px;
+      font-weight: 600;
+      text-align: center;
     }
-    .error {
-      color: red;
+    .alert.success {
+      background-color: #d4edda;
+      color: #155724;
     }
-    .success {
-      color: green;
+    .alert.error {
+      background-color: #f8d7da;
+      color: #721c24;
     }
   </style>
 </head>
 <body>
   <div class="container">
     <h2>📢 Send Notification</h2>
-    <label for="userId">HOD User ID (e.g., HODCSE)</label>
-    <input type="text" id="userId" placeholder="Enter your User ID" />
+    <form id="notificationForm">
+      <label for="userId">HOD ID</label>
+      <input type="text" id="userId" name="userId" placeholder="e.g., HODCSE001" required />
 
-    <label for="message">Notification Message</label>
-    <textarea id="message" rows="5" placeholder="Enter your message here"></textarea>
+      <label for="message">Message</label>
+      <textarea id="message" name="message" rows="5" placeholder="Enter your notification message..." required></textarea>
 
-    <button onclick="sendNotification()">Send</button>
-
-    <div id="responseMsg" class="message"></div>
+      <button type="submit">Send</button>
+      <div id="responseMessage" class="alert" style="display: none;"></div>
+    </form>
   </div>
 
   <script>
-    async function sendNotification() {
-      const userId = document.getElementById('userId').value.trim();
-      const message = document.getElementById('message').value.trim();
-      const responseMsg = document.getElementById('responseMsg');
-      responseMsg.textContent = '';
-      responseMsg.className = 'message';
+    document.getElementById("notificationForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
 
-      if (!userId || !message) {
-        responseMsg.textContent = 'Please fill in all fields.';
-        responseMsg.classList.add('error');
+      const userId = document.getElementById("userId").value.trim();
+      const message = document.getElementById("message").value.trim();
+      const responseBox = document.getElementById("responseMessage");
+
+      if (!userId.startsWith("HOD")) {
+        responseBox.style.display = "block";
+        responseBox.className = "alert error";
+        responseBox.textContent = "❌ User ID must start with 'HOD'.";
         return;
       }
 
       try {
-        const res = await fetch('/api/notifications/send', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ userId, message })
+        const res = await fetch("/api/notifications/send", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId, message }),
         });
 
         const data = await res.json();
 
-        if (res.ok && data.success) {
-          responseMsg.textContent = '✅ Notification sent successfully!';
-          responseMsg.classList.add('success');
-          document.getElementById('message').value = '';
+        responseBox.style.display = "block";
+        if (data.success) {
+          responseBox.className = "alert success";
+          responseBox.textContent = "✅ Notification sent successfully!";
+          document.getElementById("notificationForm").reset();
         } else {
-          responseMsg.textContent = data.message || '❌ Failed to send notification.';
-          responseMsg.classList.add('error');
+          responseBox.className = "alert error";
+          responseBox.textContent = "❌ " + (data.message || "Failed to send notification.");
         }
       } catch (err) {
-        console.error('Error sending notification:', err);
-        responseMsg.textContent = '❌ Server error. Try again later.';
-        responseMsg.classList.add('error');
+        responseBox.style.display = "block";
+        responseBox.className = "alert error";
+        responseBox.textContent = "❌ Network or server error.";
+        console.error(err);
       }
-    }
+    });
   </script>
 </body>
 </html>
