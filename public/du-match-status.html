@@ -231,7 +231,8 @@ function loadMatches() {
     .then(res => res.json())
     .then(data => {
       const tbody = document.querySelector("#matchTable tbody");
-      tbody.innerHTML = data.data.map(row => `
+      const rows = data.data || data;
+      tbody.innerHTML = rows.map(row => `
         <tr>
           <td>${row.userId}</td>
           <td>${row.name}</td>
@@ -243,8 +244,12 @@ function loadMatches() {
           <td>${row.matched_on ? new Date(row.matched_on).toLocaleDateString() : '-'}</td>
         </tr>
       `).join("");
+    })
+    .catch(() => {
+      Swal.fire("Error", "Failed to load matches", "error");
     });
 }
+
 
 function searchDU() {
   const query = document.getElementById("searchInput").value.trim();
