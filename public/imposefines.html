@@ -265,84 +265,95 @@
   </div>
 
   <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+  // 🔐 Unauthorized Login Check
   const userId = localStorage.getItem("userId");
-  document.getElementById("userId").textContent = userId;
-
- function imposeFine() {
-  const studentId = document.getElementById("studentId").value.trim();
-  const reason = document.getElementById("reason").value.trim();
-  const amount = parseInt(document.getElementById("amount").value.trim());
-  const academic_year = document.getElementById("fineYear").value;
-  const staffId = localStorage.getItem("userId");
-
-  if (!studentId || isNaN(amount) || !academic_year) {
+  if (!userId) {
     Swal.fire({
-      icon: "warning",
-      title: "Missing Fields",
-      text: "Please enter all required fields including Year and Amount."
+      icon: 'warning',
+      title: 'Login Required',
+      text: 'Please login to access this page.'
+    }).then(() => {
+      window.location.href = "index.html";
     });
-    return;
-  }
+  } else {
+    document.getElementById("userId").textContent = userId;
 
-  if (!reason) {
-    Swal.fire({
-      icon: "warning",
-      title: "Missing Reason",
-      text: "Please enter the reason for the fine."
-    });
-    return;
-  }
+    function imposeFine() {
+      const studentId = document.getElementById("studentId").value.trim();
+      const reason = document.getElementById("reason").value.trim();
+      const amount = parseInt(document.getElementById("amount").value.trim());
+      const academic_year = document.getElementById("fineYear").value;
+      const staffId = userId;
 
-  fetch("https://crr-noc.onrender.com/impose-fine", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      userId: studentId,
-      reason,
-      amount,
-      academic_year, // ✅ this matches backend
-      staffId
-    })
-  })
-  .then(res => res.json())
-  .then(data => {
-    Swal.fire({
-      icon: data.success ? "success" : "error",
-      title: data.success ? "Fine Imposed" : "Error",
-      text: data.message
-    });
+      if (!studentId || isNaN(amount) || !academic_year) {
+        Swal.fire({
+          icon: "warning",
+          title: "Missing Fields",
+          text: "Please enter all required fields including Year and Amount."
+        });
+        return;
+      }
 
-    if (data.success) {
-      document.getElementById("studentId").value = "";
-      document.getElementById("reason").value = "";
-      document.getElementById("amount").value = "";
-      document.getElementById("fineYear").value = "";
+      if (!reason) {
+        Swal.fire({
+          icon: "warning",
+          title: "Missing Reason",
+          text: "Please enter the reason for the fine."
+        });
+        return;
+      }
+
+      fetch("https://crr-noc.onrender.com/impose-fine", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: studentId,
+          reason,
+          amount,
+          academic_year,
+          staffId
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        Swal.fire({
+          icon: data.success ? "success" : "error",
+          title: data.success ? "Fine Imposed" : "Error",
+          text: data.message
+        });
+
+        if (data.success) {
+          document.getElementById("studentId").value = "";
+          document.getElementById("reason").value = "";
+          document.getElementById("amount").value = "";
+          document.getElementById("fineYear").value = "";
+        }
+      })
+      .catch(err => {
+        console.error("Error:", err);
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "Failed to impose fine. Please try again."
+        });
+      });
     }
-  })
-  .catch(err => {
-    console.error("Error:", err);
-    Swal.fire({
-      icon: "error",
-      title: "Error",
-      text: "Failed to impose fine. Please try again."
-    });
-  });
-}
 
-  function toggleMobileMenu() {
-    const sidebar = document.querySelector('.sidebar');
-    sidebar.classList.toggle('open');
-  }
-
-  function logout() {
-    localStorage.removeItem("userId");
-    if ("caches" in window) {
-      caches.keys().then((names) => names.forEach((name) => caches.delete(name)));
+    function toggleMobileMenu() {
+      const sidebar = document.querySelector('.sidebar');
+      sidebar.classList.toggle('open');
     }
-    window.location.replace("index.html");
+
+    function logout() {
+      localStorage.removeItem("userId");
+      if ("caches" in window) {
+        caches.keys().then(names => names.forEach(name => caches.delete(name)));
+      }
+      window.location.replace("index.html");
+    }
   }
 </script>
-
 </body>
 </html>
