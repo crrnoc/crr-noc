@@ -326,7 +326,18 @@
     <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+  // 🔐 Unauthorized login check
   const userId = localStorage.getItem("userId");
+  if (!userId) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Login Required',
+      text: 'Please login to access this page.'
+    }).then(() => {
+      window.location.href = "index.html";
+    });
+  }
+
   document.getElementById("userId").textContent = userId;
 
   // ✅ Load sidebar photo
@@ -354,7 +365,6 @@
       return;
     }
 
-    const userId = localStorage.getItem("userId");
     const url = `https://crr-noc.onrender.com/generate-noc/${userId}?year=${year}`;
     window.open(url, '_blank');
 
@@ -368,7 +378,6 @@
   }
 
   function downloadCombinedNOC() {
-    const userId = localStorage.getItem("userId");
     if (!userId) {
       Swal.fire({
         icon: 'error',
@@ -430,7 +439,5 @@
     window.location.replace("index.html");
   }
 </script>
-
-
 </body>
 </html>
