@@ -160,80 +160,79 @@
     </div>
   </div>
 
-  <script>
-    function navigateTo(route) {
-      window.location.href = route;
-    }
+<script>
+  const userId = localStorage.getItem("userId");
 
-    function toggleSidebar() {
-      document.getElementById("sidebar").classList.toggle("open");
-    }
+  if (!userId) {
+    alert("Please login first.");
+    window.location.href = "index.html";
+  }
 
-    function logout() {
-      fetch("/logout")
-        .then(() => {
-          localStorage.removeItem("userId");
-          window.location.replace("index.html");
-        })
-        .catch(() => {
-          Swal.fire("Logout Failed", "Please try again", "error");
-        });
-    }
+  function navigateTo(route) {
+    window.location.href = route;
+  }
 
-    document.getElementById("counsellingForm").addEventListener("submit", async function (e) {
-      e.preventDefault();
+  function toggleSidebar() {
+    document.getElementById("sidebar").classList.toggle("open");
+  }
 
-      const fromReg = document.getElementById("fromReg").value.trim();
-      const toReg = document.getElementById("toReg").value.trim();
-      const counsellorName = document.getElementById("counsellorName").value.trim();
-      const counsellorMobile = document.getElementById("counsellorMobile").value.trim();
-      const counsellorId = document.getElementById("staffId").value.trim();
-
-      if (!fromReg || !toReg || !counsellorName || !counsellorMobile || !counsellorId) {
-        Swal.fire("Missing Fields", "Please fill in all the fields.", "warning");
-        return;
-      }
-
-      try {
-        const res = await fetch("https://crr-noc.onrender.com/assign-counselling", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            fromReg,
-            toReg,
-            counsellorName,
-            counsellorMobile,
-            counsellorId
-          })
-        });
-
-        const data = await res.json();
-        if (res.ok) {
-          Swal.fire("Assigned!", data.message || "Students assigned successfully!", "success");
-          e.target.reset();
-        } else {
-          throw new Error(data.message || "Failed to assign.");
-        }
-      } catch (err) {
-        Swal.fire("Error", err.message || "Something went wrong.", "error");
-      }
-    });
-
-    // 🔐 Session Check
-    (async () => {
-      try {
-        const res = await fetch("/check-session");
-        if (!res.ok) throw new Error("Unauthorized");
-      } catch (err) {
+  function logout() {
+    fetch("/logout")
+      .then(() => {
         localStorage.removeItem("userId");
         window.location.replace("index.html");
-      }
-    })();
+      })
+      .catch(() => {
+        Swal.fire("Logout Failed", "Please try again", "error");
+      });
+  }
 
-    // Back button block
-    window.history.pushState(null, "", window.location.href);
-    window.onpopstate = () => window.history.pushState(null, "", window.location.href);
-  </script>
+  document.getElementById("counsellingForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const fromReg = document.getElementById("fromReg").value.trim();
+    const toReg = document.getElementById("toReg").value.trim();
+    const counsellorName = document.getElementById("counsellorName").value.trim();
+    const counsellorMobile = document.getElementById("counsellorMobile").value.trim();
+    const counsellorId = document.getElementById("staffId").value.trim();
+
+    if (!fromReg || !toReg || !counsellorName || !counsellorMobile || !counsellorId) {
+      Swal.fire("Missing Fields", "Please fill in all the fields.", "warning");
+      return;
+    }
+
+    try {
+      const res = await fetch("https://crr-noc.onrender.com/assign-counselling", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fromReg,
+          toReg,
+          counsellorName,
+          counsellorMobile,
+          counsellorId
+        })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        Swal.fire("Assigned!", data.message || "Students assigned successfully!", "success");
+        e.target.reset();
+      } else {
+        throw new Error(data.message || "Failed to assign.");
+      }
+    } catch (err) {
+      Swal.fire("Error", err.message || "Something went wrong.", "error");
+    }
+  });
+
+  // Prevent back navigation after logout
+  window.addEventListener("pageshow", (e) => {
+    if (e.persisted) window.location.reload();
+  });
+  window.history.pushState(null, "", window.location.href);
+  window.onpopstate = () => window.history.pushState(null, "", window.location.href);
+</script>
 
 </body>
 </html>
