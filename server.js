@@ -129,9 +129,7 @@ app.get("/uploadmidmarks", requireAdminSession, (req, res) => {
 app.get("/addmycounselling", requireAdminSession, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "addmycounselling.html"));
 });
-app.get("/addmycounselling", requireAdminSession, (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "addmycounselling.html"));
-});
+
 app.get("/examcell", requireAdminSession, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "examcell.html"));
 });
