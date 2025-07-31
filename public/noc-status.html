@@ -2,183 +2,186 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NOC Generation Status</title>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron&family=Poppins:wght@300;500;700&display=swap" rel="stylesheet" />
+  <title>NOC Status</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="icon" href="crrengglogo.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI&display=swap" rel="stylesheet">
   <style>
-    :root { --main-color: #3cb6ff; --accent-color: #ff3d3d; }
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
-    body { display: flex; min-height: 100vh; background: linear-gradient(to right, #0f2027, #203a43, #2c5364); color: white; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    body {
+      display: flex;
+      min-height: 100vh;
+      background: linear-gradient(to right, #e0eafc, #cfdef3);
+      color: #222;
+    }
 
     .sidebar {
-      width: 260px;
-      background: rgba(60, 66, 84, 0.5);
-      backdrop-filter: blur(8px);
-      padding: 30px 20px;
+      width: 250px;
+      background: linear-gradient(180deg, #2C3E50, #34495E);
+      padding: 20px;
       display: flex;
       flex-direction: column;
-      box-shadow: 4px 0 25px rgba(0, 0, 0, 0.4);
       position: fixed;
-      height: 100vh;
-      left: 0;
       top: 0;
-      z-index: 10;
-    }
-    .sidebar h2 { text-align: center; font-size: 24px; color: var(--main-color); margin-bottom: 30px; }
-    .sidebar ul { list-style: none; }
-    .sidebar li {
-      padding: 12px 18px;
-      margin: 12px 0;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 10px;
-      cursor: pointer;
-      transition: 0.3s ease;
-    }
-    .sidebar li:hover {
-      background: var(--main-color);
-      box-shadow: 0 0 12px var(--main-color);
-    }
-    .sidebar button {
-      margin-top: auto;
-      padding: 10px 20px;
-      border: none;
-      background: linear-gradient(to right, #ff416c, #ff4b2b);
+      left: 0;
+      bottom: 0;
       color: white;
-      border-radius: 12px;
-      cursor: pointer;
-      font-weight: bold;
-      box-shadow: 0 0 10px rgba(255, 65, 108, 0.5);
-      transition: 0.3s ease;
+      z-index: 100;
     }
-    .sidebar button:hover { transform: scale(1.05); }
 
-    .main {
-      margin-left: 260px;
-      padding: 70px;
-      flex: 1;
-      animation: slideIn 1s ease forwards;
-    }
-    .banner {
-      background: rgba(255, 255, 255, 0.08);
-      border-radius: 14px;
-      padding: 16px;
-      font-size: 18px;
+    .sidebar h2 {
       text-align: center;
+      font-weight: bold;
+      font-size: 20px;
       margin-bottom: 30px;
-      box-shadow: 0 0 15px rgba(0, 191, 255, 0.3);
-    }
-    .card {
-      background: rgba(255, 255, 255, 0.08);
-      backdrop-filter: blur(6px);
-      padding: 25px;
-      border-radius: 16px;
-      margin-bottom: 30px;
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      animation: fadeUp 0.6s ease forwards;
+      color: #3cb6ff;
     }
 
-    table {
-      border-collapse: collapse;
-      width: 100%;
-      min-width: 500px;
-      color: white;
+    .sidebar ul {
+      list-style: none;
+      padding-left: 0;
     }
-    th, td {
+
+    .sidebar li {
       padding: 12px;
-      text-align: left;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+      margin: 8px 0;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.3s;
+      background: rgba(255, 255, 255, 0.1);
     }
-    tbody tr:hover {
-      background-color: rgba(255, 255, 255, 0.08);
+
+    .sidebar li:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateX(5px);
+    }
+
+    .sidebar button {
+      background-color: #E67E22;
+      border: none;
+      color: white;
+      padding: 12px;
+      border-radius: 20px;
+      margin-top: auto;
+      cursor: pointer;
       transition: background 0.3s ease;
     }
 
-    select {
-      padding: 10px 14px;
-      border-radius: 10px;
-      background: rgba(0, 0, 0, 0.1);
-      color: black;
-      font-size: 15px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      box-shadow: inset 0 0 8px rgba(111, 180, 218, 0.708);
-      transition: all 0.3s ease;
-      backdrop-filter: blur(4px);
-    }
-    select:hover, select:focus {
-      border-color: var(--main-color);
-      box-shadow: 0 0 10px var(--main-color);
-      background: rgba(255, 255, 255, 0.15);
-      outline: none;
-    }
-
-    button {
-      background: linear-gradient(135deg, var(--main-color), var(--accent-color));
-      padding: 10px 18px;
-      border-radius: 10px;
-      border: none;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      box-shadow: 0 0 12px rgba(60, 182, 255, 0.3);
-    }
-    button:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 18px rgba(255, 61, 61, 0.5);
+    .sidebar button:hover {
+      background-color: #CA6F1E;
     }
 
     .mobile-toggle {
+      display: none;
       position: fixed;
       top: 15px;
       left: 15px;
-      font-size: 26px;
-      z-index: 20;
-      cursor: pointer;
-      display: none;
+      background: #2C3E50;
       color: white;
+      padding: 10px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      z-index: 200;
+    }
+
+    .main {
+      flex: 1;
+      margin-left: 250px;
+      padding: 60px 20px;
+    }
+
+    .card {
+      background: white;
+      max-width: 700px;
+      margin: auto;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #ccc;
+    }
+
+    input[type="text"] {
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      width: 100%;
+      font-size: 15px;
+      margin-bottom: 15px;
+    }
+
+    button {
+      background-color: #3cb6ff;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      transition: 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #359fe6;
     }
 
     @media (max-width: 768px) {
-      .sidebar { transform: translateX(-100%); transition: 0.4s ease; }
-      .sidebar.open { transform: translateX(0); }
-      .mobile-toggle { display: block; }
-      .main { margin-left: 0; padding: 80px 20px 20px; }
-    }
+      .sidebar {
+        left: -250px;
+        transition: 0.4s ease;
+      }
 
-    @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
-    @keyframes slideIn { from { opacity: 0; transform: translateX(50px); } to { opacity: 1; transform: translateX(0); } }
+      .sidebar.open {
+        left: 0;
+      }
+
+      .mobile-toggle {
+        display: block;
+      }
+
+      .main {
+        margin-left: 0;
+        padding: 80px 20px 20px;
+      }
+    }
   </style>
 </head>
 <body>
 
-  <div class="sidebar">
-    <h2>Admin Panel</h2>
+  <div class="mobile-toggle" onclick="toggleSidebar()">☰</div>
+
+  <div class="sidebar" id="sidebar">
+    <h2>Accounts Panel</h2>
     <ul>
-      <li onclick="navigateTo('uploadresultsAd.html')">📥 Upload Results</li>
-      <li onclick="navigateTo('uploadattendanceAd.html')">🗓 Upload Attendance</li>
-      <li onclick="navigateTo('upload-sbi.html')">📤 Upload SBI References</li>
-      <li onclick="navigateTo('upload-midmarks.html')">📊 Upload Mid Marks</li>
-      <li onclick="navigateTo('du-match-status.html')">📊 DU Match Status</li>
-      <li onclick="navigateTo('noc-status.html')">📜 NOC Status</li>
-      <li onclick="navigateTo('removestudents.html')">🗑️ Delete Students</li>
-      <li onclick="navigateTo('createnocAd.html')">📝 Create NOC</li>
-      <li onclick="navigateTo('uploadstudents.html')">📚 Upload Student Data</li>
+      <li onclick="navigateTo('/uploadsbi')">🏦 Upload SBI References</li>
+      <li onclick="navigateTo('/nocstatus')">📄 NOC Status</li>
+      <li onclick="navigateTo('/createnoc')">🧾 Create NOC</li>
+      <li onclick="navigateTo('/studentfeesearch')">🔍 Student Fee Search</li>
     </ul>
     <button onclick="logout()">🚪 Logout</button>
   </div>
 
-  <div class="mobile-toggle" onclick="toggleSidebar()">☰</div>
-
   <div class="main">
-    <div class="banner">📜 NOC Generation Status</div>
     <div class="card">
-      <div style="margin-bottom: 20px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
-        <input type="text" id="nocSearchInput" oninput="searchNOC()" placeholder="🔍 Search by Reg No or Name"
-          style="flex: 1; padding: 10px 15px; border-radius: 10px; font-size: 15px;
-                 border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.08);
-                 color: white; backdrop-filter: blur(5px); outline: none;" />
-        <button onclick="loadNOC()">Reset</button>
-      </div>
+      <h2>📜 NOC Generation Status</h2>
+      <input type="text" id="nocSearchInput" oninput="searchNOC()" placeholder="Search by Reg No or Name" />
+      <button onclick="loadNOC()">Reset</button>
+
       <div style="overflow-x: auto;">
         <table id="nocTable">
           <thead><tr><th>User ID</th><th>Status</th></tr></thead>
@@ -189,56 +192,22 @@
   </div>
 
   <script>
-    // 🔐 Session Check
-/*    (async () => {
-      try {
-        const res = await fetch("/check-session");
-        if (!res.ok) throw new Error("Unauthorized");
-      } catch (err) {
-        localStorage.removeItem("userId");
-        window.location.replace("index.html");
-      }
-    })();*/
-
-    // 🔁 Navigation Logic
-    function navigateTo(route) {
-      const routes = {
-        'uploadresultsAd.html': '/uploadresults',
-        'uploadattendanceAd.html': '/uploadattendance',
-        'upload-sbi.html': '/uploadsbi',
-        'upload-midmarks.html': '/uploadmidmarks',
-        'du-match-status.html': '/dumatch',
-        'noc-status.html': '/nocstatus',
-        'removestudents.html': '/removestudents',
-        'createnocAd.html': '/createnoc',
-        'uploadstudents.html':'/uploadstudents'
-      };
-      window.location.href = routes[route] || '/adminpanel';
-    }
-
-    // 🚪 Logout
-    function logout() {
-      fetch("/logout").then(() => {
-        localStorage.removeItem("userId");
-        window.location.replace("index.html");
-      });
-    }
-
-    // 📱 Sidebar Toggle
     function toggleSidebar() {
-      document.querySelector('.sidebar').classList.toggle('open');
+      document.getElementById("sidebar").classList.toggle("open");
     }
 
-    // ⛔️ Block Back/Forward Nav
-    window.addEventListener("pageshow", (event) => {
-      if (event.persisted) window.location.reload();
-    });
-    window.history.pushState(null, "", window.location.href);
-    window.onpopstate = function () {
-      window.history.pushState(null, "", window.location.href);
-    };
+    function navigateTo(route) {
+      window.location.href = route;
+    }
 
-    // 🟢 Load All NOC Statuses
+    function logout() {
+      fetch("/logout")
+        .then(() => {
+          localStorage.removeItem("userId");
+          window.location.replace("index.html");
+        });
+    }
+
     function loadNOC() {
       fetch("https://crr-noc.onrender.com/admin/noc-status")
         .then(res => res.json())
@@ -253,17 +222,13 @@
         });
     }
 
-    // 🔍 Search Function
     function searchNOC() {
       const query = document.getElementById("nocSearchInput").value.trim();
       const tbody = document.querySelector("#nocTable tbody");
 
-      if (!query) {
-        loadNOC();
-        return;
-      }
+      if (!query) return loadNOC();
 
-      tbody.innerHTML = `<tr><td colspan="2">⏳ Searching, please wait...</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="2">⏳ Searching...</td></tr>`;
 
       fetch("https://crr-noc.onrender.com/admin/search-noc-status", {
         method: "POST",
@@ -283,15 +248,12 @@
             tbody.innerHTML = `<tr><td colspan="2">No matching records found.</td></tr>`;
           }
         })
-        .catch((err) => {
-          console.error("Search error:", err);
-          tbody.innerHTML = `<tr><td colspan="2">🔴 Failed to load data. Please try again.</td></tr>`;
+        .catch(() => {
+          tbody.innerHTML = `<tr><td colspan="2">🔴 Error fetching data.</td></tr>`;
         });
     }
 
-    // 🧠 Load on Start
     loadNOC();
   </script>
-
 </body>
 </html>
