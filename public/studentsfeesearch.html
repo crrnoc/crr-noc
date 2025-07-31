@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -162,16 +163,13 @@
   <div class="mobile-toggle" onclick="toggleSidebar()">☰</div>
 
   <div class="sidebar" id="sidebar">
-    <h2>Admin Panel</h2>
+    <h2>Accounts Panel</h2>
     <ul>
-      <li onclick="navigateTo('/uploadattendance')">🗓 Upload Attendance</li>
-      <li onclick="navigateTo('/uploadmidmarks')">📊 Upload Mid Marks</li>
-      <li onclick="navigateTo('/addmycounselling')">👥 Assign Counselling</li>
-      <li onclick="navigateTo('/dumatch')">📊 DU Match Status</li>
-      <li onclick="navigateTo('/removestudents')">🗑️ Delete Students</li>
-      <li onclick="navigateTo('/uploadstudents')">📚 Upload Student Data</li>
-    </ul>
-    <button onclick="logout()">🚪 Logout</button>
+      <li onclick="navigateTo('/uploadsbi')">🏦 Upload SBI References</li>
+      <li onclick="navigateTo('/nocstatus')">📄 NOC Status</li>
+      <li onclick="navigateTo('/createnoc')">🧾 Create NOC</li>
+      <li onclick="navigateTo('/studentsfeesearch')">🔍 Student Fee Search</li>
+    </ul>    <button onclick="logout()">🚪 Logout</button>
   </div>
 
   <div class="main">
@@ -181,97 +179,117 @@
       <button onclick="loadMatches()">Reset</button>
 
       <table id="matchTable">
-        <thead>
-          <tr><th>User ID</th><th>Fee Type</th><th>DU Number</th><th>Status</th><th>Matched On</th></tr>
-        </thead>
+       <thead>
+  <tr>
+    <th>User ID</th>
+    <th>Student Name</th>
+    <th>Academic Year</th> <!-- ✅ -->
+    <th>Fee Type</th>
+    <th>Amount Paid</th>
+    <th>DU Number</th>
+    <th>Status</th>
+    <th>Matched On</th>
+  </tr>
+</thead>
+
         <tbody></tbody>
       </table>
     </div>
   </div>
 
-  <script>
-    // Session check
-    (async () => {
-      try {
-        const res = await fetch("/check-session");
-        if (!res.ok) throw new Error("Unauthorized");
-      } catch (err) {
+ <script>
+  const userId = localStorage.getItem("userId");
+
+  if (!userId) {
+    alert("Please login first.");
+    window.location.href = "index.html";
+  }
+
+  function navigateTo(route) {
+    window.location.href = route;
+  }
+
+  function logout() {
+    fetch("/logout")
+      .then(() => {
         localStorage.removeItem("userId");
         window.location.replace("index.html");
-      }
-    })();
-
-    function navigateTo(route) {
-      window.location.href = route;
-    }
-
-    function logout() {
-      fetch("/logout").then(() => {
-        localStorage.removeItem("userId");
-        window.location.replace("index.html");
-      });
-    }
-
-    function toggleSidebar() {
-      document.getElementById("sidebar").classList.toggle("open");
-    }
-
-    function loadMatches() {
-      fetch("https://crr-noc.onrender.com/admin/matches")
-        .then(res => res.json())
-        .then(data => {
-          const tbody = document.querySelector("#matchTable tbody");
-          tbody.innerHTML = data.map(row => `
-            <tr>
-              <td>${row.userId}</td>
-              <td>${row.fee_type}</td>
-              <td>${row.sbi_ref_no}</td>
-              <td>${row.matched ? '✅' : '❌'}</td>
-              <td>${row.matched_on || '-'}</td>
-            </tr>
-          `).join("");
-        });
-    }
-
-    function searchDU() {
-      const query = document.getElementById("searchInput").value.trim();
-      if (!query) return loadMatches();
-
-      fetch("https://crr-noc.onrender.com/admin/search-student-sbi", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query })
       })
+      .catch(() => {
+        Swal.fire("Logout Failed", "Please try again", "error");
+      });
+  }
+
+  function toggleSidebar() {
+    document.getElementById("sidebar").classList.toggle("open");
+  }
+
+  function loadMatches() {
+    fetch("https://crr-noc.onrender.com/admin/matches")
       .then(res => res.json())
       .then(data => {
         const tbody = document.querySelector("#matchTable tbody");
-        if (data.success && data.data.length) {
-          tbody.innerHTML = data.data.map(row => `
-            <tr>
-              <td>${row.userId}</td>
-              <td>${row.fee_type || '-'}</td>
-              <td>${row.sbi_ref_no || '-'}</td>
-              <td>${row.matched ? '✅' : '❌'}</td>
-              <td>${row.matched_on || '-'}</td>
-            </tr>
-          `).join("");
-        } else {
-          tbody.innerHTML = `<tr><td colspan="5">No matching records found.</td></tr>`;
-        }
-      })
-      .catch(() => {
-        Swal.fire("Error", "Search failed. Please try again.", "error");
+      tbody.innerHTML = data.map(row => `
+  <tr>
+    <td>${row.userId}</td>
+    <td>${row.name || '-'}</td>
+    <td>${row.academic_year || '-'}</td> <!-- ✅ Display academic year -->
+    <td>${row.fee_type || '-'}</td>
+    <td>₹${row.amount_paid || '-'}</td>
+    <td>${row.sbi_ref_no || '-'}</td>
+    <td>${row.matched ? '✅' : '❌'}</td>
+    <td>${row.matched_on || '-'}</td>
+  </tr>
+`).join("");
+
       });
-    }
+  }
 
-    window.addEventListener("pageshow", (e) => {
-      if (e.persisted) window.location.reload();
+  function searchDU() {
+    const query = document.getElementById("searchInput").value.trim();
+    if (!query) return loadMatches();
+
+    fetch("https://crr-noc.onrender.com/admin/search-student-sbi", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query })
+    })
+    .then(res => res.json())
+    .then(data => {
+      const tbody = document.querySelector("#matchTable tbody");
+      if (data.success && data.data.length) {
+      tbody.innerHTML = data.map(row => `
+  <tr>
+    <td>${row.userId}</td>
+    <td>${row.name || '-'}</td>
+    <td>${row.academic_year || '-'}</td> <!-- ✅ Display academic year -->
+    <td>${row.fee_type || '-'}</td>
+    <td>₹${row.amount_paid || '-'}</td>
+    <td>${row.sbi_ref_no || '-'}</td>
+    <td>${row.matched ? '✅' : '❌'}</td>
+    <td>${row.matched_on || '-'}</td>
+  </tr>
+`).join("");
+
+      } else {
+        tbody.innerHTML = `<tr><td colspan="7">No matching records found.</td></tr>`;
+      }
+    })
+    .catch(() => {
+      Swal.fire("Error", "Search failed. Please try again.", "error");
     });
-    window.history.pushState(null, "", window.location.href);
-    window.onpopstate = () => window.history.pushState(null, "", window.location.href);
+  }
 
-    loadMatches();
-  </script>
+  // Prevent back nav after logout
+  window.addEventListener("pageshow", (e) => {
+    if (e.persisted) window.location.reload();
+  });
+  window.history.pushState(null, "", window.location.href);
+  window.onpopstate = () => window.history.pushState(null, "", window.location.href);
+
+  // Initial load
+  loadMatches();
+</script>
 
 </body>
 </html>
