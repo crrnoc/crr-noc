@@ -188,97 +188,88 @@
     </div>
   </div>
 
-  <script>
-    // 🔐 Session validation
-    (async () => {
-      try {
-        const res = await fetch("/check-session");
-        if (!res.ok) throw new Error("Unauthorized");
-      } catch (err) {
+<script>
+  const userId = localStorage.getItem("userId");
+
+  if (!userId) {
+    alert("Please login first.");
+    window.location.href = "index.html";
+  }
+
+  function navigateTo(route) {
+    window.location.href = route;
+  }
+
+  function logout() {
+    fetch("/logout")
+      .then(() => {
         localStorage.removeItem("userId");
         window.location.replace("index.html");
-      }
-    })();
+      })
+      .catch(() => {
+        Swal.fire("Logout Failed", "Please try again", "error");
+      });
+  }
 
-    // 🔄 Navigation (direct route-based)
-    function navigateTo(route) {
-      window.location.href = route;
+  function toggleSidebar() {
+    document.getElementById("sidebar").classList.toggle("open");
+  }
+
+  window.addEventListener("pageshow", (event) => {
+    if (event.persisted) window.location.reload();
+  });
+  window.history.pushState(null, "", window.location.href);
+  window.onpopstate = () => window.history.pushState(null, "", window.location.href);
+
+  document.getElementById("attendanceForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const semester = document.getElementById("semester").value;
+    const file = document.getElementById("pdf").files[0];
+
+    if (!semester || !file) {
+      Swal.fire("Missing Fields", "Please select semester and upload a file.", "warning");
+      return;
     }
 
-    // 🚪 Logout
-    function logout() {
-      fetch("/logout")
-        .then(() => {
-          localStorage.removeItem("userId");
-          window.location.replace("index.html");
-        })
-        .catch(() => {
-          Swal.fire("Logout Failed", "Please try again", "error");
-        });
-    }
+    const formData = new FormData();
+    formData.append("semester", semester);
+    formData.append("pdf", file);
 
-    // ☰ Toggle sidebar (mobile)
-    function toggleSidebar() {
-      document.getElementById("sidebar").classList.toggle("open");
-    }
+    document.getElementById("submitBtn").disabled = true;
 
-    // Prevent navigation caching
-    window.addEventListener("pageshow", (event) => {
-      if (event.persisted) window.location.reload();
+    Swal.fire({
+      title: "Uploading...",
+      html: "Processing attendance PDF...",
+      allowOutsideClick: false,
+      didOpen: () => Swal.showLoading()
     });
-    window.history.pushState(null, "", window.location.href);
-    window.onpopstate = () => window.history.pushState(null, "", window.location.href);
 
-    // 📤 Handle attendance upload
-    document.getElementById("attendanceForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const semester = document.getElementById("semester").value;
-      const file = document.getElementById("pdf").files[0];
-
-      if (!semester || !file) {
-        Swal.fire("Missing Fields", "Please select semester and upload a file.", "warning");
-        return;
-      }
-
-      const formData = new FormData();
-      formData.append("semester", semester);
-      formData.append("pdf", file);
-
-      document.getElementById("submitBtn").disabled = true;
-
-      Swal.fire({
-        title: "Uploading...",
-        html: "Processing attendance PDF...",
-        allowOutsideClick: false,
-        didOpen: () => Swal.showLoading()
+    try {
+      const response = await fetch("https://crr-noc.onrender.com/upload-attendance", {
+        method: "POST",
+        body: formData
       });
 
-      try {
-        const response = await fetch("https://crr-noc.onrender.com/upload-attendance", {
-          method: "POST",
-          body: formData
-        });
-
-        const contentType = response.headers.get("content-type");
-        if (!contentType.includes("application/json")) {
-          throw new Error("Server returned non-JSON response.");
-        }
-
-        const result = await response.json();
-        Swal.fire({
-          icon: result.total === 0 ? "warning" : "success",
-          title: result.total === 0 ? "No Records Found" : "Upload Successful ✅",
-          html: `<b>${result.message}</b><br>Total Records: <strong>${result.total}</strong><br><a href="${result.csv_file}" target="_blank">📥 Download CSV</a>`
-        });
-
-        if (result.total > 0) e.target.reset();
-      } catch (err) {
-        Swal.fire("Upload Failed ❌", err.message || "Something went wrong.", "error");
-      } finally {
-        document.getElementById("submitBtn").disabled = false;
+      const contentType = response.headers.get("content-type");
+      if (!contentType.includes("application/json")) {
+        throw new Error("Server returned non-JSON response.");
       }
-    });
-  </script>
+
+      const result = await response.json();
+      Swal.fire({
+        icon: result.total === 0 ? "warning" : "success",
+        title: result.total === 0 ? "No Records Found" : "Upload Successful ✅",
+        html: `<b>${result.message}</b><br>Total Records: <strong>${result.total}</strong><br><a href="${result.csv_file}" target="_blank">📥 Download CSV</a>`
+      });
+
+      if (result.total > 0) e.target.reset();
+    } catch (err) {
+      Swal.fire("Upload Failed ❌", err.message || "Something went wrong.", "error");
+    } finally {
+      document.getElementById("submitBtn").disabled = false;
+    }
+  });
+</script>
 
 </body>
 </html>
