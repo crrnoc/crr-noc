@@ -231,19 +231,19 @@
       .then(res => res.json())
       .then(data => {
         const tbody = document.querySelector("#matchTable tbody");
-        tbody.innerHTML = data.map(row => `
-<tr>
-  <th>User ID</th>
-  <th>Student Name</th>
-  <th>Year</th>
-  <th>Fee Type</th>
-  <th>Amount Paid</th>
-  <th>DU Number</th>
-  <th>Status</th>
-  <th>Matched On</th>
-</tr>
+tbody.innerHTML = data.map(row => `
+  <tr>
+    <td>${row.userid}</td>
+    <td>${row.name}</td>
+    <td>${row.academic_year || row.year || '-'}</td>
+    <td>${row.fee_type}</td>
+    <td>${row.amount}</td>
+    <td>${row.du_number}</td>
+    <td>${row.status}</td>
+    <td>${row.matched_on ? new Date(row.matched_on).toLocaleDateString() : '-'}</td>
+  </tr>
+`).join("");
 
-        `).join("");
       });
   }
 
@@ -260,19 +260,22 @@
     .then(data => {
       const tbody = document.querySelector("#matchTable tbody");
       if (data.success && data.data.length) {
-        tbody.innerHTML = data.data.map(row => `
-<tr>
-  <th>User ID</th>
-  <th>Student Name</th>
-  <th>Year</th>
-  <th>Fee Type</th>
-  <th>Amount Paid</th>
-  <th>DU Number</th>
-  <th>Status</th>
-  <th>Matched On</th>
-</tr>
+       
+tbody.innerHTML = data.map(row => `
+  <tr>
+    <td>${row.userid}</td>
+    <td>${row.name}</td>
+    <td>${row.academic_year || row.year || '-'}</td>
+    <td>${row.fee_type}</td>
+    <td>${row.amount}</td>
+    <td>${row.du_number}</td>
+    <td>${row.status}</td>
+    <td>${row.matched_on ? new Date(row.matched_on).toLocaleDateString() : '-'}</td>
+  </tr>
+`).join("");
 
-        `).join("");
+
+     
       } else {
         tbody.innerHTML = `<tr><td colspan="7">No matching records found.</td></tr>`;
       }
