@@ -376,92 +376,106 @@
 
   <!-- 📱 Mobile Sidebar Toggle -->
   <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-/* ---------- shared helpers ---------- */
+/* ---------- 🔐 Unauthorized Login Check ---------- */
 const userId = localStorage.getItem("userId");
-document.getElementById("userId").textContent = userId || "Admin";
-
-function showSingle() {
-  document.getElementById("singleForm").style.display = "block";
-  document.getElementById("tabSingle").classList.add("active");
-}
-function toggleMobileMenu() {
-  document.querySelector(".sidebar").classList.toggle("open");
-}
-function logout() {
-  localStorage.removeItem("userId");
-  location.href = "index.html";
-}
-
-/* 🎯 Capitalize as user types */
-function liveTitleCase(input) {
-  input.value = input.value.toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
-}
-
-/* 🎯 Set dynamic max DOB for 16+ age */
-window.addEventListener("DOMContentLoaded", () => {
-  const dobField = document.querySelector("input[name='dob']");
-  const today = new Date();
-  const maxDOB = new Date(today.getFullYear() - 16, today.getMonth(), today.getDate());
-  dobField.max = maxDOB.toISOString().split("T")[0];
-  dobField.min = "1990-01-01";
-});
-
-/* ✅ Single student submit */
-document.getElementById("singleForm").addEventListener("submit", async e => {
-  e.preventDefault();
-  const form = e.target;
-  const data = Object.fromEntries(new FormData(form).entries());
-
-  // Capitalize relevant fields before send
-  data.name = toTitleCase(data.name.trim());
-  data.father_name = toTitleCase(data.father_name.trim());
-  data.counsellor_name = toTitleCase(data.counsellor_name.trim());
-  data.section = data.section.trim().toUpperCase();
-
-  // DOB validation (age ≥ 16)
-  const dob = new Date(data.dob);
-  const today = new Date();
-  const age = today.getFullYear() - dob.getFullYear() - (today < new Date(today.getFullYear(), dob.getMonth(), dob.getDate()) ? 1 : 0);
-  if (age < 16) {
-    Swal.fire("Invalid DOB", "Student must be at least 16 years old.", "error");
-    return;
-  }
-
-  // Mobile and Aadhar validation
-  if (!/^\d{10}$/.test(data.mobile_no)) {
-    Swal.fire("Invalid Mobile", "Enter a valid 10-digit mobile number.", "error");
-    return;
-  }
-  if (data.aadhar_no && !/^\d{12}$/.test(data.aadhar_no)) {
-    Swal.fire("Invalid Aadhar", "Enter a valid 12-digit Aadhar number.", "error");
-    return;
-  }
-
-  const res = await fetch("https://crr-noc.onrender.com/add-student", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data)
-  }).catch(() => null);
-
-  const out = await (res?.json() ?? { success: false, message: "Server error" });
-  Swal.fire(out.success ? "✅ Added" : "❌ Failed", out.message, out.success ? "success" : "error");
-  if (out.success) form.reset();
-});
-
-/* 🔠 Attach auto-capitalization to fields */
-document.addEventListener("DOMContentLoaded", () => {
-  ["name", "father_name", "counsellor_name"].forEach(field => {
-    const input = document.querySelector(`input[name="${field}"]`);
-    if (input) {
-      input.addEventListener("input", () => liveTitleCase(input));
-    }
+if (!userId) {
+  Swal.fire({
+    icon: 'warning',
+    title: 'Login Required',
+    text: 'Please login to access this page.'
+  }).then(() => {
+    window.location.href = "index.html";
   });
-});
+} else {
+  document.getElementById("userId").textContent = userId || "Admin";
 
-/* Title Case helper used in backend and submit */
-function toTitleCase(str) {
-  return str.toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
+  /* ---------- shared helpers ---------- */
+  function showSingle() {
+    document.getElementById("singleForm").style.display = "block";
+    document.getElementById("tabSingle").classList.add("active");
+  }
+
+  function toggleMobileMenu() {
+    document.querySelector(".sidebar").classList.toggle("open");
+  }
+
+  function logout() {
+    localStorage.removeItem("userId");
+    location.href = "index.html";
+  }
+
+  /* 🎯 Capitalize as user types */
+  function liveTitleCase(input) {
+    input.value = input.value.toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
+  }
+
+  /* 🎯 Set dynamic max DOB for 16+ age */
+  window.addEventListener("DOMContentLoaded", () => {
+    const dobField = document.querySelector("input[name='dob']");
+    const today = new Date();
+    const maxDOB = new Date(today.getFullYear() - 16, today.getMonth(), today.getDate());
+    dobField.max = maxDOB.toISOString().split("T")[0];
+    dobField.min = "1990-01-01";
+  });
+
+  /* ✅ Single student submit */
+  document.getElementById("singleForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const form = e.target;
+    const data = Object.fromEntries(new FormData(form).entries());
+
+    // Capitalize relevant fields before send
+    data.name = toTitleCase(data.name.trim());
+    data.father_name = toTitleCase(data.father_name.trim());
+    data.counsellor_name = toTitleCase(data.counsellor_name.trim());
+    data.section = data.section.trim().toUpperCase();
+
+    // DOB validation (age ≥ 16)
+    const dob = new Date(data.dob);
+    const today = new Date();
+    const age = today.getFullYear() - dob.getFullYear() - (today < new Date(today.getFullYear(), dob.getMonth(), dob.getDate()) ? 1 : 0);
+    if (age < 16) {
+      Swal.fire("Invalid DOB", "Student must be at least 16 years old.", "error");
+      return;
+    }
+
+    // Mobile and Aadhar validation
+    if (!/^\d{10}$/.test(data.mobile_no)) {
+      Swal.fire("Invalid Mobile", "Enter a valid 10-digit mobile number.", "error");
+      return;
+    }
+    if (data.aadhar_no && !/^\d{12}$/.test(data.aadhar_no)) {
+      Swal.fire("Invalid Aadhar", "Enter a valid 12-digit Aadhar number.", "error");
+      return;
+    }
+
+    const res = await fetch("https://crr-noc.onrender.com/add-student", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
+    }).catch(() => null);
+
+    const out = await (res?.json() ?? { success: false, message: "Server error" });
+    Swal.fire(out.success ? "✅ Added" : "❌ Failed", out.message, out.success ? "success" : "error");
+    if (out.success) form.reset();
+  });
+
+  /* 🔠 Attach auto-capitalization to fields */
+  document.addEventListener("DOMContentLoaded", () => {
+    ["name", "father_name", "counsellor_name"].forEach(field => {
+      const input = document.querySelector(`input[name="${field}"]`);
+      if (input) {
+        input.addEventListener("input", () => liveTitleCase(input));
+      }
+    });
+  });
+
+  /* Title Case helper used in backend and submit */
+  function toTitleCase(str) {
+    return str.toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
+  }
 }
 </script>
 </body>
