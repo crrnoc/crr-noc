@@ -189,91 +189,95 @@
     </div>
   </div>
 
-  <script>
-    // Session check
-    (async () => {
-      try {
-        const res = await fetch("/check-session");
-        if (!res.ok) throw new Error("Unauthorized");
-      } catch (err) {
+ <script>
+  const userId = localStorage.getItem("userId");
+
+  if (!userId) {
+    alert("Please login first.");
+    window.location.href = "index.html";
+  }
+
+  function navigateTo(route) {
+    window.location.href = route;
+  }
+
+  function logout() {
+    fetch("/logout")
+      .then(() => {
         localStorage.removeItem("userId");
         window.location.replace("index.html");
-      }
-    })();
-
-    function navigateTo(route) {
-      window.location.href = route;
-    }
-
-    function logout() {
-      fetch("/logout").then(() => {
-        localStorage.removeItem("userId");
-        window.location.replace("index.html");
-      });
-    }
-
-    function toggleSidebar() {
-      document.getElementById("sidebar").classList.toggle("open");
-    }
-
-    function loadMatches() {
-      fetch("https://crr-noc.onrender.com/admin/matches")
-        .then(res => res.json())
-        .then(data => {
-          const tbody = document.querySelector("#matchTable tbody");
-        tbody.innerHTML = data.map(row => `
-  <tr>
-    <td>${row.userId}</td>
-    <td>${row.name || '-'}</td>
-    <td>${row.fee_type}</td>
-    <td>₹${row.amount_paid}</td>
-    <td>${row.sbi_ref_no}</td>
-    <td>${row.matched ? '✅' : '❌'}</td>
-    <td>${row.matched_on || '-'}</td>
-  </tr>
-`).join("");
-        });
-    }
-
-    function searchDU() {
-      const query = document.getElementById("searchInput").value.trim();
-      if (!query) return loadMatches();
-
-      fetch("https://crr-noc.onrender.com/admin/search-student-sbi", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query })
       })
+      .catch(() => {
+        Swal.fire("Logout Failed", "Please try again", "error");
+      });
+  }
+
+  function toggleSidebar() {
+    document.getElementById("sidebar").classList.toggle("open");
+  }
+
+  function loadMatches() {
+    fetch("https://crr-noc.onrender.com/admin/matches")
       .then(res => res.json())
       .then(data => {
         const tbody = document.querySelector("#matchTable tbody");
-        if (data.success && data.data.length) {
-          tbody.innerHTML = data.data.map(row => `
-            <tr>
-              <td>${row.userId}</td>
-              <td>${row.fee_type || '-'}</td>
-              <td>${row.sbi_ref_no || '-'}</td>
-              <td>${row.matched ? '✅' : '❌'}</td>
-              <td>${row.matched_on || '-'}</td>
-            </tr>
-          `).join("");
-        } else {
-          tbody.innerHTML = `<tr><td colspan="5">No matching records found.</td></tr>`;
-        }
-      })
-      .catch(() => {
-        Swal.fire("Error", "Search failed. Please try again.", "error");
+        tbody.innerHTML = data.map(row => `
+          <tr>
+            <td>${row.userId}</td>
+            <td>${row.name || '-'}</td>
+            <td>${row.fee_type}</td>
+            <td>₹${row.amount_paid}</td>
+            <td>${row.sbi_ref_no}</td>
+            <td>${row.matched ? '✅' : '❌'}</td>
+            <td>${row.matched_on || '-'}</td>
+          </tr>
+        `).join("");
       });
-    }
+  }
 
-    window.addEventListener("pageshow", (e) => {
-      if (e.persisted) window.location.reload();
+  function searchDU() {
+    const query = document.getElementById("searchInput").value.trim();
+    if (!query) return loadMatches();
+
+    fetch("https://crr-noc.onrender.com/admin/search-student-sbi", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query })
+    })
+    .then(res => res.json())
+    .then(data => {
+      const tbody = document.querySelector("#matchTable tbody");
+      if (data.success && data.data.length) {
+        tbody.innerHTML = data.data.map(row => `
+          <tr>
+            <td>${row.userId}</td>
+            <td>${row.name || '-'}</td>
+            <td>${row.fee_type || '-'}</td>
+            <td>₹${row.amount_paid || '-'}</td>
+            <td>${row.sbi_ref_no || '-'}</td>
+            <td>${row.matched ? '✅' : '❌'}</td>
+            <td>${row.matched_on || '-'}</td>
+          </tr>
+        `).join("");
+      } else {
+        tbody.innerHTML = `<tr><td colspan="7">No matching records found.</td></tr>`;
+      }
+    })
+    .catch(() => {
+      Swal.fire("Error", "Search failed. Please try again.", "error");
     });
-    window.history.pushState(null, "", window.location.href);
-    window.onpopstate = () => window.history.pushState(null, "", window.location.href);
+  }
 
-    loadMatches();
-  </script>
+  // Prevent back nav after logout
+  window.addEventListener("pageshow", (e) => {
+    if (e.persisted) window.location.reload();
+  });
+  window.history.pushState(null, "", window.location.href);
+  window.onpopstate = () => window.history.pushState(null, "", window.location.href);
+
+  // Initial load
+  loadMatches();
+</script>
 
 </body>
 </html>
