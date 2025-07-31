@@ -295,63 +295,75 @@ body {
 
   <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
 
-  <script>
-    function toggleMobileMenu() {
-      document.querySelector('.sidebar').classList.toggle('open');
+<script>
+  // Toggle mobile sidebar
+  function toggleMobileMenu() {
+    document.querySelector('.sidebar').classList.toggle('open');
+  }
+
+  // Logout and clear session
+  function logout() {
+    localStorage.removeItem("userId");
+    if ("caches" in window) {
+      caches.keys().then(names => names.forEach(name => caches.delete(name)));
     }
+    window.location.replace("index.html");
+  }
 
-    function logout() {
-      localStorage.removeItem("userId");
-      if ("caches" in window) {
-        caches.keys().then(names => names.forEach(name => caches.delete(name)));
-      }
-      window.location.replace("index.html");
-    }
+  // Slideshow
+  let currentSlide = 0;
+  const slides = document.querySelectorAll('.slide');
+  const totalSlides = slides.length;
 
-    document.addEventListener("DOMContentLoaded", () => {
-      const userId = localStorage.getItem('userId');
-      if (!userId) {
-        alert("Please login first.");
-        window.location.href = "index.html";
-        return;
-      }
-
-      document.getElementById("userId").textContent = userId;
-
-      fetch(`https://crr-noc.onrender.com/student/${userId}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.name) {
-            document.getElementById("welcomeName").textContent = data.name;
-          }
-          if (data.photo_url) {
-            const photo = document.getElementById("sidebarPhoto");
-            photo.src = data.photo_url;
-            photo.style.display = "block";
-          }
-        })
-        .catch(err => console.error("Error loading student data:", err));
+  function showSlide(index) {
+    slides.forEach((slide, i) => {
+      slide.classList.remove('active');
     });
+    slides[index].classList.add('active');
+  }
 
-    // Slideshow
-    let currentSlide = 0;
-    const slides = document.querySelectorAll('.slide');
-    const totalSlides = slides.length;
+  function nextSlide() {
+    currentSlide = (currentSlide + 1) % totalSlides;
+    showSlide(currentSlide);
+  }
 
-    function showSlide(index) {
-      slides.forEach((slide, i) => {
-        slide.classList.remove('active');
+  setInterval(nextSlide, 5000); // auto-slide every 5s
+
+  // Load student details after page loads
+  document.addEventListener("DOMContentLoaded", () => {
+    const userId = localStorage.getItem('userId');
+
+    if (!userId) {
+      alert("Please login first.");
+      window.location.href = "index.html";
+      return;
+    }
+
+    document.getElementById("userId").textContent = userId;
+    showSlide(currentSlide); // Show first slide
+
+    // Fetch and display student name & photo
+    fetch(`https://crr-noc.onrender.com/student/${userId}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.name) {
+          document.getElementById("welcomeName").textContent = data.name;
+        }
+        if (data.photo_url) {
+          const photo = document.getElementById("sidebarPhoto");
+          photo.src = data.photo_url;
+          photo.style.display = "block";
+        }
+      })
+      .catch(err => {
+        console.error("Error loading student data:", err);
       });
-      slides[index].classList.add('active');
-    }
+  });
 
-    function nextSlide() {
-      currentSlide = (currentSlide + 1) % totalSlides;
-      showSlide(currentSlide);
-    }
+  // Prevent going back after logout
+  window.history.pushState(null, "", window.location.href);
+  window.onpopstate = () => window.history.pushState(null, "", window.location.href);
+</script>
 
-    setInterval(nextSlide, 5000); // 5 seconds
-    showSlide(currentSlide); // Show first slide on load
-  </script>
 </body>
 </html>
