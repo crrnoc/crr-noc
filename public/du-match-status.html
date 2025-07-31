@@ -222,15 +222,17 @@
       .then(data => {
         const tbody = document.querySelector("#matchTable tbody");
         tbody.innerHTML = data.map(row => `
-          <tr>
-            <td>${row.userId}</td>
-            <td>${row.name || '-'}</td>
-            <td>${row.fee_type}</td>
-            <td>₹${row.amount_paid}</td>
-            <td>${row.sbi_ref_no}</td>
-            <td>${row.matched ? '✅' : '❌'}</td>
-            <td>${row.matched_on || '-'}</td>
-          </tr>
+<tr>
+  <th>User ID</th>
+  <th>Student Name</th>
+  <th>Year</th>
+  <th>Fee Type</th>
+  <th>Amount Paid</th>
+  <th>DU Number</th>
+  <th>Status</th>
+  <th>Matched On</th>
+</tr>
+
         `).join("");
       });
   }
@@ -249,15 +251,17 @@
       const tbody = document.querySelector("#matchTable tbody");
       if (data.success && data.data.length) {
         tbody.innerHTML = data.data.map(row => `
-          <tr>
-            <td>${row.userId}</td>
-            <td>${row.name || '-'}</td>
-            <td>${row.fee_type || '-'}</td>
-            <td>₹${row.amount_paid || '-'}</td>
-            <td>${row.sbi_ref_no || '-'}</td>
-            <td>${row.matched ? '✅' : '❌'}</td>
-            <td>${row.matched_on || '-'}</td>
-          </tr>
+<tr>
+  <th>User ID</th>
+  <th>Student Name</th>
+  <th>Year</th>
+  <th>Fee Type</th>
+  <th>Amount Paid</th>
+  <th>DU Number</th>
+  <th>Status</th>
+  <th>Matched On</th>
+</tr>
+
         `).join("");
       } else {
         tbody.innerHTML = `<tr><td colspan="7">No matching records found.</td></tr>`;
