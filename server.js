@@ -899,10 +899,20 @@ app.post('/admin/upload-sbi', upload.single('sbiFile'), (req, res) => {
 
 app.get('/admin/matches', (req, res) => {
   const sql = `
-    SELECT s.name, s.reg_no AS userId, f.fee_type, f.sbi_ref_no, f.amount_paid, f.matched, f.matched_on
+    SELECT 
+      s.name,
+      s.reg_no AS userId,
+      f.academic_year,
+      f.fee_type,
+      f.amount_paid,
+      f.sbi_ref_no,
+      f.matched,
+      DATE_FORMAT(f.matched_on, '%d-%m-%Y') AS matched_on
     FROM student_fee_payments f
     JOIN students s ON f.userId = s.reg_no
+    ORDER BY f.matched_on DESC
   `;
+
   connection.query(sql, (err, results) => {
     if (err) {
       console.error('Error fetching matches:', err);
@@ -911,6 +921,7 @@ app.get('/admin/matches', (req, res) => {
     res.json(results);
   });
 });
+
 
 
 app.post('/admin/search-noc-status', (req, res) => {
