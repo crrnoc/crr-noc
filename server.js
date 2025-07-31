@@ -3368,33 +3368,23 @@ app.post('/api/notifications/send', (req, res) => {
   });
 });
 //get dept wise notifications
-app.get('/api/student/notifications/:userId', async (req, res) => {
-  const userId = req.params.userId;
+app.get('/student/notifications/:regno', (req, res) => {
+  const { regno } = req.params;
 
-  try {
-    // Step 1: Get dept_code of the student
-    const [studentResult] = await db.query(
-      'SELECT dept_code FROM students WHERE userId = ?',
-      [userId]
-    );
+  const deptQuery = 'SELECT dept_code FROM students WHERE regno = ?';
+  connection.query(deptQuery, [regno], (err, results) => {
+    if (err) return res.status(500).json({ error: 'Database error' });
+    if (results.length === 0) return res.status(404).json({ error: 'Student not found' });
 
-    if (studentResult.length === 0) {
-      return res.status(404).json({ error: 'Student not found' });
-    }
+    const deptCode = results[0].dept_code;
+    const staffId = `HOD${deptCode.toUpperCase()}`;
 
-    const deptCode = studentResult[0].dept_code.toUpperCase(); // e.g., 'CSE'
-
-    // Step 2: Fetch notifications where staffId is like `HOD${deptCode}`
-    const [notifications] = await db.query(
-      'SELECT * FROM notifications WHERE staffId = ? ORDER BY timestamp DESC',
-      [`HOD${deptCode}`]
-    );
-
-    res.json(notifications);
-  } catch (err) {
-    console.error('❌ Error fetching notifications:', err);
-    res.status(500).json({ error: 'Server error' });
-  }
+    const notifQuery = 'SELECT * FROM notifications WHERE staffId = ? ORDER BY createdAt DESC';
+    connection.query(notifQuery, [staffId], (err2, notifResults) => {
+      if (err2) return res.status(500).json({ error: 'Error fetching notifications' });
+      res.json(notifResults);
+    });
+  });
 });
 
 
