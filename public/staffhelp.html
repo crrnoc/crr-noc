@@ -303,8 +303,22 @@
     </div>
   </div>
 <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-  document.getElementById("userId").textContent = localStorage.getItem("userId") || "Unknown";
+  const userId = localStorage.getItem("userId");
+
+  if (!userId) {
+    Swal.fire({
+      icon: "warning",
+      title: "Unauthorized Access",
+      text: "Please login to continue.",
+      confirmButtonText: "Go to Login"
+    }).then(() => {
+      window.location.href = "index.html";
+    });
+  }
+
+  document.getElementById("userId").textContent = userId || "Unknown";
 
   document.getElementById("feedbackForm").addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -374,6 +388,5 @@
     window.location.replace("index.html");
   }
 </script>
-
 </body>
 </html>
