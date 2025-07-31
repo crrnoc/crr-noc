@@ -178,75 +178,74 @@
     </div>
   </div>
 
-  <script>
-    (async () => {
-      try {
-        const res = await fetch("/check-session");
-        if (!res.ok) throw new Error("Unauthorized");
-      } catch (err) {
+ <script>
+  const userId = localStorage.getItem("userId");
+
+  if (!userId) {
+    alert("Please login first.");
+    window.location.href = "index.html";
+  }
+
+  function navigateTo(route) {
+    window.location.href = route;
+  }
+
+  function logout() {
+    fetch("/logout")
+      .then(() => {
         localStorage.removeItem("userId");
         window.location.replace("index.html");
-      }
-    })();
-
-    function navigateTo(route) {
-      window.location.href = route;
-    }
-
-    function logout() {
-      fetch("/logout").then(() => {
-        localStorage.removeItem("userId");
-        window.location.replace("index.html");
-      }).catch(() => {
+      })
+      .catch(() => {
         Swal.fire("Logout Failed", "Please try again", "error");
       });
+  }
+
+  function toggleSidebar() {
+    document.getElementById("sidebar").classList.toggle("open");
+  }
+
+  window.addEventListener("pageshow", (event) => {
+    if (event.persisted) window.location.reload();
+  });
+
+  window.history.pushState(null, "", window.location.href);
+  window.onpopstate = () => window.history.pushState(null, "", window.location.href);
+
+  document.getElementById("midForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const file = document.getElementById("midMarksFile").files[0];
+    if (!file) {
+      return Swal.fire("No File Selected", "Please choose a CSV file.", "warning");
     }
 
-    function toggleSidebar() {
-      document.getElementById("sidebar").classList.toggle("open");
-    }
+    const formData = new FormData();
+    formData.append("file", file);
 
-    window.addEventListener("pageshow", (event) => {
-      if (event.persisted) window.location.reload();
+    document.getElementById("uploadBtn").disabled = true;
+
+    Swal.fire({
+      title: "Uploading...",
+      html: "Please wait while mid marks are being uploaded...",
+      allowOutsideClick: false,
+      didOpen: () => Swal.showLoading()
     });
-    window.history.pushState(null, "", window.location.href);
-    window.onpopstate = () => window.history.pushState(null, "", window.location.href);
 
-    document.getElementById("midForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const file = document.getElementById("midMarksFile").files[0];
-      if (!file) {
-        return Swal.fire("No File Selected", "Please choose a CSV file.", "warning");
-      }
-
-      const formData = new FormData();
-      formData.append("file", file);
-
-      document.getElementById("uploadBtn").disabled = true;
-
-      Swal.fire({
-        title: "Uploading...",
-        html: "Please wait while mid marks are being uploaded...",
-        allowOutsideClick: false,
-        didOpen: () => Swal.showLoading()
+    try {
+      const res = await fetch("https://crr-noc.onrender.com/upload-midmarks", {
+        method: "POST",
+        body: formData
       });
 
-      try {
-        const res = await fetch("https://crr-noc.onrender.com/upload-midmarks", {
-          method: "POST",
-          body: formData
-        });
-
-        const data = await res.json();
-        Swal.fire("Upload Successful ✅", data.message || "Marks uploaded.", "success");
-        e.target.reset();
-      } catch (err) {
-        Swal.fire("Upload Failed ❌", err.message || "Something went wrong.", "error");
-      } finally {
-        document.getElementById("uploadBtn").disabled = false;
-      }
-    });
-  </script>
-
+      const data = await res.json();
+      Swal.fire("Upload Successful ✅", data.message || "Marks uploaded.", "success");
+      e.target.reset();
+    } catch (err) {
+      Swal.fire("Upload Failed ❌", err.message || "Something went wrong.", "error");
+    } finally {
+      document.getElementById("uploadBtn").disabled = false;
+    }
+  });
+</script>
 </body>
 </html>
