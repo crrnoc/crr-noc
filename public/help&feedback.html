@@ -327,82 +327,95 @@
     </div>
   </div>
     <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+  // 🔐 Unauthorized login check
   const userId = localStorage.getItem("userId");
-  document.getElementById("userId").textContent = userId || "Unknown";
-
-  // ✅ Load sidebar photo
-  fetch(`https://crr-noc.onrender.com/student/${userId}`)
-    .then(res => res.json())
-    .then(data => {
-      const photo = document.getElementById("sidebarPhoto");
-      if (photo && data.photo_url) {
-        photo.src = data.photo_url;
-        photo.style.display = "block";
-      }
-    })
-    .catch(err => {
-      console.warn("⚠️ Failed to load photo:", err.message);
+  if (!userId) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Login Required',
+      text: 'Please login to access this page.'
+    }).then(() => {
+      window.location.href = "index.html";
     });
+  } else {
+    document.getElementById("userId").textContent = userId || "Unknown";
+
+    // ✅ Load sidebar photo
+    fetch(`https://crr-noc.onrender.com/student/${userId}`)
+      .then(res => res.json())
+      .then(data => {
+        const photo = document.getElementById("sidebarPhoto");
+        if (photo && data.photo_url) {
+          photo.src = data.photo_url;
+          photo.style.display = "block";
+        }
+      })
+      .catch(err => {
+        console.warn("⚠️ Failed to load photo:", err.message);
+      });
+
+    // ✅ Handle Feedback Submit
+    document.getElementById("feedbackForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const name = document.getElementById("name").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const message = document.getElementById("message").value.trim();
+      const submitBtn = document.querySelector('button[type="submit"]');
+
+      if (message.split(" ").length < 3) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Message too short',
+          text: 'Please enter at least 3 words.'
+        });
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.innerText = "Sending...";
+
+      try {
+        const res = await fetch("https://crr-noc.onrender.com/api/submit-feedback", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, email, message }),
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Feedback Sent',
+            text: '✅ Mail sent successfully!'
+          });
+          document.getElementById("feedbackForm").reset();
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Failed to Send',
+            text: '❌ Failed to send mail.'
+          });
+        }
+      } catch (err) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Network Error',
+          text: '❌ Network error. Try again later.'
+        });
+      }
+
+      submitBtn.disabled = false;
+      submitBtn.innerText = "Submit";
+    });
+  }
 
   function goBack() {
     window.location.href = "settings.html";
   }
-
-  document.getElementById("feedbackForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const name = document.getElementById("name").value.trim();
-    const email = document.getElementById("email").value.trim();
-    const message = document.getElementById("message").value.trim();
-    const submitBtn = document.querySelector('button[type="submit"]');
-
-    if (message.split(" ").length < 3) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Message too short',
-        text: 'Please enter at least 3 words.'
-      });
-      return;
-    }
-
-    submitBtn.disabled = true;
-    submitBtn.innerText = "Sending...";
-
-    try {
-      const res = await fetch("https://crr-noc.onrender.com/api/submit-feedback", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, message }),
-      });
-
-      const data = await res.json();
-
-      if (data.success) {
-        Swal.fire({
-          icon: 'success',
-          title: 'Feedback Sent',
-          text: '✅ Mail sent successfully!'
-        });
-        document.getElementById("feedbackForm").reset();
-      } else {
-        Swal.fire({
-          icon: 'error',
-          title: 'Failed to Send',
-          text: '❌ Failed to send mail.'
-        });
-      }
-    } catch (err) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Network Error',
-        text: '❌ Network error. Try again later.'
-      });
-    }
-
-    submitBtn.disabled = false;
-    submitBtn.innerText = "Submit";
-  });
 
   function toggleMobileMenu() {
     const sidebar = document.querySelector('.sidebar');
