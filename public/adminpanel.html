@@ -184,16 +184,6 @@
         });
     }
 
-    window.onload = function () {
-      fetch('/check-session')
-        .then(res => {
-          if (!res.ok) throw new Error("Unauthorized");
-        })
-        .catch(err => {
-          console.warn("Session expired or unauthorized.");
-          localStorage.removeItem("userId");
-          window.location.replace("index.html");
-        });
 
       window.history.pushState(null, "", window.location.href);
       window.onpopstate = function () {
