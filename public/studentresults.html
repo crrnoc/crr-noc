@@ -357,6 +357,13 @@ select#semester:hover {
 
   <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
 <script>
+  // 🔐 Unauthorized login check
+  const userId = localStorage.getItem("userId") || localStorage.getItem("regno");
+  if (!userId) {
+    alert("Please login first.");
+    window.location.href = "index.html";
+  }
+
   function toggleMobileMenu() {
     const sidebar = document.querySelector('.sidebar');
     sidebar.classList.toggle('open');
@@ -371,13 +378,6 @@ select#semester:hover {
   });
 
   document.addEventListener("DOMContentLoaded", async () => {
-    const userId = localStorage.getItem("userId") || localStorage.getItem("regno");
-    if (!userId) {
-      alert("Please login first.");
-      window.location.href = "index.html";
-      return;
-    }
-
     document.getElementById("userId").textContent = userId;
 
     // ✅ Sidebar Photo Load
@@ -544,7 +544,6 @@ select#semester:hover {
     window.location.replace("index.html");
   }
 </script>
-
-
+  
 </body>
 </html>
