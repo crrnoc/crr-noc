@@ -259,11 +259,12 @@ body {
       </div>
 
       <!-- Notifications -->
-      <div class="notifications">
-        <marquee behavior="scroll" direction="left" scrollamount="5">
-          🔔 Upcoming mid-semester exams start from 15th August | Fee due date is 20th August | CRR Fest registrations are open now!
-        </marquee>
-      </div>
+<div class="notifications" id="dynamicNotifications">
+  <marquee behavior="scroll" direction="left" scrollamount="5">
+    Loading notifications...
+  </marquee>
+</div>
+
 
       <!-- Slideshow -->
       <div class="slideshow-container">
@@ -295,6 +296,7 @@ body {
 
   <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
 
+<!-- Add this updated <script> section inside your <script> tag -->
 <script>
   // Toggle mobile sidebar
   function toggleMobileMenu() {
@@ -329,6 +331,30 @@ body {
 
   setInterval(nextSlide, 5000); // auto-slide every 5s
 
+  // Load notifications dynamically
+  function loadNotifications(userId) {
+    fetch(`https://crr-noc.onrender.com/api/student/notifications/${userId}`)
+      .then(res => res.json())
+      .then(data => {
+        const notifyBox = document.getElementById("dynamicNotifications");
+        if (!data || data.length === 0) {
+          notifyBox.innerHTML = `<p>No notifications found for your department.</p>`;
+          return;
+        }
+
+        const message = data.map(n => `🔔 ${n.message}`).join(" | ");
+        notifyBox.innerHTML = `
+          <marquee behavior="scroll" direction="left" scrollamount="5">
+            ${message}
+          </marquee>
+        `;
+      })
+      .catch(err => {
+        console.error("Notification load error:", err);
+        document.getElementById("dynamicNotifications").innerHTML = "<p>Error loading notifications.</p>";
+      });
+  }
+
   // Load student details after page loads
   document.addEventListener("DOMContentLoaded", () => {
     const userId = localStorage.getItem('userId');
@@ -358,6 +384,9 @@ body {
       .catch(err => {
         console.error("Error loading student data:", err);
       });
+
+    // Call dynamic notifications function
+    loadNotifications(userId);
   });
 
   // Prevent going back after logout
