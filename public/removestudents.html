@@ -185,148 +185,156 @@
     </div>
   </div>
 
-  <script>
-    async function checkSession() {
-      try {
-        const res = await fetch("/check-session");
-        if (!res.ok) throw new Error("Unauthorized");
-      } catch {
+<script>
+  const userId = localStorage.getItem("userId");
+
+  if (!userId) {
+    alert("Please login first.");
+    window.location.href = "index.html";
+  }
+
+  function navigateTo(route) {
+    window.location.href = route;
+  }
+
+  function logout() {
+    fetch("/logout")
+      .then(() => {
         localStorage.removeItem("userId");
         window.location.replace("index.html");
+      })
+      .catch(() => Swal.fire("Logout Failed", "Please try again", "error"));
+  }
+
+  function toggleSidebar() {
+    document.getElementById("sidebar").classList.toggle("open");
+  }
+
+  // 👇 Single Student Deletion
+  let fetchedReg = "";
+
+  function fetchStudentDetails() {
+    const regNo = document.getElementById("regNo").value.trim();
+    if (!regNo) return Swal.fire("Error", "Please enter a registration number", "warning");
+
+    fetch("/get-student-details", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reg_no: regNo })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (!data.success) return Swal.fire("Not Found", data.message, "error");
+      fetchedReg = data.student.reg_no;
+      const infoBox = document.getElementById("studentInfo");
+      infoBox.innerHTML = `
+        <strong>Name:</strong> ${data.student.name}<br>
+        <strong>Reg No:</strong> ${data.student.reg_no}<br>
+        <strong>Course:</strong> ${data.student.course}<br>
+        <strong>Section:</strong> ${data.student.section}
+      `;
+      infoBox.style.display = "block";
+    })
+    .catch(() => Swal.fire("Error", "Failed to fetch student data", "error"));
+  }
+
+  function confirmDelete() {
+    if (!fetchedReg) return Swal.fire("No Student", "Please fetch a student first.", "warning");
+
+    Swal.fire({
+      title: `Are you sure?`,
+      text: `Delete student ${fetchedReg}?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, delete"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        fetch("/delete-student", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ reg_no: fetchedReg })
+        })
+        .then(res => res.json())
+        .then(data => {
+          fetch("/admin/delete-photos", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ prefix: fetchedReg })
+          }).then(() => {
+            Swal.fire("Deleted", data.message + " and photo removed!", "success");
+          });
+        })
+        .catch(() => Swal.fire("Error", "Failed to delete student", "error"));
       }
-    }
-    checkSession();
+    });
+  }
 
-    function navigateTo(route) {
-      window.location.href = route;
-    }
+  // 👇 Batch Delete Functions
+  function filterBatch() {
+    const prefix = document.getElementById("batchPrefix").value.trim();
+    const branch = document.getElementById("batchBranch").value;
 
-    function logout() {
-      fetch("/logout").then(() => {
-        localStorage.removeItem("userId");
-        window.location.replace("index.html");
-      });
-    }
+    if (!prefix || !branch) return Swal.fire("Missing", "Please enter both prefix and branch", "warning");
 
-    function toggleSidebar() {
-      document.getElementById("sidebar").classList.toggle("open");
-    }
-
-    let fetchedReg = "";
-
-    function fetchStudentDetails() {
-      const regNo = document.getElementById("regNo").value.trim();
-      if (!regNo) return Swal.fire("Error", "Please enter a registration number", "warning");
-
-      fetch("/get-student-details", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reg_no: regNo })
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (!data.success) return Swal.fire("Not Found", data.message, "error");
-        fetchedReg = data.student.reg_no;
-        const infoBox = document.getElementById("studentInfo");
-        infoBox.innerHTML = `
-          <strong>Name:</strong> ${data.student.name}<br>
-          <strong>Reg No:</strong> ${data.student.reg_no}<br>
-          <strong>Course:</strong> ${data.student.course}<br>
-          <strong>Section:</strong> ${data.student.section}
-        `;
-        infoBox.style.display = "block";
-      })
-      .catch(() => Swal.fire("Error", "Failed to fetch student data", "error"));
-    }
-
-    function confirmDelete() {
-      if (!fetchedReg) return Swal.fire("No Student", "Please fetch a student first.", "warning");
-
-      Swal.fire({
-        title: `Are you sure?`,
-        text: `Delete student ${fetchedReg}?`,
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonText: "Yes, delete"
-      }).then((result) => {
-        if (result.isConfirmed) {
-          fetch("/delete-student", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ reg_no: fetchedReg })
-          })
-          .then(res => res.json())
-          .then(data => {
-            fetch("/admin/delete-photos", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ prefix: fetchedReg })
-            }).then(() => {
-              Swal.fire("Deleted", data.message + " and photo removed!", "success");
-            });
-          })
-          .catch(() => Swal.fire("Error", "Failed to delete student", "error"));
-        }
-      });
-    }
-
-    function filterBatch() {
-      const prefix = document.getElementById("batchPrefix").value.trim();
-      const branch = document.getElementById("batchBranch").value;
-
-      if (!prefix || !branch) return Swal.fire("Missing", "Please enter both prefix and branch", "warning");
-
-      fetch("/filter-batch", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ batchPrefix: prefix, branch })
-      })
-      .then(res => res.json())
-      .then(data => {
-        const list = document.getElementById("batchList");
-        if (!data.success || data.students.length === 0) {
-          list.innerHTML = "No students found.";
-          list.style.display = "block";
-          return;
-        }
-        list.innerHTML = data.students.map(s => `${s.reg_no} - ${s.name}`).join("<br>");
+    fetch("/filter-batch", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ batchPrefix: prefix, branch })
+    })
+    .then(res => res.json())
+    .then(data => {
+      const list = document.getElementById("batchList");
+      if (!data.success || data.students.length === 0) {
+        list.innerHTML = "No students found.";
         list.style.display = "block";
-      })
-      .catch(() => Swal.fire("Error", "Failed to fetch batch data", "error"));
-    }
+        return;
+      }
+      list.innerHTML = data.students.map(s => `${s.reg_no} - ${s.name}`).join("<br>");
+      list.style.display = "block";
+    })
+    .catch(() => Swal.fire("Error", "Failed to fetch batch data", "error"));
+  }
 
-    function confirmBatchDelete() {
-      const prefix = document.getElementById("batchPrefix").value.trim();
-      const branch = document.getElementById("batchBranch").value;
+  function confirmBatchDelete() {
+    const prefix = document.getElementById("batchPrefix").value.trim();
+    const branch = document.getElementById("batchBranch").value;
 
-      if (!prefix || !branch) return Swal.fire("Missing Info", "Prefix and branch required", "warning");
+    if (!prefix || !branch) return Swal.fire("Missing Info", "Prefix and branch required", "warning");
 
-      Swal.fire({
-        title: "Delete Entire Batch?",
-        text: `This will delete all students starting with ${prefix} from ${branch}.`,
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonText: "Yes, delete batch"
-      }).then(result => {
-        if (result.isConfirmed) {
-          fetch("/delete-batch", {
+    Swal.fire({
+      title: "Delete Entire Batch?",
+      text: `This will delete all students starting with ${prefix} from ${branch}.`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, delete batch"
+    }).then(result => {
+      if (result.isConfirmed) {
+        fetch("/delete-batch", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ batchPrefix: prefix, branch })
+        })
+        .then(res => res.json())
+        .then(data => {
+          fetch("/admin/delete-photos", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ batchPrefix: prefix, branch })
-          })
-          .then(res => res.json())
-          .then(data => {
-            fetch("/admin/delete-photos", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ prefix })
-            }).then(() => {
-              Swal.fire("Deleted", data.message + " and photos removed!", "success");
-            });
-          })
-          .catch(() => Swal.fire("Error", "Failed to delete batch", "error"));
-        }
-      });
-    }
-  </script>
+            body: JSON.stringify({ prefix })
+          }).then(() => {
+            Swal.fire("Deleted", data.message + " and photos removed!", "success");
+          });
+        })
+        .catch(() => Swal.fire("Error", "Failed to delete batch", "error"));
+      }
+    });
+  }
+
+  // 🔒 Prevent back button after logout
+  window.addEventListener("pageshow", (e) => {
+    if (e.persisted) window.location.reload();
+  });
+  window.history.pushState(null, "", window.location.href);
+  window.onpopstate = () => window.history.pushState(null, "", window.location.href);
+</script>
+
 </body>
