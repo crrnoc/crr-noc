@@ -264,70 +264,81 @@
     </div>
   </div>
 <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+  // 🔐 Unauthorized login check
   const userId = localStorage.getItem("userId");
-  document.getElementById("userId").textContent = userId;
+  if (!userId) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Login Required',
+      text: 'Please login to access this page.'
+    }).then(() => {
+      window.location.href = "index.html";
+    });
+  } else {
+    document.getElementById("userId").textContent = userId;
 
-  const fetchBtn = document.getElementById("fetchStudentBtn");
-  const studentIdInput = document.getElementById("studentIdInput");
+    const fetchBtn = document.getElementById("fetchStudentBtn");
+    const studentIdInput = document.getElementById("studentIdInput");
 
-  fetchBtn.addEventListener("click", () => {
-    const studentId = studentIdInput.value.trim();
-    if (!studentId) {
-      Swal.fire({
-        icon: "warning",
-        title: "Student ID Missing",
-        text: "Please enter a valid student user ID."
-      });
-      return;
+    fetchBtn.addEventListener("click", () => {
+      const studentId = studentIdInput.value.trim();
+      if (!studentId) {
+        Swal.fire({
+          icon: "warning",
+          title: "Student ID Missing",
+          text: "Please enter a valid student user ID."
+        });
+        return;
+      }
+
+      fetch(`https://crr-noc.onrender.com/student/${studentId}`)
+        .then(res => {
+          if (!res.ok) throw new Error("Student not found.");
+          return res.json();
+        })
+        .then(data => {
+          Swal.fire({
+            title: `${data.name}'s Profile`,
+            html: `
+              <div style="text-align:left">
+                <p><strong>Reg No:</strong> ${data.reg_no}</p>
+                <p><strong>DOB:</strong> ${new Date(data.dob).toLocaleDateString('en-GB')}</p>
+                <p><strong>Year:</strong> ${data.year}</p>
+                <p><strong>Course:</strong> ${data.course}</p>
+                <p><strong>Semester:</strong> ${data.semester}</p>
+                <p><strong>Mobile:</strong> ${data.mobile_no}</p>
+                <p><strong>Email:</strong> ${data.email}</p>
+                <p><strong>Aadhar:</strong> ${data.aadhar_no}</p>
+                <p><strong>Type Of Admission:</strong> ${data.admission_type || 'N/A'}</p>
+                <p><strong>Father Name:</strong> ${data.father_name || 'N/A'}</p>
+                <p><strong>Father Mobile:</strong> ${data.father_mobile || 'N/A'}</p>
+                <p><strong>Counsellor Name:</strong> ${data.counsellor_name || 'N/A'}</p>
+                <p><strong>Counsellor Mobile:</strong> ${data.counsellor_mobile || 'N/A'}</p>
+              </div>`,
+            showCloseButton: true,
+            showConfirmButton: false,
+            width: 600
+          });
+        })
+        .catch(err => {
+          Swal.fire({
+            icon: "error",
+            title: "Fetch Failed",
+            text: err.message
+          });
+        });
+    });
+
+    function toggleMobileMenu() {
+      document.querySelector('.sidebar').classList.toggle('open');
     }
 
-    fetch(`https://crr-noc.onrender.com/student/${studentId}`)
-      .then(res => {
-        if (!res.ok) throw new Error("Student not found.");
-        return res.json();
-      })
-      .then(data => {
-        Swal.fire({
-          title: `${data.name}'s Profile`,
-          html: `
-            <div style="text-align:left">
-              <p><strong>Reg No:</strong> ${data.reg_no}</p>
-              <p><strong>DOB:</strong> ${new Date(data.dob).toLocaleDateString('en-GB')}</p>
-              <p><strong>Year:</strong> ${data.year}</p>
-              <p><strong>Course:</strong> ${data.course}</p>
-              <p><strong>Semester:</strong> ${data.semester}</p>
-              <p><strong>Mobile:</strong> ${data.mobile_no}</p>
-              <p><strong>Email:</strong> ${data.email}</p>
-              <p><strong>Aadhar:</strong> ${data.aadhar_no}</p>
-              <p><strong>Type Of admission:</strong> ${data.admission_type || 'N/A'}</p>
-              <p><strong>Father Name:</strong> ${data.father_name || 'N/A'}</p>
-              <p><strong>Father Mobile:</strong> ${data.father_mobile || 'N/A'}</p>
-              <p><strong>Counsellor Name:</strong> ${data.counsellor_name || 'N/A'}</p>
-              <p><strong>Counsellor Mobile:</strong> ${data.counsellor_mobile || 'N/A'}</p>
-            </div>`,
-          showCloseButton: true,
-          showConfirmButton: false,
-          width: 600
-        });
-      })
-      .catch(err => {
-        Swal.fire({
-          icon: "error",
-          title: "Fetch Failed",
-          text: err.message
-        });
-      });
-  });
-
-  
-  function toggleMobileMenu() {
-    document.querySelector('.sidebar').classList.toggle('open');
-  }
-
     function logout() {
-    localStorage.clear();
-    window.location.href = "index.html";
+      localStorage.clear();
+      window.location.href = "index.html";
+    }
   }
 </script>
 </body>
