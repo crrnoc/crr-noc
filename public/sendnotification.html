@@ -249,97 +249,108 @@
     </div>
   </div>
 <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+  // 🔐 Unauthorized login check
   const userId = localStorage.getItem("userId");
-  document.getElementById("userId").textContent = userId;
+  if (!userId) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Login Required',
+      text: 'Please login to access this page.'
+    }).then(() => {
+      window.location.href = "index.html";
+    });
+  } else {
+    document.getElementById("userId").textContent = userId;
 
-  // Expand reg.no ranges like 23B81A4601-10 into list of userIds
-  function expandRegNos(input) {
-    const parts = input.split(',');
-    const finalList = [];
+    // 🧠 Expand reg.no ranges like 23B81A4601-10
+    function expandRegNos(input) {
+      const parts = input.split(',');
+      const finalList = [];
 
-    parts.forEach(part => {
-      part = part.trim();
-      if (part.includes('-')) {
-        const [start, end] = part.split('-');
-        const prefix = start.slice(0, -2);
-        const startNum = parseInt(start.slice(-2));
-        const endNum = parseInt(end);
+      parts.forEach(part => {
+        part = part.trim();
+        if (part.includes('-')) {
+          const [start, end] = part.split('-');
+          const prefix = start.slice(0, -2);
+          const startNum = parseInt(start.slice(-2));
+          const endNum = parseInt(end);
 
-        for (let i = startNum; i <= endNum; i++) {
-          const suffix = i.toString().padStart(2, '0');
-          finalList.push(`${prefix}${suffix}`);
+          for (let i = startNum; i <= endNum; i++) {
+            const suffix = i.toString().padStart(2, '0');
+            finalList.push(`${prefix}${suffix}`);
+          }
+        } else {
+          finalList.push(part);
         }
-      } else {
-        finalList.push(part);
-      }
-    });
-
-    return finalList;
-  }
-
-  function sendNotification() {
-    const studentIdInput = document.getElementById("studentId").value.trim();
-    const message = document.getElementById("message").value.trim();
-    const btn = document.querySelector(".form button");
-
-    if (!studentIdInput || !message) {
-      Swal.fire({ icon: "warning", title: "Missing Information", text: "Enter reg. nos and message." });
-      return;
-    }
-
-    const userIds = expandRegNos(studentIdInput);
-
-    btn.disabled = true;
-    btn.textContent = "Sending...";
-
-    fetch("https://crr-noc.onrender.com/send-bulk-notification", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userIds, message })
-    })
-    .then(res => res.json())
-    .then(data => {
-      btn.disabled = false;
-      btn.textContent = "Send Notification";
-      document.getElementById("studentId").value = "";
-      document.getElementById("message").value = "";
-
-      Swal.fire({
-        icon: data.success ? "success" : "error",
-        title: "Notification Status",
-        html: `✅ Sent: ${data.sent}<br>❌ Failed: ${data.failed}`
       });
-    })
-    .catch(error => {
-      console.error("Error sending notification:", error);
-      btn.disabled = false;
-      btn.textContent = "Send Notification";
-      Swal.fire({ icon: "error", title: "Failed!", text: "Something went wrong. Please try again." });
-    });
-  }
 
-  function toggleMobileMenu() {
-    const sidebar = document.querySelector('.sidebar');
-    sidebar.classList.toggle('open');
-  }
-
-  document.querySelectorAll(".menu li a").forEach(link => {
-    link.addEventListener("click", () => {
-      if (window.innerWidth <= 768) {
-        document.querySelector('.sidebar').classList.remove('open');
-      }
-    });
-  });
-
-  function logout() {
-    localStorage.removeItem("userId");
-    if ("caches" in window) {
-      caches.keys().then((names) => names.forEach((name) => caches.delete(name)));
+      return finalList;
     }
-    window.location.replace("index.html");
+
+    function sendNotification() {
+      const studentIdInput = document.getElementById("studentId").value.trim();
+      const message = document.getElementById("message").value.trim();
+      const btn = document.querySelector(".form button");
+
+      if (!studentIdInput || !message) {
+        Swal.fire({ icon: "warning", title: "Missing Information", text: "Enter reg. nos and message." });
+        return;
+      }
+
+      const userIds = expandRegNos(studentIdInput);
+
+      btn.disabled = true;
+      btn.textContent = "Sending...";
+
+      fetch("https://crr-noc.onrender.com/send-bulk-notification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userIds, message })
+      })
+        .then(res => res.json())
+        .then(data => {
+          btn.disabled = false;
+          btn.textContent = "Send Notification";
+          document.getElementById("studentId").value = "";
+          document.getElementById("message").value = "";
+
+          Swal.fire({
+            icon: data.success ? "success" : "error",
+            title: "Notification Status",
+            html: `✅ Sent: ${data.sent}<br>❌ Failed: ${data.failed}`
+          });
+        })
+        .catch(error => {
+          console.error("Error sending notification:", error);
+          btn.disabled = false;
+          btn.textContent = "Send Notification";
+          Swal.fire({ icon: "error", title: "Failed!", text: "Something went wrong. Please try again." });
+        });
+    }
+
+    function toggleMobileMenu() {
+      const sidebar = document.querySelector('.sidebar');
+      sidebar.classList.toggle('open');
+    }
+
+    document.querySelectorAll(".menu li a").forEach(link => {
+      link.addEventListener("click", () => {
+        if (window.innerWidth <= 768) {
+          document.querySelector('.sidebar').classList.remove('open');
+        }
+      });
+    });
+
+    function logout() {
+      localStorage.removeItem("userId");
+      if ("caches" in window) {
+        caches.keys().then((names) => names.forEach((name) => caches.delete(name)));
+      }
+      window.location.replace("index.html");
+    }
   }
 </script>
-
 </body>
 </html>
