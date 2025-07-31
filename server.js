@@ -3345,7 +3345,6 @@ app.get("/api/midmarks/search", (req, res) => {
 app.post('/api/notifications/send', (req, res) => {
   const { userId, message } = req.body;
 
-  // Input validation
   if (!userId || !message || !userId.startsWith("HOD")) {
     return res.status(400).json({ success: false, message: 'Invalid input' });
   }
@@ -3353,13 +3352,13 @@ app.post('/api/notifications/send', (req, res) => {
   const sql = 'INSERT INTO notifications (staffId, message) VALUES (?, ?)';
   const values = [userId, message];
 
-  db.query(sql, values, (err, result) => {
+  connection.query(sql, values, (err, results) => {
     if (err) {
-      console.error('❌ DB Insert Error:', err);
+      console.error('❌ DB Error:', err);
       return res.status(500).json({ success: false, message: 'Database error' });
     }
 
-    return res.json({ success: true, message: 'Notification sent' });
+    res.json({ success: true, message: 'Notification sent' });
   });
 });
 
