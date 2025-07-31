@@ -354,10 +354,14 @@
   </div>
 <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
 <script>
+  if (!localStorage.getItem("userId")) {
+    alert("Please login first.");
+    window.location.href = "index.html";
+  }
+
   const userId = localStorage.getItem("userId");
   document.getElementById("userId").textContent = userId || "Unknown";
 
-  // ✅ Load profile photo from backend
   fetch(`https://crr-noc.onrender.com/student/${userId}`)
     .then(r => r.json())
     .then(data => {
@@ -375,6 +379,11 @@
 
       const data = res.data;
       const container = document.querySelector(".fee-details");
+      if (data.length === 0) {
+        container.innerHTML = "<h2>No fee records found for this student.</h2>";
+        return;
+      }
+
       container.innerHTML = `<h2>📘 Year-wise Fee Details</h2>`;
 
       data.forEach(({ year, structure, paid, fines }, index) => {
@@ -474,9 +483,11 @@
     }
     window.location.replace("index.html");
   }
+
+  // Block back button access
+  window.history.pushState(null, "", window.location.href);
+  window.onpopstate = () => window.history.pushState(null, "", window.location.href);
 </script>
-
-
 
 </body>
 </html>
