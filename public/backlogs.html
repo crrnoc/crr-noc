@@ -249,8 +249,19 @@
   <!-- Mobile Toggle Button -->
   <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
 
-  <script>
-    const userId = localStorage.getItem("userId");
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+  // 🔐 Unauthorized access check
+  const userId = localStorage.getItem("userId");
+  if (!userId) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Login Required',
+      text: 'Please login to access this page.'
+    }).then(() => {
+      window.location.href = "index.html";
+    });
+  } else {
     document.getElementById("userId").textContent = userId || "Unknown";
 
     function logout() {
@@ -306,6 +317,7 @@
           Swal.fire("Error", "Failed to fetch data", "error");
         });
     }
-  </script>
+  }
+</script>
 </body>
 </html>
