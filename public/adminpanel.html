@@ -160,36 +160,45 @@
     </p>
   </div>
 
-  <script>
-    function navigateTo(route) {
-      window.location.href = route;
-    }
+<script>
+  const userId = localStorage.getItem("userId");
 
-    function toggleSidebar() {
-      const sidebar = document.getElementById("sidebar");
-      const main = document.getElementById("main-content");
-      sidebar.classList.toggle("open");
-      main.classList.toggle("shifted");
-    }
+  if (!userId) {
+    alert("Please login first.");
+    window.location.href = "index.html";
+  }
 
-    function logout() {
-      fetch("/logout")
-        .then(() => {
-          localStorage.removeItem("userId");
-          window.location.replace("index.html");
-        })
-        .catch((err) => {
-          console.error("Logout failed:", err);
-          alert("Logout failed. Try again.");
-        });
-    }
+  function navigateTo(route) {
+    // If your pages are HTML files like 'uploadattendanceAd.html', use those names:
+    // window.location.href = route + ".html";
+    window.location.href = route;
+  }
 
+  function toggleSidebar() {
+    const sidebar = document.getElementById("sidebar");
+    const main = document.getElementById("main-content");
+    sidebar.classList.toggle("open");
+    main.classList.toggle("shifted");
+  }
 
-      window.history.pushState(null, "", window.location.href);
-      window.onpopstate = function () {
-        window.history.pushState(null, "", window.location.href);
-      };
-    };
-  </script>
+  function logout() {
+    fetch("/logout")
+      .then(() => {
+        localStorage.removeItem("userId");
+        window.location.replace("index.html");
+      })
+      .catch((err) => {
+        console.error("Logout failed:", err);
+        alert("Logout failed. Try again.");
+      });
+  }
+
+  // 🔒 Prevent back button navigation after logout
+  window.history.pushState(null, "", window.location.href);
+  window.onpopstate = function () {
+    window.history.pushState(null, "", window.location.href);
+  };
+</script>
+
 </body>
 </html>
