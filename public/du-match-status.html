@@ -226,64 +226,59 @@
     document.getElementById("sidebar").classList.toggle("open");
   }
 
-  function loadMatches() {
-    fetch("https://crr-noc.onrender.com/admin/matches")
-      .then(res => res.json())
-      .then(data => {
-        const tbody = document.querySelector("#matchTable tbody");
-tbody.innerHTML = data.map(row => `
-  <tr>
-    <td>${row.userId}</td>
-    <td>${row.name}</td>
-    <td>${row.academic_year || row.year || '-'}</td>
-    <td>${row.fee_type}</td>
-    <td>${row.amount}</td>
-    <td>${row.du_number}</td>
-    <td>${row.status}</td>
-    <td>${row.matched_on ? new Date(row.matched_on).toLocaleDateString() : '-'}</td>
-  </tr>
-`).join("");
+function loadMatches() {
+  fetch("https://crr-noc.onrender.com/admin/matches")
+    .then(res => res.json())
+    .then(data => {
+      const tbody = document.querySelector("#matchTable tbody");
+      tbody.innerHTML = data.data.map(row => `
+        <tr>
+          <td>${row.userId}</td>
+          <td>${row.name}</td>
+          <td>${row.academic_year || row.year || '-'}</td>
+          <td>${row.fee_type}</td>
+          <td>${row.amount}</td>
+          <td>${row.du_number}</td>
+          <td>${row.status}</td>
+          <td>${row.matched_on ? new Date(row.matched_on).toLocaleDateString() : '-'}</td>
+        </tr>
+      `).join("");
+    });
+}
 
-      });
-  }
+function searchDU() {
+  const query = document.getElementById("searchInput").value.trim();
+  if (!query) return loadMatches();
 
-  function searchDU() {
-    const query = document.getElementById("searchInput").value.trim();
-    if (!query) return loadMatches();
-
-    fetch("https://crr-noc.onrender.com/admin/search-student-sbi", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query })
-    })
+  fetch("https://crr-noc.onrender.com/admin/search-student-sbi", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ query })
+  })
     .then(res => res.json())
     .then(data => {
       const tbody = document.querySelector("#matchTable tbody");
       if (data.success && data.data.length) {
-       
-tbody.innerHTML = data.map(row => `
-  <tr>
-    <td>${row.userId}</td>
-    <td>${row.name}</td>
-    <td>${row.academic_year || row.year || '-'}</td>
-    <td>${row.fee_type}</td>
-    <td>${row.amount}</td>
-    <td>${row.du_number}</td>
-    <td>${row.status}</td>
-    <td>${row.matched_on ? new Date(row.matched_on).toLocaleDateString() : '-'}</td>
-  </tr>
-`).join("");
-
-
-     
+        tbody.innerHTML = data.data.map(row => `
+          <tr>
+            <td>${row.userId}</td>
+            <td>${row.name}</td>
+            <td>${row.academic_year || row.year || '-'}</td>
+            <td>${row.fee_type}</td>
+            <td>${row.amount}</td>
+            <td>${row.du_number}</td>
+            <td>${row.status}</td>
+            <td>${row.matched_on ? new Date(row.matched_on).toLocaleDateString() : '-'}</td>
+          </tr>
+        `).join("");
       } else {
-        tbody.innerHTML = `<tr><td colspan="7">No matching records found.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8">No matching records found.</td></tr>`;
       }
     })
     .catch(() => {
       Swal.fire("Error", "Search failed. Please try again.", "error");
     });
-  }
+}
 
   // Prevent back nav after logout
   window.addEventListener("pageshow", (e) => {
