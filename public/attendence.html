@@ -357,7 +357,13 @@
 
   <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
 <script>
+  // 🔐 Redirect to login page if not authorized
   const userId = localStorage.getItem("userId");
+  if (!userId) {
+    alert("Please login first.");
+    window.location.href = "index.html";
+  }
+
   document.getElementById("userId").textContent = userId || "Unknown";
 
   // ✅ Load profile photo from backend
