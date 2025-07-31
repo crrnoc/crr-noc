@@ -294,8 +294,19 @@
 
   <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
 
-  <script>
-    const userId = localStorage.getItem("userId") || "Staff";
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+  // 🔐 Unauthorized login check
+  const userId = localStorage.getItem("userId");
+  if (!userId) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Login Required',
+      text: 'Please login to access this page.'
+    }).then(() => {
+      window.location.href = "index.html";
+    });
+  } else {
     document.getElementById("userId").textContent = userId;
 
     function toggleMobileMenu() {
@@ -408,7 +419,6 @@
       `;
       document.getElementById("editFormContainer").innerHTML = formHtml;
 
-      // Set dropdowns if values exist
       document.getElementById("course").value = data.course;
       document.getElementById("semester").value = data.semester;
       document.getElementById("year").value = data.year;
@@ -467,6 +477,7 @@
         Swal.fire("Error", err.message, "error");
       }
     }
-  </script>
+  }
+</script>
 </body>
 </html>
