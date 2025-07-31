@@ -188,20 +188,10 @@
       document.getElementById("sidebar").classList.toggle("open");
     }
 
-    function navigateTo(route) {
-      const routes = {
-        'uploadresultsAd.html': '/uploadresults',
-        'uploadattendanceAd.html': '/uploadattendance',
-        'upload-sbi.html': '/uploadsbi',
-        'upload-midmarks.html': '/uploadmidmarks',
-        'du-match-status.html': '/dumatch',
-        'noc-status.html': '/nocstatus',
-        'removestudents.html': '/removestudents',
-        'createnocAd.html': '/createnoc',
-        'uploadstudents.html':'/uploadstudents'
-      };
-      window.location.href = routes[route] || '/adminpanel';
-    }
+  function navigateTo(route) {
+    window.location.href = route;
+  }
+
 
     function logout() {
       fetch("/logout").then(() => {
