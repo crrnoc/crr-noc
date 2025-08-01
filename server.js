@@ -10,7 +10,7 @@ const PDFDocument = require('pdfkit');
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/' });
 const fs = require('fs');
-const { spawn } = require('child_process'); // ✅ REQUIRED for Python integration
+const { spawn } = require('child_process'); //  REQUIRED for Python integration for pdf parsing
 const router = express.Router();
 const adminRoutes = require("./admin"); 
 const app = express();
@@ -27,7 +27,7 @@ const xlsx = require("xlsx");
 const csv = require("csv-parser");
 
 
-const logoBase64 = fs.readFileSync('./public/crrengglogo.png', { encoding: 'base64' }); // rename your image to logo.png in public
+const logoBase64 = fs.readFileSync('./public/crrengglogo.png', { encoding: 'base64' });
 // Configure the email transporter (use your App Password here)
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -75,7 +75,7 @@ const sessionStore = new MySQLStore({
   database: process.env.MYSQLDATABASE,
   port: process.env.MYSQLPORT
 }); 
-
+//sessions
 app.use(session({
   key: 'noc_sid',
   secret: 'sircrrengg@123',
@@ -1040,7 +1040,7 @@ app.get('/admin/noc-status', (req, res) => {
                       library: parseFloat(fees.library) || 0,
                       fines: parseFloat(fine)
                     };
-                    // ✅ Check remaining
+                    // Check remaining
                     for (let key in expected) {
                       const remaining = expected[key] - (paidMap[key] || 0);
                       if (remaining > 0) return resolve({ userId, eligible: false });
@@ -1131,10 +1131,10 @@ app.post("/add-student", async (req, res) => {
     email = "", password, section,
     father_name, father_mobile_no,
     counsellor_name, counsellor_mobile,
-    admission_type // ✅ already added
+    admission_type 
   } = req.body;
 
-  // ✅ Required fields for validation
+  // Required fields for validation
   const must = {
     userId, reg_no, unique_id, year, course,
     semester, section, password,
@@ -1148,7 +1148,7 @@ app.post("/add-student", async (req, res) => {
   }
 
   try {
-    // ✅ Capitalize helper
+    //  Capitalize helper
     const capitalize = (s) =>
       (s || "").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
 
@@ -1157,21 +1157,21 @@ app.post("/add-student", async (req, res) => {
     const counsellorName = capitalize(counsellor_name);
     const sectionUpper = (section || "").toUpperCase();
 
-    // ✅ Check if user already exists
+    // Check if user already exists
     connection.query("SELECT 1 FROM users WHERE userid = ?", [userId], async (e, r) => {
       if (e) return res.status(500).json({ success: false });
       if (r.length) return res.status(400).json({ success: false, message: "User exists" });
 
       const hashed = await bcrypt.hash(password, 10);
 
-      // ✅ Insert into users table
+      //  Insert into users table
       connection.query(
         "INSERT INTO users (userid, password, role) VALUES (?, ?, 'student')",
         [userId, hashed],
         (e1) => {
           if (e1) return res.status(500).json({ success: false, message: "User insert failed" });
 
-          // ✅ Insert into students table with admission_type
+          //  Insert into students table with admission_type
           const studentSql = `
             INSERT INTO students
               (userId, reg_no, uniqueId, year, course, semester, section,
@@ -1206,7 +1206,7 @@ app.post("/add-student", async (req, res) => {
 });
 
 //logic for the fee upadate by staff
-// ✅ Staff updates fee structure for a student by reg_no
+//Staff updates fee structure for a student by reg_no
 app.post('/update-fee-structure', (req, res) => {
   const {
     reg_no, academic_year, tuition, hostel, bus,
@@ -1252,7 +1252,7 @@ app.post('/update-fee-structure', (req, res) => {
 //noc code
 // ... all previous code remains unchanged
 
-// ✅ Updated Generate NOC PDF logic (fixed hanging issue)
+//Updated Generate NOC PDF logic (fixed hanging issue)
 app.get('/generate-noc/:userId', (req, res) => {
   const { userId } = req.params;
   const academicYear = parseInt(req.query.year); // 👈 Get year from query param
@@ -1750,7 +1750,7 @@ const sql = `SELECT id, fee_type, amount_paid, sbi_ref_no, created_at, matched
   });
 });
 
-// ❌ Delete a specific fee entry
+//  Delete a specific fee entry
 app.delete("/delete-fee-entry/:id", (req, res) => {
   const { id } = req.params;
   connection.query("DELETE FROM student_fee_payments WHERE id = ?", [id], (err, result) => {
@@ -1806,7 +1806,7 @@ app.get('/admin/noc-status', (req, res) => {
       const { userId, reg_no, name } = student;
 
       return new Promise(resolve => {
-        // 1️⃣ Get latest fee structure
+        // 1️ Get latest fee structure
         connection.query(
           'SELECT * FROM student_fee_structure WHERE reg_no = ? ORDER BY updated_at DESC LIMIT 1',
           [reg_no],
@@ -1815,7 +1815,7 @@ app.get('/admin/noc-status', (req, res) => {
 
             const fees = feeRows[0];
 
-            // 2️⃣ Get verified paid fees
+            // 2️Get verified paid fees
             connection.query(
               `SELECT fee_type, SUM(amount_paid) AS totalPaid 
                FROM student_fee_payments 
@@ -1828,7 +1828,7 @@ app.get('/admin/noc-status', (req, res) => {
                 const paidMap = {};
                 paidRows.forEach(r => paidMap[r.fee_type] = parseFloat(r.totalPaid));
 
-                // 3️⃣ Get fines
+                // Get fines
                 connection.query(
                   'SELECT SUM(amount) AS fine FROM fines WHERE userId = ?',
                   [userId],
@@ -1864,7 +1864,7 @@ app.get('/admin/noc-status', (req, res) => {
   });
 });
 
-// ✅ Year-wise full fee breakdown (structure + paid + fines)
+// Year-wise full fee breakdown (structure + paid + fines)
 app.get('/yearwise-fee/:userId', (req, res) => {
   const { userId } = req.params;
 
@@ -1937,7 +1937,7 @@ app.get("/total-backlogs", (req, res) => {
     res.json({ backlogData, count: backlogData.length });
   });
 });
-// 🧠 Get Student Details for Removal
+// get Student Details for Removal
 app.post("/get-student-details", async (req, res) => {
   const { reg_no } = req.body;
   try {
@@ -1952,8 +1952,8 @@ app.post("/get-student-details", async (req, res) => {
   }
 });
 
-// ✅ Delete Student with Photo Removal
-// 🗑️ Delete a single student and all their data
+// Delete Student with Photo Removal
+// Delete a single student and all their data
 app.post('/delete-student', (req, res) => {
   const { reg_no } = req.body;
 
@@ -1991,7 +1991,7 @@ app.post('/delete-student', (req, res) => {
 });
 
 
-// ✅ Filter Batch
+// Filter Batch
 app.post("/filter-batch", async (req, res) => {
   const { batchPrefix, branch } = req.body;
   try {
@@ -2006,7 +2006,7 @@ app.post("/filter-batch", async (req, res) => {
   }
 });
 
-// ✅ Delete Batch
+// Delete Batch
 app.post('/delete-batch', (req, res) => {
   const { batchPrefix, branch } = req.body;
 
@@ -2053,7 +2053,7 @@ app.post('/delete-batch', (req, res) => {
 });
 
 // result pdf upload
-// 📥 Admin uploads result PDF
+// Admin uploads result PDF
 app.post('/upload', upload.single('pdf'), (req, res) => {
   const semester = req.body.semester;
   const filePath = req.file?.path;
@@ -2146,7 +2146,7 @@ app.post('/upload', upload.single('pdf'), (req, res) => {
 
 //AUTONOMOUS results upload
 // Route: Upload Autonomous Student Result PDF
-// 🧠 Autonomous PDF Upload Route
+// Autonomous PDF Upload Route
 // Route: Upload Autonomous Student Result PDF
 app.post("/admin/upload-autonomous-result-pdf", upload.single("pdf"), async (req, res) => {
   try {
@@ -2159,7 +2159,7 @@ app.post("/admin/upload-autonomous-result-pdf", upload.single("pdf"), async (req
     const data = await pdfParse(buffer);
     const lines = data.text.split("\n").map(line => line.trim()).filter(Boolean);
 
-    // ✅ Save raw text to .txt file
+    //Save raw text to .txt file
     const baseName = path.basename(req.file.originalname, path.extname(req.file.originalname)).replace(/\s+/g, "_");
     const txtPath = path.join(__dirname, "uploads", `${baseName}.txt`);
     fs.writeFileSync(txtPath, data.text, "utf-8");
@@ -2172,7 +2172,7 @@ app.post("/admin/upload-autonomous-result-pdf", upload.single("pdf"), async (req
     for (let i = 0; i < lines.length - 1; i++) {
       const line = lines[i];
 
-      // 🎯 Update subject codes from SGPA line
+      // Update subject codes from SGPA line
       if (line.includes("SGPA")) {
         const subPart = line.split("SGPA")[0];
         const subcodes = subPart.match(/[A-Z0-9]{8}/g);
@@ -2182,7 +2182,7 @@ app.post("/admin/upload-autonomous-result-pdf", upload.single("pdf"), async (req
         continue;
       }
 
-      // 📚 Update subject map when subnames appear again
+      // Update subject map when subnames appear again
       const match = line.match(/^\d+\)\s*([A-Z0-9]{8})-(.+)$/);
       if (match) {
         const subcode = match[1].trim();
@@ -2191,7 +2191,7 @@ app.post("/admin/upload-autonomous-result-pdf", upload.single("pdf"), async (req
         continue;
       }
 
-      // 🎓 Process student result blocks
+      // Process student result blocks
       const regno = lines[i];
       const resultLine = lines[i + 1];
 
@@ -2222,13 +2222,13 @@ app.post("/admin/upload-autonomous-result-pdf", upload.single("pdf"), async (req
       }
     }
 
-    // ✅ Save .csv version
+    // Save .csv version
     const csvPath = path.join(__dirname, "uploads", `${baseName}.csv`);
     const csvHeader = "regno,semester,subcode,subname,grade,sgpa\n";
     const csvContent = csvHeader + results.map(r => r.join(",")).join("\n");
     fs.writeFileSync(csvPath, csvContent, "utf-8");
 
-    // ✅ Clean up PDF
+    // Clean up PDF
     fs.unlinkSync(req.file.path);
 
     res.json({
@@ -2245,7 +2245,7 @@ app.post("/admin/upload-autonomous-result-pdf", upload.single("pdf"), async (req
 });
 
 // Route: Upload attendance PDF
-// ✅ Attendance upload route
+// Attendance upload route
 app.post("/upload-attendance", upload.single("pdf"), (req, res) => {
   const semester = req.body.semester;
   const filePath = req.file?.path;
@@ -2333,8 +2333,8 @@ app.get("/student-attendance/:regno", (req, res) => {
   );
 });
 
-// 📊 Fetch student results by regno and semester
-// 📊 Fetch student results by regno and semester
+// Fetch student results by regno and semester
+// Fetch student results by regno and semester
 app.get('/student/results/:regno', async (req, res) => {
   const { regno } = req.params;
   const semester = req.query.semester;
@@ -2580,7 +2580,7 @@ app.get("/generate-certificate/:userId", async (req, res) => {
     doc.text("YEAR - SEMESTER :", labelX, lineY);
     doc.text(semester.toUpperCase(), valueX, lineY);
 
-    // ✅ Cloudinary photo fix with headers
+    // Cloudinary photo fix with headers
     const photo_url = student.photo_url;
     if (photo_url) {
       try {
@@ -2771,7 +2771,7 @@ app.post('/admin/manual-create-noc', (req, res) => {
 ENC_KEY=12345678901234567890123456789012
 ENC_IV=1234567890123456
 //verify manual noc by qr
-// ✅ Manual NOC QR Verification Page
+// Manual NOC QR Verification Page
 app.get("/verify-noc/manual", (req, res) => {
   const { regno, year, ...rest } = req.query;
   if (!regno || !year) return res.send("❌ Invalid QR code.");
@@ -2906,7 +2906,7 @@ app.get('/check-session', (req, res) => {
   }
 });
 
-// ✅ Staff updates student profile (editstudentdetails.html)
+// staff updates student profile (editstudentdetails.html)
 app.post('/staff/update-student', (req, res) => {
   const {
     userId,
@@ -2925,7 +2925,7 @@ app.post('/staff/update-student', (req, res) => {
     counsellor_mobile
   } = req.body;
 
-  // ✅ Fix string "null" values to actual NULL
+  // Fix string "null" values to actual NULL
   const safe_admission_type = (admission_type && admission_type !== "null") ? admission_type : null;
   const safe_section = (section && section !== "null") ? section : null;
 
@@ -2968,7 +2968,7 @@ app.get('/hod/students', (req, res) => {
   const deptCode = staffId.toUpperCase().replace("HOD", "");
   console.log("🧩 Extracted deptCode:", deptCode);
 
-  // ✅ Use your existing MySQL connection (change `connection` to whatever you're using)
+  // Use your existing MySQL connection (change `connection` to whatever you're using)
   connection.query(
     `SELECT name, reg_no, course, year, section, mobile_no, email, father_name, father_mobile
      FROM students WHERE dept_code = ?`,
@@ -3371,7 +3371,7 @@ app.get("/api/midmarks/search", (req, res) => {
   });
 });
 
-// ✅ HOD send notification route
+//  HOD send notification route
 app.post('/api/notifications/send', (req, res) => {
   const { userId, message } = req.body;
 
