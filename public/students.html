@@ -183,7 +183,7 @@
 
 <script>
   const staffId = localStorage.getItem("userId");
-  const welcomeText = document.getElementById("welcomeHOD");
+  const welcomeText = document.getElementById("welcomeText");
 
   // 🔒 Authentication Check
   if (!staffId || !staffId.startsWith("HOD")) {
@@ -237,6 +237,7 @@
               <strong>Email:</strong> ${student.email || 'N/A'}<br>
               <strong>Father:</strong> ${student.father_name || 'N/A'}, ${student.father_mobile || 'N/A'}
             </p>
+            <a href="hodfeesearch.html?reg_no=${student.reg_no}" class="btn btn-primary btn-sm mt-2">💰 View Fee Details</a>
           </div>
         </div>
       `;
