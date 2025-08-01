@@ -1765,24 +1765,39 @@ app.delete("/delete-fee-entry/:id", (req, res) => {
 app.post('/admin/search-student-sbi', (req, res) => {
   const { query } = req.body;
 
-  if (!query) return res.status(400).json({ success: false, message: "Query is required" });
+  if (!query || query.trim() === "") {
+    return res.status(400).json({ success: false, message: "Query is required" });
+  }
 
+  const likeQuery = `%${query.toLowerCase()}%`;
+  
   const sql = `
-    SELECT s.reg_no AS userId, s.name, f.fee_type, f.sbi_ref_no, f.matched, f.matched_on
+    SELECT 
+      s.reg_no AS userId,
+      s.name AS studentName,
+      f.fee_type,
+      f.sbi_ref_no,
+      f.amount_paid,
+      f.matched AS fee_matched,
+      f.matched_on AS fee_matched_on,
+      f.academic_year
     FROM students s
     LEFT JOIN student_fee_payments f ON s.reg_no = f.userId
-    WHERE s.reg_no LIKE ? OR s.name LIKE ?
+    WHERE LOWER(s.reg_no) LIKE ? OR LOWER(s.name) LIKE ?
+    ORDER BY f.matched_on DESC
   `;
 
-  const likeQuery = `%${query}%`;
   connection.query(sql, [likeQuery, likeQuery], (err, results) => {
     if (err) {
       console.error("🔥 SQL Execution Error:", err.sqlMessage);
-      return res.status(500).json({ success: false, message: "Internal error" });
+      return res.status(500).json({ success: false, message: "Internal server error" });
     }
+
     res.json({ success: true, data: results });
   });
 });
+
+
 app.get('/admin/noc-status', (req, res) => {
   connection.query('SELECT userId, reg_no, name FROM students', (err, students) => {
     if (err) return res.status(500).json([]);
