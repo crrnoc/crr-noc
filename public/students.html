@@ -162,14 +162,18 @@
   <!-- Sidebar -->
   <div class="sidebar" id="sidebar">
     <img src="crrengglogo.png" alt="College Logo"/>
-    <h4 id="welcomeHOD">Welcome HOD</h4>
-      <a href="hodpanel.html">🏠 Dashboard</a>
-      <a href="students.html" class="active">🎓 Students</a>
+    <h4 id="welcomeText">Welcome HOD</h4>
+    <div class="menu">
+      <a href="hodpanel.html" class="active">🏠 Dashboard</a>
+      <a href="students.html">🎓 Students</a>
       <a href="hodfeesearch.html">💰 Fee Search</a>
       <a href="hodbacklogsview.html">📚 Backlogs</a>
       <a href="hodmidmarks.html">📝 Mid Marks</a>
       <a href="hodnotifications.html">📢 Send Notifications</a>
     </div>
+    <button class="logout" onclick="logout()">Logout</button>
+  </div>
+
   <!-- Main Content -->
   <div class="main-content" id="main-content">
     <h2> Students in Your Department</h2>
