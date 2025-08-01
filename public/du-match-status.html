@@ -261,7 +261,7 @@
     .then(data => {
       const tbody = document.querySelector("#matchTable tbody");
       if (data.success && data.data.length) {
-      tbody.innerHTML = data.map(row => `
+      tbody.innerHTML = data.data.map(row => `...`)
   <tr>
     <td>${row.userId}</td>
     <td>${row.name || '-'}</td>
