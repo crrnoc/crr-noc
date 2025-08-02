@@ -340,6 +340,7 @@
           <button onclick="showTab('attendance')" id="btnAttendance">📊 Attendance</button>
           <button onclick="showTab('results')" id="btnResults">📚 Results</button>
           <button onclick="showTab('midmarks')" id="btnMidMarks">📝 Mid Marks</button>
+          <button onclick="showTab('fee')" id="btnFee">💵 Fee Details</button>
         </div>
 
         <!-- Attendance Section -->
@@ -389,6 +390,11 @@
 
           <div id="midmarksContent" style="margin-top: 20px;"></div>
         </div>
+          <!-- Fee Details Section -->
+<div id="feeTab" style="display: none;">
+  <h3 style="margin-top: 20px; border-bottom: 1px solid #ddd; padding-bottom: 6px;">💵 Year-wise Fee Details</h3>
+  <div id="feeContent"></div>
+</div>
 
         <button class="modal-close" onclick="closeModal()">✖</button>
       </div>
@@ -539,6 +545,48 @@
 
     document.getElementById("midYearSelect").onchange = fetchMidMarks;
     document.getElementById("midSemesterSelect").onchange = fetchMidMarks;
+
+    // Fee Details
+    document.getElementById("feeContent").innerHTML = "Loading...";
+    fetch(`/yearwise-fee/${student.userId}`)
+      .then(res => res.json())
+      .then(data => {
+        const container = document.getElementById("feeContent");
+        if (data.success && data.data.length > 0) {
+          let html = "";
+          data.data.forEach(row => {
+            const structure = row.structure;
+            const paid = row.paid;
+            html += `
+              <h4>Year ${row.year}</h4>
+              <table>
+                <tr><th>Fee Type</th><th>Expected</th><th>Paid</th><th>Remaining</th></tr>
+                ${Object.keys(structure)
+                  .filter(k => k !== "academic_year" && k !== "reg_no")
+                  .map(type => {
+                    const expected = parseFloat(structure[type] || 0);
+                    const paidAmt = parseFloat(paid[type] || 0);
+                    return `
+                      <tr>
+                        <td>${type.toUpperCase()}</td>
+                        <td>₹${expected}</td>
+                        <td>₹${paidAmt}</td>
+                        <td>${expected - paidAmt > 0 ? `₹${expected - paidAmt}` : "✅ Paid"}</td>
+                      </tr>
+                    `;
+                  }).join("")}
+              </table>
+            `;
+          });
+          container.innerHTML = html;
+        } else {
+          container.innerHTML = "<p>No fee details available.</p>";
+        }
+      })
+      .catch(err => {
+        console.error("Error fetching fee details:", err);
+        document.getElementById("feeContent").innerHTML = "<p>Error loading fee details.</p>";
+      });
   }
 
   function fetchMidMarks() {
@@ -593,7 +641,7 @@
   }
 
   function showTab(tabName) {
-    const tabs = ['attendance', 'results', 'midmarks'];
+    const tabs = ['attendance', 'results', 'midmarks', 'fee'];
     tabs.forEach(t => {
       document.getElementById(t + 'Tab').style.display = (t === tabName) ? 'block' : 'none';
       const btn = document.getElementById('btn' + t.charAt(0).toUpperCase() + t.slice(1));
