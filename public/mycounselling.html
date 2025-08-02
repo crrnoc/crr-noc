@@ -546,48 +546,95 @@
     document.getElementById("midYearSelect").onchange = fetchMidMarks;
     document.getElementById("midSemesterSelect").onchange = fetchMidMarks;
 
-    // Fee Details
-    document.getElementById("feeContent").innerHTML = "Loading...";
-    fetch(`/yearwise-fee/${student.userId}`)
-      .then(res => res.json())
-      .then(data => {
-        const container = document.getElementById("feeContent");
-        if (data.success && data.data.length > 0) {
-          let html = "";
-          data.data.forEach(row => {
-            const structure = row.structure;
-            const paid = row.paid;
-            html += `
-              <h4>Year ${row.year}</h4>
-              <table>
-                <tr><th>Fee Type</th><th>Expected</th><th>Paid</th><th>Remaining</th></tr>
-                ${Object.keys(structure)
-                  .filter(k => k !== "academic_year" && k !== "reg_no")
-                  .map(type => {
-                    const expected = parseFloat(structure[type] || 0);
-                    const paidAmt = parseFloat(paid[type] || 0);
-                    return `
-                      <tr>
-                        <td>${type.toUpperCase()}</td>
-                        <td>₹${expected}</td>
-                        <td>₹${paidAmt}</td>
-                        <td>${expected - paidAmt > 0 ? `₹${expected - paidAmt}` : "✅ Paid"}</td>
-                      </tr>
-                    `;
-                  }).join("")}
-              </table>
-            `;
-          });
-          container.innerHTML = html;
-        } else {
-          container.innerHTML = "<p>No fee details available.</p>";
-        }
-      })
-      .catch(err => {
-        console.error("Error fetching fee details:", err);
-        document.getElementById("feeContent").innerHTML = "<p>Error loading fee details.</p>";
+   // Fee Details - Year-wise Accordion
+document.getElementById("feeContent").innerHTML = "Loading...";
+fetch(`/yearwise-fee/${student.userId}`)  // student.userId from counselling list
+  .then(res => res.json())
+  .then(res => {
+    const container = document.getElementById("feeContent");
+    if (!res.success || res.data.length === 0) {
+      container.innerHTML = "<p>No fee details available.</p>";
+      return;
+    }
+
+    container.innerHTML = "";
+
+    res.data.forEach(({ year, structure, paid, fines }, index) => {
+      const items = [
+        { label: "Tuition Fee", key: "tuition" },
+        { label: "Hostel Fee", key: "hostel" },
+        { label: "Bus Fee", key: "bus" },
+        { label: "University Fee", key: "university" },
+        { label: "Semester Fee", key: "semester" },
+        { label: "Library Dues", key: "library" },
+        { label: "Fines", key: "fines" }
+      ];
+
+      let paidTotal = 0, remainingTotal = 0, actualTotal = 0;
+      let rowsHTML = "";
+
+      items.forEach(({ label, key }) => {
+        const total = key === "fines" ? fines : parseFloat(structure[key]) || 0;
+        const paidAmt = parseFloat(paid[key]) || 0;
+        const remain = Math.max(0, total - paidAmt);
+
+        paidTotal += paidAmt;
+        remainingTotal += remain;
+        actualTotal += total;
+
+        rowsHTML += `
+          <tr>
+            <td>${label}</td>
+            <td>₹${paidAmt.toFixed(2)}</td>
+            <td>₹${remain.toFixed(2)}</td>
+            <td>₹${total.toFixed(2)}</td>
+          </tr>`;
       });
-  }
+
+      container.innerHTML += `
+        <div class="accordion-card" style="margin-top: 10px;">
+          <button class="accordion-toggle" data-index="${index}">📅 Academic Year ${year}</button>
+          <div class="accordion-content" style="display: none;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Fee Type</th>
+                  <th>Paid (₹)</th>
+                  <th>Remaining (₹)</th>
+                  <th>Total (₹)</th>
+                </tr>
+              </thead>
+              <tbody>${rowsHTML}</tbody>
+              <tfoot>
+                <tr>
+                  <td><strong>Total</strong></td>
+                  <td><strong>₹${paidTotal.toFixed(2)}</strong></td>
+                  <td><strong>₹${remainingTotal.toFixed(2)}</strong></td>
+                  <td><strong>₹${actualTotal.toFixed(2)}</strong></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>`;
+    });
+
+    // Accordion toggle logic
+    const toggles = container.querySelectorAll(".accordion-toggle");
+    const contents = container.querySelectorAll(".accordion-content");
+    toggles.forEach((btn, i) => {
+      btn.addEventListener("click", () => {
+        contents.forEach((content, j) => {
+          content.style.display = (i === j)
+            ? (content.style.display === "block" ? "none" : "block")
+            : "none";
+        });
+      });
+    });
+  })
+  .catch(err => {
+    console.error("Error fetching fee details:", err);
+    document.getElementById("feeContent").innerHTML = "<p>Error loading fee details.</p>";
+  });
 
   function fetchMidMarks() {
     if (!currentStudent) return;
