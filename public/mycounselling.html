@@ -6,44 +6,298 @@
   <title>My Counselling Students</title>
   <link rel="icon" href="crrengglogo.png" type="image/png" />
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <style>
-    /* Same CSS as before */
-    * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    body { background-color:#ffffff; color:#000; }
-    .main-container { display:flex; height:100vh; flex-direction:row; }
-    .sidebar { width:270px; background-color:rgb(247, 201, 155); display:flex; flex-direction:column; justify-content:space-between; padding:20px; position:fixed; top:0; bottom:0; left:0; z-index:100; overflow-y:auto; }
-    .sidebar h2 { margin:40px 20px 20px 20px; color:black; font-size:18px; }
-    .menu { list-style:none; padding:0; }
-    .menu li { margin-bottom:15px; }
-    .menu li a { display:flex; align-items:center; gap:10px; font-size:16px; color:black; padding:12px 20px; border-radius:8px; transition:all 0.3s ease; text-decoration:none; }
-    .menu li a:hover, .menu li.active a { background-color:#d4d4d4; font-weight:bold; transform:translateX(5px); box-shadow:0 3px 8px rgba(0,0,0,0.15); }
-    .menu li a span { font-size:18px; transition:transform 0.3s ease; }
-    .menu li a:hover span { transform:scale(1.2); }
-    .logout { background-color:#f09000; color:white; border:none; padding:10px 20px; border-radius:20px; cursor:pointer; font-size:16px; width:50%; margin:20px auto; }
-    .logout:hover { background-color:#d07900; }
-    .content { flex-grow:1; margin-left:270px; padding:40px 20px; display:flex; flex-direction:column; align-items:center; }
-    .header { font-size:24px; font-weight:bold; margin-bottom:20px; color:black; }
-    .card-container { display:grid; grid-template-columns:repeat(auto-fit, minmax(260px,1fr)); gap:20px; width:100%; max-width:1200px; }
-    .student-card { background:#fff; border-radius:12px; padding:20px; box-shadow:0 4px 15px rgba(0,0,0,0.08); transition:all 0.3s ease; cursor:pointer; }
-    .student-card:hover { transform:translateY(-6px); box-shadow:0 10px 25px rgba(0,0,0,0.15); }
-    .student-card h3 { margin-bottom:10px; font-size:18px; font-weight:bold; color:#222; }
-    .student-card p { font-size:14px; margin:4px 0; color:#555; }
-    .mobile-toggle { display:none; position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background-color:#1f75cb; color:white; font-size:24px; padding:12px 18px; border-radius:50px; z-index:10001; cursor:pointer; }
-    #modalOverlay { position:fixed; top:0; left:0; right:0; bottom:0; display:flex; justify-content:center; align-items:center; backdrop-filter:blur(6px); background:rgba(0,0,0,0.6); z-index:9999; }
-    .modal-box { background:white; border-radius:20px; padding:30px 35px; width:95%; max-width:750px; max-height:90vh; overflow-y:auto; position:relative; box-shadow:0 20px 50px rgba(0,0,0,0.25); }
-    .modal-close { position:absolute; top:14px; right:18px; background:#ff3b3b; color:white; border:none; padding:10px 16px; font-size:18px; font-weight:bold; border-radius:50%; cursor:pointer; }
-    .modal-box table { width:100%; border-collapse:collapse; margin-top:12px; font-size:14px; }
-    .modal-box table th, .modal-box table td { border:1px solid #ddd; padding:8px; text-align:center; }
-    .accordion-toggle { background:#1f75cb; color:white; padding:8px 14px; border:none; border-radius:8px; cursor:pointer; width:100%; text-align:left; }
-    .accordion-content { display:none; margin-top:6px; }
-    @media (max-width:768px) {
-      .main-container { flex-direction:column; }
-      .sidebar { width:100%; top:-100%; max-height:90vh; transition:top 0.4s ease; }
-      .sidebar.open { top:0; }
-      .content { margin-left:0; margin-top:100px; padding:20px; }
-      .mobile-toggle { display:block; }
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+
+  body {
+    background-color: #ffffff;
+    color: #000;
+  }
+
+  .main-container {
+    display: flex;
+    height: 100vh;
+    flex-direction: row;
+  }
+
+  .sidebar {
+    width: 270px;
+    background-color: rgb(247, 201, 155);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 20px;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 100;
+    overflow-y: auto;
+    transition: top 0.3s ease-in-out;
+  }
+
+  .sidebar h2 {
+    margin: 40px 20px 20px 20px;
+    color: black;
+    font-size: 18px;
+  }
+
+  .menu {
+    list-style-type: none;
+    padding: 0;
+  }
+
+  .menu li {
+    margin-bottom: 15px;
+  }
+
+  .menu li a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 16px;
+    color: black;
+    padding: 12px 20px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    border: none;
+  }
+
+  .menu li a:hover,
+  .menu li.active a {
+    background-color: #d4d4d4;
+    font-weight: bold;
+    transform: translateX(5px);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  .menu li a span {
+    font-size: 18px;
+    transition: transform 0.3s ease;
+  }
+
+  .menu li a:hover span {
+    transform: scale(1.2);
+  }
+
+  .logout {
+    background-color: #f09000;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 16px;
+    width: 50%;
+    margin: 20px auto;
+    transition: background 0.3s ease;
+  }
+
+  .logout:hover {
+    background-color: #d07900;
+  }
+
+  .content {
+    flex-grow: 1;
+    margin-left: 270px;
+    padding: 40px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .header {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    color: black;
+  }
+
+  .card-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+    width: 100%;
+    max-width: 1200px;
+  }
+
+  /* Updated student-card design */
+  .student-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+
+  .student-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  }
+
+  .student-card h3 {
+    margin-bottom: 10px;
+    font-size: 18px;
+    font-weight: bold;
+    color: #222;
+  }
+
+  .student-card p {
+    font-size: 14px;
+    margin: 4px 0;
+    color: #555;
+  }
+
+  .mobile-toggle {
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #1f75cb;
+    color: white;
+    font-size: 24px;
+    padding: 12px 18px;
+    border-radius: 50px;
+    z-index: 10001;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Modal Overlay */
+  #modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(6px);
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 9999;
+    animation: fadeInOverlay 0.3s ease;
+  }
+
+  .modal-box {
+    background: white;
+    border-radius: 20px;
+    padding: 30px 35px;
+    width: 95%;
+    max-width: 750px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+    animation: modalFadeIn 0.4s ease;
+  }
+
+  .modal-close {
+    position: absolute;
+    top: 14px;
+    right: 18px;
+    background: #ff3b3b;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    font-size: 18px;
+    font-weight: bold;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.2s ease;
+  }
+
+  .modal-close:hover {
+    background: #e60000;
+    transform: scale(1.1);
+  }
+
+  /* Tabs & Table Styling */
+  .modal-box button {
+    background: #f6f6f6;
+    border: none;
+    color: #333;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .modal-box button:hover {
+    background: #ddd;
+  }
+
+  .modal-box table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+    font-size: 14px;
+  }
+
+  .modal-box table th,
+  .modal-box table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+  }
+
+  .modal-box table th {
+    background: #f6f6f6;
+    font-weight: bold;
+  }
+
+  @keyframes modalFadeIn {
+    from { opacity: 0; transform: translateY(-20px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  @keyframes fadeInOverlay {
+    from { background: rgba(0, 0, 0, 0); }
+    to { background: rgba(0, 0, 0, 0.6); }
+  }
+
+  @media (max-width: 768px) {
+    .main-container {
+      flex-direction: column;
     }
-  </style>
+
+    .sidebar {
+      width: 100%;
+      position: fixed;
+      top: -100%;
+      left: 0;
+      background-color: rgb(247, 201, 155);
+      height: auto;
+      max-height: 90vh;
+      overflow-y: auto;
+      z-index: 10000;
+      transition: top 0.4s ease;
+    }
+
+    .sidebar.open {
+      top: 0;
+    }
+
+    .content {
+      margin-left: 0;
+      margin-top: 100px;
+      padding: 20px;
+    }
+
+    .mobile-toggle {
+      display: block;
+    }
+  }
+</style>
 </head>
 <body>
   <div class="main-container">
@@ -64,226 +318,424 @@
       <button class="logout" onclick="logout()">Logout</button>
     </div>
 
-    <!-- Content -->
+    <!-- Main Content -->
     <div class="content">
       <div class="header">My Counselling Students</div>
-      <div class="card-container" id="cardContainer"></div>
+      <div class="card-container" id="cardContainer">
+        <!-- Student cards will be injected here -->
+      </div>
     </div>
   </div>
 
   <!-- Modal -->
-  <div id="studentModal" style="display:none;">
+  <div id="studentModal" style="display: none;">
     <div id="modalOverlay">
       <div class="modal-box">
         <h2 id="modalName">Student Name</h2>
         <p><strong>Father Name:</strong> <span id="modalFatherName"></span></p>
         <p><strong>Father Mobile:</strong> <span id="modalFatherMobile"></span></p>
 
-        <div style="margin:20px 0; display:flex; gap:10px; flex-wrap:wrap;">
+        <!-- Tab Buttons -->
+        <div style="margin: 20px 0; display: flex; gap: 10px; flex-wrap: wrap;">
           <button onclick="showTab('attendance')" id="btnAttendance">📊 Attendance</button>
           <button onclick="showTab('results')" id="btnResults">📚 Results</button>
           <button onclick="showTab('midmarks')" id="btnMidMarks">📝 Mid Marks</button>
           <button onclick="showTab('fee')" id="btnFee">💵 Fee Details</button>
         </div>
 
-        <div id="attendanceTab" style="display:none;"><div id="attendanceContent"></div></div>
-        <div id="resultsTab" style="display:none;">
+        <!-- Attendance Section -->
+        <div id="attendanceTab" style="display: none;">
+          <h3 style="margin-top: 20px; border-bottom: 1px solid #ddd; padding-bottom: 6px;">📊 Attendance Details</h3>
+          <div id="attendanceContent"></div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsTab" style="display: none;">
+          <h3 style="margin-top: 20px; border-bottom: 1px solid #ddd; padding-bottom: 6px;">📚 Results Overview</h3>
+          <h4 style="margin-bottom: 8px;">🎓 Select Semester to View Results:</h4>
           <select id="semesterSelect">
-            <option value="">-- Select Semester --</option>
-            <option value="1-1">1-1</option><option value="1-2">1-2</option>
-            <option value="2-1">2-1</option><option value="2-2">2-2</option>
-            <option value="3-1">3-1</option><option value="3-2">3-2</option>
-            <option value="4-1">4-1</option><option value="4-2">4-2</option>
+            <option value="">-- Select --</option>
+            <option value="1-1">1-1</option>
+            <option value="1-2">1-2</option>
+            <option value="2-1">2-1</option>
+            <option value="2-2">2-2</option>
+            <option value="3-1">3-1</option>
+            <option value="3-2">3-2</option>
+            <option value="4-1">4-1</option>
+            <option value="4-2">4-2</option>
           </select>
           <div id="resultsContent"></div>
         </div>
-        <div id="midmarksTab" style="display:none;">
+
+        <!-- Mid Marks Section -->
+        <div id="midmarksTab" style="display: none;">
+          <h3 style="margin-top: 20px; border-bottom: 1px solid #ddd; padding-bottom: 6px;">📝 Mid Marks</h3>
+          <h4 style="margin-bottom: 8px;">📅 Select Year and Semester to View Mid Marks:</h4>
+
+          <label for="midYearSelect">Year:</label>
           <select id="midYearSelect">
-            <option value="">Year</option><option value="1">1</option>
-            <option value="2">2</option><option value="3">3</option><option value="4">4</option>
+            <option value="">Select Year</option>
+            <option value="1">1st Year</option>
+            <option value="2">2nd Year</option>
+            <option value="3">3rd Year</option>
+            <option value="4">4th Year</option>
           </select>
+
+          <label for="midSemesterSelect" style="margin-left: 15px;">Semester:</label>
           <select id="midSemesterSelect">
-            <option value="">Semester</option><option value="1">1</option><option value="2">2</option>
+            <option value="">Select Semester</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
           </select>
-          <div id="midmarksContent"></div>
+
+          <div id="midmarksContent" style="margin-top: 20px;"></div>
         </div>
-        <div id="feeTab" style="display:none;"><div id="feeContent"></div></div>
+         <!-- Fee Details Section -->
+<div id="feeTab" style="display: none;">
+  <h3 style="margin-top: 20px; border-bottom: 1px solid #ddd; padding-bottom: 6px;">💵 Year-wise Fee Details</h3>
+  <div id="feeContent"></div>
+</div>
 
         <button class="modal-close" onclick="closeModal()">✖</button>
       </div>
     </div>
   </div>
 
+  <!-- Mobile Toggle -->
   <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
 
 <script>
-const userId = localStorage.getItem("userId");
-const role = localStorage.getItem("role");
-document.getElementById("userId").textContent = userId || "Unknown";
+  const userId = localStorage.getItem("userId");
+  const role = localStorage.getItem("role");
+  document.getElementById("userId").textContent = userId || "Unknown";
 
-if (!userId || role !== "staff") {
-  Swal.fire({icon:"error", title:"Unauthorized", text:"Login as staff."})
-  .then(() => window.location.href="index.html");
-} else {
-  fetch(`/my-counselling-students/${userId}`)
-    .then(res => res.json())
-    .then(data => {
-      const container = document.getElementById("cardContainer");
-      if (data.success && data.students.length > 0) {
-        data.students.forEach(std => {
-          const card = document.createElement("div");
-          card.className = "student-card";
-          card.innerHTML = `
-            <div style="display:flex; align-items:center; gap:12px;">
-              <img src="https://ui-avatars.com/api/?name=${std.name}" style="width:40px; height:40px; border-radius:50%;">
-              <h3>${std.name}</h3>
-            </div>
-            <p><strong>Reg No:</strong> ${std.reg_no}</p>
-            <p><strong>Course:</strong> ${std.course}</p>
-            <p><strong>Year:</strong> ${std.year}</p>
-            <p><strong>Section:</strong> ${std.section}</p>
-          `;
-          card.onclick = () => openModal(std);
-          container.appendChild(card);
-        });
-      } else {
-        container.innerHTML = "<p>No students assigned.</p>";
-      }
+  let currentStudent = null;
+
+  if (!userId || role !== "staff") {
+    Swal.fire({
+      icon: "error",
+      title: "Unauthorized",
+      text: "You must login as staff to view this page.",
+      confirmButtonText: "Go to Login"
+    }).then(() => {
+      window.location.href = "index.html";
     });
-}
-
-let currentStudent = null;
-
-function openModal(student) {
-  currentStudent = student;
-  document.getElementById("modalName").textContent = student.name;
-  document.getElementById("modalFatherName").textContent = student.father_name || "N/A";
-  document.getElementById("modalFatherMobile").textContent = student.father_mobile || "N/A";
-  document.getElementById("studentModal").style.display = "block";
-  document.body.style.overflow = "hidden";
-  showTab("attendance");
-
-  // Attendance
-  fetch(`/student-attendance/${student.reg_no}`)
-    .then(res => res.json())
-    .then(data => {
-      const cont = document.getElementById("attendanceContent");
-      if (data.success && data.data.length) {
-        cont.innerHTML = `<table><tr><th>Sem</th><th>Total</th><th>Attended</th><th>%</th></tr>
-        ${data.data.map(row => `<tr><td>${row.semester}</td><td>${row.total_classes}</td><td>${row.attended_classes}</td><td>${row.percentage}%</td></tr>`).join("")}
-        </table>`;
-      } else cont.innerHTML = "No attendance data.";
-    });
-
-  // Results
-  const semesterDropdown = document.getElementById("semesterSelect");
-  semesterDropdown.value = "";
-  document.getElementById("resultsContent").innerHTML = "";
-  semesterDropdown.onchange = () => {
-    if (!semesterDropdown.value) return;
-    fetch(`/student/results/${student.reg_no}?semester=${semesterDropdown.value}`)
+  } else {
+    fetch(`/my-counselling-students/${userId}`)
       .then(res => res.json())
       .then(data => {
-        const cont = document.getElementById("resultsContent");
-        if (data.results && data.results.length) {
-          cont.innerHTML = `<table><tr><th>Sub Code</th><th>Subject</th><th>Grade</th><th>Credits</th></tr>
-          ${data.results.map(r => `<tr><td>${r.subcode}</td><td>${r.subname}</td><td>${r.grade}</td><td>${r.credits}</td></tr>`).join("")}
-          </table><p><b>SGPA:</b> ${data.sgpa} <b>CGPA:</b> ${data.cgpa} <b>Percentage:</b> ${data.percentage}%</p>`;
-        } else cont.innerHTML = "No results.";
+        const container = document.getElementById("cardContainer");
+
+        if (data.success && data.students.length > 0) {
+          data.students.forEach(std => {
+            const card = document.createElement("div");
+            card.className = "student-card";
+            card.innerHTML = `
+              <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
+                <img src="https://ui-avatars.com/api/?name=${std.name}&background=random&rounded=true" style="width:40px; height:40px; border-radius:50%;">
+                <h3 style="margin:0;">${std.name}</h3>
+              </div>
+              <p><strong>Reg No:</strong> ${std.reg_no}</p>
+              <p><strong>Course:</strong> ${std.course}</p>
+              <p><strong>Year:</strong> ${std.year}</p>
+              <p><strong>Section:</strong> ${std.section}</p>
+              <p><strong>Email:</strong> ${std.email}</p>
+              <p><strong>Mobile:</strong> ${std.mobile_no}</p>
+            `;
+            card.onclick = () => openModal(std);
+            container.appendChild(card);
+          });
+        } else {
+          container.innerHTML = `<p style="text-align:center; color:#666;">No students assigned yet.</p>`;
+        }
+      })
+      .catch(err => {
+        console.error("Error fetching students:", err);
+        Swal.fire("Error", "Failed to fetch student data.", "error");
       });
-  };
+  }
 
-  // Mid marks reset
-  document.getElementById("midYearSelect").value = "";
-  document.getElementById("midSemesterSelect").value = "";
-  document.getElementById("midmarksContent").innerHTML = "";
-  document.getElementById("midYearSelect").onchange = fetchMidMarks;
-  document.getElementById("midSemesterSelect").onchange = fetchMidMarks;
+  function openModal(student) {
+    currentStudent = student;
 
-  // Fee details
-  loadFeeDetails(student.reg_no);
-}
+    document.getElementById("modalName").textContent = student.name;
+    document.getElementById("modalFatherName").textContent = student.father_name || "N/A";
+    document.getElementById("modalFatherMobile").textContent = student.father_mobile || "N/A";
 
-function loadFeeDetails(regNo) {
+    document.getElementById("studentModal").style.display = "block";
+    document.body.style.overflow = "hidden";
+    showTab("attendance");
+
+    // Attendance
+    fetch(`/student-attendance/${student.reg_no}`)
+      .then(res => res.json())
+      .then(data => {
+        const container = document.getElementById("attendanceContent");
+        if (data.success && data.data.length > 0) {
+          const rows = data.data.map(row => `
+            <tr>
+              <td>${row.semester}</td>
+              <td>${row.total_classes}</td>
+              <td>${row.attended_classes}</td>
+              <td>${row.percentage}%</td>
+            </tr>`).join("");
+          container.innerHTML = `
+            <table>
+              <tr>
+                <th>Semester</th>
+                <th>Total</th>
+                <th>Attended</th>
+                <th>%</th>
+              </tr>
+              ${rows}
+            </table>
+          `;
+        } else {
+          container.innerHTML = "No attendance data available.";
+        }
+      });
+
+    // Results
+    const semesterDropdown = document.getElementById("semesterSelect");
+    semesterDropdown.value = "";
+    document.getElementById("resultsContent").innerHTML = "";
+
+    semesterDropdown.onchange = () => {
+      const semester = semesterDropdown.value;
+      if (!semester) return;
+
+      fetch(`/student/results/${student.reg_no}?semester=${semester}`)
+        .then(res => res.json())
+        .then(data => {
+          const container = document.getElementById("resultsContent");
+          if (data.results && data.results.length > 0) {
+            const subjectRows = data.results.map(r => `
+              <tr>
+                <td>${r.subcode}</td>
+                <td>${r.subname}</td>
+                <td>${r.grade}</td>
+                <td>${r.credits}</td>
+              </tr>`).join("");
+            container.innerHTML = `
+              <table>
+                <tr>
+                  <th>Sub Code</th>
+                  <th>Subject</th>
+                  <th>Grade</th>
+                  <th>Credits</th>
+                </tr>
+                ${subjectRows}
+              </table>
+              <div>
+                <p><strong>SGPA:</strong> ${data.sgpa}</p>
+                <p><strong>CGPA:</strong> ${data.cgpa}</p>
+                <p><strong>Percentage:</strong> ${data.percentage}%</p>
+              </div>
+            `;
+          } else {
+            container.innerHTML = "No result data for selected semester.";
+          }
+        });
+    };
+
+    // Mid Marks
+    document.getElementById("midYearSelect").value = "";
+    document.getElementById("midSemesterSelect").value = "";
+    document.getElementById("midmarksContent").innerHTML = "";
+
+    document.getElementById("midYearSelect").onchange = fetchMidMarks;
+    document.getElementById("midSemesterSelect").onchange = fetchMidMarks;
+  }
+
+  
+
+  function fetchMidMarks() {
+    if (!currentStudent) return;
+
+    const year = document.getElementById("midYearSelect").value;
+    const semester = document.getElementById("midSemesterSelect").value;
+
+    fetch(`/student/midmarks/${currentStudent.reg_no}?year=${year}&semester=${semester}`)
+      .then(res => res.json())
+      .then(data => {
+        const container = document.getElementById("midmarksContent");
+        if (!data.midmarks || data.midmarks.length === 0) {
+          container.innerHTML = "<p>No mid marks found for selected year and semester.</p>";
+          return;
+        }
+
+        let html = `
+          <table>
+            <tr>
+              <th>Subject Code</th>
+              <th>Mid 1</th>
+              <th>A1</th>
+              <th>Q1</th>
+              <th>Mid 2</th>
+              <th>A2</th>
+              <th>Q2</th>
+              <th>Status</th>
+            </tr>
+        `;
+        data.midmarks.forEach(row => {
+          html += `
+            <tr>
+              <td>${row.sub_code}</td>
+              <td>${row.mid1}</td>
+              <td>${row.a1}</td>
+              <td>${row.q1}</td>
+              <td>${row.mid2}</td>
+              <td>${row.a2}</td>
+              <td>${row.q2}</td>
+              <td>${row.lds_or_status}</td>
+            </tr>
+          `;
+        });
+        html += `</table>`;
+        container.innerHTML = html;
+      })
+      .catch(err => {
+        console.error("Error fetching mid marks:", err);
+        document.getElementById("midmarksContent").innerHTML = "<p>Error loading mid marks.</p>";
+      });
+  }
+
+  // Fee Details
+loadFeeDetails(student.reg_no);
+
+  function loadFeeDetails(regNo) {
   const container = document.getElementById("feeContent");
   container.innerHTML = "Loading...";
+
   fetch(`/yearwise-fee/${regNo}`)
     .then(res => res.json())
     .then(res => {
       if (!res.success || res.data.length === 0) {
-        container.innerHTML = "<p>No fee details.</p>";
+        container.innerHTML = "<p>No fee details available.</p>";
         return;
       }
+
       container.innerHTML = "";
-      res.data.forEach((yearData, index) => {
-        const {year, structure, paid, fines} = yearData;
-        let rows = "", totalPaid=0, totalRemain=0, total=0;
-        const items = ["tuition","hostel","bus","university","semester","library","fines"];
-        items.forEach(key => {
-          const label = key.charAt(0).toUpperCase()+key.slice(1)+" Fee";
-          const totalAmt = key === "fines" ? fines : (parseFloat(structure[key]) || 0);
+
+      res.data.forEach(({ year, structure, paid, fines }, index) => {
+        const items = [
+          { label: "Tuition Fee", key: "tuition" },
+          { label: "Hostel Fee", key: "hostel" },
+          { label: "Bus Fee", key: "bus" },
+          { label: "University Fee", key: "university" },
+          { label: "Semester Fee", key: "semester" },
+          { label: "Library Dues", key: "library" },
+          { label: "Fines", key: "fines" }
+        ];
+
+        let paidTotal = 0, remainingTotal = 0, actualTotal = 0;
+        let rowsHTML = "";
+
+        items.forEach(({ label, key }) => {
+          const total = key === "fines" ? fines : parseFloat(structure[key]) || 0;
           const paidAmt = parseFloat(paid[key]) || 0;
-          const remain = totalAmt - paidAmt;
-          totalPaid += paidAmt; totalRemain += remain; total += totalAmt;
-          rows += `<tr><td>${label}</td><td>₹${paidAmt}</td><td>₹${remain > 0 ? remain : 0}</td><td>₹${totalAmt}</td></tr>`;
+          const remain = Math.max(0, total - paidAmt);
+
+          paidTotal += paidAmt;
+          remainingTotal += remain;
+          actualTotal += total;
+
+          rowsHTML += `
+            <tr>
+              <td>${label}</td>
+              <td>₹${paidAmt.toFixed(2)}</td>
+              <td>₹${remain.toFixed(2)}</td>
+              <td>₹${total.toFixed(2)}</td>
+            </tr>`;
         });
-        container.innerHTML += `<div><button class="accordion-toggle">Academic Year ${year}</button>
-          <div class="accordion-content">
-            <table><thead><tr><th>Type</th><th>Paid</th><th>Remain</th><th>Total</th></tr></thead>
-            <tbody>${rows}</tbody>
-            <tfoot><tr><td><b>Total</b></td><td>₹${totalPaid}</td><td>₹${totalRemain}</td><td>₹${total}</td></tr></tfoot>
-            </table>
-          </div></div>`;
+
+        container.innerHTML += `
+          <div class="accordion-card" style="margin-top: 10px;">
+            <button class="accordion-toggle" data-index="${index}">📅 Academic Year ${year}</button>
+            <div class="accordion-content" style="display: none;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Fee Type</th>
+                    <th>Paid (₹)</th>
+                    <th>Remaining (₹)</th>
+                    <th>Total (₹)</th>
+                  </tr>
+                </thead>
+                <tbody>${rowsHTML}</tbody>
+                <tfoot>
+                  <tr>
+                    <td><strong>Total</strong></td>
+                    <td><strong>₹${paidTotal.toFixed(2)}</strong></td>
+                    <td><strong>₹${remainingTotal.toFixed(2)}</strong></td>
+                    <td><strong>₹${actualTotal.toFixed(2)}</strong></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>`;
       });
-      container.querySelectorAll(".accordion-toggle").forEach((btn,i)=>{
-        btn.addEventListener("click",()=>{
-          const content = btn.nextElementSibling;
-          content.style.display = content.style.display==="block" ? "none" : "block";
+
+      // Accordion toggle
+      const toggles = container.querySelectorAll(".accordion-toggle");
+      const contents = container.querySelectorAll(".accordion-content");
+      toggles.forEach((btn, i) => {
+        btn.addEventListener("click", () => {
+          contents.forEach((content, j) => {
+            content.style.display = (i === j)
+              ? (content.style.display === "block" ? "none" : "block")
+              : "none";
+          });
         });
       });
     })
-    .catch(()=> container.innerHTML = "<p>Error loading fee details.</p>");
-}
-
-function fetchMidMarks() {
-  if (!currentStudent) return;
-  const y = document.getElementById("midYearSelect").value;
-  const s = document.getElementById("midSemesterSelect").value;
-  fetch(`/student/midmarks/${currentStudent.reg_no}?year=${y}&semester=${s}`)
-    .then(res=>res.json())
-    .then(data=>{
-      const cont = document.getElementById("midmarksContent");
-      if (!data.midmarks || !data.midmarks.length) {
-        cont.innerHTML = "No mid marks.";
-        return;
-      }
-      cont.innerHTML = `<table><tr><th>Sub Code</th><th>Mid1</th><th>Mid2</th><th>Status</th></tr>
-      ${data.midmarks.map(row=>`<tr><td>${row.sub_code}</td><td>${row.mid1}</td><td>${row.mid2}</td><td>${row.lds_or_status}</td></tr>`).join("")}
-      </table>`;
+    .catch(err => {
+      console.error("Error fetching fee details:", err);
+      container.innerHTML = "<p>Error loading fee details.</p>";
     });
 }
 
-function showTab(tab) {
-  ["attendance","results","midmarks","fee"].forEach(t=>{
-    document.getElementById(t+"Tab").style.display = t===tab?"block":"none";
-    const btn = document.getElementById("btn"+t.charAt(0).toUpperCase()+t.slice(1));
-    if (btn) btn.style.backgroundColor = t===tab?"#ddd":"#f6f6f6";
-  });
-}
-
-function closeModal() {
-  document.getElementById("studentModal").style.display = "none";
-  document.body.style.overflow = "";
-}
-function logout() { localStorage.clear(); window.location.href="index.html"; }
-function toggleMobileMenu() { document.querySelector('.sidebar').classList.toggle('open'); }
-
-document.addEventListener("click", e => {
-  const modal = document.getElementById("studentModal");
-  if (modal.style.display==="block" && !document.querySelector(".modal-box").contains(e.target) && !e.target.closest(".student-card")) {
-    closeModal();
+  function showTab(tabName) {
+    const tabs = ['attendance', 'results', 'midmarks'];
+    tabs.forEach(t => {
+      document.getElementById(t + 'Tab').style.display = (t === tabName) ? 'block' : 'none';
+      const btn = document.getElementById('btn' + t.charAt(0).toUpperCase() + t.slice(1));
+      if (btn) {
+        btn.style.backgroundColor = (t === tabName) ? '#ddd' : '#f6f6f6';
+      }
+    });
   }
-});
+
+  function closeModal() {
+    document.getElementById("studentModal").style.display = "none";
+    document.body.style.overflow = "";
+  }
+
+  function logout() {
+    localStorage.clear();
+    window.location.href = "index.html";
+  }
+
+  function toggleMobileMenu() {
+    document.querySelector('.sidebar').classList.toggle('open');
+  }
+
+  // Close modal when clicked outside
+  document.addEventListener("click", function (e) {
+    const modalBox = document.querySelector(".modal-box");
+    const modal = document.getElementById("studentModal");
+    if (
+      modal.style.display === "block" &&
+      !modalBox.contains(e.target) &&
+      !e.target.closest(".student-card") &&
+      !e.target.closest(".sidebar") &&
+      !e.target.closest(".mobile-toggle")
+    ) {
+      closeModal();
+    }
+  });
 </script>
 </body>
 </html>
+
+ee my counselling page lo results attendance elaa chupistunnayoo same alaney fee details kudaa display cheyyali ra 
