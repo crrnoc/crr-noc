@@ -22,8 +22,6 @@ const pdfParse = require("pdf-parse");
 require('dotenv').config();
 const axios = require("axios");
 const cloudinary = require("cloudinary").v2;
-const crypto = require('crypto');
-const xlsx = require("xlsx");
 const csv = require("csv-parser");
 
 
@@ -3429,6 +3427,7 @@ app.get('/student/notifications/:userId', (req, res) => {
     });
   });
 });
+
 
 
 
