@@ -279,149 +279,177 @@
 
   <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
 
-  <script>
-    const userId = localStorage.getItem("userId") || "";
-    let staff_id = localStorage.getItem("staff_id") || "";
+<script>
+  const userId = localStorage.getItem("userId") || "";
+  let staff_id = localStorage.getItem("staff_id") || "";
 
-    if (!userId) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Please Login',
-        text: 'You are not logged in as staff.'
-      }).then(() => {
-        window.location.href = "index.html";
-      });
-    } else {
-      document.getElementById("userId").textContent = userId;
-      if (!staff_id) {
-        staff_id = userId;
-        console.warn("⚠️ staff_id not found in localStorage. Using userId as fallback.");
-      }
-    }
-
-    const courseSelect = document.getElementById("courseSelect");
-    const sectionSelect = document.getElementById("sectionSelect");
-    const periodSelect = document.getElementById("periodSelect");
-    const studentsTable = document.querySelector("#studentsTable tbody");
-    const form = document.getElementById("attendanceForm");
-
-    function toggleAll(master) {
-      const checkboxes = document.querySelectorAll('input[name="attendance"]');
-      checkboxes.forEach(cb => cb.checked = master.checked);
-    }
-
-    window.onload = () => {
-      fetch(`https://crr-noc.onrender.com/api/staff-allocation?staff_id=${staff_id}`)
-        .then(res => res.json())
-        .then(data => {
-          if (!data.length) {
-            Swal.fire("❌ No Allocation Found", "Contact admin to allocate your timetable.", "info");
-            return;
-          }
-
-          const uniqueCourses = new Set();
-          const uniqueSections = new Set();
-          const uniqueSubjects = new Set();
-
-          data.forEach(row => {
-            uniqueCourses.add(row.course);
-            uniqueSections.add(row.section);
-            for (let i = 1; i <= 7; i++) {
-              const period = row[`period${i}`];
-              if (period && period.trim()) uniqueSubjects.add(period);
-            }
-          });
-
-          courseSelect.innerHTML = [...uniqueCourses].map(c => `<option value="${c}">${c}</option>`).join('');
-          sectionSelect.innerHTML = [...uniqueSections].map(s => `<option value="${s}">${s}</option>`).join('');
-          periodSelect.innerHTML = [...uniqueSubjects].map(p => `<option value="${p}">${p}</option>`).join('');
-        })
-        .catch(err => {
-          console.error("Allocation fetch failed", err);
-          Swal.fire("❌ Error", "Unable to fetch staff allocation.", "error");
-        });
-    };
-
-    function fetchStudents() {
-      const course = courseSelect.value;
-      const section = sectionSelect.value;
-
-      if (!course || !section) {
-        Swal.fire("⚠️ Select Course & Section", "", "warning");
-        return;
-      }
-
-      fetch(`/api/students-by-course-section?course=${encodeURIComponent(course)}&section=${encodeURIComponent(section)}`)
-        .then(res => res.json())
-        .then(students => {
-          if (!students.length) {
-            studentsTable.innerHTML = `<tr><td colspan="3">No students found</td></tr>`;
-            return;
-          }
-
-          studentsTable.innerHTML = students.map(s => `
-            <tr>
-              <td>${s.reg_no}</td>
-              <td>${s.name}</td>
-              <td><input type="checkbox" name="attendance" value="${s.reg_no}" checked></td>
-            </tr>
-          `).join('');
-        })
-        .catch(err => {
-          console.error("Failed to fetch students", err);
-          Swal.fire("❌ Error", "Unable to load students", "error");
-        });
-    }
-
-    form.onsubmit = async (e) => {
-      e.preventDefault();
-
-      const year = document.getElementById("yearSelect").value;
-      const semester = document.getElementById("semesterSelect").value;
-
-      const presentRegnos = Array.from(document.querySelectorAll('input[name="attendance"]:checked')).map(cb => cb.value);
-      const absentRegnos = Array.from(document.querySelectorAll('input[name="attendance"]:not(:checked)')).map(cb => cb.value);
-
-      const payload = {
-        staff_id,
-        date: new Date().toISOString().split("T")[0],
-        course: courseSelect.value,
-        year,
-        semester,
-        section: sectionSelect.value,
-        subject: periodSelect.value,
-        present: presentRegnos,
-        absent: absentRegnos
-      };
-
-      try {
-        const res = await fetch('/api/submit-attendance', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-
-        const result = await res.json();
-        if (res.ok) {
-          Swal.fire("✅ Attendance Marked", "", "success");
-          studentsTable.innerHTML = ""; // Clear table after submit
-        } else {
-          Swal.fire("❌ Failed", result.error || "Unknown error", "error");
-        }
-      } catch (err) {
-        console.error("Submission failed", err);
-        Swal.fire("❌ Error", "Network or server issue", "error");
-      }
-    };
-
-    function toggleMobileMenu() {
-      document.querySelector('.sidebar').classList.toggle('open');
-    }
-
-    function logout() {
-      localStorage.clear();
+  if (!userId) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Please Login',
+      text: 'You are not logged in as staff.'
+    }).then(() => {
       window.location.href = "index.html";
+    });
+  } else {
+    document.getElementById("userId").textContent = userId;
+    if (!staff_id) {
+      staff_id = userId;
+      console.warn("⚠️ staff_id not found in localStorage. Using userId as fallback.");
     }
-  </script>
+  }
+
+  const courseSelect = document.getElementById("courseSelect");
+  const sectionSelect = document.getElementById("sectionSelect");
+  const periodSelect = document.getElementById("periodSelect");
+  const yearSelect = document.getElementById("yearSelect");
+  const semesterSelect = document.getElementById("semesterSelect");
+  const studentsTable = document.querySelector("#studentsTable tbody");
+  const form = document.getElementById("attendanceForm");
+
+  let staffAllocData = []; // 🔄 store fetched allocation for later
+
+  function toggleAll(master) {
+    const checkboxes = document.querySelectorAll('input[name="attendance"]');
+    checkboxes.forEach(cb => cb.checked = master.checked);
+  }
+
+  window.onload = () => {
+    fetch(`https://crr-noc.onrender.com/api/staff-allocation?staff_id=${staff_id}`)
+      .then(res => res.json())
+      .then(data => {
+        if (!data.length) {
+          Swal.fire("❌ No Allocation Found", "Contact admin to allocate your timetable.", "info");
+          return;
+        }
+
+        staffAllocData = data; // store it
+
+        const uniqueCourses = new Set();
+        const uniqueSections = new Set();
+        const uniqueSubjects = new Set();
+
+        data.forEach(row => {
+          uniqueCourses.add(row.course);
+          uniqueSections.add(row.section);
+          for (let i = 1; i <= 7; i++) {
+            const period = row[`period${i}`];
+            if (period && period.trim()) uniqueSubjects.add(period);
+          }
+        });
+
+        courseSelect.innerHTML = [...uniqueCourses].map(c => `<option value="${c}">${c}</option>`).join('');
+        sectionSelect.innerHTML = [...uniqueSections].map(s => `<option value="${s}">${s}</option>`).join('');
+        periodSelect.innerHTML = [...uniqueSubjects].map(p => `<option value="${p}">${p}</option>`).join('');
+      })
+      .catch(err => {
+        console.error("Allocation fetch failed", err);
+        Swal.fire("❌ Error", "Unable to fetch staff allocation.", "error");
+      });
+  };
+
+  periodSelect.addEventListener('change', () => {
+    const selectedSubject = periodSelect.value;
+    const course = courseSelect.value;
+    const section = sectionSelect.value;
+
+    if (!selectedSubject || !course || !section) return;
+
+    // Match entry with course, section, and subject
+    const match = staffAllocData.find(row => {
+      return row.course === course &&
+             row.section === section &&
+             Object.values(row).includes(selectedSubject);
+    });
+
+    if (match) {
+      yearSelect.value = match.year;
+      semesterSelect.value = match.semester;
+    } else {
+      console.warn("⚠️ Matching year/semester not found for selected subject.");
+    }
+  });
+
+  function fetchStudents() {
+    const course = courseSelect.value;
+    const section = sectionSelect.value;
+
+    if (!course || !section) {
+      Swal.fire("⚠️ Select Course & Section", "", "warning");
+      return;
+    }
+
+    fetch(`/api/students-by-course-section?course=${encodeURIComponent(course)}&section=${encodeURIComponent(section)}`)
+      .then(res => res.json())
+      .then(students => {
+        if (!students.length) {
+          studentsTable.innerHTML = `<tr><td colspan="3">No students found</td></tr>`;
+          return;
+        }
+
+        studentsTable.innerHTML = students.map(s => `
+          <tr>
+            <td>${s.reg_no}</td>
+            <td>${s.name}</td>
+            <td><input type="checkbox" name="attendance" value="${s.reg_no}" checked></td>
+          </tr>
+        `).join('');
+      })
+      .catch(err => {
+        console.error("Failed to fetch students", err);
+        Swal.fire("❌ Error", "Unable to load students", "error");
+      });
+  }
+
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+
+    const year = yearSelect.value;
+    const semester = semesterSelect.value;
+
+    const presentRegnos = Array.from(document.querySelectorAll('input[name="attendance"]:checked')).map(cb => cb.value);
+    const absentRegnos = Array.from(document.querySelectorAll('input[name="attendance"]:not(:checked)')).map(cb => cb.value);
+
+    const payload = {
+      staff_id,
+      date: new Date().toISOString().split("T")[0],
+      course: courseSelect.value,
+      year,
+      semester,
+      section: sectionSelect.value,
+      subject: periodSelect.value,
+      present: presentRegnos,
+      absent: absentRegnos
+    };
+
+    try {
+      const res = await fetch('/api/submit-attendance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await res.json();
+      if (res.ok) {
+        Swal.fire("✅ Attendance Marked", "", "success");
+        studentsTable.innerHTML = ""; // Clear table after submit
+      } else {
+        Swal.fire("❌ Failed", result.error || "Unknown error", "error");
+      }
+    } catch (err) {
+      console.error("Submission failed", err);
+      Swal.fire("❌ Error", "Network or server issue", "error");
+    }
+  };
+
+  function toggleMobileMenu() {
+    document.querySelector('.sidebar').classList.toggle('open');
+  }
+
+  function logout() {
+    localStorage.clear();
+    window.location.href = "index.html";
+  }
+</script>
 </body>
 </html>
