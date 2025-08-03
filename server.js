@@ -3622,3 +3622,45 @@ app.post("/api/submit-attendance", (req, res) => {
   });
 });
 
+app.get("/api/get-period-info", (req, res) => {
+  const { staff_id, subject } = req.query;
+
+  if (!staff_id || !subject) {
+    return res.status(400).json({ error: "Missing staff_id or subject" });
+  }
+
+  const sql = `
+    SELECT year, semester, day, 
+      CASE 
+        WHEN period1 = ? THEN '1'
+        WHEN period2 = ? THEN '2'
+        WHEN period3 = ? THEN '3'
+        WHEN period4 = ? THEN '4'
+        WHEN period5 = ? THEN '5'
+        WHEN period6 = ? THEN '6'
+        WHEN period7 = ? THEN '7'
+        ELSE null 
+      END AS period
+    FROM staff_period_allocation
+    WHERE staff_id = ? AND (
+      period1 = ? OR period2 = ? OR period3 = ? OR
+      period4 = ? OR period5 = ? OR period6 = ? OR period7 = ?
+    )
+    LIMIT 1
+  `;
+
+  const params = [subject, subject, subject, subject, subject, subject, subject, subject, staff_id, subject, subject, subject, subject, subject, subject];
+
+  connection.query(sql, params, (err, result) => {
+    if (err) {
+      console.error("Error:", err);
+      return res.status(500).json({ error: "Database error" });
+    }
+    if (result.length === 0) {
+      return res.status(404).json({ error: "No matching period found" });
+    }
+
+    res.json(result[0]);
+  });
+});
+
