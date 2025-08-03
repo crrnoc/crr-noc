@@ -3727,28 +3727,33 @@ app.get("/api/download-attendance-pdf", (req, res) => {
     res.setHeader("Content-Type", "application/pdf");
     doc.pipe(res);
 
-    // Logo
+    // ✅ Logo
     const logoPath = path.join(__dirname, "public", "crrengglogo.png");
     if (fs.existsSync(logoPath)) {
       doc.image(logoPath, 50, 40, { width: 60 });
     }
 
-    // Title
+    // ✅ Title block shifted right (to avoid overlap)
+    const textStartX = 130;
     doc
       .font("Helvetica-Bold")
       .fontSize(16)
-      .text("SIR C.R.REDDY COLLEGE OF ENGINEERING", 0, 50, { align: "center" });
-    doc
+      .text("SIR C.R.REDDY COLLEGE OF ENGINEERING", textStartX, 45, { align: "left" })
+      .font("Helvetica-Bold")
+      .fontSize(11)
+      .text("(AUTONOMOUS)", textStartX, doc.y + 2)
       .font("Helvetica")
       .fontSize(10)
-      .text("Vatluru, Eluru-534007, Eluru Dist. A.P.", { align: "center" });
+      .text("Vatluru, Eluru-534007, Eluru Dist. A.P.", textStartX, doc.y + 2);
 
+    // ✅ Report Title
     doc.moveDown(1);
     doc
       .font("Helvetica-Bold")
       .fontSize(14)
       .text("STATEMENT OF ATTENDANCE REPORT", { align: "center" });
 
+    // ✅ Report Info
     doc.moveDown(1);
     doc
       .font("Helvetica")
@@ -3758,41 +3763,46 @@ app.get("/api/download-attendance-pdf", (req, res) => {
 
     doc.moveDown(1);
 
-    // Table Header
+    // ✅ Table Header
     const startY = doc.y + 10;
-    const colX = [50, 170, 270, 370, 470]; // Column positions
+    const colX = [50, 180, 280, 380, 470];
 
     doc
       .font("Helvetica-Bold")
       .fontSize(12)
-      .text("Regd.No", colX[0], startY)
-      .text("Total", colX[1], startY)
-      .text("Attended", colX[2], startY)
-      .text("Percent", colX[3], startY);
+      .text("Sno", colX[0], startY)
+      .text("Regd.No", colX[1], startY)
+      .text("Total", colX[2], startY)
+      .text("Attended", colX[3], startY)
+      .text("Percent", colX[4], startY);
 
-    // Draw header line
     doc.moveTo(50, startY + 15).lineTo(550, startY + 15).stroke();
 
-    // Table Rows
+    // ✅ Table Rows
     doc.font("Helvetica").fontSize(11);
     let y = startY + 25;
 
-    rows.forEach(row => {
-      doc
-        .rect(48, y - 3, 500, 18) // Box outline
-        .stroke();
+    rows.forEach((row, idx) => {
+      doc.rect(48, y - 3, 500, 18).stroke(); // Box outline
 
-      doc.text(row.regno, colX[0], y);
-      doc.text(row.total_classes.toString(), colX[1], y);
-      doc.text(row.attended_classes.toString(), colX[2], y);
-      doc.text(`${row.percentage}%`, colX[3], y);
+      doc.text((idx + 1).toString(), colX[0], y);
+      doc.text(row.regno, colX[1], y);
+      doc.text(row.total_classes.toString(), colX[2], y);
+      doc.text(row.attended_classes.toString(), colX[3], y);
+      doc.text(`${row.percentage}%`, colX[4], y);
+
       y += 20;
-
-      if (y > 750) {
+      if (y > 720) {
         doc.addPage();
         y = 50;
       }
     });
+
+    // ✅ Footer with signatures
+    doc.moveDown(4);
+    doc.fontSize(11);
+    doc.text("Faculty Signature", 70, doc.y + 50);
+    doc.text("HOD Signature", 400, doc.y - 15);
 
     doc.end();
   });
