@@ -343,9 +343,9 @@ if (!userId) {
 
         studentsTable.innerHTML = students.map(s => `
           <tr>
-            <td>${s.regno}</td>
-            <td>${s.full_name}</td>
-            <td><input type="checkbox" name="attendance" value="${s.regno}" checked></td>
+            <td>${s.reg_no}</td>
+            <td>${s.name}</td>
+            <td><input type="checkbox" name="attendance" value="${s.reg_no}" checked></td>
           </tr>
         `).join('');
       })
