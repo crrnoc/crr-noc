@@ -8,32 +8,117 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
-    body {
-      font-family: "Segoe UI", sans-serif;
+    * {
       margin: 0;
       padding: 0;
-      background: #f7f7f7;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
     }
-    header {
-      background: #0b5394;
-      color: #fff;
-      padding: 10px 20px;
-      font-size: 1.5rem;
+
+    body {
+      background-color: #f7f7f7;
     }
-    .container {
+
+    .main-container {
+      display: flex;
+      flex-direction: row;
+      height: 100vh;
+    }
+
+    .sidebar {
+      width: 270px;
+      background-color: rgb(247, 201, 155);
       padding: 20px;
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
     }
+
+    .sidebar h2 {
+      color: black;
+      font-size: 18px;
+      margin-bottom: 30px;
+    }
+
+    .menu {
+      list-style: none;
+      padding: 0;
+    }
+
+    .menu li {
+      margin-bottom: 15px;
+    }
+
+    .menu li a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 20px;
+      border-radius: 8px;
+      color: black;
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+
+    .menu li a:hover,
+    .menu li.active a {
+      background-color: #d4d4d4;
+      font-weight: bold;
+      transform: translateX(5px);
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .logout {
+      background-color: #f09000;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 16px;
+      width: 50%;
+      margin: 20px auto 0;
+      transition: background 0.3s ease;
+    }
+
+    .logout:hover {
+      background-color: #d07900;
+    }
+
+    .content {
+      flex-grow: 1;
+      margin-left: 270px;
+      padding: 30px;
+    }
+
+    header {
+      font-size: 1.8rem;
+      color: #fff;
+      background: #0b5394;
+      padding: 15px 25px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
+
     .form-row {
       margin-bottom: 15px;
     }
+
     label {
       display: inline-block;
       width: 100px;
     }
+
     select {
       padding: 5px;
       min-width: 150px;
     }
+
     button {
       background: #0b5394;
       color: white;
@@ -42,73 +127,144 @@
       border-radius: 5px;
       cursor: pointer;
     }
+
     button:hover {
       background: #063b6d;
     }
+
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 20px;
       background: white;
     }
+
     th, td {
       border: 1px solid #ccc;
       padding: 8px;
       text-align: center;
     }
+
     th {
       background: #e6e6e6;
+    }
+
+    @media (max-width: 768px) {
+      .main-container {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        width: 100%;
+        position: fixed;
+        top: -100%;
+        transition: top 0.3s ease-in-out;
+      }
+
+      .sidebar.open {
+        top: 0;
+      }
+
+      .content {
+        margin-left: 0;
+        padding: 20px;
+      }
+
+      .mobile-toggle {
+        display: block;
+      }
+    }
+
+    .mobile-toggle {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #1f75cb;
+      color: white;
+      font-size: 24px;
+      padding: 12px 18px;
+      border-radius: 50px;
+      z-index: 9999;
+      cursor: pointer;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
     }
   </style>
 </head>
 <body>
-  <header>
-    📋 Mark Attendance
-  </header>
+  <div class="main-container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <h2><strong>ID:</strong> <span id="userId">Loading...</span></h2>
+      <ul class="menu">
+        <li><a href="knowaboutstd1.html"><span>👤</span> Know about Student</a></li>
+        <li><a href="editstudentdetails.html"><span>✏️</span> Edit Student Details</a></li>
+        <li><a href="sendnotification.html"><span>📨</span> Send Notification</a></li>
+        <li><a href="updatefee.html"><span>💵</span> Update Fee</a></li>
+        <li><a href="imposefines.html"><span>💰</span> Impose Fines</a></li>
+        <li><a href="addstudent.html"><span>➕</span> Add Student</a></li>
+        <li class="active"><a href="#"><span>📝</span> Mark Attendance</a></li>
+        <li><a href="backlogs.html"><span>📚</span> Find Backlogs</a></li>
+        <li><a href="mycounselling.html"><span>📋</span> View Counselling</a></li>
+        <li><a href="staffsettings.html"><span>⚙️</span> Settings</a></li>
+      </ul>
+      <button class="logout" onclick="logout()">Logout</button>
+    </div>
 
-  <div class="container">
-    <form id="attendanceForm">
-      <div class="form-row">
-        <label>Course:</label>
-        <select id="courseSelect" required></select>
-      </div>
-      <div class="form-row">
-        <label>Section:</label>
-        <select id="sectionSelect" required></select>
-      </div>
-      <div class="form-row">
-        <label>Subject:</label>
-        <select id="periodSelect" required></select>
-      </div>
-      <div class="form-row">
-        <button type="button" onclick="fetchStudents()">📥 Load Students</button>
-      </div>
+    <!-- Main Content -->
+    <div class="content">
+      <header>📋 Mark Attendance</header>
+      <form id="attendanceForm">
+        <div class="form-row">
+          <label>Course:</label>
+          <select id="courseSelect" required></select>
+        </div>
+        <div class="form-row">
+          <label>Section:</label>
+          <select id="sectionSelect" required></select>
+        </div>
+        <div class="form-row">
+          <label>Subject:</label>
+          <select id="periodSelect" required></select>
+        </div>
+        <div class="form-row">
+          <button type="button" onclick="fetchStudents()">📥 Load Students</button>
+        </div>
 
-      <table id="studentsTable">
-        <thead>
-          <tr>
-            <th>Reg No</th>
-            <th>Name</th>
-            <th>Present</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+        <table id="studentsTable">
+          <thead>
+            <tr>
+              <th>Reg No</th>
+              <th>Name</th>
+              <th>
+                Present<br>
+                <input type="checkbox" id="markAll" onclick="toggleAll(this)">
+              </th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
 
-      <div style="margin-top: 20px;">
-        <button type="submit">✅ Submit Attendance</button>
-      </div>
-    </form>
-  </div>
+        <div style="margin-top: 20px;">
+          <button type="submit">✅ Submit Attendance</button>
+        </div>
+      </form>
+    </div> <!-- closing .content -->
+  </div> <!-- closing .main-container -->
 
+  <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
 <script>
+  const userId = localStorage.getItem("userId");
   const staff_id = localStorage.getItem("staff_id");
-  console.log("Staff ID from localStorage:", staff_id);
 
-  if (!staff_id) {
+  // Unauthorized access check
+  if (!userId || !staff_id) {
     Swal.fire("⚠️ Not Logged In", "Please log in again as staff.", "warning").then(() => {
       window.location.href = "index.html";
     });
+  } else {
+    document.getElementById("userId").textContent = userId;
   }
 
   const courseSelect = document.getElementById("courseSelect");
@@ -117,7 +273,13 @@
   const studentsTable = document.querySelector("#studentsTable tbody");
   const form = document.getElementById("attendanceForm");
 
-  // Load allocations on page load
+  // Toggle all checkboxes
+  function toggleAll(masterCheckbox) {
+    const checkboxes = document.querySelectorAll('input[name="attendance"]');
+    checkboxes.forEach(cb => cb.checked = masterCheckbox.checked);
+  }
+
+  // Load staff allocations on page load
   window.onload = () => {
     fetch(`https://crr-noc.onrender.com/api/staff-allocation?staff_id=${staff_id}`)
       .then(res => res.json())
@@ -209,6 +371,7 @@
       const result = await res.json();
       if (res.ok) {
         Swal.fire("✅ Attendance Marked", "", "success");
+        studentsTable.innerHTML = ""; // clear after success
       } else {
         Swal.fire("❌ Failed", result.error || "Unknown error", "error");
       }
@@ -217,7 +380,17 @@
       Swal.fire("❌ Error", "Network or server issue", "error");
     }
   };
-</script>
 
+  // Mobile menu toggle
+  function toggleMobileMenu() {
+    document.querySelector('.sidebar').classList.toggle('open');
+  }
+
+  // Logout
+  function logout() {
+    localStorage.clear();
+    window.location.href = "index.html";
+  }
+</script>
 </body>
 </html>
