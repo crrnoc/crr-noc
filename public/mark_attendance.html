@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title> Mark Attendance</title>
+  <title>Mark Attendance</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" href="crrengglogo.png" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
@@ -103,6 +103,7 @@
 
 <script>
   const staff_id = localStorage.getItem("staff_id");
+  console.log("Staff ID from localStorage:", staff_id);
 
   if (!staff_id) {
     Swal.fire("⚠️ Not Logged In", "Please log in again as staff.", "warning").then(() => {
@@ -115,7 +116,6 @@
   const periodSelect = document.getElementById("periodSelect");
   const studentsTable = document.querySelector("#studentsTable tbody");
   const form = document.getElementById("attendanceForm");
-  const fetchBtn = document.getElementById("fetchBtn");
 
   // Load allocations on page load
   window.onload = () => {
@@ -151,7 +151,7 @@
   };
 
   // Fetch student list
-  fetchBtn.onclick = () => {
+  function fetchStudents() {
     const course = courseSelect.value;
     const section = sectionSelect.value;
 
@@ -180,7 +180,7 @@
         console.error("Failed to fetch students", err);
         Swal.fire("❌ Error", "Unable to load students", "error");
       });
-  };
+  }
 
   // Submit attendance
   form.onsubmit = async (e) => {
