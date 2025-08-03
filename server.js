@@ -3572,9 +3572,9 @@ app.get("/api/students-by-course-section", (req, res) => {
   const { course, section } = req.query;
 
   const sql = `
-    SELECT regno, full_name FROM students
+    SELECT reg_no, name FROM students
     WHERE course = ? AND section = ?
-    ORDER BY regno
+    ORDER BY reg_no
   `;
 
   connection.query(sql, [course, section], (err, result) => {
@@ -3617,3 +3617,4 @@ app.post("/api/submit-attendance", (req, res) => {
     res.json({ message: "✅ Attendance submitted" });
   });
 });
+
