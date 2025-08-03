@@ -3698,19 +3698,19 @@ app.get("/api/download-attendance-pdf", (req, res) => {
     return res.status(400).send("Missing required query parameters.");
   }
 
-  const sql = `
-    SELECT 
-      a.reg_no AS regno,
-      s.name,
-      COUNT(*) AS total_classes,
-      SUM(CASE WHEN a.status = 'Present' THEN 1 ELSE 0 END) AS attended_classes,
-      ROUND(SUM(CASE WHEN a.status = 'Present' THEN 1 ELSE 0 END) / COUNT(*) * 100, 2) AS percentage
-    FROM daily_attendance a
-    JOIN students s ON a.reg_no = s.reg_no
-    WHERE a.year = ? AND a.semester = ? AND a.course = ? AND a.section = ? AND a.subject = ?
-    GROUP BY a.reg_no
-    ORDER BY a.reg_no;
-  `;
+const sql = `
+  SELECT 
+    a.reg_no AS regno,
+    s.name,
+    COUNT(*) AS total_classes,
+    SUM(CASE WHEN a.status = 'Present' THEN 1 ELSE 0 END) AS attended_classes,
+    ROUND(SUM(CASE WHEN a.status = 'Present' THEN 1 ELSE 0 END) / COUNT(*) * 100, 2) AS percentage
+  FROM daily_attendance a
+  JOIN students s ON a.reg_no = s.reg_no
+  WHERE a.year = ? AND a.semester = ? AND a.course = ? AND a.section = ? AND a.subject = ?
+  GROUP BY a.reg_no, s.name
+  ORDER BY a.reg_no
+`;
 
   connection.query(sql, [year, semester, course, section, subject], (err, rows) => {
     if (err) {
@@ -3774,4 +3774,5 @@ app.get("/api/download-attendance-pdf", (req, res) => {
     doc.end();
   });
 });
+
 
