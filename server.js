@@ -3664,3 +3664,24 @@ app.get("/api/get-period-info", (req, res) => {
   });
 });
 
+
+app.get('/api/staff/semesters/:staffId', (req, res) => {
+  const staffId = req.params.staffId;
+
+  const sql = `
+    SELECT DISTINCT semester 
+    FROM staff_period_allocation 
+    WHERE staff_id = ?
+    ORDER BY 
+      FIELD(semester, '1-1', '1-2', '2-1', '2-2', '3-1', '3-2', '4-1', '4-2')
+  `;
+
+  connection.query(sql, [staffId], (err, results) => {
+    if (err) {
+      console.error("Error fetching semesters:", err);
+      return res.status(500).json({ error: "Database error" });
+    }
+    const semesters = results.map(row => row.semester);
+    res.json({ semesters });
+  });
+});
