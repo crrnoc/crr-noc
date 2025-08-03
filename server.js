@@ -3544,8 +3544,13 @@ app.post('/api/allocate', (req, res) => {
 });
 
 //Get Allocated Periods by Staff ID
+// Route to get staff's period allocations
 app.get("/api/staff-allocation", (req, res) => {
   const { staff_id } = req.query;
+
+  if (!staff_id) {
+    return res.status(400).json({ error: "Missing staff_id" });
+  }
 
   const sql = `
     SELECT DISTINCT year, course, section, day, period1, period2, period3, period4, period5, period6, period7
@@ -3553,10 +3558,10 @@ app.get("/api/staff-allocation", (req, res) => {
     WHERE staff_id = ?
   `;
 
-  db.query(sql, [staff_id], (err, result) => {
+  connection.query(sql, [staff_id], (err, result) => {
     if (err) {
-      console.error("❌ Error fetching periods:", err);
-      return res.status(500).json({ error: "Failed to fetch data" });
+      console.error("❌ Error in query:", err);
+      return res.status(500).json({ error: "Internal server error" });
     }
     res.json(result);
   });
@@ -3608,5 +3613,6 @@ app.post("/api/submit-attendance", (req, res) => {
     res.json({ message: "✅ Attendance submitted" });
   });
 });
+
 
 
