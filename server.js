@@ -3543,3 +3543,70 @@ app.post('/api/allocate', (req, res) => {
   });
 });
 
+//Get Allocated Periods by Staff ID
+app.get("/api/staff-allocation", (req, res) => {
+  const { staff_id } = req.query;
+
+  const sql = `
+    SELECT DISTINCT year, course, section, day, period1, period2, period3, period4, period5, period6, period7
+    FROM staff_period_allocation
+    WHERE staff_id = ?
+  `;
+
+  db.query(sql, [staff_id], (err, result) => {
+    if (err) {
+      console.error("❌ Error fetching periods:", err);
+      return res.status(500).json({ error: "Failed to fetch data" });
+    }
+    res.json(result);
+  });
+});
+
+//Get Students by Course & Section
+app.get("/api/students-by-course-section", (req, res) => {
+  const { course, section } = req.query;
+
+  const sql = `
+    SELECT regno, full_name FROM students
+    WHERE course = ? AND section = ?
+    ORDER BY regno
+  `;
+
+  db.query(sql, [course, section], (err, result) => {
+    if (err) {
+      console.error("❌ Error fetching students:", err);
+      return res.status(500).json({ error: "Failed to fetch students" });
+    }
+    res.json(result);
+  });
+});
+
+//Backend Route to Submit Attendance 
+app.post("/api/submit-attendance", (req, res) => {
+  const { staff_id, date, course, section, subject, present, absent } = req.body;
+
+  const values = [];
+
+  present.forEach(regno => {
+    values.push([regno, date, staff_id, course, section, subject, 'Present']);
+  });
+
+  absent.forEach(regno => {
+    values.push([regno, date, staff_id, course, section, subject, 'Absent']);
+  });
+
+  const sql = `
+    INSERT INTO attendance (regno, date, staff_id, course, section, subject, status)
+    VALUES ?
+  `;
+
+  db.query(sql, [values], (err, result) => {
+    if (err) {
+      console.error("❌ Error saving attendance:", err);
+      return res.status(500).json({ error: "Database insert failed" });
+    }
+    res.json({ message: "✅ Attendance submitted" });
+  });
+});
+
+
