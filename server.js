@@ -3577,7 +3577,7 @@ app.get("/api/students-by-course-section", (req, res) => {
     ORDER BY regno
   `;
 
-  db.query(sql, [course, section], (err, result) => {
+  connection.query(sql, [course, section], (err, result) => {
     if (err) {
       console.error("❌ Error fetching students:", err);
       return res.status(500).json({ error: "Failed to fetch students" });
@@ -3589,6 +3589,10 @@ app.get("/api/students-by-course-section", (req, res) => {
 //Backend Route to Submit Attendance 
 app.post("/api/submit-attendance", (req, res) => {
   const { staff_id, date, course, section, subject, present, absent } = req.body;
+
+  if (!staff_id || !date || !course || !section || !subject) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
 
   const values = [];
 
@@ -3605,7 +3609,7 @@ app.post("/api/submit-attendance", (req, res) => {
     VALUES ?
   `;
 
-  db.query(sql, [values], (err, result) => {
+  connection.query(sql, [values], (err, result) => {
     if (err) {
       console.error("❌ Error saving attendance:", err);
       return res.status(500).json({ error: "Database insert failed" });
@@ -3613,6 +3617,3 @@ app.post("/api/submit-attendance", (req, res) => {
     res.json({ message: "✅ Attendance submitted" });
   });
 });
-
-
-
