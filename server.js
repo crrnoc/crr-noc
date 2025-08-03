@@ -23,6 +23,8 @@ require('dotenv').config();
 const axios = require("axios");
 const cloudinary = require("cloudinary").v2;
 const csv = require("csv-parser");
+const attendanceRoutes = require('./routes/attendanceRoutes');
+app.use('/', attendanceRoutes);
 
 
 const logoBase64 = fs.readFileSync('./public/crrengglogo.png', { encoding: 'base64' });
@@ -3735,5 +3737,6 @@ router.get("/api/download-attendance-pdf", (req, res) => {
 });
 
 module.exports = router;
+
 
 
