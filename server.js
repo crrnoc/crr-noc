@@ -3461,7 +3461,6 @@ app.get('/student/notifications/:userId', (req, res) => {
 });
 
 
-// ✅ GET departments from students table
 app.get('/api/departments', (req, res) => {
   const sql = 'SELECT DISTINCT dept_code FROM students';
   connection.query(sql, (err, result) => {
@@ -3470,27 +3469,37 @@ app.get('/api/departments', (req, res) => {
   });
 });
 
-// ✅ GET courses by department
-app.get('/api/courses/:dept', (req, res) => {
-  const dept = req.params.dept;
-  const sql = 'SELECT DISTINCT course FROM students WHERE dept_code = ?';
-  connection.query(sql, [dept], (err, result) => {
+
+app.get('/api/years/:dept_code', (req, res) => {
+  const dept_code = req.params.dept_code;
+  const sql = 'SELECT DISTINCT year FROM students WHERE dept_code = ?';
+  connection.query(sql, [dept_code], (err, result) => {
+    if (err) return res.status(500).json({ error: 'Failed to fetch years' });
+    res.json(result);
+  });
+});
+
+app.get('/api/courses-by-year', (req, res) => {
+  const { dept_code, year } = req.query;
+  const sql = 'SELECT DISTINCT course FROM students WHERE dept_code = ? AND year = ?';
+  connection.query(sql, [dept_code, year], (err, result) => {
     if (err) return res.status(500).json({ error: 'Failed to fetch courses' });
     res.json(result);
   });
 });
 
-// ✅ GET year-section by department and course
-app.get('/api/year-section', (req, res) => {
-  const { dept_code, course } = req.query;
-  const sql = 'SELECT DISTINCT year, section FROM students WHERE dept_code = ? AND course = ?';
-  connection.query(sql, [dept_code, course], (err, result) => {
-    if (err) return res.status(500).json({ error: 'Failed to fetch year-section' });
+app.get('/api/sections', (req, res) => {
+  const { dept_code, year, course } = req.query;
+  const sql = `
+    SELECT DISTINCT section FROM students 
+    WHERE dept_code = ? AND year = ? AND course = ?
+  `;
+  connection.query(sql, [dept_code, year, course], (err, result) => {
+    if (err) return res.status(500).json({ error: 'Failed to fetch sections' });
     res.json(result);
   });
 });
 
-// ✅ GET staff name by ID
 app.get('/api/staff/:id', (req, res) => {
   const staffId = req.params.id;
   const sql = 'SELECT staff_name FROM staff WHERE staff_id = ?';
@@ -3501,7 +3510,6 @@ app.get('/api/staff/:id', (req, res) => {
   });
 });
 
-// ✅ POST - Allocate periods (replace existing for same staff/day/section)
 app.post('/api/allocate', (req, res) => {
   const {
     staff_id, dept_code, course, year, section, day,
@@ -3534,3 +3542,4 @@ app.post('/api/allocate', (req, res) => {
     });
   });
 });
+
