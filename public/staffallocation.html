@@ -157,78 +157,98 @@
     </form>
   </div>
 
-  <script>
-    const baseUrl = "https://crr-noc.onrender.com";
+ <script>
+const baseUrl = "https://crr-noc.onrender.com";
 
-    async function fetchStaffName(id) {
-      const res = await fetch(`${baseUrl}/api/staff/${id}`);
-      const data = await res.json();
-      document.getElementById('staff_name').value = data.staff_name || '';
-    }
-
-    document.getElementById("staff_id").addEventListener("blur", e => {
-      const id = e.target.value;
-      if (id) fetchStaffName(id);
+// 🔁 Populate department dropdown
+async function populateDropdown() {
+  try {
+    const deptRes = await fetch(`${baseUrl}/api/departments`);
+    const deptData = await deptRes.json();
+    const deptSelect = document.getElementById('dept_code');
+    deptSelect.innerHTML = `<option value="">Select</option>`;
+    deptData.forEach(dept => {
+      deptSelect.innerHTML += `<option value="${dept.dept_code}">${dept.dept_code}</option>`;
     });
+  } catch (err) {
+    console.error("Failed to fetch departments", err);
+  }
+}
 
-    async function populateDropdown(url, selectEl, key) {
-      const res = await fetch(url);
-      const data = await res.json();
-      selectEl.innerHTML = '<option value="">Select</option>' +
-        data.map(d => `<option value="${d[key]}">${d[key]}</option>`).join('');
-    }
+// 🔁 Fetch courses based on department
+document.getElementById("dept_code").addEventListener("change", async function () {
+  const dept = this.value;
+  const res = await fetch(`${baseUrl}/api/courses/${dept}`);
+  const data = await res.json();
+  const courseSelect = document.getElementById("course");
+  courseSelect.innerHTML = `<option value="">Select</option>`;
+  data.forEach(course => {
+    courseSelect.innerHTML += `<option value="${course.course}">${course.course}</option>`;
+  });
+});
 
-    document.addEventListener("DOMContentLoaded", () => {
-      populateDropdown(`${baseUrl}/api/departments`, document.getElementById('dept_code'), 'dept_code');
+// 🔁 Fetch year & section based on dept + course
+document.getElementById("course").addEventListener("change", async function () {
+  const dept_code = document.getElementById("dept_code").value;
+  const course = this.value;
+  const res = await fetch(`${baseUrl}/api/year-section?dept_code=${dept_code}&course=${course}`);
+  const data = await res.json();
 
-      document.getElementById('dept_code').addEventListener('change', e => {
-        const dept = e.target.value;
-        populateDropdown(`${baseUrl}/api/courses/${dept}`, document.getElementById('course'), 'course');
-      });
+  const yearSelect = document.getElementById("year");
+  const sectionSelect = document.getElementById("section");
 
-      document.getElementById('course').addEventListener('change', () => {
-        const dept = document.getElementById('dept_code').value;
-        const course = document.getElementById('course').value;
-        fetch(`${baseUrl}/api/year-section?dept_code=${dept}&course=${course}`)
-          .then(res => res.json())
-          .then(data => {
-            const yearSel = document.getElementById('year');
-            const sectionSel = document.getElementById('section');
-            yearSel.innerHTML = '<option value="">Select</option>';
-            sectionSel.innerHTML = '<option value="">Select</option>';
-            data.forEach(row => {
-              if (!yearSel.innerHTML.includes(row.year)) {
-                yearSel.innerHTML += `<option value="${row.year}">${row.year}</option>`;
-              }
-              sectionSel.innerHTML += `<option value="${row.section}">${row.section}</option>`;
-            });
-          });
-      });
+  yearSelect.innerHTML = `<option value="">Select</option>`;
+  sectionSelect.innerHTML = `<option value="">Select</option>`;
+
+  const years = [...new Set(data.map(d => d.year))];
+  const sections = [...new Set(data.map(d => d.section))];
+
+  years.forEach(y => yearSelect.innerHTML += `<option value="${y}">${y}</option>`);
+  sections.forEach(s => sectionSelect.innerHTML += `<option value="${s}">${s}</option>`);
+});
+
+// 🔁 Fetch staff name
+document.getElementById("staff_id").addEventListener("blur", async function () {
+  const id = this.value;
+  if (!id) return;
+  try {
+    const res = await fetch(`${baseUrl}/api/staff/${id}`);
+    const data = await res.json();
+    document.getElementById("staff_name").value = data.staff_name || "";
+  } catch (err) {
+    console.error("Staff not found or error", err);
+    document.getElementById("staff_name").value = "";
+  }
+});
+
+// ✅ Submit period allocation
+document.getElementById("allocationForm").addEventListener("submit", async function (e) {
+  e.preventDefault();
+  const formData = new FormData(this);
+  const data = Object.fromEntries(formData.entries());
+
+  try {
+    const res = await fetch(`${baseUrl}/api/allocate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
     });
+    const result = await res.json();
 
-    document.getElementById("allocationForm").addEventListener("submit", async function(e) {
-      e.preventDefault();
-      const formData = new FormData(e.target);
-      const data = Object.fromEntries(formData.entries());
-
-      const res = await fetch(`${baseUrl}/api/allocate`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-      });
-
-      const result = await res.json();
-      if (result.success) {
-        Swal.fire("✅ Success", result.message, "success");
-        e.target.reset();
-      } else {
-        Swal.fire("❌ Error", result.error || "Failed to allocate.", "error");
-      }
-    });
-
-    function navigateTo(path) {
-      window.location.href = path;
+    if (result.success) {
+      Swal.fire("✅ Success", result.message, "success");
+      this.reset();
+    } else {
+      Swal.fire("❌ Failed", result.error || "Allocation failed", "error");
     }
-  </script>
+  } catch (err) {
+    Swal.fire("❌ Error", "Network/server issue", "error");
+    console.error(err);
+  }
+});
+
+window.onload = populateDropdown;
+</script>
+
 </body>
 </html>
