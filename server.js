@@ -2860,7 +2860,7 @@ app.post("/assign-counselling", async (req, res) => {
 app.get("/my-counselling-students/:staffId", (req, res) => {
   const { staffId } = req.params;
 
-  const query = 
+  const query = `
     SELECT 
       name,
       reg_no,
@@ -2873,7 +2873,7 @@ app.get("/my-counselling-students/:staffId", (req, res) => {
       father_mobile
     FROM students
     WHERE counsellor_id = ?
-  ;
+  `;
 
   connection.query(query, [staffId], (err, results) => {
     if (err) {
@@ -2884,6 +2884,7 @@ app.get("/my-counselling-students/:staffId", (req, res) => {
     res.json({ success: true, students: results });
   });
 });
+
 //update father details
 app.post("/update-father-details", (req, res) => {
   const { reg_no, father_name, father_mobile } = req.body;
@@ -3456,6 +3457,7 @@ app.get('/student/notifications/:userId', (req, res) => {
     });
   });
 });
+
 
 
 
