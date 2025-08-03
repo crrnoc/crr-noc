@@ -3700,7 +3700,7 @@ app.get("/api/download-attendance-pdf", (req, res) => {
     ORDER BY reg_no
   `;
 
-  db.query(query, [year, semester, course, section, subject], (err, results) => {
+  connection.query(query, [year, semester, course, section, subject], (err, results) => {
     if (err) {
       console.error("❌ Database error:", err);
       return res.status(500).json({ error: "Database error." });
@@ -3740,7 +3740,7 @@ app.get("/api/download-attendance-pdf", (req, res) => {
           return res.status(500).json({ error: "Failed to send PDF file." });
         }
 
-        // Optional: Clean up after sending
+        // Optional: Cleanup
         fs.unlink(filePath, () => {});
       });
     });
@@ -3751,4 +3751,3 @@ app.get("/api/download-attendance-pdf", (req, res) => {
     });
   });
 });
-
