@@ -3691,63 +3691,90 @@ app.get('/api/staff/semesters/:staffId', (req, res) => {
   });
 });
 // download attendance pdf
+const fs = require("fs");
+const path = require("path");
+const PDFDocument = require("pdfkit");
+
 app.get("/api/download-attendance-pdf", (req, res) => {
   const { year, semester, course, section, subject } = req.query;
 
-  const query = `
-    SELECT * FROM daily_attendance 
-    WHERE year = ? AND semester = ? AND course = ? AND section = ? AND subject = ?
-    ORDER BY reg_no
+  if (!year || !semester || !course || !section || !subject) {
+    return res.status(400).send("Missing required query parameters.");
+  }
+
+  const sql = `
+    SELECT 
+      a.reg_no AS regno,
+      s.name,
+      COUNT(*) AS total_classes,
+      SUM(CASE WHEN a.status = 'Present' THEN 1 ELSE 0 END) AS attended_classes,
+      ROUND(SUM(CASE WHEN a.status = 'Present' THEN 1 ELSE 0 END) / COUNT(*) * 100, 2) AS percentage
+    FROM daily_attendance a
+    JOIN students s ON a.reg_no = s.reg_no
+    WHERE a.year = ? AND a.semester = ? AND a.course = ? AND a.section = ? AND a.subject = ?
+    GROUP BY a.reg_no
+    ORDER BY a.reg_no;
   `;
 
-  connection.query(query, [year, semester, course, section, subject], (err, results) => {
+  connection.query(sql, [year, semester, course, section, subject], (err, rows) => {
     if (err) {
-      console.error("❌ Database error:", err);
-      return res.status(500).json({ error: "Database error." });
+      console.error("❌ DB error:", err);
+      return res.status(500).send("Database error.");
     }
 
-    if (!results.length) {
-      console.warn("⚠️ No data found for:", req.query);
-      return res.status(404).json({ message: "No attendance records found." });
+    if (!rows.length) {
+      return res.status(404).send("No attendance records found.");
     }
 
-    const doc = new PDFDocument();
-    const fileName = `Attendance_${subject}_${Date.now()}.pdf`;
-    const filePath = `./uploads/${fileName}`;
-    const stream = fs.createWriteStream(filePath);
+    const doc = new PDFDocument({ margin: 50, size: "A4" });
+    const filename = `Attendance_${course}_${section}_${subject}_Y${year}_S${semester}.pdf`;
 
-    doc.pipe(stream);
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    res.setHeader("Content-Type", "application/pdf");
+    doc.pipe(res);
 
-    doc.fontSize(18).text("Attendance Report", { align: "center" });
-    doc.moveDown();
-    doc.fontSize(12).text(`Subject: ${subject}`);
-    doc.text(`Course: ${course}`);
-    doc.text(`Section: ${section}`);
-    doc.text(`Semester: ${semester}`);
-    doc.text(`Year: ${year}`);
-    doc.moveDown();
+    // 🔰 Logo on top-left
+    const logoPath = path.join(__dirname, "crrengglogo.png");
+    if (fs.existsSync(logoPath)) {
+      doc.image(logoPath, 50, 30, { width: 70 });
+    }
 
-    results.forEach((row, index) => {
-      doc.text(`${index + 1}. ${row.reg_no} - ${row.status} on ${row.date}`);
+    // 🔰 Header
+    doc
+      .fontSize(18)
+      .text("SIR C.R.REDDY COLLEGE OF ENGINEERING (Autonomous)", 150, 30, { align: "center" })
+      .fontSize(13)
+      .text(`B.Tech Year - ${year}   Sem - ${semester}   Branch - ${course}   Section - ${section}`, { align: "center" })
+      .moveDown(0.3)
+      .text(`Subject: ${subject}`, { align: "center" })
+      .text("STATEMENT OF ATTENDANCE REPORT", { align: "center" })
+      .text("Vatluru, Eluru-534007, Eluru Dist. A.P.", { align: "center" })
+      .moveDown(1);
+
+    // 🧾 Table header
+    doc.font("Helvetica-Bold").fontSize(12);
+    doc.text("Regd.No", 50);
+    doc.text("Total", 200);
+    doc.text("Attended", 300);
+    doc.text("Percent", 400);
+    doc.moveDown(0.2);
+    doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+    doc.moveDown(0.5);
+
+    // 🧾 Table content
+    doc.font("Helvetica").fontSize(11);
+    rows.forEach(row => {
+      doc.text(row.regno, 50);
+      doc.text(row.total_classes.toString(), 200);
+      doc.text(row.attended_classes.toString(), 300);
+      doc.text(`${row.percentage}%`, 400);
+      doc.moveDown(0.5);
     });
+
+    // ✅ Principal
+    doc.moveDown(2);
+    doc.text("PRINCIPAL", 400, doc.y + 20);
 
     doc.end();
-
-    stream.on("finish", () => {
-      res.download(filePath, fileName, (err) => {
-        if (err) {
-          console.error("❌ Download error:", err);
-          return res.status(500).json({ error: "Failed to send PDF file." });
-        }
-
-        // Optional: Cleanup
-        fs.unlink(filePath, () => {});
-      });
-    });
-
-    stream.on("error", (err) => {
-      console.error("❌ Stream error:", err);
-      res.status(500).json({ error: "Failed to write PDF file." });
-    });
   });
 });
