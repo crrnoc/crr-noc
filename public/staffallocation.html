@@ -160,87 +160,105 @@
 <script>
   const baseUrl = "https://crr-noc.onrender.com";
 
-  // 🔍 Fetch and display staff name when ID is entered
-  async function fetchStaffName(id) {
+  // 🔍 Get staff name when staff ID is entered
+  document.getElementById("staff_id").addEventListener("blur", async function () {
+    const id = this.value;
+    if (!id) return;
     try {
       const res = await fetch(`${baseUrl}/api/staff/${id}`);
       const data = await res.json();
-      document.getElementById('staff_name').value = data.staff_name || '';
+      document.getElementById("staff_name").value = data.staff_name || "";
     } catch (err) {
-      document.getElementById('staff_name').value = '';
+      document.getElementById("staff_name").value = "";
+      console.error("Error fetching staff:", err);
     }
-  }
-
-  document.getElementById("staff_id").addEventListener("blur", (e) => {
-    const id = e.target.value.trim();
-    if (id) fetchStaffName(id);
   });
 
-  // 📌 Generic dropdown population
-  async function populateDropdown(url, selectEl, key) {
+  // 🔁 Populate departments on load
+  window.onload = async function () {
     try {
-      const res = await fetch(url);
+      const res = await fetch(`${baseUrl}/api/departments`);
       const data = await res.json();
-      selectEl.innerHTML = '<option value="">Select</option>' +
-        data.map(d => `<option value="${d[key]}">${d[key]}</option>`).join('');
+      const deptSel = document.getElementById("dept_code");
+      deptSel.innerHTML = `<option value="">Select</option>`;
+      data.forEach(d => {
+        deptSel.innerHTML += `<option value="${d.dept_code}">${d.dept_code}</option>`;
+      });
     } catch (err) {
-      selectEl.innerHTML = '<option value="">Select</option>';
+      console.error("Failed to load departments", err);
     }
-  }
+  };
 
-  // 🔁 Step-by-step selection logic
-  document.addEventListener("DOMContentLoaded", () => {
-    const deptSel = document.getElementById('dept_code');
-    const yearSel = document.getElementById('year');
-    const courseSel = document.getElementById('course');
-    const sectionSel = document.getElementById('section');
+  // 🔁 Populate years based on department
+  document.getElementById("dept_code").addEventListener("change", async function () {
+    const dept = this.value;
+    const yearSel = document.getElementById("year");
+    const courseSel = document.getElementById("course");
+    const sectionSel = document.getElementById("section");
 
-    // 1️⃣ Load departments on page load
-    populateDropdown(`${baseUrl}/api/departments`, deptSel, 'dept_code');
+    yearSel.innerHTML = `<option value="">Loading...</option>`;
+    courseSel.innerHTML = `<option value="">Select</option>`;
+    sectionSel.innerHTML = `<option value="">Select</option>`;
 
-    // 2️⃣ After selecting department → load years
-    deptSel.addEventListener('change', () => {
-      const dept = deptSel.value;
-      populateDropdown(`${baseUrl}/api/years/${dept}`, yearSel, 'year');
-      courseSel.innerHTML = '<option value="">Select</option>';
-      sectionSel.innerHTML = '<option value="">Select</option>';
-    });
-
-    // 3️⃣ After selecting year → load courses
-    yearSel.addEventListener('change', () => {
-      const dept = deptSel.value;
-      const year = yearSel.value;
-      fetch(`${baseUrl}/api/courses-by-year?dept_code=${dept}&year=${year}`)
-        .then(res => res.json())
-        .then(data => {
-          courseSel.innerHTML = '<option value="">Select</option>';
-          data.forEach(c => {
-            courseSel.innerHTML += `<option value="${c.course}">${c.course}</option>`;
-          });
-          sectionSel.innerHTML = '<option value="">Select</option>';
-        });
-    });
-
-    // 4️⃣ After selecting course → load sections
-    courseSel.addEventListener('change', () => {
-      const dept_code = deptSel.value;
-      const course = courseSel.value;
-      fetch(`${baseUrl}/api/year-section?dept_code=${dept_code}&course=${course}`)
-        .then(res => res.json())
-        .then(data => {
-          sectionSel.innerHTML = '<option value="">Select</option>';
-          const uniqueSections = [...new Set(data.map(d => d.section))];
-          uniqueSections.forEach(s => {
-            sectionSel.innerHTML += `<option value="${s}">${s}</option>`;
-          });
-        });
-    });
+    try {
+      const res = await fetch(`${baseUrl}/api/years/${dept}`);
+      const data = await res.json();
+      yearSel.innerHTML = `<option value="">Select</option>`;
+      data.forEach(d => {
+        yearSel.innerHTML += `<option value="${d.year}">${d.year}</option>`;
+      });
+    } catch (err) {
+      console.error("Error loading years", err);
+    }
   });
 
-  // ✅ Submit the period allocation
+  // 🔁 Populate courses based on dept + year
+  document.getElementById("year").addEventListener("change", async function () {
+    const dept = document.getElementById("dept_code").value;
+    const year = this.value;
+    const courseSel = document.getElementById("course");
+    const sectionSel = document.getElementById("section");
+
+    courseSel.innerHTML = `<option value="">Loading...</option>`;
+    sectionSel.innerHTML = `<option value="">Select</option>`;
+
+    try {
+      const res = await fetch(`${baseUrl}/api/courses-by-year?dept_code=${dept}&year=${year}`);
+      const data = await res.json();
+      courseSel.innerHTML = `<option value="">Select</option>`;
+      data.forEach(d => {
+        courseSel.innerHTML += `<option value="${d.course}">${d.course}</option>`;
+      });
+    } catch (err) {
+      console.error("Error loading courses", err);
+    }
+  });
+
+  // 🔁 Populate sections based on dept + year + course
+  document.getElementById("course").addEventListener("change", async function () {
+    const dept = document.getElementById("dept_code").value;
+    const year = document.getElementById("year").value;
+    const course = this.value;
+    const sectionSel = document.getElementById("section");
+
+    sectionSel.innerHTML = `<option value="">Loading...</option>`;
+
+    try {
+      const res = await fetch(`${baseUrl}/api/sections?dept_code=${dept}&year=${year}&course=${course}`);
+      const data = await res.json();
+      sectionSel.innerHTML = `<option value="">Select</option>`;
+      data.forEach(d => {
+        sectionSel.innerHTML += `<option value="${d.section}">${d.section}</option>`;
+      });
+    } catch (err) {
+      console.error("Error loading sections", err);
+    }
+  });
+
+  // ✅ Final submit
   document.getElementById("allocationForm").addEventListener("submit", async function (e) {
     e.preventDefault();
-    const formData = new FormData(e.target);
+    const formData = new FormData(this);
     const data = Object.fromEntries(formData.entries());
 
     try {
@@ -251,21 +269,24 @@
       });
 
       const result = await res.json();
+
       if (result.success) {
         Swal.fire("✅ Success", result.message, "success");
-        e.target.reset();
+        this.reset();
       } else {
-        Swal.fire("❌ Error", result.error || "Failed to allocate.", "error");
+        Swal.fire("❌ Failed", result.error || "Allocation failed", "error");
       }
     } catch (err) {
-      Swal.fire("❌ Error", "Server issue", "error");
+      Swal.fire("❌ Error", "Server/Network error", "error");
+      console.error("Submit failed", err);
     }
   });
 
-  // Navigation helper
   function navigateTo(path) {
-    window.location.href = path;
-  }
+  window.location.href = path;
+}
+
 </script>
+
 </body>
 </html>
