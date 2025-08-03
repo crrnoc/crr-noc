@@ -3459,21 +3459,17 @@ app.get('/student/notifications/:userId', (req, res) => {
     });
   });
 });
-
-// Get all distinct departments from students
-router.get('/departments', (req, res) => {
+// ✅ Get all distinct department codes from students
+app.get('/api/departments', (req, res) => {
   const sql = 'SELECT DISTINCT dept_code FROM students';
   db.query(sql, (err, result) => {
-    if (err) {
-      console.error('Error fetching departments:', err);
-      return res.status(500).json({ error: 'Failed to fetch departments' });
-    }
+    if (err) return res.status(500).json({ error: 'Failed to fetch departments' });
     res.json(result);
   });
 });
 
-// Get all distinct courses for a given department
-router.get('/courses/:dept', (req, res) => {
+// ✅ Get all distinct courses for a given department
+app.get('/api/courses/:dept', (req, res) => {
   const dept = req.params.dept;
   const sql = 'SELECT DISTINCT course FROM students WHERE dept_code = ?';
   db.query(sql, [dept], (err, result) => {
@@ -3482,68 +3478,58 @@ router.get('/courses/:dept', (req, res) => {
   });
 });
 
-// Get all distinct sections for given department and course
-router.get('/sections/:dept/:course', (req, res) => {
-  const { dept, course } = req.params;
-  const sql = 'SELECT DISTINCT section FROM students WHERE dept_code = ? AND course = ?';
-  db.query(sql, [dept, course], (err, result) => {
-    if (err) return res.status(500).json({ error: 'Failed to fetch sections' });
+// ✅ Get all year-section combinations for a given dept + course
+app.get('/api/year-section', (req, res) => {
+  const { dept_code, course } = req.query;
+  const sql = 'SELECT DISTINCT year, section FROM students WHERE dept_code = ? AND course = ?';
+  db.query(sql, [dept_code, course], (err, result) => {
+    if (err) return res.status(500).json({ error: 'Failed to fetch year-section' });
     res.json(result);
   });
 });
 
-// Get staff name by staff ID
-router.get('/staff/:id', (req, res) => {
+// ✅ Get staff name for given staff_id
+app.get('/api/staff/:id', (req, res) => {
   const staffId = req.params.id;
   const sql = 'SELECT staff_name FROM staff WHERE staff_id = ?';
   db.query(sql, [staffId], (err, result) => {
     if (err) return res.status(500).json({ error: 'Failed to fetch staff' });
-    if (result.length > 0) res.json(result[0]);
-    else res.status(404).json({ error: 'Staff not found' });
+    if (result.length === 0) return res.status(404).json({ error: 'Staff not found' });
+    res.json(result[0]);
   });
 });
 
-// Store period allocation
-router.post('/allocate', (req, res) => {
-  const { staff_id, dept, course, section, day, periods } = req.body;
+// ✅ Insert or overwrite period allocation
+app.post('/api/allocate', (req, res) => {
+  const {
+    staff_id, dept_code, course, year, section,
+    day, period1, period2, period3,
+    period4, period5, period6, period7
+  } = req.body;
 
-  const deleteSql = 'DELETE FROM period_allocations WHERE staff_id = ? AND dept = ? AND course = ? AND section = ? AND day = ?';
-  db.query(deleteSql, [staff_id, dept, course, section, day], (err) => {
-    if (err) {
-      console.error('Error deleting old periods:', err);
-      return res.status(500).json({ error: 'Failed to clear previous allocations' });
-    }
+  const deleteSQL = `
+    DELETE FROM staff_period_allocation
+    WHERE staff_id = ? AND dept_code = ? AND course = ? AND year = ? AND section = ? AND day = ?
+  `;
 
-    let insertCount = 0;
-    let hasError = false;
+  db.query(deleteSQL, [staff_id, dept_code, course, year, section, day], (err) => {
+    if (err) return res.status(500).json({ error: 'Failed to clear old allocation' });
 
-    periods.forEach((period, index) => {
-      if (period.subject && period.time) {
-        const insertSql = 'INSERT INTO period_allocations (staff_id, dept, course, section, day, period_number, subject, time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
-        const values = [staff_id, dept, course, section, day, index + 1, period.subject, period.time];
+    const insertSQL = `
+      INSERT INTO staff_period_allocation (
+        staff_id, dept_code, course, year, section, day,
+        period1, period2, period3, period4, period5, period6, period7
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
 
-        db.query(insertSql, values, (err) => {
-          if (err) {
-            console.error('Error inserting period:', err);
-            if (!hasError) {
-              hasError = true;
-              return res.status(500).json({ error: 'Failed to insert period allocation' });
-            }
-          } else {
-            insertCount++;
-            if (insertCount === periods.length && !hasError) {
-              res.json({ success: true });
-            }
-          }
-        });
-      } else {
-        insertCount++;
-        if (insertCount === periods.length && !hasError) {
-          res.json({ success: true });
-        }
-      }
+    const values = [
+      staff_id, dept_code, course, year, section, day,
+      period1, period2, period3, period4, period5, period6, period7
+    ];
+
+    db.query(insertSQL, values, (err2) => {
+      if (err2) return res.status(500).json({ error: 'Failed to save new allocation' });
+      res.json({ success: true, message: 'Period allocation saved' });
     });
   });
 });
-
-module.exports = router;
