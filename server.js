@@ -3698,21 +3698,19 @@ app.get("/api/download-attendance-pdf", (req, res) => {
     return res.status(400).send("Missing required query parameters.");
   }
 
-const sql = `
-  SELECT 
-    a.reg_no AS regno,
-    s.name,
-    COUNT(*) AS total_classes,
-    SUM(CASE WHEN a.status = 'Present' THEN 1 ELSE 0 END) AS attended_classes,
-    ROUND(SUM(CASE WHEN a.status = 'Present' THEN 1 ELSE 0 END) / COUNT(*) * 100, 2) AS percentage
-  FROM daily_attendance a
-  JOIN students s ON a.reg_no = s.reg_no
-  WHERE a.year = ? AND a.semester = ? AND a.course = ? AND a.section = ? AND a.subject = ?
-  GROUP BY a.reg_no, s.name
-  ORDER BY a.reg_no
-`;
+  const query = `
+    SELECT 
+      a.reg_no AS regno,
+      COUNT(*) AS total_classes,
+      SUM(CASE WHEN a.status = 'Present' THEN 1 ELSE 0 END) AS attended_classes,
+      ROUND(SUM(CASE WHEN a.status = 'Present' THEN 1 ELSE 0 END) / COUNT(*) * 100, 2) AS percentage
+    FROM daily_attendance a
+    WHERE a.year = ? AND a.semester = ? AND a.course = ? AND a.section = ? AND a.subject = ?
+    GROUP BY a.reg_no
+    ORDER BY a.reg_no;
+  `;
 
-  connection.query(sql, [year, semester, course, section, subject], (err, rows) => {
+  connection.query(query, [year, semester, course, section, subject], (err, rows) => {
     if (err) {
       console.error("❌ DB error:", err);
       return res.status(500).send("Database error.");
@@ -3722,57 +3720,80 @@ const sql = `
       return res.status(404).send("No attendance records found.");
     }
 
-    const doc = new PDFDocument({ margin: 50, size: "A4" });
-    const filename = `Attendance_${course}_${section}_${subject}_Y${year}_S${semester}.pdf`;
+    const doc = new PDFDocument({ size: "A4", margin: 50 });
+    const filename = `Attendance_${subject}_Y${year}_S${semester}.pdf`;
 
     res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
     res.setHeader("Content-Type", "application/pdf");
     doc.pipe(res);
 
-    // 🔰 Logo on top-left
-    const logoPath = path.join(__dirname, "crrengglogo.png");
+    // Logo
+    const logoPath = path.join(__dirname, "public", "crrengglogo.png");
     if (fs.existsSync(logoPath)) {
-      doc.image(logoPath, 50, 30, { width: 70 });
+      doc.image(logoPath, 50, 40, { width: 60 });
     }
 
-    // 🔰 Header
+    // Title
     doc
-      .fontSize(18)
-      .text("SIR C.R.REDDY COLLEGE OF ENGINEERING (Autonomous)", 150, 30, { align: "center" })
-      .fontSize(13)
+      .font("Helvetica-Bold")
+      .fontSize(16)
+      .text("SIR C.R.REDDY COLLEGE OF ENGINEERING", 0, 50, { align: "center" });
+    doc
+      .font("Helvetica")
+      .fontSize(10)
+      .text("Vatluru, Eluru-534007, Eluru Dist. A.P.", { align: "center" });
+
+    doc.moveDown(1);
+    doc
+      .font("Helvetica-Bold")
+      .fontSize(14)
+      .text("STATEMENT OF ATTENDANCE REPORT", { align: "center" });
+
+    doc.moveDown(1);
+    doc
+      .font("Helvetica")
+      .fontSize(12)
       .text(`B.Tech Year - ${year}   Sem - ${semester}   Branch - ${course}   Section - ${section}`, { align: "center" })
-      .moveDown(0.3)
-      .text(`Subject: ${subject}`, { align: "center" })
-      .text("STATEMENT OF ATTENDANCE REPORT", { align: "center" })
-      .text("Vatluru, Eluru-534007, Eluru Dist. A.P.", { align: "center" })
-      .moveDown(1);
+      .text(`Subject: ${subject}`, { align: "center" });
 
-    // 🧾 Table header
-    doc.font("Helvetica-Bold").fontSize(12);
-    doc.text("Regd.No", 50);
-    doc.text("Total", 200);
-    doc.text("Attended", 300);
-    doc.text("Percent", 400);
-    doc.moveDown(0.2);
-    doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
-    doc.moveDown(0.5);
+    doc.moveDown(1);
 
-    // 🧾 Table content
+    // Table Header
+    const startY = doc.y + 10;
+    const colX = [50, 170, 270, 370, 470]; // Column positions
+
+    doc
+      .font("Helvetica-Bold")
+      .fontSize(12)
+      .text("Regd.No", colX[0], startY)
+      .text("Total", colX[1], startY)
+      .text("Attended", colX[2], startY)
+      .text("Percent", colX[3], startY);
+
+    // Draw header line
+    doc.moveTo(50, startY + 15).lineTo(550, startY + 15).stroke();
+
+    // Table Rows
     doc.font("Helvetica").fontSize(11);
-    rows.forEach(row => {
-      doc.text(row.regno, 50);
-      doc.text(row.total_classes.toString(), 200);
-      doc.text(row.attended_classes.toString(), 300);
-      doc.text(`${row.percentage}%`, 400);
-      doc.moveDown(0.5);
-    });
+    let y = startY + 25;
 
-    // ✅ Principal
-    doc.moveDown(2);
-    doc.text("PRINCIPAL", 400, doc.y + 20);
+    rows.forEach(row => {
+      doc
+        .rect(48, y - 3, 500, 18) // Box outline
+        .stroke();
+
+      doc.text(row.regno, colX[0], y);
+      doc.text(row.total_classes.toString(), colX[1], y);
+      doc.text(row.attended_classes.toString(), colX[2], y);
+      doc.text(`${row.percentage}%`, colX[3], y);
+      y += 20;
+
+      if (y > 750) {
+        doc.addPage();
+        y = 50;
+      }
+    });
 
     doc.end();
   });
 });
-
-
