@@ -2,61 +2,112 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>📝 Mark Attendance</title>
+  <title>📋 Mark Attendance</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="crrengglogo.png" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
     body {
-      font-family: Arial;
-      background: #f0f0f0;
+      font-family: "Segoe UI", sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f7f7f7;
+    }
+    header {
+      background: #0b5394;
+      color: #fff;
+      padding: 10px 20px;
+      font-size: 1.5rem;
+    }
+    .container {
       padding: 20px;
     }
-    select, button {
-      padding: 8px;
-      margin: 5px;
+    .form-row {
+      margin-bottom: 15px;
+    }
+    label {
+      display: inline-block;
+      width: 100px;
+    }
+    select {
+      padding: 5px;
+      min-width: 150px;
+    }
+    button {
+      background: #0b5394;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #063b6d;
     }
     table {
-      border-collapse: collapse;
       width: 100%;
-      background: #fff;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background: white;
     }
     th, td {
       border: 1px solid #ccc;
-      padding: 10px;
+      padding: 8px;
+      text-align: center;
+    }
+    th {
+      background: #e6e6e6;
     }
   </style>
 </head>
 <body>
-  <h2>📌 Mark Attendance</h2>
+  <header>
+    📋 Mark Attendance
+  </header>
 
-  <div id="timetable-section">
-    <label>Course:</label>
-    <select id="courseSelect"></select>
+  <div class="container">
+    <form id="attendanceForm">
+      <div class="form-row">
+        <label>Course:</label>
+        <select id="courseSelect" required></select>
+      </div>
+      <div class="form-row">
+        <label>Section:</label>
+        <select id="sectionSelect" required></select>
+      </div>
+      <div class="form-row">
+        <label>Subject:</label>
+        <select id="periodSelect" required></select>
+      </div>
+      <div class="form-row">
+        <button type="button" onclick="fetchStudents()">📥 Load Students</button>
+      </div>
 
-    <label>Section:</label>
-    <select id="sectionSelect"></select>
+      <table id="studentsTable">
+        <thead>
+          <tr>
+            <th>Reg No</th>
+            <th>Name</th>
+            <th>Present</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
 
-    <label>Period:</label>
-    <select id="periodSelect"></select>
-
-    <button onclick="fetchStudents()">Load Students</button>
+      <div style="margin-top: 20px;">
+        <button type="submit">✅ Submit Attendance</button>
+      </div>
+    </form>
   </div>
-
-  <form id="attendanceForm" style="margin-top: 20px;">
-    <table id="studentsTable">
-      <thead>
-        <tr>
-          <th>Reg No</th>
-          <th>Name</th>
-          <th>Present</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-    <button type="submit">Submit Attendance</button>
-  </form>
 
   <script>
     const staff_id = localStorage.getItem("staff_id");
+    if (!staff_id) {
+      Swal.fire("⚠️ Not Logged In", "Please log in again as staff.", "warning").then(() => {
+        window.location.href = "staff_login.html";
+      });
+    }
 
     const courseSelect = document.getElementById("courseSelect");
     const sectionSelect = document.getElementById("sectionSelect");
@@ -86,6 +137,10 @@
           courseSelect.innerHTML = [...uniqueCourses].map(c => `<option value="${c}">${c}</option>`).join('');
           sectionSelect.innerHTML = [...uniqueSections].map(s => `<option value="${s}">${s}</option>`).join('');
           periodSelect.innerHTML = [...uniquePeriods].map(p => `<option value="${p}">${p}</option>`).join('');
+        })
+        .catch(err => {
+          console.error("Allocation fetch failed", err);
+          Swal.fire("❌ Error", "Unable to fetch staff allocation.", "error");
         });
     };
 
