@@ -332,7 +332,7 @@ if (!userId) {
       return;
     }
 
-    ffetch(`/api/students-by-course-section?course=${encodeURIComponent(course)}&section=${encodeURIComponent(section)}`)
+    fetch(`/api/students-by-course-section?course=${encodeURIComponent(course)}&section=${encodeURIComponent(section)}`)
 
       .then(res => res.json())
       .then(students => {
