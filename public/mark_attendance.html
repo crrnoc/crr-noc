@@ -274,6 +274,10 @@
           <button type="submit">✅ Submit Attendance</button>
         </div>
       </form>
+      <div style="margin-top: 20px;">
+  <button id="downloadPdfBtn" class="btn btn-primary">📄 Download Attendance PDF</button>
+</div>
+
     </div>
   </div>
 
@@ -441,7 +445,22 @@ function fetchStudents() {
       Swal.fire("❌ Error", "Network or server issue", "error");
     }
   };
+document.getElementById("downloadPdfBtn").addEventListener("click", () => {
+  const course = courseSelect.value;
+  const section = sectionSelect.value;
+  const year = yearSelect.value;
+  const semester = semesterSelect.value;
 
+  if (!course || !section || !year || !semester) {
+    Swal.fire("⚠️ Please select all fields before downloading PDF", "", "warning");
+    return;
+  }
+
+  const url = `/api/download-attendance-pdf?year=${year}&semester=${semester}&course=${course}&section=${section}`;
+
+  // Open in new tab or trigger download
+  window.open(url, '_blank');
+});
   function toggleMobileMenu() {
     document.querySelector('.sidebar').classList.toggle('open');
   }
