@@ -425,7 +425,6 @@
       .then(res => res.json())
       .then(data => {
         const container = document.getElementById("cardContainer");
-
         if (data.success && data.students.length > 0) {
           data.students.forEach(std => {
             const card = document.createElement("div");
@@ -446,296 +445,174 @@
             container.appendChild(card);
           });
         } else {
-          container.innerHTML = `<p style="text-align:center; color:#666;">No students assigned yet.</p>`;
+          container.innerHTML = `<p style="color:red;">No students assigned or available.</p>`;
         }
-      })
-      .catch(err => {
-        console.error("Error fetching students:", err);
-        Swal.fire("Error", "Failed to fetch student data.", "error");
       });
   }
 
-  function openModal(student) {
-    currentStudent = student;
+  function openModal(std) {
+    currentStudent = std;
 
-    document.getElementById("modalName").textContent = student.name;
-    document.getElementById("modalFatherName").textContent = student.father_name || "N/A";
-    document.getElementById("modalFatherMobile").textContent = student.father_mobile || "N/A";
+    document.getElementById("modalName").textContent = std.name;
+    document.getElementById("modalFatherName").textContent = std.father_name || "N/A";
+    document.getElementById("modalFatherMobile").textContent = std.father_mobile || "N/A";
 
-    document.getElementById("studentModal").style.display = "block";
-    document.body.style.overflow = "hidden";
-    showTab("attendance");
+    showTab('attendance');
 
-    // Attendance
-    fetch(`/student-attendance/${student.reg_no}`)
+    // --- Attendance ---
+    document.getElementById("attendanceContent").innerHTML = `<p>Loading...</p>`;
+    fetch(`/attendance/${std.userId}`)
       .then(res => res.json())
       .then(data => {
-        const container = document.getElementById("attendanceContent");
-        if (data.success && data.data.length > 0) {
-          const rows = data.data.map(row => `
-            <tr>
-              <td>${row.semester}</td>
-              <td>${row.total_classes}</td>
-              <td>${row.attended_classes}</td>
-              <td>${row.percentage}%</td>
-            </tr>`).join("");
-          container.innerHTML = `
-            <table>
-              <tr>
-                <th>Semester</th>
-                <th>Total</th>
-                <th>Attended</th>
-                <th>%</th>
-              </tr>
-              ${rows}
-            </table>
-          `;
-        } else {
-          container.innerHTML = "No attendance data available.";
+        const attendance = data.attendance || [];
+        if (attendance.length === 0) {
+          document.getElementById("attendanceContent").innerHTML = `<p>No attendance records found.</p>`;
+          return;
         }
+        let html = `<table><thead><tr><th>Date</th><th>Status</th></tr></thead><tbody>`;
+        attendance.forEach(row => {
+          html += `<tr><td>${row.date}</td><td>${row.status}</td></tr>`;
+        });
+        html += `</tbody></table>`;
+        document.getElementById("attendanceContent").innerHTML = html;
       });
 
-    // Results
-    const semesterDropdown = document.getElementById("semesterSelect");
-    semesterDropdown.value = "";
+    // --- Results ---
     document.getElementById("resultsContent").innerHTML = "";
+    document.getElementById("semesterSelect").value = "";
+    document.getElementById("semesterSelect").onchange = () => {
+      const sem = document.getElementById("semesterSelect").value;
+      if (!sem) return;
 
-    semesterDropdown.onchange = () => {
-      const semester = semesterDropdown.value;
-      if (!semester) return;
-
-      fetch(`/student/results/${student.reg_no}?semester=${semester}`)
+      fetch(`/results/${std.userId}/${sem}`)
         .then(res => res.json())
         .then(data => {
-          const container = document.getElementById("resultsContent");
-          if (data.results && data.results.length > 0) {
-            const subjectRows = data.results.map(r => `
-              <tr>
-                <td>${r.subcode}</td>
-                <td>${r.subname}</td>
-                <td>${r.grade}</td>
-                <td>${r.credits}</td>
-              </tr>`).join("");
-            container.innerHTML = `
-              <table>
-                <tr>
-                  <th>Sub Code</th>
-                  <th>Subject</th>
-                  <th>Grade</th>
-                  <th>Credits</th>
-                </tr>
-                ${subjectRows}
-              </table>
-              <div>
-                <p><strong>SGPA:</strong> ${data.sgpa}</p>
-                <p><strong>CGPA:</strong> ${data.cgpa}</p>
-                <p><strong>Percentage:</strong> ${data.percentage}%</p>
-              </div>
-            `;
-          } else {
-            container.innerHTML = "No result data for selected semester.";
+          if (!data.success || !data.results.length) {
+            document.getElementById("resultsContent").innerHTML = `<p>No results found for this semester.</p>`;
+            return;
           }
+
+          let html = `<table><thead><tr><th>Subject</th><th>Grade</th></tr></thead><tbody>`;
+          data.results.forEach(r => {
+            html += `<tr><td>${r.subject}</td><td>${r.grade}</td></tr>`;
+          });
+          html += `</tbody></table>`;
+          document.getElementById("resultsContent").innerHTML = html;
         });
     };
 
-    // Mid Marks
+    // --- Mid Marks ---
+    document.getElementById("midmarksContent").innerHTML = "";
     document.getElementById("midYearSelect").value = "";
     document.getElementById("midSemesterSelect").value = "";
-    document.getElementById("midmarksContent").innerHTML = "";
+    document.getElementById("midYearSelect").onchange = loadMidMarks;
+    document.getElementById("midSemesterSelect").onchange = loadMidMarks;
 
-    document.getElementById("midYearSelect").onchange = fetchMidMarks;
-    document.getElementById("midSemesterSelect").onchange = fetchMidMarks;
-  }
+    function loadMidMarks() {
+      const year = document.getElementById("midYearSelect").value;
+      const sem = document.getElementById("midSemesterSelect").value;
+      if (!year || !sem) return;
 
-  
+      fetch(`/midmarks/${std.userId}/${year}/${sem}`)
+        .then(res => res.json())
+        .then(data => {
+          if (!data.success || !data.marks.length) {
+            document.getElementById("midmarksContent").innerHTML = `<p>No mid marks found.</p>`;
+            return;
+          }
 
-  function fetchMidMarks() {
-    if (!currentStudent) return;
+          let html = `<table><thead><tr><th>Subject</th><th>Marks</th></tr></thead><tbody>`;
+          data.marks.forEach(m => {
+            html += `<tr><td>${m.subject}</td><td>${m.marks}</td></tr>`;
+          });
+          html += `</tbody></table>`;
+          document.getElementById("midmarksContent").innerHTML = html;
+        });
+    }
 
-    const year = document.getElementById("midYearSelect").value;
-    const semester = document.getElementById("midSemesterSelect").value;
-
-    fetch(`/student/midmarks/${currentStudent.reg_no}?year=${year}&semester=${semester}`)
+    // --- Fee Details ---
+    const feeDiv = document.getElementById("feeContent");
+    feeDiv.innerHTML = `<p>Loading...</p>`;
+    fetch(`/fee-status/${std.userId}`)
       .then(res => res.json())
-      .then(data => {
-        const container = document.getElementById("midmarksContent");
-        if (!data.midmarks || data.midmarks.length === 0) {
-          container.innerHTML = "<p>No mid marks found for selected year and semester.</p>";
+      .then(res => {
+        if (!res.success || !res.years) {
+          feeDiv.innerHTML = "<p style='color:red;'>Fee details not available.</p>";
           return;
         }
 
-        let html = `
-          <table>
-            <tr>
-              <th>Subject Code</th>
-              <th>Mid 1</th>
-              <th>A1</th>
-              <th>Q1</th>
-              <th>Mid 2</th>
-              <th>A2</th>
-              <th>Q2</th>
-              <th>Status</th>
-            </tr>
-        `;
-        data.midmarks.forEach(row => {
-          html += `
-            <tr>
-              <td>${row.sub_code}</td>
-              <td>${row.mid1}</td>
-              <td>${row.a1}</td>
-              <td>${row.q1}</td>
-              <td>${row.mid2}</td>
-              <td>${row.a2}</td>
-              <td>${row.q2}</td>
-              <td>${row.lds_or_status}</td>
-            </tr>
-          `;
-        });
-        html += `</table>`;
-        container.innerHTML = html;
-      })
-      .catch(err => {
-        console.error("Error fetching mid marks:", err);
-        document.getElementById("midmarksContent").innerHTML = "<p>Error loading mid marks.</p>";
-      });
-  }
+        feeDiv.innerHTML = "";
+        Object.entries(res.years).forEach(([year, { expected, paid }]) => {
+          let rows = "";
+          const types = ["tuition", "hostel", "bus", "university", "semester", "library", "fines"];
+          let totalPaid = 0, totalRemain = 0, totalFee = 0;
 
-  // Fee Details
-loadFeeDetails(student.reg_no);
+          types.forEach(type => {
+            const total = parseFloat(expected[type]) || 0;
+            const paidAmt = parseFloat(paid[type]) || 0;
+            const remain = Math.max(0, total - paidAmt);
 
-  function loadFeeDetails(regNo) {
-  const container = document.getElementById("feeContent");
-  container.innerHTML = "Loading...";
+            totalPaid += paidAmt;
+            totalRemain += remain;
+            totalFee += total;
 
-  fetch(`/yearwise-fee/${regNo}`)
-    .then(res => res.json())
-    .then(res => {
-      if (!res.success || res.data.length === 0) {
-        container.innerHTML = "<p>No fee details available.</p>";
-        return;
-      }
+            rows += `
+              <tr>
+                <td>${type.charAt(0).toUpperCase() + type.slice(1)}</td>
+                <td>₹${paidAmt.toFixed(2)}</td>
+                <td>₹${remain.toFixed(2)}</td>
+                <td>₹${total.toFixed(2)}</td>
+              </tr>`;
+          });
 
-      container.innerHTML = "";
-
-      res.data.forEach(({ year, structure, paid, fines }, index) => {
-        const items = [
-          { label: "Tuition Fee", key: "tuition" },
-          { label: "Hostel Fee", key: "hostel" },
-          { label: "Bus Fee", key: "bus" },
-          { label: "University Fee", key: "university" },
-          { label: "Semester Fee", key: "semester" },
-          { label: "Library Dues", key: "library" },
-          { label: "Fines", key: "fines" }
-        ];
-
-        let paidTotal = 0, remainingTotal = 0, actualTotal = 0;
-        let rowsHTML = "";
-
-        items.forEach(({ label, key }) => {
-          const total = key === "fines" ? fines : parseFloat(structure[key]) || 0;
-          const paidAmt = parseFloat(paid[key]) || 0;
-          const remain = Math.max(0, total - paidAmt);
-
-          paidTotal += paidAmt;
-          remainingTotal += remain;
-          actualTotal += total;
-
-          rowsHTML += `
-            <tr>
-              <td>${label}</td>
-              <td>₹${paidAmt.toFixed(2)}</td>
-              <td>₹${remain.toFixed(2)}</td>
-              <td>₹${total.toFixed(2)}</td>
-            </tr>`;
-        });
-
-        container.innerHTML += `
-          <div class="accordion-card" style="margin-top: 10px;">
-            <button class="accordion-toggle" data-index="${index}">📅 Academic Year ${year}</button>
-            <div class="accordion-content" style="display: none;">
+          const table = `
+            <div class="accordion-content" style="margin-bottom:20px;">
+              <h4 style="color:#1f75cb;">Academic Year: ${year}</h4>
               <table>
                 <thead>
-                  <tr>
-                    <th>Fee Type</th>
-                    <th>Paid (₹)</th>
-                    <th>Remaining (₹)</th>
-                    <th>Total (₹)</th>
-                  </tr>
+                  <tr><th>Fee Type</th><th>Paid</th><th>Remaining</th><th>Total</th></tr>
                 </thead>
-                <tbody>${rowsHTML}</tbody>
+                <tbody>${rows}</tbody>
                 <tfoot>
                   <tr>
-                    <td><strong>Total</strong></td>
-                    <td><strong>₹${paidTotal.toFixed(2)}</strong></td>
-                    <td><strong>₹${remainingTotal.toFixed(2)}</strong></td>
-                    <td><strong>₹${actualTotal.toFixed(2)}</strong></td>
+                    <td>Total</td>
+                    <td>₹${totalPaid.toFixed(2)}</td>
+                    <td>₹${totalRemain.toFixed(2)}</td>
+                    <td>₹${totalFee.toFixed(2)}</td>
                   </tr>
                 </tfoot>
               </table>
-            </div>
-          </div>`;
-      });
-
-      // Accordion toggle
-      const toggles = container.querySelectorAll(".accordion-toggle");
-      const contents = container.querySelectorAll(".accordion-content");
-      toggles.forEach((btn, i) => {
-        btn.addEventListener("click", () => {
-          contents.forEach((content, j) => {
-            content.style.display = (i === j)
-              ? (content.style.display === "block" ? "none" : "block")
-              : "none";
-          });
+            </div>`;
+          feeDiv.innerHTML += table;
         });
+      })
+      .catch(err => {
+        feeDiv.innerHTML = "<p>Error loading fee data.</p>";
       });
-    })
-    .catch(err => {
-      console.error("Error fetching fee details:", err);
-      container.innerHTML = "<p>Error loading fee details.</p>";
-    });
-}
 
-  function showTab(tabName) {
-    const tabs = ['attendance', 'results', 'midmarks'];
-    tabs.forEach(t => {
-      document.getElementById(t + 'Tab').style.display = (t === tabName) ? 'block' : 'none';
-      const btn = document.getElementById('btn' + t.charAt(0).toUpperCase() + t.slice(1));
-      if (btn) {
-        btn.style.backgroundColor = (t === tabName) ? '#ddd' : '#f6f6f6';
-      }
-    });
+    // Show modal
+    document.getElementById("studentModal").style.display = "block";
   }
 
   function closeModal() {
     document.getElementById("studentModal").style.display = "none";
-    document.body.style.overflow = "";
+  }
+
+  function showTab(tabName) {
+    ['attendance', 'results', 'midmarks', 'fee'].forEach(tab => {
+      document.getElementById(tab + 'Tab').style.display = 'none';
+    });
+    document.getElementById(tabName + 'Tab').style.display = 'block';
+  }
+
+  function toggleMobileMenu() {
+    document.getElementById("sidebar").classList.toggle("open");
   }
 
   function logout() {
     localStorage.clear();
     window.location.href = "index.html";
   }
-
-  function toggleMobileMenu() {
-    document.querySelector('.sidebar').classList.toggle('open');
-  }
-
-  // Close modal when clicked outside
-  document.addEventListener("click", function (e) {
-    const modalBox = document.querySelector(".modal-box");
-    const modal = document.getElementById("studentModal");
-    if (
-      modal.style.display === "block" &&
-      !modalBox.contains(e.target) &&
-      !e.target.closest(".student-card") &&
-      !e.target.closest(".sidebar") &&
-      !e.target.closest(".mobile-toggle")
-    ) {
-      closeModal();
-    }
-  });
 </script>
 </body>
 </html>
-
-ee my counselling page lo results attendance elaa chupistunnayoo same alaney fee details kudaa display cheyyali ra 
