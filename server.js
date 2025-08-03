@@ -3697,27 +3697,26 @@ app.get("/api/download-attendance-pdf", (req, res) => {
   const query = `
     SELECT * FROM daily_attendance 
     WHERE year = ? AND semester = ? AND course = ? AND section = ? AND subject = ?
-    ORDER BY regno
+    ORDER BY reg_no
   `;
 
   db.query(query, [year, semester, course, section, subject], (err, results) => {
     if (err) {
-      console.error("Database error:", err);
+      console.error("❌ Database error:", err);
       return res.status(500).json({ error: "Database error." });
     }
 
-    if (results.length === 0) {
+    if (!results.length) {
+      console.warn("⚠️ No data found for:", req.query);
       return res.status(404).json({ message: "No attendance records found." });
     }
 
-    // ✅ Generate PDF
-    const PDFDocument = require("pdfkit");
-    const fs = require("fs");
     const doc = new PDFDocument();
     const fileName = `Attendance_${subject}_${Date.now()}.pdf`;
     const filePath = `./uploads/${fileName}`;
+    const stream = fs.createWriteStream(filePath);
 
-    doc.pipe(fs.createWriteStream(filePath));
+    doc.pipe(stream);
 
     doc.fontSize(18).text("Attendance Report", { align: "center" });
     doc.moveDown();
@@ -3729,18 +3728,27 @@ app.get("/api/download-attendance-pdf", (req, res) => {
     doc.moveDown();
 
     results.forEach((row, index) => {
-      doc.text(`${index + 1}. RegNo: ${row.regno} - ${row.status} on ${row.date}`);
+      doc.text(`${index + 1}. ${row.reg_no} - ${row.status} on ${row.date}`);
     });
 
     doc.end();
 
-    doc.on("finish", () => {
+    stream.on("finish", () => {
       res.download(filePath, fileName, (err) => {
         if (err) {
-          console.error("Error sending file:", err);
+          console.error("❌ Download error:", err);
+          return res.status(500).json({ error: "Failed to send PDF file." });
         }
-        fs.unlink(filePath, () => {}); // optional cleanup
+
+        // Optional: Clean up after sending
+        fs.unlink(filePath, () => {});
       });
+    });
+
+    stream.on("error", (err) => {
+      console.error("❌ Stream error:", err);
+      res.status(500).json({ error: "Failed to write PDF file." });
     });
   });
 });
+
