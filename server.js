@@ -1061,26 +1061,53 @@ app.get('/admin/noc-status', (req, res) => {
 app.get("/fee-status/:userId", (req, res) => {
   const { userId } = req.params;
 
-  connection.query('SELECT reg_no FROM students WHERE userId = ?', [userId], (err, studentRows) => {
-    if (err || studentRows.length === 0) return res.status(500).json({ success: false });
+  // Step 1: Get reg_no from students table
+  const getRegNoQuery = `
+    SELECT reg_no FROM students
+    WHERE userId = ?
+  `;
+
+  connection.query(getRegNoQuery, [userId], (err, studentRows) => {
+    if (err) {
+      console.error("❌ DB error fetching reg_no:", err);
+      return res.status(500).json({ success: false, message: "DB error (reg_no)" });
+    }
+
+    if (studentRows.length === 0) {
+      return res.status(404).json({ success: false, message: "Student not found" });
+    }
 
     const reg_no = studentRows[0].reg_no;
 
-    // 1. Get ALL fee structures by year
-    connection.query(`
-      SELECT * FROM student_fee_structure 
+    // Step 2: Get fee structure for this student
+    const feeStructureQuery = `
+      SELECT * FROM student_fee_structure
       WHERE reg_no = ?
-    `, [reg_no], (err2, feeRows) => {
-      if (err2 || feeRows.length === 0) return res.status(400).json({ success: false });
+    `;
 
-      // 2. Get ALL payments by user grouped by year and fee_type
-      connection.query(`
+    connection.query(feeStructureQuery, [reg_no], (err2, feeRows) => {
+      if (err2) {
+        console.error("❌ DB error fetching fee structure:", err2);
+        return res.status(500).json({ success: false, message: "DB error (structure)" });
+      }
+
+      if (feeRows.length === 0) {
+        return res.status(404).json({ success: false, message: "No fee structure found" });
+      }
+
+      // Step 3: Get total paid amounts grouped by year and fee_type
+      const paymentsQuery = `
         SELECT academic_year, fee_type, SUM(amount_paid) AS paid
         FROM student_fee_payments
         WHERE userId = ? AND matched = 1
         GROUP BY academic_year, fee_type
-      `, [userId], (err3, paidRows) => {
-        if (err3) return res.status(500).json({ success: false });
+      `;
+
+      connection.query(paymentsQuery, [userId], (err3, paidRows) => {
+        if (err3) {
+          console.error("❌ DB error fetching paid data:", err3);
+          return res.status(500).json({ success: false, message: "DB error (payments)" });
+        }
 
         const paidMap = {};
         paidRows.forEach(row => {
@@ -1090,8 +1117,8 @@ app.get("/fee-status/:userId", (req, res) => {
           paidMap[year][type] = parseFloat(row.paid);
         });
 
+        // Step 4: Build fee summary for each academic year
         const years = {};
-
         feeRows.forEach(row => {
           const year = row.academic_year;
           const expected = {
@@ -1111,6 +1138,8 @@ app.get("/fee-status/:userId", (req, res) => {
             paid
           };
         });
+
+        console.log(`✅ Fee details for ${reg_no}:`, years);
 
         return res.json({
           success: true,
@@ -3427,6 +3456,7 @@ app.get('/student/notifications/:userId', (req, res) => {
     });
   });
 });
+
 
 
 
