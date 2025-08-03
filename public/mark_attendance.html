@@ -101,43 +101,48 @@
     </form>
   </div>
 
-  <script>
+<script>
   const staff_id = localStorage.getItem("staff_id");
+
   if (!staff_id) {
     Swal.fire("⚠️ Not Logged In", "Please log in again as staff.", "warning").then(() => {
       window.location.href = "index.html";
     });
   }
 
-  const BASE_URL = "https://crr-noc.onrender.com";
   const courseSelect = document.getElementById("courseSelect");
   const sectionSelect = document.getElementById("sectionSelect");
   const periodSelect = document.getElementById("periodSelect");
   const studentsTable = document.querySelector("#studentsTable tbody");
   const form = document.getElementById("attendanceForm");
+  const fetchBtn = document.getElementById("fetchBtn");
 
-  let subjects = [];
-
+  // Load allocations on page load
   window.onload = () => {
-    fetch(`${BASE_URL}/api/staff-allocation?staff_id=${staff_id}`)
+    fetch(`https://crr-noc.onrender.com/api/staff-allocation?staff_id=${staff_id}`)
       .then(res => res.json())
       .then(data => {
+        if (!data.length) {
+          Swal.fire("❌ No Allocation Found", "Contact admin to allocate your timetable.", "info");
+          return;
+        }
+
         const uniqueCourses = new Set();
         const uniqueSections = new Set();
-        const uniquePeriods = new Set();
+        const uniqueSubjects = new Set();
 
         data.forEach(row => {
           uniqueCourses.add(row.course);
           uniqueSections.add(row.section);
           for (let i = 1; i <= 7; i++) {
-            const p = row[`period${i}`];
-            if (p && p.trim()) uniquePeriods.add(p);
+            const period = row[`period${i}`];
+            if (period && period.trim()) uniqueSubjects.add(period);
           }
         });
 
         courseSelect.innerHTML = [...uniqueCourses].map(c => `<option value="${c}">${c}</option>`).join('');
         sectionSelect.innerHTML = [...uniqueSections].map(s => `<option value="${s}">${s}</option>`).join('');
-        periodSelect.innerHTML = [...uniquePeriods].map(p => `<option value="${p}">${p}</option>`).join('');
+        periodSelect.innerHTML = [...uniqueSubjects].map(p => `<option value="${p}">${p}</option>`).join('');
       })
       .catch(err => {
         console.error("Allocation fetch failed", err);
@@ -145,27 +150,39 @@
       });
   };
 
-  function fetchStudents() {
+  // Fetch student list
+  fetchBtn.onclick = () => {
     const course = courseSelect.value;
     const section = sectionSelect.value;
 
-    fetch(`${BASE_URL}/api/students-by-course-section?course=${course}&section=${section}`)
+    if (!course || !section) {
+      Swal.fire("⚠️ Select Course & Section", "", "warning");
+      return;
+    }
+
+    fetch(`/api/students-by-course-section?course=${course}&section=${section}`)
       .then(res => res.json())
       .then(students => {
+        if (!students.length) {
+          studentsTable.innerHTML = `<tr><td colspan="3">No students found</td></tr>`;
+          return;
+        }
+
         studentsTable.innerHTML = students.map(s => `
           <tr>
             <td>${s.regno}</td>
             <td>${s.full_name}</td>
-            <td><input type="checkbox" name="attendance" value="${s.regno}" checked /></td>
+            <td><input type="checkbox" name="attendance" value="${s.regno}" checked></td>
           </tr>
         `).join('');
       })
       .catch(err => {
-        console.error("Student fetch failed", err);
-        Swal.fire("❌ Error", "Unable to fetch students.", "error");
+        console.error("Failed to fetch students", err);
+        Swal.fire("❌ Error", "Unable to load students", "error");
       });
-  }
+  };
 
+  // Submit attendance
   form.onsubmit = async (e) => {
     e.preventDefault();
 
@@ -183,23 +200,24 @@
     };
 
     try {
-      const res = await fetch(`${BASE_URL}/api/submit-attendance`, {
+      const res = await fetch('/api/submit-attendance', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
 
-      const data = await res.json();
+      const result = await res.json();
       if (res.ok) {
         Swal.fire("✅ Attendance Marked", "", "success");
       } else {
-        Swal.fire("❌ Failed", data.error || "Server error", "error");
+        Swal.fire("❌ Failed", result.error || "Unknown error", "error");
       }
-    } catch (error) {
-      console.error("Submit failed", error);
-      Swal.fire("❌ Network Error", "Failed to submit attendance.", "error");
+    } catch (err) {
+      console.error("Submission failed", err);
+      Swal.fire("❌ Error", "Network or server issue", "error");
     }
   };
 </script>
+
 </body>
 </html>
