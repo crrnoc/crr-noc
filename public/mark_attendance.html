@@ -348,27 +348,25 @@
       });
   };
 
-  periodSelect.addEventListener('change', () => {
-    const selectedSubject = periodSelect.value;
-    const course = courseSelect.value;
-    const section = sectionSelect.value;
+periodSelect.addEventListener('change', () => {
+  const selectedSubject = periodSelect.value;
+  const course = courseSelect.value;
+  const section = sectionSelect.value;
 
-    if (!selectedSubject || !course || !section) return;
+  if (!selectedSubject || !course || !section) return;
 
-    // Match entry with course, section, and subject
-    const match = staffAllocData.find(row => {
-      return row.course === course &&
-             row.section === section &&
-             Object.values(row).includes(selectedSubject);
-    });
-
-    if (match) {
-      yearSelect.value = match.year;
-      semesterSelect.value = match.semester;
-    } else {
-      console.warn("⚠️ Matching year/semester not found for selected subject.");
-    }
+  const match = staffAllocData.find(row => {
+    const hasSubject = Array.from({ length: 7 }, (_, i) => row[`period${i + 1}`]).includes(selectedSubject);
+    return row.course === course && row.section === section && hasSubject;
   });
+
+  if (match) {
+    yearSelect.value = match.year;
+    semesterSelect.value = match.semester;
+  } else {
+    console.warn("⚠️ Matching year/semester not found for selected subject.");
+  }
+});
 
   function fetchStudents() {
     const course = courseSelect.value;
