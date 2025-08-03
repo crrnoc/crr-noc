@@ -3569,17 +3569,21 @@ app.get("/api/staff-allocation", (req, res) => {
   });
 });
 
-//Get Students by Course & Section
+// Get Students by Year, Semester, Course & Section
 app.get("/api/students-by-course-section", (req, res) => {
-  const { course, section } = req.query;
+  const { year, semester, course, section } = req.query;
+
+  if (!year || !semester || !course || !section) {
+    return res.status(400).json({ error: "Missing year, semester, course, or section" });
+  }
 
   const sql = `
     SELECT reg_no, name FROM students
-    WHERE course = ? AND section = ?
+    WHERE year = ? AND semester = ? AND course = ? AND section = ?
     ORDER BY reg_no
   `;
 
-  connection.query(sql, [course, section], (err, result) => {
+  connection.query(sql, [year, semester, course, section], (err, result) => {
     if (err) {
       console.error("❌ Error fetching students:", err);
       return res.status(500).json({ error: "Failed to fetch students" });
@@ -3587,6 +3591,7 @@ app.get("/api/students-by-course-section", (req, res) => {
     res.json(result);
   });
 });
+
 
 //Backend Route to Submit Attendance 
 app.post("/api/submit-attendance", (req, res) => {
@@ -3685,3 +3690,4 @@ app.get('/api/staff/semesters/:staffId', (req, res) => {
     res.json({ semesters });
   });
 });
+
