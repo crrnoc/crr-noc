@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>📋 Mark Attendance</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f1f1f1;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .form-box {
+      max-width: 900px;
+      margin: auto;
+      background: #fff;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    label {
+      display: block;
+      margin-top: 15px;
+    }
+
+    select, input[type="date"] {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    table {
+      width: 100%;
+      margin-top: 20px;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
+
+    th {
+      background: #007bff;
+      color: white;
+    }
+
+    button {
+      margin-top: 20px;
+      padding: 12px 20px;
+      border: none;
+      background-color: #007bff;
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <div class="form-box">
+    <h2>Mark Attendance</h2>
+    
+    <label for="course">Course</label>
+    <select id="course" onchange="fetchSections()">
+      <option value="">Select Course</option>
+    </select>
+
+    <label for="section">Section</label>
+    <select id="section" onchange="fetchStudents()">
+      <option value="">Select Section</option>
+    </select>
+
+    <label for="subject">Subject (based on your today's period)</label>
+    <select id="subject">
+      <option value="">Loading subjects...</option>
+    </select>
+
+    <table id="studentTable">
+      <thead>
+        <tr>
+          <th>Reg No</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Filled dynamically -->
+      </tbody>
+    </table>
+
+    <button onclick="submitAttendance()">Submit Attendance</button>
+  </div>
+
+  <script>
+    const staffId = sessionStorage.getItem("staffId"); // Replace this if stored differently
+
+    // Get today’s weekday
+    const today = new Date().toLocaleString("en-US", { weekday: 'long' });
+
+    // Fetch today's subject allocation for staff
+    async function fetchStaffTimetable() {
+      const res = await fetch(`/api/staff-period-allocation?staff_id=${staffId}&day=${today}`);
+      const data = await res.json();
+
+      if (!data.length) {
+        Swal.fire("No timetable found for today.");
+        return;
+      }
+
+      const subjects = new Set();
+      data.forEach(row => {
+        ['period1','period2','period3','period4','period5','period6','period7'].forEach(period => {
+          if (row[period] && row[period] !== '-') {
+            subjects.add(row[period]);
+          }
+        });
+      });
+
+      // Populate subject dropdown
+      const subjectSelect = document.getElementById("subject");
+      subjectSelect.innerHTML = `<option value="">Select Subject</option>`;
+      subjects.forEach(sub => {
+        subjectSelect.innerHTML += `<option value="${sub}">${sub}</option>`;
+      });
+
+      // Populate course and section
+      const courseSelect = document.getElementById("course");
+      data.forEach(row => {
+        courseSelect.innerHTML += `<option value="${row.course}">${row.course}</option>`;
+      });
+
+    }
+
+    async function fetchSections() {
+      const course = document.getElementById("course").value;
+      const res = await fetch(`/api/sections?course=${course}`);
+      const data = await res.json();
+
+      const sectionSelect = document.getElementById("section");
+      sectionSelect.innerHTML = `<option value="">Select Section</option>`;
+      data.forEach(row => {
+        sectionSelect.innerHTML += `<option value="${row.section}">${row.section}</option>`;
+      });
+    }
+
+    async function fetchStudents() {
+      const course = document.getElementById("course").value;
+      const section = document.getElementById("section").value;
+      const res = await fetch(`/api/students?course=${course}&section=${section}`);
+      const students = await res.json();
+
+      const tbody = document.getElementById("studentTable").querySelector("tbody");
+      tbody.innerHTML = "";
+      students.forEach(stud => {
+        tbody.innerHTML += `
+          <tr>
+            <td>${stud.regno}</td>
+            <td>
+              <select data-regno="${stud.regno}">
+                <option value="Present">Present</option>
+                <option value="Absent">Absent</option>
+              </select>
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    async function submitAttendance() {
+      const subject = document.getElementById("subject").value;
+      const course = document.getElementById("course").value;
+      const section = document.getElementById("section").value;
+      const day = today;
+
+      if (!subject || !course || !section) {
+        Swal.fire("Please select all fields");
+        return;
+      }
+
+      const rows = document.querySelectorAll("tbody tr");
+      const attendanceData = [];
+
+      rows.forEach(row => {
+        const regno = row.querySelector("td").innerText;
+        const status = row.querySelector("select").value;
+        attendanceData.push({ regno, status });
+      });
+
+      const res = await fetch("/api/mark-attendance", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          staff_id: staffId,
+          subject,
+          course,
+          section,
+          day,
+          attendance: attendanceData
+        })
+      });
+
+      const result = await res.json();
+      if (result.success) {
+        Swal.fire("✅ Attendance Submitted Successfully");
+      } else {
+        Swal.fire("❌ Failed to submit attendance");
+      }
+    }
+
+    fetchStaffTimetable();
+  </script>
+</body>
+</html>
+
