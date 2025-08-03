@@ -3510,36 +3510,38 @@ app.get('/api/staff/:id', (req, res) => {
   });
 });
 
-app.post('/api/allocate', (req, res) => {
+app.post("/api/allocate", (req, res) => {
   const {
-    staff_id, dept_code, course, year, section, day,
+    staff_id, year, course, dept_code,
+    section, semester, day,
     period1, period2, period3, period4, period5, period6, period7
   } = req.body;
 
-  const deleteSQL = `
-    DELETE FROM staff_period_allocation
-    WHERE staff_id = ? AND dept_code = ? AND course = ? AND year = ? AND section = ? AND day = ?
+  if (!staff_id || !day || !semester) {
+    return res.status(400).json({ success: false, error: "Missing required fields" });
+  }
+
+  const sql = `
+    INSERT INTO staff_period_allocation (
+      staff_id, year, course, dept_code, section,
+      semester, day, period1, period2, period3,
+      period4, period5, period6, period7
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
-  connection.query(deleteSQL, [staff_id, dept_code, course, year, section, day], (delErr) => {
-    if (delErr) return res.status(500).json({ error: 'Failed to clear old allocation' });
+  const values = [
+    staff_id, year, course, dept_code, section,
+    semester, day, period1, period2, period3,
+    period4, period5, period6, period7
+  ];
 
-    const insertSQL = `
-      INSERT INTO staff_period_allocation (
-        staff_id, dept_code, course, year, section, day,
-        period1, period2, period3, period4, period5, period6, period7
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
+  connection.query(sql, values, (err, result) => {
+    if (err) {
+      console.error("❌ Allocation insert error:", err);
+      return res.status(500).json({ success: false, error: "Database error" });
+    }
 
-    const values = [
-      staff_id, dept_code, course, year, section, day,
-      period1, period2, period3, period4, period5, period6, period7
-    ];
-
-    connection.query(insertSQL, values, (insErr) => {
-      if (insErr) return res.status(500).json({ error: 'Failed to save new allocation' });
-      res.json({ success: true, message: 'Period allocation saved' });
-    });
+    res.json({ success: true, message: "Period allocation saved successfully!" });
   });
 });
 
@@ -3619,3 +3621,4 @@ app.post("/api/submit-attendance", (req, res) => {
     res.json({ success: true, message: "✅ Attendance submitted successfully." });
   });
 });
+
