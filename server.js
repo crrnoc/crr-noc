@@ -2833,6 +2833,7 @@ app.get("/my-counselling-students/:staffId", (req, res) => {
 
   const query = `
     SELECT 
+      userId,
       name,
       reg_no,
       email,
@@ -2855,6 +2856,7 @@ app.get("/my-counselling-students/:staffId", (req, res) => {
     res.json({ success: true, students: results });
   });
 });
+
 //update father details
 app.post("/update-father-details", (req, res) => {
   const { reg_no, father_name, father_mobile } = req.body;
@@ -3427,6 +3429,7 @@ app.get('/student/notifications/:userId', (req, res) => {
     });
   });
 });
+
 
 
 
