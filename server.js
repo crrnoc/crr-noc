@@ -23,8 +23,6 @@ require('dotenv').config();
 const axios = require("axios");
 const cloudinary = require("cloudinary").v2;
 const csv = require("csv-parser");
-const attendanceRoutes = require('./routes/attendanceRoutes');
-app.use('/', attendanceRoutes);
 
 
 const logoBase64 = fs.readFileSync('./public/crrengglogo.png', { encoding: 'base64' });
@@ -3693,50 +3691,56 @@ app.get('/api/staff/semesters/:staffId', (req, res) => {
   });
 });
 // download attendance pdf
-router.get("/api/download-attendance-pdf", (req, res) => {
-  const { year, course, section, semester, subject } = req.query;
+app.get("/api/download-attendance-pdf", (req, res) => {
+  const { year, semester, course, section, subject } = req.query;
 
   const query = `
-    SELECT reg_no, status, date
-    FROM daily_attendance
-    WHERE year = ? AND course = ? AND section = ? AND semester = ? AND subject = ?
-    ORDER BY date, reg_no
+    SELECT * FROM daily_attendance 
+    WHERE year = ? AND semester = ? AND course = ? AND section = ? AND subject = ?
+    ORDER BY regno
   `;
 
-  connection.query(query, [year, course, section, semester, subject], (err, rows) => {
+  db.query(query, [year, semester, course, section, subject], (err, results) => {
     if (err) {
-      console.error("❌ Database error:", err);
-      return res.status(500).send("Database error.");
+      console.error("Database error:", err);
+      return res.status(500).json({ error: "Database error." });
     }
 
-    if (!rows.length) {
-      return res.status(404).send("No attendance records found.");
+    if (results.length === 0) {
+      return res.status(404).json({ message: "No attendance records found." });
     }
 
-    // Generate PDF
+    // ✅ Generate PDF
+    const PDFDocument = require("pdfkit");
+    const fs = require("fs");
     const doc = new PDFDocument();
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", "attachment; filename=attendance_report.pdf");
+    const fileName = `Attendance_${subject}_${Date.now()}.pdf`;
+    const filePath = `./uploads/${fileName}`;
 
-    doc.pipe(res);
+    doc.pipe(fs.createWriteStream(filePath));
 
     doc.fontSize(18).text("Attendance Report", { align: "center" });
     doc.moveDown();
-    doc.fontSize(12).text(`Year: ${year} | Semester: ${semester} | Course: ${course} | Section: ${section} | Subject: ${subject}`);
+    doc.fontSize(12).text(`Subject: ${subject}`);
+    doc.text(`Course: ${course}`);
+    doc.text(`Section: ${section}`);
+    doc.text(`Semester: ${semester}`);
+    doc.text(`Year: ${year}`);
     doc.moveDown();
 
-    doc.fontSize(12).text("Reg No      Date        Status");
-    doc.moveDown(0.5);
-
-    rows.forEach((row) => {
-      doc.text(`${row.reg_no}    ${row.date.toISOString().split("T")[0]}    ${row.status}`);
+    results.forEach((row, index) => {
+      doc.text(`${index + 1}. RegNo: ${row.regno} - ${row.status} on ${row.date}`);
     });
 
     doc.end();
+
+    doc.on("finish", () => {
+      res.download(filePath, fileName, (err) => {
+        if (err) {
+          console.error("Error sending file:", err);
+        }
+        fs.unlink(filePath, () => {}); // optional cleanup
+      });
+    });
   });
 });
-
-module.exports = router;
-
-
-
