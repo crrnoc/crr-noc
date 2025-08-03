@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>📋 Mark Attendance</title>
+  <title> Mark Attendance</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" href="crrengglogo.png" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
@@ -118,7 +118,8 @@
     let subjects = [];
 
     window.onload = () => {
-      fetch(`/api/staff-allocation?staff_id=${staff_id}`)
+     fetch("https://crr-noc.onrender.com/api/staff-allocation?staff_id=" + staff_id)
+
         .then(res => res.json())
         .then(data => {
           const uniqueCourses = new Set();
