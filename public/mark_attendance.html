@@ -377,7 +377,8 @@ periodSelect.addEventListener('change', () => {
       return;
     }
 
-    fetch(`/api/students-by-course-section?course=${encodeURIComponent(course)}&section=${encodeURIComponent(section)}`)
+   fetch(`/api/students-by-course-section?year=${year}&semester=${semester}&course=${course}&section=${section}`)
+
       .then(res => res.json())
       .then(students => {
         if (!students.length) {
