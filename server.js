@@ -3691,78 +3691,49 @@ app.get('/api/staff/semesters/:staffId', (req, res) => {
   });
 });
 // download attendance pdf
-app.get("/api/download-attendance-pdf", (req, res) => {
-  const { year, semester, course, section, subject } = req.query;
+router.get("/api/download-attendance-pdf", (req, res) => {
+  const { year, course, section, semester, subject } = req.query;
 
-  if (!year || !semester || !course || !section || !subject) {
-    return res.status(400).send("Missing required query parameters.");
-  }
-
-  const sql = `
-    SELECT 
-      a.reg_no AS regno,
-      s.name,
-      COUNT(*) AS total_classes,
-      SUM(CASE WHEN a.status = 'Present' THEN 1 ELSE 0 END) AS attended_classes,
-      ROUND(SUM(CASE WHEN a.status = 'Present' THEN 1 ELSE 0 END) / COUNT(*) * 100, 2) AS percentage
-    FROM attendance a
-    JOIN students s ON a.reg_no = s.reg_no
-    WHERE a.year = ? AND a.semester = ? AND a.course = ? AND a.section = ? AND a.subject = ?
-    GROUP BY a.reg_no
-    ORDER BY a.reg_no;
+  const query = `
+    SELECT reg_no, status, date
+    FROM daily_attendance
+    WHERE year = ? AND course = ? AND section = ? AND semester = ? AND subject = ?
+    ORDER BY date, reg_no
   `;
 
-  connection.query(sql, [year, semester, course, section, subject], (err, rows) => {
+  connection.query(query, [year, course, section, semester, subject], (err, rows) => {
     if (err) {
-      console.error("❌ Error fetching attendance data:", err);
+      console.error("❌ Database error:", err);
       return res.status(500).send("Database error.");
     }
 
     if (!rows.length) {
-      return res.status(404).send("No attendance records found for given inputs.");
+      return res.status(404).send("No attendance records found.");
     }
 
-    const doc = new PDFDocument({ margin: 50, size: "A4" });
-    const filename = `Attendance_${course}_${section}_${subject}_Y${year}_S${semester}.pdf`;
-
-    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    // Generate PDF
+    const doc = new PDFDocument();
     res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", "attachment; filename=attendance_report.pdf");
+
     doc.pipe(res);
 
-    // Title and Header Info
-    doc.fontSize(18).text("📘 Subject-wise Attendance Report", { align: "center" });
-    doc.moveDown(0.5);
-    doc.fontSize(12);
-    doc.text(`Course    : ${course}`);
-    doc.text(`Section   : ${section}`);
-    doc.text(`Year      : ${year}`);
-    doc.text(`Semester  : ${semester}`);
-    doc.text(`Subject   : ${subject}`);
-    doc.moveDown(1);
+    doc.fontSize(18).text("Attendance Report", { align: "center" });
+    doc.moveDown();
+    doc.fontSize(12).text(`Year: ${year} | Semester: ${semester} | Course: ${course} | Section: ${section} | Subject: ${subject}`);
+    doc.moveDown();
 
-    // Table Header
-    doc.font("Helvetica-Bold").fontSize(12);
-    doc.text("Reg No", 50);
-    doc.text("Name", 120);
-    doc.text("Total", 300);
-    doc.text("Attended", 370);
-    doc.text("Percent", 450);
-    doc.moveDown(0.2);
-    doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+    doc.fontSize(12).text("Reg No      Date        Status");
     doc.moveDown(0.5);
 
-    // Table Content
-    doc.font("Helvetica").fontSize(11);
-    rows.forEach(row => {
-      doc.text(row.regno, 50);
-      doc.text(row.name, 120);
-      doc.text(row.total_classes.toString(), 300);
-      doc.text(row.attended_classes.toString(), 370);
-      doc.text(`${row.percentage}%`, 450);
-      doc.moveDown(0.5);
+    rows.forEach((row) => {
+      doc.text(`${row.reg_no}    ${row.date.toISOString().split("T")[0]}    ${row.status}`);
     });
 
     doc.end();
   });
 });
+
+module.exports = router;
+
 
