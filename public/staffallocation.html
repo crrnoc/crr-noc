@@ -2,32 +2,33 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>📘 Staff Period Allocation</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🧑‍🏫 Staff Period Allocation</title>
+  <link rel="icon" href="crrengglogo.png" />
   <link href="https://fonts.googleapis.com/css2?family=Segoe+UI&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
     body {
-      display: flex;
-      min-height: 100vh;
-      background: linear-gradient(to right, #e0eafc, #cfdef3);
       font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      background-color: #f1f1f1;
     }
 
     .sidebar {
-      width: 250px;
-      background: linear-gradient(180deg, #2C3E50, #34495E);
-      padding: 20px;
-      color: white;
       position: fixed;
-      top: 0; left: 0; bottom: 0;
+      top: 0;
+      left: 0;
+      width: 260px;
+      height: 100%;
+      background-color: #20232a;
+      padding-top: 20px;
+      color: white;
     }
 
     .sidebar h2 {
       text-align: center;
+      margin-bottom: 20px;
       font-size: 20px;
-      color: #3cb6ff;
-      margin-bottom: 30px;
     }
 
     .sidebar ul {
@@ -35,100 +36,91 @@
       padding: 0;
     }
 
-    .sidebar li {
-      padding: 12px;
-      margin: 8px 0;
-      background: rgba(255,255,255,0.1);
-      border-radius: 8px;
+    .sidebar ul li {
+      padding: 12px 20px;
       cursor: pointer;
+      border-bottom: 1px solid #333;
     }
 
-    .sidebar li:hover {
-      background: rgba(255,255,255,0.2);
-    }
-
-    .sidebar li.active {
-      background: rgba(255,255,255,0.3);
-      font-weight: bold;
+    .sidebar ul li:hover, .sidebar ul li.active {
+      background-color: #4a90e2;
     }
 
     .main {
-      flex: 1;
-      margin-left: 250px;
-      padding: 40px;
+      margin-left: 260px;
+      padding: 20px;
     }
 
     h1 {
-      text-align: center;
-      margin-bottom: 20px;
-      color: #333;
+      margin-top: 0;
+      font-size: 26px;
     }
 
     form {
-      background: white;
-      padding: 30px;
-      border-radius: 15px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      max-width: 800px;
-      margin: auto;
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    input, select, button {
+      padding: 10px;
+      margin: 5px 0;
+      width: 100%;
+      border: 1px solid #ccc;
+      border-radius: 5px;
     }
 
     label {
-      font-weight: bold;
+      margin-top: 10px;
       display: block;
-      margin-top: 15px;
-    }
-
-    input, select {
-      padding: 10px;
-      width: 100%;
-      margin-top: 5px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
     }
 
     button {
       background-color: #007bff;
       color: white;
-      padding: 12px 20px;
       border: none;
-      border-radius: 6px;
-      margin-top: 25px;
+      font-weight: bold;
       cursor: pointer;
-      width: 100%;
-      font-size: 16px;
     }
 
     button:hover {
       background-color: #0056b3;
     }
 
-    .period-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 10px;
-      margin-top: 20px;
+    .topbar {
+      background-color: #007bff;
+      padding: 10px 20px;
+      color: white;
+      font-size: 18px;
+      margin-left: 260px;
     }
   </style>
 </head>
 <body>
   <div class="sidebar">
-    <h2>Admin Panel</h2>
+    <h2>🧑‍💼 Admin Panel</h2>
     <ul>
-      <li onclick="navigateTo('/uploadattendance')">🗓 Upload Attendance</li>
-      <li onclick="navigateTo('/uploadmidmarks')">📊 Upload Mid Marks</li>
-      <li class="active">📘 Staff Period Allocation</li>
+      <li onclick="navigateTo('/dashboard')">🏠 Dashboard</li>
+      <li onclick="navigateTo('/uploadattendance')">📤 Upload Attendance</li>
+      <li onclick="navigateTo('/uploadmidmarks')">📥 Upload Mid Marks</li>
+      <li onclick="navigateTo('/uploadstudentdata')">👨‍🎓 Upload Student Data</li>
+      <li class="active">🧑‍🏫 Staff Period Allocation</li>
     </ul>
   </div>
 
+  <div class="topbar">🧑‍🏫 Staff Period Allocation</div>
+
   <div class="main">
-    <h1>📘 Staff Period Allocation</h1>
     <form id="allocationForm">
+      <h1>Allocate Periods to Staff</h1>
+
       <label>Staff ID</label>
       <input type="text" name="staff_id" id="staff_id" required />
 
       <label>Staff Name</label>
-      <input type="text" id="staff_name" readonly />
+      <input type="text" name="staff_name" id="staff_name" readonly />
 
       <label>Department</label>
       <select name="dept_code" id="dept_code" required></select>
@@ -137,148 +129,100 @@
       <select name="course" id="course" required></select>
 
       <label>Year</label>
-      <select name="year" id="year" required>
-        <option value="">Select</option>
-        <option value="1">1st Year</option>
-        <option value="2">2nd Year</option>
-        <option value="3">3rd Year</option>
-        <option value="4">4th Year</option>
-      </select>
+      <select name="year" id="year" required></select>
 
       <label>Section</label>
       <select name="section" id="section" required></select>
 
       <label>Day</label>
       <select name="day" required>
-        <option value="">Select Day</option>
-        <option>Monday</option>
-        <option>Tuesday</option>
-        <option>Wednesday</option>
-        <option>Thursday</option>
-        <option>Friday</option>
-        <option>Saturday</option>
+        <option value="">Select</option>
+        <option value="Monday">Monday</option>
+        <option value="Tuesday">Tuesday</option>
+        <option value="Wednesday">Wednesday</option>
+        <option value="Thursday">Thursday</option>
+        <option value="Friday">Friday</option>
+        <option value="Saturday">Saturday</option>
       </select>
 
-      <div class="period-grid">
-        <div>
-          <label>Period 1 (9:30 - 10:20)</label>
-          <input type="text" name="period1" />
-        </div>
-        <div>
-          <label>Period 2 (10:20 - 11:10)</label>
-          <input type="text" name="period2" />
-        </div>
-        <div>
-          <label>Period 3 (11:30 - 12:20)</label>
-          <input type="text" name="period3" />
-        </div>
-        <div>
-          <label>Period 4 (12:20 - 1:10)</label>
-          <input type="text" name="period4" />
-        </div>
-        <div>
-          <label>Period 5 (2:00 - 2:50)</label>
-          <input type="text" name="period5" />
-        </div>
-        <div>
-          <label>Period 6 (2:50 - 3:40)</label>
-          <input type="text" name="period6" />
-        </div>
-        <div>
-          <label>Period 7 (3:40 - 4:30)</label>
-          <input type="text" name="period7" />
-        </div>
-      </div>
+      <label>Period 1</label><input type="text" name="period1">
+      <label>Period 2</label><input type="text" name="period2">
+      <label>Period 3</label><input type="text" name="period3">
+      <label>Period 4</label><input type="text" name="period4">
+      <label>Period 5</label><input type="text" name="period5">
+      <label>Period 6</label><input type="text" name="period6">
+      <label>Period 7</label><input type="text" name="period7">
 
-      <button type="submit">📝 Allocate Periods</button>
+      <button type="submit">Allocate</button>
     </form>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script>
     const baseUrl = "https://crr-noc.onrender.com";
 
-    // Fetch staff name
-    document.getElementById("staff_id").addEventListener("blur", async function () {
-      const id = this.value.trim();
-      if (!id) return;
-      try {
-        const res = await fetch(`${baseUrl}/api/staff/${id}`);
-        const data = await res.json();
-        if (data.staff_name) {
-          document.getElementById("staff_name").value = data.staff_name;
-        } else {
-          document.getElementById("staff_name").value = "";
-          Swal.fire("❌ Not Found", "Staff ID not found", "error");
-        }
-      } catch (e) {
-        Swal.fire("❌ Error", "Unable to fetch staff info", "error");
-      }
+    async function fetchStaffName(id) {
+      const res = await fetch(`${baseUrl}/api/staff/${id}`);
+      const data = await res.json();
+      document.getElementById('staff_name').value = data.staff_name || '';
+    }
+
+    document.getElementById("staff_id").addEventListener("blur", e => {
+      const id = e.target.value;
+      if (id) fetchStaffName(id);
     });
 
-    // Fetch departments
-    fetch(`${baseUrl}/api/departments`)
-      .then(res => res.json())
-      .then(data => {
-        const select = document.getElementById("dept_code");
-        select.innerHTML = '<option value="">Select Department</option>';
-        data.forEach(row => {
-          select.innerHTML += `<option value="${row.dept_code}">${row.dept_code}</option>`;
-        });
+    async function populateDropdown(url, selectEl, key) {
+      const res = await fetch(url);
+      const data = await res.json();
+      selectEl.innerHTML = '<option value="">Select</option>' +
+        data.map(d => `<option value="${d[key]}">${d[key]}</option>`).join('');
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      populateDropdown(`${baseUrl}/api/departments`, document.getElementById('dept_code'), 'dept_code');
+
+      document.getElementById('dept_code').addEventListener('change', e => {
+        const dept = e.target.value;
+        populateDropdown(`${baseUrl}/api/courses/${dept}`, document.getElementById('course'), 'course');
       });
 
-    // On dept change → fetch courses
-    document.getElementById("dept_code").addEventListener("change", function () {
-      const dept = this.value;
-      fetch(`${baseUrl}/api/courses/${dept}`)
-        .then(res => res.json())
-        .then(data => {
-          const courseSel = document.getElementById("course");
-          courseSel.innerHTML = '<option value="">Select Course</option>';
-          data.forEach(row => {
-            courseSel.innerHTML += `<option value="${row.course}">${row.course}</option>`;
+      document.getElementById('course').addEventListener('change', () => {
+        const dept = document.getElementById('dept_code').value;
+        const course = document.getElementById('course').value;
+        fetch(`${baseUrl}/api/year-section?dept_code=${dept}&course=${course}`)
+          .then(res => res.json())
+          .then(data => {
+            const yearSel = document.getElementById('year');
+            const sectionSel = document.getElementById('section');
+            yearSel.innerHTML = '<option value="">Select</option>';
+            sectionSel.innerHTML = '<option value="">Select</option>';
+            data.forEach(row => {
+              if (!yearSel.innerHTML.includes(row.year)) {
+                yearSel.innerHTML += `<option value="${row.year}">${row.year}</option>`;
+              }
+              sectionSel.innerHTML += `<option value="${row.section}">${row.section}</option>`;
+            });
           });
-        });
+      });
     });
 
-    // On course change → fetch sections
-    document.getElementById("course").addEventListener("change", function () {
-      const dept = document.getElementById("dept_code").value;
-      const course = this.value;
-      fetch(`${baseUrl}/api/year-section?dept_code=${dept}&course=${course}`)
-        .then(res => res.json())
-        .then(data => {
-          const sectionSel = document.getElementById("section");
-          sectionSel.innerHTML = '<option value="">Select Section</option>';
-          data.forEach(row => {
-            sectionSel.innerHTML += `<option value="${row.section}">${row.section}</option>`;
-          });
-        });
-    });
-
-    // Submit form
-    document.getElementById("allocationForm").addEventListener("submit", async function (e) {
+    document.getElementById("allocationForm").addEventListener("submit", async function(e) {
       e.preventDefault();
-      const formData = new FormData(this);
+      const formData = new FormData(e.target);
       const data = Object.fromEntries(formData.entries());
 
-      try {
-        const res = await fetch(`${baseUrl}/api/period-allocation`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data)
-        });
+      const res = await fetch(`${baseUrl}/api/allocate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
 
-        const result = await res.json();
-        if (res.ok) {
-          Swal.fire("✅ Success", "Periods allocated successfully", "success");
-          this.reset();
-          document.getElementById("staff_name").value = "";
-        } else {
-          Swal.fire("❌ Error", result.error || "Something went wrong", "error");
-        }
-      } catch (err) {
-        Swal.fire("❌ Error", "Server error occurred", "error");
+      const result = await res.json();
+      if (result.success) {
+        Swal.fire("✅ Success", result.message, "success");
+        e.target.reset();
+      } else {
+        Swal.fire("❌ Error", result.error || "Failed to allocate.", "error");
       }
     });
 
