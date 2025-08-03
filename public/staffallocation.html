@@ -2,274 +2,293 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>🧑‍🏫 Staff Period Allocation</title>
-  <link rel="icon" href="crrengglogo.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>📚 Staff Period Allocation</title>
   <link href="https://fonts.googleapis.com/css2?family=Segoe+UI&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
+    * {
       margin: 0;
-      background-color: #f1f1f1;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
     }
-
+    body {
+      display: flex;
+      min-height: 100vh;
+      background: linear-gradient(to right, #e0eafc, #cfdef3);
+      color: #222;
+      overflow-x: hidden;
+    }
     .sidebar {
+      width: 250px;
+      background: linear-gradient(180deg, #2C3E50, #34495E);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 260px;
-      height: 100%;
-      background-color: #20232a;
-      padding-top: 20px;
+      top: 0; left: 0; bottom: 0;
       color: white;
+      z-index: 100;
     }
-
     .sidebar h2 {
       text-align: center;
-      margin-bottom: 20px;
+      font-weight: bold;
       font-size: 20px;
+      margin-bottom: 30px;
+      color: #3cb6ff;
     }
-
     .sidebar ul {
       list-style: none;
       padding: 0;
     }
-
-    .sidebar ul li {
-      padding: 12px 20px;
+    .sidebar li {
+      padding: 12px;
+      border-radius: 8px;
+      margin: 8px 0;
       cursor: pointer;
-      border-bottom: 1px solid #333;
+      transition: all 0.3s ease;
+      background: rgba(255,255,255,0.1);
     }
-
-    .sidebar ul li:hover, .sidebar ul li.active {
-      background-color: #4a90e2;
+    .sidebar li:hover {
+      background: rgba(255,255,255,0.2);
+      transform: translateX(5px);
     }
-
+    .sidebar li.active {
+      background: rgba(255,255,255,0.3);
+      font-weight: bold;
+    }
+    .sidebar button {
+      background-color: #E67E22;
+      border: none;
+      color: white;
+      padding: 12px;
+      border-radius: 20px;
+      margin-top: auto;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    .sidebar button:hover {
+      background-color: #CA6F1E;
+    }
     .main {
-      margin-left: 260px;
-      padding: 20px;
+      flex: 1;
+      margin-left: 250px;
+      padding: 40px;
+      margin-top: 36px;
     }
-
-    h1 {
-      margin-top: 0;
-      font-size: 26px;
+    .form-box {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      max-width: 800px;
+      margin: auto;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     }
-
-    form {
-      background-color: #fff;
-      padding: 20px;
-      border-radius: 10px;
-      margin-bottom: 30px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    .form-box h2 {
+      margin-bottom: 25px;
+      color: #2c3e50;
     }
-
-    input, select, button {
-      padding: 10px;
-      margin: 5px 0;
-      width: 100%;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-
     label {
-      margin-top: 10px;
+      font-weight: 600;
+      margin-top: 15px;
       display: block;
     }
-
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
     button {
-      background-color: #007bff;
+      background: #007bff;
       color: white;
+      padding: 12px 25px;
       border: none;
-      font-weight: bold;
+      border-radius: 6px;
+      margin-top: 20px;
       cursor: pointer;
     }
-
     button:hover {
-      background-color: #0056b3;
+      background: #0056b3;
     }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: white;
-      margin-top: 20px;
-    }
-
-    th, td {
-      padding: 10px;
-      border: 1px solid #ddd;
-      text-align: left;
-    }
-
-    th {
-      background-color: #007bff;
-      color: white;
-    }
-
-    .topbar {
-      background-color: #007bff;
-      padding: 10px 20px;
-      color: white;
-      font-size: 18px;
-      margin-left: 260px;
+    @media (max-width: 768px) {
+      .main { margin-left: 0; padding: 20px; }
+      .sidebar { display: none; }
     }
   </style>
 </head>
 <body>
-
   <div class="sidebar">
-    <h2>🧑‍💼 Admin Panel</h2>
+    <h2>Admin Panel</h2>
     <ul>
-      <li onclick="navigateTo('/dashboard')">🏠 Dashboard</li>
-      <li onclick="navigateTo('/uploadattendance')">📤 Upload Attendance</li>
-      <li onclick="navigateTo('/uploadmidmarks')">📥 Upload Mid Marks</li>
-      <li onclick="navigateTo('/uploadstudentdata')">👨‍🎓 Upload Student Data</li>
+      <li onclick="navigateTo('/uploadattendance')">🗓 Upload Attendance</li>
+      <li onclick="navigateTo('/uploadmidmarks')">📊 Upload Mid Marks</li>
+      <li onclick="navigateTo('/addmycounselling')">👥 Assign Counselling</li>
+      <li onclick="navigateTo('/dumatch')">📊 DU Match Status</li>
+      <li onclick="navigateTo('/removestudents')">🗑️ Delete Students</li>
+      <li onclick="navigateTo('/uploadstudents')">📚 Upload Student Data</li>
       <li class="active">🧑‍🏫 Staff Period Allocation</li>
     </ul>
+    <button onclick="logout()">🚪 Logout</button>
   </div>
 
-  <div class="topbar">🧑‍🏫 Staff Period Allocation</div>
-
   <div class="main">
-    <form id="allocationForm">
-      <h1>Allocate Periods to Staff</h1>
-      <label>Year</label>
-      <input type="text" name="year" required />
-
-      <label>Department Code</label>
-      <input type="text" name="dept_code" required />
-
-      <label>Course</label>
-      <input type="text" name="course" required />
-
-      <label>Section</label>
-      <input type="text" name="section" required />
-
-      <label>Day</label>
-      <select name="day" required>
-        <option value="">Select</option>
-        <option value="Monday">Monday</option>
-        <option value="Tuesday">Tuesday</option>
-        <option value="Wednesday">Wednesday</option>
-        <option value="Thursday">Thursday</option>
-        <option value="Friday">Friday</option>
-        <option value="Saturday">Saturday</option>
-      </select>
-
+    <div class="form-box">
+      <h2>🧑‍🏫 Allocate Periods to Staff</h2>
       <label>Staff ID</label>
-      <input type="text" name="staff_id" required />
+      <input type="text" id="staff_id" placeholder="Enter Staff ID" />
 
       <label>Staff Name</label>
-      <input type="text" name="staff_name" required />
+      <input type="text" id="staff_name" disabled />
 
-      <label>Period 1</label>
-      <input type="text" name="period1" />
-      <label>Period 2</label>
-      <input type="text" name="period2" />
-      <label>Period 3</label>
-      <input type="text" name="period3" />
-      <label>Period 4</label>
-      <input type="text" name="period4" />
-      <label>Period 5</label>
-      <input type="text" name="period5" />
-      <label>Period 6</label>
-      <input type="text" name="period6" />
-      <label>Period 7</label>
-      <input type="text" name="period7" />
-
-      <button type="submit">Allocate</button>
-    </form>
-
-    <form id="fetchForm">
-      <h2>📋 View Staff Period Allocation</h2>
-      <label>Year</label>
-      <input type="text" name="year" required />
-
-      <label>Department Code</label>
-      <input type="text" name="dept_code" required />
+      <label>Department</label>
+      <select id="dept"></select>
 
       <label>Course</label>
-      <input type="text" name="course" required />
+      <select id="course"></select>
 
-      <label>Section</label>
-      <input type="text" name="section" required />
+      <div class="grid-2">
+        <div>
+          <label>Year</label>
+          <select id="year"></select>
+        </div>
+        <div>
+          <label>Section</label>
+          <select id="section"></select>
+        </div>
+      </div>
 
       <label>Day</label>
-      <select name="day" required>
-        <option value="">Select</option>
-        <option value="Monday">Monday</option>
-        <option value="Tuesday">Tuesday</option>
-        <option value="Wednesday">Wednesday</option>
-        <option value="Thursday">Thursday</option>
-        <option value="Friday">Friday</option>
-        <option value="Saturday">Saturday</option>
+      <select id="day">
+        <option>Monday</option>
+        <option>Tuesday</option>
+        <option>Wednesday</option>
+        <option>Thursday</option>
+        <option>Friday</option>
+        <option>Saturday</option>
       </select>
 
-      <button type="submit">Fetch</button>
-    </form>
+      <div class="grid-2">
+        <div><label>Period 1</label><input type="text" id="period1" /></div>
+        <div><label>Period 2</label><input type="text" id="period2" /></div>
+        <div><label>Period 3</label><input type="text" id="period3" /></div>
+        <div><label>Period 4</label><input type="text" id="period4" /></div>
+        <div><label>Period 5</label><input type="text" id="period5" /></div>
+        <div><label>Period 6</label><input type="text" id="period6" /></div>
+        <div><label>Period 7</label><input type="text" id="period7" /></div>
+      </div>
 
-    <div id="allocationTable"></div>
+      <button onclick="submitAllocation()">Save Allocation</button>
+    </div>
   </div>
 
   <script>
-    const baseUrl = "https://crr-noc.onrender.com"; // change to your server URL
+    const baseUrl = "https://crr-noc.onrender.com";
 
-    document.getElementById("allocationForm").addEventListener("submit", async function (e) {
-      e.preventDefault();
-      const formData = new FormData(e.target);
-      const data = Object.fromEntries(formData.entries());
+    document.getElementById('staff_id').addEventListener('blur', async () => {
+      const id = document.getElementById('staff_id').value;
+      const res = await fetch(`${baseUrl}/api/staff/${id}`);
+      const data = await res.json();
+      document.getElementById('staff_name').value = data.staff_name || 'Not found';
+    });
 
-      const response = await fetch(`${baseUrl}/api/staff-period-allocation`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+    async function populateDropdown(id, url, key) {
+      const res = await fetch(url);
+      const data = await res.json();
+      const select = document.getElementById(id);
+      select.innerHTML = '<option value="">Select</option>';
+      data.forEach(row => {
+        const opt = document.createElement('option');
+        opt.value = row[key];
+        opt.textContent = row[key];
+        select.appendChild(opt);
+      });
+    }
+
+    populateDropdown('dept', `${baseUrl}/api/departments`, 'dept_code');
+
+    document.getElementById('dept').addEventListener('change', () => {
+      const dept = document.getElementById('dept').value;
+      populateDropdown('course', `${baseUrl}/api/courses/${dept}`, 'course');
+    });
+
+    document.getElementById('course').addEventListener('change', async () => {
+      const dept = document.getElementById('dept').value;
+      const course = document.getElementById('course').value;
+      const res = await fetch(`${baseUrl}/api/year-section?dept_code=${dept}&course=${course}`);
+      const data = await res.json();
+      const yearSel = document.getElementById('year');
+      const sectionSel = document.getElementById('section');
+
+      yearSel.innerHTML = '';
+      sectionSel.innerHTML = '';
+      const years = [...new Set(data.map(row => row.year))];
+      const sections = [...new Set(data.map(row => row.section))];
+
+      years.forEach(y => {
+        const opt = document.createElement('option');
+        opt.value = y;
+        opt.textContent = y;
+        yearSel.appendChild(opt);
       });
 
-      const result = await response.json();
-      if (result.success) {
-        Swal.fire("✅ Success", "Period allocation saved!", "success");
-        e.target.reset();
-      } else {
-        Swal.fire("❌ Error", "Failed to save allocation.", "error");
-      }
+      sections.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s;
+        opt.textContent = s;
+        sectionSel.appendChild(opt);
+      });
     });
 
-    document.getElementById("fetchForm").addEventListener("submit", async function (e) {
-      e.preventDefault();
-      const formData = new FormData(e.target);
-      const params = new URLSearchParams(formData);
-      const response = await fetch(`${baseUrl}/api/staff-period-allocation?${params}`);
-      const result = await response.json();
+    async function submitAllocation() {
+      const payload = {
+        staff_id: document.getElementById('staff_id').value,
+        year: document.getElementById('year').value,
+        course: document.getElementById('course').value,
+        dept_code: document.getElementById('dept').value,
+        section: document.getElementById('section').value,
+        day: document.getElementById('day').value,
+        period1: document.getElementById('period1').value,
+        period2: document.getElementById('period2').value,
+        period3: document.getElementById('period3').value,
+        period4: document.getElementById('period4').value,
+        period5: document.getElementById('period5').value,
+        period6: document.getElementById('period6').value,
+        period7: document.getElementById('period7').value,
+      };
 
-      if (result.success && result.data.length > 0) {
-        let table = "<table><tr><th>Staff ID</th><th>Staff Name</th>";
-        for (let i = 1; i <= 7; i++) table += `<th>Period ${i}</th>`;
-        table += "</tr>";
+      const res = await fetch(`${baseUrl}/api/period-allocation`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
 
-        result.data.forEach(row => {
-          table += `<tr>
-            <td>${row.staff_id}</td>
-            <td>${row.staff_name}</td>
-            <td>${row.period1 || ''}</td>
-            <td>${row.period2 || ''}</td>
-            <td>${row.period3 || ''}</td>
-            <td>${row.period4 || ''}</td>
-            <td>${row.period5 || ''}</td>
-            <td>${row.period6 || ''}</td>
-            <td>${row.period7 || ''}</td>
-          </tr>`;
-        });
-
-        table += "</table>";
-        document.getElementById("allocationTable").innerHTML = table;
+      const result = await res.json();
+      if (res.ok) {
+        Swal.fire('✅ Success', result.message, 'success');
       } else {
-        document.getElementById("allocationTable").innerHTML = "<p>No allocation data found.</p>";
+        Swal.fire('❌ Error', result.error || 'Something went wrong', 'error');
       }
-    });
+    }
 
-    function navigateTo(path) {
-      window.location.href = path;
+    function navigateTo(route) {
+      window.location.href = route;
+    }
+
+    function logout() {
+      fetch("/logout")
+        .then(() => {
+          localStorage.removeItem("userId");
+          window.location.replace("index.html");
+        })
+        .catch(() => alert("Logout failed"));
     }
   </script>
 </body>
