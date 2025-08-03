@@ -368,37 +368,38 @@ periodSelect.addEventListener('change', () => {
   }
 });
 
-  function fetchStudents() {
-    const course = courseSelect.value;
-    const section = sectionSelect.value;
+function fetchStudents() {
+  const course = courseSelect.value;
+  const section = sectionSelect.value;
+  const year = yearSelect.value;
+  const semester = semesterSelect.value;
 
-    if (!course || !section) {
-      Swal.fire("⚠️ Select Course & Section", "", "warning");
-      return;
-    }
-
-   fetch(`/api/students-by-course-section?year=${year}&semester=${semester}&course=${course}&section=${section}`)
-
-      .then(res => res.json())
-      .then(students => {
-        if (!students.length) {
-          studentsTable.innerHTML = `<tr><td colspan="3">No students found</td></tr>`;
-          return;
-        }
-
-        studentsTable.innerHTML = students.map(s => `
-          <tr>
-            <td>${s.reg_no}</td>
-            <td>${s.name}</td>
-            <td><input type="checkbox" name="attendance" value="${s.reg_no}" checked></td>
-          </tr>
-        `).join('');
-      })
-      .catch(err => {
-        console.error("Failed to fetch students", err);
-        Swal.fire("❌ Error", "Unable to load students", "error");
-      });
+  if (!course || !section || !year || !semester) {
+    Swal.fire("⚠️ Please select all required fields", "", "warning");
+    return;
   }
+
+  fetch(`/api/students-by-course-section?year=${year}&semester=${semester}&course=${course}&section=${section}`)
+    .then(res => res.json())
+    .then(students => {
+      if (!students.length) {
+        studentsTable.innerHTML = `<tr><td colspan="3">No students found</td></tr>`;
+        return;
+      }
+
+      studentsTable.innerHTML = students.map(s => `
+        <tr>
+          <td>${s.reg_no}</td>
+          <td>${s.name}</td>
+          <td><input type="checkbox" name="attendance" value="${s.reg_no}" checked></td>
+        </tr>
+      `).join('');
+    })
+    .catch(err => {
+      console.error("Failed to fetch students", err);
+      Swal.fire("❌ Error", "Unable to load students", "error");
+    });
+}
 
   form.onsubmit = async (e) => {
     e.preventDefault();
