@@ -456,7 +456,15 @@ document.getElementById("downloadPdfBtn").addEventListener("click", () => {
     return;
   }
 
-  const url = `/api/download-attendance-pdf?year=${year}&semester=${semester}&course=${course}&section=${section}`;
+ const subject = periodSelect.value;
+
+if (!subject) {
+  Swal.fire("⚠️ Please select a subject", "", "warning");
+  return;
+}
+
+const url = `/api/download-attendance-pdf?year=${year}&semester=${semester}&course=${course}&section=${section}&subject=${encodeURIComponent(subject)}`;
+
 
   // Open in new tab or trigger download
   window.open(url, '_blank');
