@@ -255,17 +255,27 @@
 
   <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
 <script>
-  const userId = localStorage.getItem("userId");
-  const staff_id = localStorage.getItem("staff_id");
+const userId = localStorage.getItem("userId") || "";
+let staff_id = localStorage.getItem("staff_id") || "";
 
-  // Unauthorized access check
-  if (!userId || !staff_id) {
-    Swal.fire("⚠️ Not Logged In", "Please log in again as staff.", "warning").then(() => {
-      window.location.href = "index.html";
-    });
-  } else {
-    document.getElementById("userId").textContent = userId;
+if (!userId) {
+  Swal.fire({
+    icon: 'warning',
+    title: 'Please Login',
+    text: 'You are not logged in as staff.'
+  }).then(() => {
+    window.location.href = "index.html";
+  });
+} else {
+  document.getElementById("userId").textContent = userId;
+
+  // Fallback: if staff_id missing, assume staff uses userId as staff_id
+  if (!staff_id) {
+    staff_id = userId;
+    console.warn("⚠️ staff_id not found in localStorage. Using userId as staff_id fallback:", staff_id);
   }
+}
+
 
   const courseSelect = document.getElementById("courseSelect");
   const sectionSelect = document.getElementById("sectionSelect");
