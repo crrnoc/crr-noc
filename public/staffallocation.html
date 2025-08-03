@@ -2,125 +2,112 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>📚 Staff Period Allocation</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>📘 Staff Period Allocation</title>
   <link href="https://fonts.googleapis.com/css2?family=Segoe+UI&display=swap" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css"/>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Segoe UI', sans-serif;
-    }
     body {
       display: flex;
       min-height: 100vh;
       background: linear-gradient(to right, #e0eafc, #cfdef3);
-      color: #222;
-      overflow-x: hidden;
+      font-family: 'Segoe UI', sans-serif;
     }
+
     .sidebar {
       width: 250px;
       background: linear-gradient(180deg, #2C3E50, #34495E);
       padding: 20px;
-      display: flex;
-      flex-direction: column;
+      color: white;
       position: fixed;
       top: 0; left: 0; bottom: 0;
-      color: white;
-      z-index: 100;
     }
+
     .sidebar h2 {
       text-align: center;
-      font-weight: bold;
       font-size: 20px;
-      margin-bottom: 30px;
       color: #3cb6ff;
+      margin-bottom: 30px;
     }
+
     .sidebar ul {
       list-style: none;
       padding: 0;
     }
+
     .sidebar li {
       padding: 12px;
-      border-radius: 8px;
       margin: 8px 0;
-      cursor: pointer;
-      transition: all 0.3s ease;
       background: rgba(255,255,255,0.1);
+      border-radius: 8px;
+      cursor: pointer;
     }
+
     .sidebar li:hover {
       background: rgba(255,255,255,0.2);
-      transform: translateX(5px);
     }
+
     .sidebar li.active {
       background: rgba(255,255,255,0.3);
       font-weight: bold;
     }
-    .sidebar button {
-      background-color: #E67E22;
-      border: none;
-      color: white;
-      padding: 12px;
-      border-radius: 20px;
-      margin-top: auto;
-      cursor: pointer;
-      transition: background 0.3s ease;
-    }
-    .sidebar button:hover {
-      background-color: #CA6F1E;
-    }
+
     .main {
       flex: 1;
       margin-left: 250px;
       padding: 40px;
-      margin-top: 36px;
     }
-    .form-box {
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    form {
       background: white;
       padding: 30px;
-      border-radius: 12px;
+      border-radius: 15px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
       max-width: 800px;
       margin: auto;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     }
-    .form-box h2 {
-      margin-bottom: 25px;
-      color: #2c3e50;
-    }
+
     label {
-      font-weight: 600;
-      margin-top: 15px;
+      font-weight: bold;
       display: block;
+      margin-top: 15px;
     }
+
     input, select {
-      width: 100%;
       padding: 10px;
+      width: 100%;
       margin-top: 5px;
       border: 1px solid #ccc;
       border-radius: 6px;
     }
-    .grid-2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-    }
+
     button {
-      background: #007bff;
+      background-color: #007bff;
       color: white;
-      padding: 12px 25px;
+      padding: 12px 20px;
       border: none;
       border-radius: 6px;
-      margin-top: 20px;
+      margin-top: 25px;
       cursor: pointer;
+      width: 100%;
+      font-size: 16px;
     }
+
     button:hover {
-      background: #0056b3;
+      background-color: #0056b3;
     }
-    @media (max-width: 768px) {
-      .main { margin-left: 0; padding: 20px; }
-      .sidebar { display: none; }
+
+    .period-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-top: 20px;
     }
   </style>
 </head>
@@ -130,43 +117,40 @@
     <ul>
       <li onclick="navigateTo('/uploadattendance')">🗓 Upload Attendance</li>
       <li onclick="navigateTo('/uploadmidmarks')">📊 Upload Mid Marks</li>
-      <li onclick="navigateTo('/addmycounselling')">👥 Assign Counselling</li>
-      <li onclick="navigateTo('/dumatch')">📊 DU Match Status</li>
-      <li onclick="navigateTo('/removestudents')">🗑️ Delete Students</li>
-      <li onclick="navigateTo('/uploadstudents')">📚 Upload Student Data</li>
-      <li class="active">🧑‍🏫 Staff Period Allocation</li>
+      <li class="active">📘 Staff Period Allocation</li>
     </ul>
-    <button onclick="logout()">🚪 Logout</button>
   </div>
 
   <div class="main">
-    <div class="form-box">
-      <h2>🧑‍🏫 Allocate Periods to Staff</h2>
+    <h1>📘 Staff Period Allocation</h1>
+    <form id="allocationForm">
       <label>Staff ID</label>
-      <input type="text" id="staff_id" placeholder="Enter Staff ID" />
+      <input type="text" name="staff_id" id="staff_id" required />
 
       <label>Staff Name</label>
-      <input type="text" id="staff_name" disabled />
+      <input type="text" id="staff_name" readonly />
 
       <label>Department</label>
-      <select id="dept"></select>
+      <select name="dept_code" id="dept_code" required></select>
 
       <label>Course</label>
-      <select id="course"></select>
+      <select name="course" id="course" required></select>
 
-      <div class="grid-2">
-        <div>
-          <label>Year</label>
-          <select id="year"></select>
-        </div>
-        <div>
-          <label>Section</label>
-          <select id="section"></select>
-        </div>
-      </div>
+      <label>Year</label>
+      <select name="year" id="year" required>
+        <option value="">Select</option>
+        <option value="1">1st Year</option>
+        <option value="2">2nd Year</option>
+        <option value="3">3rd Year</option>
+        <option value="4">4th Year</option>
+      </select>
+
+      <label>Section</label>
+      <select name="section" id="section" required></select>
 
       <label>Day</label>
-      <select id="day">
+      <select name="day" required>
+        <option value="">Select Day</option>
         <option>Monday</option>
         <option>Tuesday</option>
         <option>Wednesday</option>
@@ -175,120 +159,131 @@
         <option>Saturday</option>
       </select>
 
-      <div class="grid-2">
-        <div><label>Period 1</label><input type="text" id="period1" /></div>
-        <div><label>Period 2</label><input type="text" id="period2" /></div>
-        <div><label>Period 3</label><input type="text" id="period3" /></div>
-        <div><label>Period 4</label><input type="text" id="period4" /></div>
-        <div><label>Period 5</label><input type="text" id="period5" /></div>
-        <div><label>Period 6</label><input type="text" id="period6" /></div>
-        <div><label>Period 7</label><input type="text" id="period7" /></div>
+      <div class="period-grid">
+        <div>
+          <label>Period 1 (9:30 - 10:20)</label>
+          <input type="text" name="period1" />
+        </div>
+        <div>
+          <label>Period 2 (10:20 - 11:10)</label>
+          <input type="text" name="period2" />
+        </div>
+        <div>
+          <label>Period 3 (11:30 - 12:20)</label>
+          <input type="text" name="period3" />
+        </div>
+        <div>
+          <label>Period 4 (12:20 - 1:10)</label>
+          <input type="text" name="period4" />
+        </div>
+        <div>
+          <label>Period 5 (2:00 - 2:50)</label>
+          <input type="text" name="period5" />
+        </div>
+        <div>
+          <label>Period 6 (2:50 - 3:40)</label>
+          <input type="text" name="period6" />
+        </div>
+        <div>
+          <label>Period 7 (3:40 - 4:30)</label>
+          <input type="text" name="period7" />
+        </div>
       </div>
 
-      <button onclick="submitAllocation()">Save Allocation</button>
-    </div>
+      <button type="submit">📝 Allocate Periods</button>
+    </form>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script>
     const baseUrl = "https://crr-noc.onrender.com";
 
-    document.getElementById('staff_id').addEventListener('blur', async () => {
-      const id = document.getElementById('staff_id').value;
-      const res = await fetch(`${baseUrl}/api/staff/${id}`);
-      const data = await res.json();
-      document.getElementById('staff_name').value = data.staff_name || 'Not found';
-    });
-
-    async function populateDropdown(id, url, key) {
-      const res = await fetch(url);
-      const data = await res.json();
-      const select = document.getElementById(id);
-      select.innerHTML = '<option value="">Select</option>';
-      data.forEach(row => {
-        const opt = document.createElement('option');
-        opt.value = row[key];
-        opt.textContent = row[key];
-        select.appendChild(opt);
-      });
-    }
-
-    populateDropdown('dept', `${baseUrl}/api/departments`, 'dept_code');
-
-    document.getElementById('dept').addEventListener('change', () => {
-      const dept = document.getElementById('dept').value;
-      populateDropdown('course', `${baseUrl}/api/courses/${dept}`, 'course');
-    });
-
-    document.getElementById('course').addEventListener('change', async () => {
-      const dept = document.getElementById('dept').value;
-      const course = document.getElementById('course').value;
-      const res = await fetch(`${baseUrl}/api/year-section?dept_code=${dept}&course=${course}`);
-      const data = await res.json();
-      const yearSel = document.getElementById('year');
-      const sectionSel = document.getElementById('section');
-
-      yearSel.innerHTML = '';
-      sectionSel.innerHTML = '';
-      const years = [...new Set(data.map(row => row.year))];
-      const sections = [...new Set(data.map(row => row.section))];
-
-      years.forEach(y => {
-        const opt = document.createElement('option');
-        opt.value = y;
-        opt.textContent = y;
-        yearSel.appendChild(opt);
-      });
-
-      sections.forEach(s => {
-        const opt = document.createElement('option');
-        opt.value = s;
-        opt.textContent = s;
-        sectionSel.appendChild(opt);
-      });
-    });
-
-    async function submitAllocation() {
-      const payload = {
-        staff_id: document.getElementById('staff_id').value,
-        year: document.getElementById('year').value,
-        course: document.getElementById('course').value,
-        dept_code: document.getElementById('dept').value,
-        section: document.getElementById('section').value,
-        day: document.getElementById('day').value,
-        period1: document.getElementById('period1').value,
-        period2: document.getElementById('period2').value,
-        period3: document.getElementById('period3').value,
-        period4: document.getElementById('period4').value,
-        period5: document.getElementById('period5').value,
-        period6: document.getElementById('period6').value,
-        period7: document.getElementById('period7').value,
-      };
-
-      const res = await fetch(`${baseUrl}/api/period-allocation`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      const result = await res.json();
-      if (res.ok) {
-        Swal.fire('✅ Success', result.message, 'success');
-      } else {
-        Swal.fire('❌ Error', result.error || 'Something went wrong', 'error');
+    // Fetch staff name
+    document.getElementById("staff_id").addEventListener("blur", async function () {
+      const id = this.value.trim();
+      if (!id) return;
+      try {
+        const res = await fetch(`${baseUrl}/api/staff/${id}`);
+        const data = await res.json();
+        if (data.staff_name) {
+          document.getElementById("staff_name").value = data.staff_name;
+        } else {
+          document.getElementById("staff_name").value = "";
+          Swal.fire("❌ Not Found", "Staff ID not found", "error");
+        }
+      } catch (e) {
+        Swal.fire("❌ Error", "Unable to fetch staff info", "error");
       }
-    }
+    });
 
-    function navigateTo(route) {
-      window.location.href = route;
-    }
+    // Fetch departments
+    fetch(`${baseUrl}/api/departments`)
+      .then(res => res.json())
+      .then(data => {
+        const select = document.getElementById("dept_code");
+        select.innerHTML = '<option value="">Select Department</option>';
+        data.forEach(row => {
+          select.innerHTML += `<option value="${row.dept_code}">${row.dept_code}</option>`;
+        });
+      });
 
-    function logout() {
-      fetch("/logout")
-        .then(() => {
-          localStorage.removeItem("userId");
-          window.location.replace("index.html");
-        })
-        .catch(() => alert("Logout failed"));
+    // On dept change → fetch courses
+    document.getElementById("dept_code").addEventListener("change", function () {
+      const dept = this.value;
+      fetch(`${baseUrl}/api/courses/${dept}`)
+        .then(res => res.json())
+        .then(data => {
+          const courseSel = document.getElementById("course");
+          courseSel.innerHTML = '<option value="">Select Course</option>';
+          data.forEach(row => {
+            courseSel.innerHTML += `<option value="${row.course}">${row.course}</option>`;
+          });
+        });
+    });
+
+    // On course change → fetch sections
+    document.getElementById("course").addEventListener("change", function () {
+      const dept = document.getElementById("dept_code").value;
+      const course = this.value;
+      fetch(`${baseUrl}/api/year-section?dept_code=${dept}&course=${course}`)
+        .then(res => res.json())
+        .then(data => {
+          const sectionSel = document.getElementById("section");
+          sectionSel.innerHTML = '<option value="">Select Section</option>';
+          data.forEach(row => {
+            sectionSel.innerHTML += `<option value="${row.section}">${row.section}</option>`;
+          });
+        });
+    });
+
+    // Submit form
+    document.getElementById("allocationForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      const data = Object.fromEntries(formData.entries());
+
+      try {
+        const res = await fetch(`${baseUrl}/api/period-allocation`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
+
+        const result = await res.json();
+        if (res.ok) {
+          Swal.fire("✅ Success", "Periods allocated successfully", "success");
+          this.reset();
+          document.getElementById("staff_name").value = "";
+        } else {
+          Swal.fire("❌ Error", result.error || "Something went wrong", "error");
+        }
+      } catch (err) {
+        Swal.fire("❌ Error", "Server error occurred", "error");
+      }
+    });
+
+    function navigateTo(path) {
+      window.location.href = path;
     }
   </script>
 </body>
