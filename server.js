@@ -134,7 +134,9 @@ app.get("/examcell", requireAdminSession, (req, res) => {
 app.get("/studentsfeesearch", requireAdminSession, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "studentsfeesearch.html"));
 });
-
+app.get("/staffallocation", requireAdminSession, (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "staffallocation.html"));
+});
 app.use("/uploads", express.static(path.join(__dirname, "uploads"))); // for previews
 
 // ✅ MySQL connection
@@ -3516,4 +3518,5 @@ app.get('/api/staff-period-allocation', (req, res) => {
     res.json(result);
   });
 });
+
 
