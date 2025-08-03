@@ -3588,24 +3588,26 @@ app.get("/api/students-by-course-section", (req, res) => {
 
 //Backend Route to Submit Attendance 
 app.post("/api/submit-attendance", (req, res) => {
-  const { staff_id, date, course, section, subject, present, absent } = req.body;
+  const { staff_id, date, course, year, semester, section, subject, present, absent } = req.body;
 
-  if (!staff_id || !date || !course || !section || !subject) {
+  // Validate required fields
+  if (!staff_id || !date || !course || !year || !semester || !section || !subject) {
     return res.status(400).json({ error: "Missing required fields" });
   }
 
   const values = [];
 
-  present.forEach(regno => {
-    values.push([regno, date, staff_id, course, section, subject, 'Present']);
+  present.forEach(reg_no => {
+    values.push([reg_no, date, staff_id, course, year, semester, section, subject, 'Present']);
   });
 
-  absent.forEach(regno => {
-    values.push([regno, date, staff_id, course, section, subject, 'Absent']);
+  absent.forEach(reg_no => {
+    values.push([reg_no, date, staff_id, course, year, semester, section, subject, 'Absent']);
   });
 
   const sql = `
-    INSERT INTO attendance (regno, date, staff_id, course, section, subject, status)
+    INSERT INTO daily_attendance 
+    (reg_no, date, staff_id, course, year, semester, section, subject, status)
     VALUES ?
   `;
 
@@ -3614,7 +3616,6 @@ app.post("/api/submit-attendance", (req, res) => {
       console.error("❌ Error saving attendance:", err);
       return res.status(500).json({ error: "Database insert failed" });
     }
-    res.json({ message: "✅ Attendance submitted" });
+    res.json({ success: true, message: "✅ Attendance submitted successfully." });
   });
 });
-
