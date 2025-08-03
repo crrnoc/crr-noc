@@ -422,7 +422,10 @@
     });
   } else {
     fetch(`/my-counselling-students/${userId}`)
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error("Failed to fetch students.");
+        return res.json();
+      })
       .then(data => {
         const container = document.getElementById("cardContainer");
         if (data.success && data.students.length > 0) {
@@ -447,11 +450,17 @@
         } else {
           container.innerHTML = `<p style="color:red;">No students assigned or available.</p>`;
         }
+      })
+      .catch(err => {
+        document.getElementById("cardContainer").innerHTML = `<p style="color:red;">Error loading students.</p>`;
+        console.error(err);
       });
   }
 
   function openModal(std) {
     currentStudent = std;
+
+    const studentUserId = std.userId || std.userid || std.user_id || std.reg_no;
 
     document.getElementById("modalName").textContent = std.name;
     document.getElementById("modalFatherName").textContent = std.father_name || "N/A";
@@ -461,7 +470,7 @@
 
     // --- Attendance ---
     document.getElementById("attendanceContent").innerHTML = `<p>Loading...</p>`;
-    fetch(`/attendance/${std.userId}`)
+    fetch(`/attendance/${studentUserId}`)
       .then(res => res.json())
       .then(data => {
         const attendance = data.attendance || [];
@@ -484,7 +493,7 @@
       const sem = document.getElementById("semesterSelect").value;
       if (!sem) return;
 
-      fetch(`/results/${std.userId}/${sem}`)
+      fetch(`/results/${studentUserId}/${sem}`)
         .then(res => res.json())
         .then(data => {
           if (!data.success || !data.results.length) {
@@ -513,7 +522,7 @@
       const sem = document.getElementById("midSemesterSelect").value;
       if (!year || !sem) return;
 
-      fetch(`/midmarks/${std.userId}/${year}/${sem}`)
+      fetch(`/midmarks/${studentUserId}/${year}/${sem}`)
         .then(res => res.json())
         .then(data => {
           if (!data.success || !data.marks.length) {
@@ -533,7 +542,7 @@
     // --- Fee Details ---
     const feeDiv = document.getElementById("feeContent");
     feeDiv.innerHTML = `<p>Loading...</p>`;
-    fetch(`/fee-status/${std.userId}`)
+    fetch(`/fee-status/${studentUserId}`)
       .then(res => res.json())
       .then(res => {
         if (!res.success || !res.years) {
