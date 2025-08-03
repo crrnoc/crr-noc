@@ -3691,10 +3691,6 @@ app.get('/api/staff/semesters/:staffId', (req, res) => {
   });
 });
 // download attendance pdf
-const fs = require("fs");
-const path = require("path");
-const PDFDocument = require("pdfkit");
-
 app.get("/api/download-attendance-pdf", (req, res) => {
   const { year, semester, course, section, subject } = req.query;
 
@@ -3778,3 +3774,4 @@ app.get("/api/download-attendance-pdf", (req, res) => {
     doc.end();
   });
 });
+
