@@ -3458,10 +3458,62 @@ app.get('/student/notifications/:userId', (req, res) => {
   });
 });
 
+app.post('/api/staff-period-allocation', (req, res) => {
+  const {
+    year,
+    dept_code,
+    course,
+    section,
+    day,
+    staff_id,
+    staff_name,
+    period1,
+    period2,
+    period3,
+    period4,
+    period5,
+    period6,
+    period7
+  } = req.body;
 
+  const sql = `
+    INSERT INTO staff_period_allocation (
+      year, dept_code, course, section, day, staff_id, staff_name,
+      period1, period2, period3, period4, period5, period6, period7
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `;
 
+  const values = [
+    year, dept_code, course, section, day, staff_id, staff_name,
+    period1, period2, period3, period4, period5, period6, period7
+  ];
 
+  db.query(sql, values, (err, result) => {
+    if (err) {
+      console.error("❌ Error saving staff allocation:", err);
+      return res.status(500).json({ error: "Failed to save allocation" });
+    }
+    res.json({ message: "✅ Staff period allocation saved successfully" });
+  });
+});
 
+app.get('/api/staff-period-allocation', (req, res) => {
+  const { year, dept_code, course, section, day } = req.query;
 
+  const sql = `
+    SELECT * FROM staff_period_allocation
+    WHERE year = ? AND dept_code = ? AND course = ? AND section = ? AND day = ?
+  `;
 
+  const values = [year, dept_code, course, section, day];
+
+  db.query(sql, values, (err, result) => {
+    if (err) {
+      console.error("❌ Error fetching staff allocation:", err);
+      return res.status(500).json({ error: "Failed to fetch allocation" });
+    }
+    res.json(result);
+  });
+});
 
