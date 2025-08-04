@@ -3848,13 +3848,10 @@ app.get("/api/fetch-courses-sections", (req, res) => {
 
 
 // download section wise attendance
-
 app.get("/api/download-all-subjects-attendance", (req, res) => {
   const { year, course, section, semester, from_date, to_date } = req.query;
-
-  if (!year || !course || !section || !from_date || !to_date || !semester) {
+  if (!year || !course || !section || !from_date || !to_date || !semester)
     return res.status(400).json({ error: "Missing query parameters." });
-  }
 
   const query = `
     SELECT 
@@ -3876,7 +3873,6 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
     if (!results.length) return res.status(404).json({ error: "No data found" });
 
     const allSubjects = [...new Set(results.map(r => r.subject))];
-
     const studentMap = {};
     results.forEach(r => {
       if (!studentMap[r.reg_no]) {
@@ -3896,8 +3892,7 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
     const doc = new PDFDocument({ margin: 40, size: "A4", layout: "landscape" });
     const fileName = `DOC-${Date.now()}.pdf`;
     const filePath = path.join(__dirname, "uploads", fileName);
-    const stream = fs.createWriteStream(filePath);
-    doc.pipe(stream);
+    doc.pipe(fs.createWriteStream(filePath));
 
     // Header
     doc.image(path.join(__dirname, "public", "crrengglogo.png"), 40, 20, { width: 50 });
@@ -3908,71 +3903,66 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
     doc.text(`From: ${from_date}  To: ${to_date}`, { align: "center" });
     doc.moveDown();
 
-    // Table layout
-    const startX = 40;
-    let startY = 200;
-    const rowHeight = 25;
-    const colWidths = [80, ...Array(allSubjects.length).fill(60), 80, 70];
+    // Table Drawing
+    const startX = 50;
+    let y = doc.y + 10;
+    const cellHeight = 20;
+    const regnoWidth = 80;
+    const subjectWidth = 70;
+    const totalWidth = 70;
+    const percentWidth = 70;
+
     const headers = ["Regd.No", ...allSubjects, "TOTAL", "PERCENT"];
 
     // Draw Header Row
     headers.forEach((header, i) => {
-      const x = startX + colWidths.slice(0, i).reduce((a, b) => a + b, 0);
-      doc.rect(x, startY, colWidths[i], rowHeight).fillAndStroke("#007acc", "black");
-      doc.fillColor("white").font("Helvetica-Bold").fontSize(9).text(header, x + 4, startY + 8, {
-        width: colWidths[i] - 8,
-        align: "center"
-      });
+      const x = startX + i * subjectWidth;
+      doc.rect(x, y, subjectWidth, cellHeight).fillAndStroke("#007acc", "black");
+      doc.fillColor("white").font("Helvetica-Bold").fontSize(9).text(header, x + 3, y + 5, { width: subjectWidth - 6, align: "center" });
     });
+    y += cellHeight;
 
-    startY += rowHeight;
-
-    // Draw Rows
-    Object.values(studentMap).forEach(std => {
+    // Draw student rows
+    Object.values(studentMap).forEach((std) => {
       const row = [
         std.regno,
-        ...allSubjects.map(subject => std.subjects[subject] || "-"),
+        ...allSubjects.map(sub => std.subjects[sub] || "-"),
         `${std.total_attended}/${std.total_classes}`,
-        ((std.total_attended / std.total_classes) * 100).toFixed(2)
+        std.total_classes > 0 ? ((std.total_attended / std.total_classes) * 100).toFixed(2) : "0.00"
       ];
 
-      row.forEach((val, i) => {
-        const x = startX + colWidths.slice(0, i).reduce((a, b) => a + b, 0);
-        doc.rect(x, startY, colWidths[i], rowHeight).stroke();
-
+      row.forEach((cell, i) => {
+        const x = startX + i * subjectWidth;
         const isPercent = i === row.length - 1;
-        if (isPercent && parseFloat(val) < 75) {
-          doc.fillColor("red");
-        } else {
-          doc.fillColor("black");
-        }
+        if (isPercent && parseFloat(cell) < 75) doc.fillColor("red");
+        else doc.fillColor("black");
 
-        doc.font("Helvetica").fontSize(9).text(val, x + 4, startY + 8, {
-          width: colWidths[i] - 8,
-          align: "center"
-        });
+        doc.rect(x, y, subjectWidth, cellHeight).stroke();
+        doc.font("Helvetica").fontSize(9).text(cell, x + 3, y + 5, { width: subjectWidth - 6, align: "center" });
       });
 
-      startY += rowHeight;
+      y += cellHeight;
+      if (y > 520) {
+        doc.addPage();
+        y = 50;
+      }
     });
 
     // Footer
     doc.moveDown(2);
-    doc.fontSize(10);
-    doc.text("Faculty Signature", 50, doc.y);
+    doc.fillColor("black").fontSize(10);
+    doc.text("Faculty Signature", 60, doc.y);
     doc.text("HOD Signature", 600, doc.y);
-
     doc.end();
 
-    stream.on("finish", () => {
-      res.download(filePath, fileName, err => {
-        if (err) res.status(500).json({ error: "Download error" });
-        fs.unlink(filePath, () => {}); // optional cleanup
+    // Send file
+    doc.pipe(fs.createWriteStream(filePath));
+    doc.end();
+    doc.on("finish", () => {
+      res.download(filePath, fileName, (err) => {
+        if (err) res.status(500).json({ error: "File download error" });
+        fs.unlink(filePath, () => {});
       });
-    });
-
-    stream.on("error", () => {
-      res.status(500).json({ error: "PDF error" });
     });
   });
 });
