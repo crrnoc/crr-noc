@@ -132,12 +132,13 @@
     form.onsubmit = (e) => {
       e.preventDefault();
 
-      const course = courseSelect.value;
-      const section = sectionSelect.value;
-      const year = yearSelect.value;
-      const semester = document.getElementById("semester").value;
-      const from_date = document.getElementById("from_date").value;
-      const to_date = document.getElementById("to_date").value;
+const dept = deptInput.value;
+const year = yearSelect.value;
+const semester = document.getElementById("semester").value;
+const course = courseSelect.value;
+const section = sectionSelect.value;
+const from_date = document.getElementById("from_date").value;
+const to_date = document.getElementById("to_date").value;
 
 if (!course || !section || !year || !from_date || !to_date || !semester) {
   Swal.fire("⚠️", "Please fill all fields", "warning");
