@@ -17,7 +17,7 @@
     "express-mysql-session": "^3.0.3",
     "express-session": "^1.18.1",
     "@fast-csv/parse": "^4.3.6",
-    "@fast-csv/format": "^4.3.6"
+    "@fast-csv/format": "^4.3.6",
     "mammoth": "^1.9.0",
     "multer": "^2.0.1",
     "mysql2": "^3.14.1",
