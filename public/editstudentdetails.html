@@ -1,13 +1,13 @@
+<!-- 🎯 Edit Profile Page with Mobile + Dynamic User ID + All Fields -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Edit Student</title>
   <link rel="icon" href="crrengglogo.png" type="image/png" />
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
-    /* 💅 Same styles as your Add Student page */
     * {
       margin: 0;
       padding: 0;
@@ -19,6 +19,7 @@
     }
     .main-container {
       display: flex;
+      flex-direction: row;
       height: 100vh;
     }
     .sidebar {
@@ -29,8 +30,8 @@
       top: 0;
       bottom: 0;
       left: 0;
-      overflow-y: auto;
       z-index: 100;
+      overflow-y: auto;
     }
     .sidebar h2 {
       margin: 40px 0 20px;
@@ -52,7 +53,8 @@
       border-radius: 8px;
       transition: all 0.3s ease;
     }
-    .menu li a:hover, .menu li.active a {
+    .menu li a:hover,
+    .menu li.active a {
       background-color: #d4d4d4;
       font-weight: bold;
     }
@@ -117,6 +119,46 @@
       border-radius: 8px;
       margin-top: 10px;
     }
+
+    /* 📱 Mobile View */
+    .mobile-toggle {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #1f75cb;
+      color: white;
+      font-size: 24px;
+      padding: 12px 18px;
+      border-radius: 50px;
+      z-index: 2000;
+      cursor: pointer;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+    @media (max-width: 768px) {
+      .main-container {
+        flex-direction: column;
+      }
+      .sidebar {
+        width: 100%;
+        height: 90vh;
+        top: -100%;
+        left: 0;
+        position: fixed;
+        transition: top 0.3s ease-in-out;
+      }
+      .sidebar.open {
+        top: 0;
+      }
+      .main {
+        margin-left: 0;
+        padding: 20px;
+      }
+      .mobile-toggle {
+        display: block;
+      }
+    }
   </style>
 </head>
 <body>
@@ -126,6 +168,10 @@
     Swal.fire({ icon: "warning", title: "Unauthorized", text: "Please login to access this page" }).then(() => {
       window.location.href = "index.html";
     });
+  } else {
+    document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("userId").textContent = userId;
+    });
   }
 </script>
 
@@ -133,15 +179,15 @@
   <div class="sidebar">
     <h2><strong>ID:</strong> <span id="userId">Staff</span></h2>
     <ul class="menu">
-        <li><a href="knowaboutstd1.html"><span>👤</span> Know about Student</a></li>
-        <li class="active"><a href="#"><span>✏️</span> Edit Student Details</a></li>
-        <li><a href="sendnotification.html"><span>📨</span> Send Notification</a></li>
-        <li><a href="updatefee.html"><span>💵</span> Update Fee</a></li>
-        <li><a href="imposefines.html"><span>💰</span> Impose Fines</a></li>
-        <li><a href="addstudent.html"><span>➕</span> Add Student</a></li>
-        <li><a href="backlogs.html"><span>📚</span> Find Backlogs</a></li>
-        <li><a href="mycounselling.html"><span>📋</span> View Counselling</a></li>
-        <li><a href="staffsettings.html"><span>⚙️</span> Settings</a></li>
+      <li><a href="knowaboutstd1.html">👤 Know Student</a></li>
+      <li class="active"><a href="#">✏️ Edit Profile</a></li>
+      <li><a href="sendnotification.html">📨 Send Notification</a></li>
+      <li><a href="updatefee.html">💵 Update Fee</a></li>
+      <li><a href="imposefines.html">💰 Impose Fines</a></li>
+      <li><a href="addstudent.html">➕ Add Student</a></li>
+      <li><a href="backlogs.html">📚 Find Backlogs</a></li>
+      <li><a href="mycounselling.html">📋 View Counselling</a></li>
+      <li><a href="staffsettings.html">⚙️ Settings</a></li>
     </ul>
     <button class="logout" onclick="logout()">Logout</button>
   </div>
@@ -157,11 +203,16 @@
     </div>
   </div>
 </div>
+<div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
 
 <script>
 function logout() {
   localStorage.removeItem("userId");
   location.href = "index.html";
+}
+
+function toggleMobileMenu() {
+  document.querySelector(".sidebar").classList.toggle("open");
 }
 
 function fetchStudentData() {
@@ -184,7 +235,7 @@ function showEditForm(data) {
       <label>DOB</label><input type="date" name="dob" value="${data.dob?.split('T')[0]}" required />
       <label>Unique ID</label><input name="uniqueId" value="${data.uniqueId}" required />
       <label>Aadhar No</label><input name="aadhar_no" value="${data.aadhar_no || ''}" />
-      <label>Mobile No</label><input name="mobile_no" value="${data.mobile_no}" required />
+      <label>Mobile No</label><input name="mobile_no" value="${data.mobile_no || ''}" required />
       <label>Email</label><input type="email" name="email" value="${data.email}" required />
       <label>Course</label><input name="course" value="${data.course}" required />
       <label>Dept Code</label><input name="dept_code" value="${data.dept_code || ''}" />
