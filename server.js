@@ -3849,10 +3849,6 @@ app.get("/api/fetch-courses-sections", (req, res) => {
 
 // download section wise attendance
 
-const PDFDocument = require("pdfkit");
-const fs = require("fs");
-const path = require("path");
-
 app.get("/api/download-all-subjects-attendance", (req, res) => {
   const { year, course, section, semester, from_date, to_date } = req.query;
   if (!year || !course || !section || !semester || !from_date || !to_date) {
@@ -4000,3 +3996,4 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
     });
   });
 });
+
