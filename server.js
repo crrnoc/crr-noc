@@ -3843,107 +3843,126 @@ app.get("/api/fetch-courses-sections", (req, res) => {
 
 app.get("/api/download-all-subjects-attendance", (req, res) => {
   const { year, course, section, from_date, to_date } = req.query;
-
   if (!year || !course || !section || !from_date || !to_date) {
     return res.status(400).json({ error: "Missing query parameters." });
   }
 
   const query = `
-SELECT 
-  a.reg_no,
-  s.name,
-  a.subject,
-  COUNT(*) AS total_classes,
-  SUM(CASE WHEN a.status = 'Present' THEN 1 ELSE 0 END) AS attended_classes,
-  ROUND(SUM(CASE WHEN a.status = 'Present' THEN 1 ELSE 0 END) / COUNT(*) * 100, 2) AS percentage
-FROM daily_attendance a
-JOIN students s ON a.reg_no = s.reg_no
-WHERE a.year = ? AND a.course = ? AND a.section = ? 
-  AND a.date BETWEEN ? AND ?
-GROUP BY a.subject, a.reg_no, s.name
-ORDER BY a.subject, a.reg_no
-
+    SELECT 
+      a.reg_no,
+      s.name,
+      a.subject,
+      COUNT(*) AS total_classes,
+      SUM(CASE WHEN a.status = 'Present' THEN 1 ELSE 0 END) AS attended
+    FROM daily_attendance a
+    JOIN students s ON a.reg_no = s.reg_no
+    WHERE a.year = ? AND a.course = ? AND a.section = ? 
+      AND a.date BETWEEN ? AND ?
+    GROUP BY a.reg_no, a.subject, s.name
+    ORDER BY a.reg_no, a.subject
   `;
 
   connection.query(query, [year, course, section, from_date, to_date], (err, results) => {
     if (err) {
       console.error("❌ DB error:", err);
-      return res.status(500).json({ error: "Database query failed." });
+      return res.status(500).json({ error: "DB error" });
     }
 
     if (!results.length) {
-      return res.status(404).json({ message: "No attendance found." });
+      return res.status(404).json({ error: "No attendance data found" });
     }
 
-    const groupedBySubject = {};
-    results.forEach(row => {
-      if (!groupedBySubject[row.subject]) groupedBySubject[row.subject] = [];
-      groupedBySubject[row.subject].push(row);
+    // Step 1: Get all subjects
+    const allSubjects = [...new Set(results.map(r => r.subject))];
+
+    // Step 2: Build student-wise matrix
+    const studentMap = {};
+    results.forEach(r => {
+      if (!studentMap[r.reg_no]) {
+        studentMap[r.reg_no] = { name: r.name, regno: r.reg_no, subjects: {}, total_attended: 0, total_classes: 0 };
+      }
+      studentMap[r.reg_no].subjects[r.subject] = `${r.attended}/${r.total_classes}`;
+      studentMap[r.reg_no].total_attended += r.attended;
+      studentMap[r.reg_no].total_classes += r.total_classes;
     });
 
-    const doc = new PDFDocument({ margin: 40 });
+    // Step 3: Generate PDF
+    const doc = new PDFDocument({ margin: 30, size: 'A4', layout: 'landscape' });
     const fileName = `Section_Attendance_${Date.now()}.pdf`;
     const filePath = path.join(__dirname, "uploads", fileName);
     const stream = fs.createWriteStream(filePath);
     doc.pipe(stream);
 
-    // College Header
-    doc.image(path.join(__dirname, "public", "crrengglogo.png"), 40, 30, { width: 60 });
-    doc.fontSize(16).text("SIR C R REDDY COLLEGE OF ENGINEERING (A)", 110, 35);
-    doc.fontSize(11).text("Affiliated to AU | Recognized by AICTE | ISO 9001:2015", 110, 55);
-    doc.fontSize(11).text("Eluru - 534007, West Godavari, Andhra Pradesh", 110, 70);
-    doc.moveDown();
-    doc.moveDown();
-    doc.fontSize(14).text("📄 SECTION ATTENDANCE REPORT", { align: "center" });
-    doc.moveDown(0.5);
-    doc.fontSize(11).text(`Course: ${course} | Section: ${section} | Year: ${year} | From: ${from_date} | To: ${to_date}`, { align: "center" });
-    doc.moveDown(1.5);
+    // Logo and Header
+    doc.image(path.join(__dirname, "public", "crrengglogo.png"), 30, 20, { width: 50 });
+    doc.fontSize(16).text("SIR C.R.REDDY COLLEGE OF ENGINEERING (Autonomous)", 100, 20);
+    doc.fontSize(12).text(`B.Tech Year - ${year}  Sem - ?  Branch - ${course}  Section - ${section}`, 100, 40);
+    doc.text("STATEMENT OF ATTENDANCE REPORT", 100, 60);
+    doc.text("Vatluru, Eluru - 534007, Eluru Dist. A.P.", 100, 80);
+    doc.text(`From : ${from_date} To: ${to_date}`, 100, 100);
+    doc.moveDown(2);
 
-    // Subject-wise attendance
-    Object.keys(groupedBySubject).forEach((subject, idx) => {
-      if (idx !== 0) doc.addPage();
+    // Build header row
+    const tableTop = doc.y;
+    const colWidth = 60;
+    let x = 30;
+    doc.font("Helvetica-Bold").fontSize(8);
+    doc.text("Regd.No", x, tableTop, { width: 55 }); x += 55;
 
-      doc.fontSize(12).text(`📘 Subject: ${subject}`, { underline: true });
-      doc.moveDown(0.5);
-
-      doc.font("Helvetica-Bold");
-      doc.text("SNo", 50, doc.y);
-      doc.text("Reg No", 100, doc.y);
-      doc.text("Name", 180, doc.y);
-      doc.text("Attended", 350, doc.y);
-      doc.text("Total", 420, doc.y);
-      doc.text("%", 470, doc.y);
-      doc.moveDown(0.2);
-      doc.font("Helvetica");
-
-      groupedBySubject[subject].forEach((entry, i) => {
-        doc.text(`${i + 1}`, 50, doc.y);
-        doc.text(entry.reg_no, 100, doc.y);
-        doc.text(entry.name, 180, doc.y, { width: 150 });
-        doc.text(entry.attended_classes.toString(), 350, doc.y);
-        doc.text(entry.total_classes.toString(), 420, doc.y);
-        doc.text(entry.percentage.toString(), 470, doc.y);
-        doc.moveDown(0.2);
-      });
+    allSubjects.forEach(sub => {
+      doc.text(sub, x, tableTop, { width: colWidth, align: "center" });
+      x += colWidth;
     });
+
+    doc.text("TOTAL", x, tableTop, { width: 55, align: "center" }); x += 55;
+    doc.text("PERCENT", x, tableTop, { width: 55, align: "center" });
+
+    // Rows for each student
+    doc.font("Helvetica").moveDown(0.5);
+    let rowY = tableTop + 20;
+
+    Object.values(studentMap).forEach(std => {
+      x = 30;
+      doc.text(std.regno, x, rowY, { width: 55 }); x += 55;
+
+      allSubjects.forEach(sub => {
+        const val = std.subjects[sub] || "-";
+        doc.text(val, x, rowY, { width: colWidth, align: "center" });
+        x += colWidth;
+      });
+
+      doc.text(`${std.total_attended}/${std.total_classes}`, x, rowY, { width: 55, align: "center" }); x += 55;
+      const percent = ((std.total_attended / std.total_classes) * 100).toFixed(2);
+      doc.text(percent, x, rowY, { width: 55, align: "center" });
+
+      rowY += 20;
+      if (rowY > 520) {  // break to new page
+        doc.addPage();
+        rowY = 50;
+      }
+    });
+
+    // Footer: Signature
+    doc.moveDown(2);
+    doc.fontSize(10);
+    doc.text("Faculty Signature", 30, 500);
+    doc.text("HOD Signature", 600, 500);
 
     doc.end();
 
     stream.on("finish", () => {
       res.download(filePath, fileName, (err) => {
         if (err) {
-          console.error("❌ File send error:", err);
-          return res.status(500).json({ error: "Could not send PDF file" });
+          console.error("❌ Download error:", err);
+          res.status(500).json({ error: "File download failed" });
         }
-
         fs.unlink(filePath, () => {}); // optional cleanup
       });
     });
 
     stream.on("error", (err) => {
-      console.error("❌ Stream error:", err);
-      res.status(500).json({ error: "PDF writing failed." });
+      console.error("❌ PDF stream error:", err);
+      res.status(500).json({ error: "PDF creation failed" });
     });
   });
 });
-
