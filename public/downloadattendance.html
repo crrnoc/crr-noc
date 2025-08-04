@@ -1,1 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>📥 Download Section Attendance</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f4f4;
+      padding: 40px;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #333;
+    }
+    form {
+      background: white;
+      padding: 30px;
+      max-width: 500px;
+      margin: auto;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    }
+    label {
+      display: block;
+      margin: 15px 0 5px;
+    }
+    select, input {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    button {
+      background-color: #007acc;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 20px;
+      width: 100%;
+    }
+    button:hover {
+      background-color: #005e99;
+    }
+  </style>
+</head>
+<body>
+  <h1>📊 Download Section Attendance</h1>
+
+  <form id="attendanceForm">
+    <label for="dept_code">Department Code</label>
+    <input type="text" id="dept_code" required placeholder="e.g. CSE" />
+
+    <label for="year">Year</label>
+    <select id="year" required>
+      <option value="">Select Year</option>
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+    </select>
+
+    <label for="course">Course</label>
+    <select id="course" required></select>
+
+    <label for="section">Section</label>
+    <select id="section" required></select>
+
+    <label for="from_date">From Date</label>
+    <input type="date" id="from_date" required />
+
+    <label for="to_date">To Date</label>
+    <input type="date" id="to_date" required />
+
+    <button type="submit">📥 Download Attendance PDF</button>
+  </form>
+
+  <script>
+    const deptInput = document.getElementById("dept_code");
+    const yearSelect = document.getElementById("year");
+    const courseSelect = document.getElementById("course");
+    const sectionSelect = document.getElementById("section");
+    const form = document.getElementById("attendanceForm");
+
+    // Load course and section when year & dept_code are filled
+    async function loadCourseAndSections() {
+      const dept = deptInput.value;
+      const year = yearSelect.value;
+      if (!dept || !year) return;
+
+      try {
+        const res = await fetch(`/api/fetch-courses-sections?dept_code=${dept}&year=${year}`);
+        const data = await res.json();
+
+        const courses = [...new Set(data.map(d => d.course))];
+        const sections = [...new Set(data.map(d => d.section))];
+
+        courseSelect.innerHTML = courses.map(c => `<option value="${c}">${c}</option>`).join("");
+        sectionSelect.innerHTML = sections.map(s => `<option value="${s}">${s}</option>`).join("");
+      } catch (err) {
+        console.error("❌ Failed to fetch data:", err);
+        Swal.fire("Error", "Unable to fetch course/section data", "error");
+      }
+    }
+
+    deptInput.addEventListener("change", loadCourseAndSections);
+    yearSelect.addEventListener("change", loadCourseAndSections);
+
+    form.onsubmit = (e) => {
+      e.preventDefault();
+
+      const course = courseSelect.value;
+      const section = sectionSelect.value;
+      const year = yearSelect.value;
+      const from_date = document.getElementById("from_date").value;
+      const to_date = document.getElementById("to_date").value;
+
+      if (!course || !section || !year || !from_date || !to_date) {
+        Swal.fire("⚠️", "Please fill all fields", "warning");
+        return;
+      }
+
+      const url = `/api/download-all-subjects-attendance?year=${year}&course=${encodeURIComponent(course)}&section=${section}&from_date=${from_date}&to_date=${to_date}`;
+      window.open(url, '_blank');
+    };
+  </script>
+</body>
+</html>
 
