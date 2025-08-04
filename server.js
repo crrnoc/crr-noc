@@ -3892,7 +3892,8 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
     const doc = new PDFDocument({ margin: 40, size: "A4", layout: "landscape" });
     const fileName = `DOC-${Date.now()}.pdf`;
     const filePath = path.join(__dirname, "uploads", fileName);
-    doc.pipe(fs.createWriteStream(filePath));
+    const writeStream = fs.createWriteStream(filePath);
+    doc.pipe(writeStream);
 
     // Header
     doc.image(path.join(__dirname, "public", "crrengglogo.png"), 40, 20, { width: 50 });
@@ -3907,10 +3908,7 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
     const startX = 50;
     let y = doc.y + 10;
     const cellHeight = 20;
-    const regnoWidth = 80;
     const subjectWidth = 70;
-    const totalWidth = 70;
-    const percentWidth = 70;
 
     const headers = ["Regd.No", ...allSubjects, "TOTAL", "PERCENT"];
 
@@ -3918,7 +3916,10 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
     headers.forEach((header, i) => {
       const x = startX + i * subjectWidth;
       doc.rect(x, y, subjectWidth, cellHeight).fillAndStroke("#007acc", "black");
-      doc.fillColor("white").font("Helvetica-Bold").fontSize(9).text(header, x + 3, y + 5, { width: subjectWidth - 6, align: "center" });
+      doc.fillColor("white").font("Helvetica-Bold").fontSize(9).text(header, x + 3, y + 5, {
+        width: subjectWidth - 6,
+        align: "center"
+      });
     });
     y += cellHeight;
 
@@ -3938,7 +3939,10 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
         else doc.fillColor("black");
 
         doc.rect(x, y, subjectWidth, cellHeight).stroke();
-        doc.font("Helvetica").fontSize(9).text(cell, x + 3, y + 5, { width: subjectWidth - 6, align: "center" });
+        doc.font("Helvetica").fontSize(9).text(cell, x + 3, y + 5, {
+          width: subjectWidth - 6,
+          align: "center"
+        });
       });
 
       y += cellHeight;
@@ -3953,16 +3957,21 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
     doc.fillColor("black").fontSize(10);
     doc.text("Faculty Signature", 60, doc.y);
     doc.text("HOD Signature", 600, doc.y);
+    
     doc.end();
 
-    // Send file
-    doc.pipe(fs.createWriteStream(filePath));
-    doc.end();
-    doc.on("finish", () => {
+    // Final download
+    writeStream.on("finish", () => {
       res.download(filePath, fileName, (err) => {
         if (err) res.status(500).json({ error: "File download error" });
         fs.unlink(filePath, () => {});
       });
     });
+
+    writeStream.on("error", (err) => {
+      console.error("❌ PDF Stream error:", err);
+      res.status(500).json({ error: "PDF stream error" });
+    });
   });
 });
+
