@@ -3851,6 +3851,7 @@ app.get("/api/fetch-courses-sections", (req, res) => {
 
 app.get("/api/download-all-subjects-attendance", (req, res) => {
   const { year, course, section, semester, from_date, to_date } = req.query;
+
   if (!year || !course || !section || !from_date || !to_date || !semester) {
     return res.status(400).json({ error: "Missing query parameters." });
   }
@@ -3904,59 +3905,68 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
     const stream = fs.createWriteStream(filePath);
     doc.pipe(stream);
 
-    // Logo and Header
+    // Header
     doc.image(path.join(__dirname, "public", "crrengglogo.png"), 40, 20, { width: 50 });
     doc.fontSize(16).font("Helvetica-Bold").text("SIR C.R.REDDY COLLEGE OF ENGINEERING (Autonomous)", {
-      align: "center",
+      align: "center"
     });
-    doc.fontSize(12).text(
-      `B.Tech Year - ${year}   Sem - ${semester}   Branch - ${course}   Section - ${section}`,
-      { align: "center" }
-    );
+    doc.fontSize(12).text(`B.Tech Year - ${year}   Sem - ${semester}   Branch - ${course}   Section - ${section}`, {
+      align: "center"
+    });
     doc.text("STATEMENT OF ATTENDANCE REPORT", { align: "center" });
     doc.text("Vatluru, Eluru - 534007, Eluru Dist. A.P.", { align: "center" });
-    doc.text(`From: ${from_date} To: ${to_date}`, { align: "center" });
+    doc.text(`From: ${from_date}  To: ${to_date}`, { align: "center" });
     doc.moveDown(1.5);
 
-    // Prepare table rows
-    const tableRows = [];
+    // Table Headers
     const headerRow = [
-      { label: "Regd.No", options: { fontSize: 9, valign: "center" } },
-      ...allSubjects.map((sub) => ({ label: sub, options: { fontSize: 9, align: "center" } })),
+      { label: "Regd.No", options: { fontSize: 9 } },
+      ...allSubjects.map(subject => ({ label: subject, options: { fontSize: 9, align: "center" } })),
       { label: "TOTAL", options: { fontSize: 9, align: "center" } },
       { label: "PERCENT", options: { fontSize: 9, align: "center" } },
     ];
-    tableRows.push(headerRow);
 
-    Object.values(studentMap).forEach((std) => {
-      const row = [
+    // Table Data
+    const tableRows = Object.values(studentMap).map(std => {
+      const subjectData = allSubjects.map(subject => std.subjects[subject] || "-");
+      const percent = std.total_classes > 0 ? ((std.total_attended / std.total_classes) * 100).toFixed(2) : "0.00";
+      return [
         std.regno,
-        ...allSubjects.map((sub) => std.subjects[sub] || "-"),
+        ...subjectData,
         `${std.total_attended}/${std.total_classes}`,
-        ((std.total_attended / std.total_classes) * 100).toFixed(2),
+        percent
       ];
-      tableRows.push(row);
     });
 
-    // Render table
+    // Custom row formatting for red color if % < 75
     doc.table(
       {
         headers: headerRow,
-        rows: tableRows.slice(1),
+        rows: tableRows,
       },
       {
         prepareHeader: () => doc.font("Helvetica-Bold").fillColor("white"),
-        prepareRow: (row, i) => doc.font("Helvetica").fillColor("black"),
-        columnSpacing: 5,
-        columnsSize: [70, ...Array(allSubjects.length).fill(60), 70, 70],
+        prepareRow: (row, i, rectRow, rectCell) => {
+          const percentStr = row[row.length - 1];
+          const percent = parseFloat(percentStr);
+          if (percent < 75) {
+            doc.fillColor("red");
+          } else {
+            doc.fillColor("black");
+          }
+          doc.font("Helvetica");
+        },
         headerBackgroundColor: "#007acc",
+        columnSpacing: 4,
+        columnsSize: [70, ...Array(allSubjects.length).fill(60), 70, 70],
         border: true,
       }
     );
 
-    // Signatures
+    // Footer Signatures
     doc.moveDown(2);
-    doc.fontSize(10).text("Faculty Signature", 50, doc.y);
+    doc.fontSize(10);
+    doc.text("Faculty Signature", 50, doc.y);
     doc.text("HOD Signature", 600, doc.y);
 
     doc.end();
@@ -3967,7 +3977,7 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
           console.error("❌ Download error:", err);
           res.status(500).json({ error: "File download failed" });
         }
-        fs.unlink(filePath, () => {}); // optional cleanup
+        fs.unlink(filePath, () => {}); // Optional cleanup
       });
     });
 
