@@ -329,102 +329,110 @@ app.get('/student/:userId', (req, res) => {
 });
 
 // ✏️ Update student profile
-
 app.post("/editprofile", upload.single("photo"), async (req, res) => {
   const {
     userId,
-    uniqueId, // ✅ NEW FIELD
     name,
     dob,
+    reg_no,
+    uniqueId,
     year,
     course,
+    dept_code,
     semester,
-    aadhar,
-    mobile,
-    email
+    aadhar_no,
+    mobile_no,
+    email,
+    father_name,
+    father_mobile,
+    admission_type,
+    section,
+    counsellor_name,
+    counsellor_mobile
   } = req.body;
-  const file = req.file;
 
-  console.log("📥 Incoming profile update for userId:", userId);
-  console.log("📦 Form Data:", req.body);
-  if (file) console.log("🖼️ Photo file received:", file.originalname);
+  const file = req.file;
+  console.log("📥 Edit Profile Req:", req.body);
 
   try {
     let photo_url = null;
     let public_id = null;
 
     if (file) {
-      const student = await new Promise((resolve, reject) => {
-        connection.query("SELECT reg_no FROM students WHERE userId = ?", [userId], (err, result) => {
-          if (err || !result.length) return reject("Student not found");
-          resolve(result[0]);
-        });
-      });
-
-      const regno = student.reg_no;
-      console.log("📛 Uploading image for regno:", regno);
-
       const result = await cloudinary.uploader.upload(file.path, {
-        public_id: `students/${regno}`,
+        public_id: `students/${reg_no}`,
         overwrite: true,
         resource_type: "image"
       });
-
       photo_url = result.secure_url;
       public_id = result.public_id;
-      console.log("✅ Uploaded to Cloudinary:", photo_url);
-
-      fs.unlinkSync(file.path); // cleanup
+      fs.unlinkSync(file.path);
     }
 
-    const safeDOB = dob && dob.trim() !== "" ? dob : null;
-    console.log("🗓️ Processed DOB:", safeDOB);
-
-    const fields = [
-      uniqueId,  // ✅ Add first
+    const updateFields = [
       name,
-      safeDOB,
+      dob || null,
+      reg_no,
+      uniqueId,
       year,
       course,
+      dept_code,
       semester,
-      aadhar,
-      mobile,
-      email
+      aadhar_no,
+      mobile_no,
+      email,
+      father_name,
+      father_mobile,
+      admission_type,
+      section,
+      counsellor_name,
+      counsellor_mobile
     ];
 
-    let query = `
-      UPDATE students 
-      SET uniqueId=?, name=?, dob=?, year=?, course=?, semester=?, aadhar_no=?, mobile_no=?, email=?`;
+    let sql = `
+      UPDATE students SET
+        name=?,
+        dob=?,
+        reg_no=?,
+        uniqueId=?,
+        year=?,
+        course=?,
+        dept_code=?,
+        semester=?,
+        aadhar_no=?,
+        mobile_no=?,
+        email=?,
+        father_name=?,
+        father_mobile=?,
+        admission_type=?,
+        section=?,
+        counsellor_name=?,
+        counsellor_mobile=?`;
 
     if (photo_url) {
-      query += `, photo_url=?, photo_public_id=?`;
-      fields.push(photo_url, public_id);
+      sql += `, photo_url=?, photo_public_id=?`;
+      updateFields.push(photo_url, public_id);
     }
 
-    query += ` WHERE userId=?`;
-    fields.push(userId);
+    sql += ` WHERE userId=?`;
+    updateFields.push(userId);
 
-    console.log("📄 Final SQL Query:", query);
-    console.log("📋 Query Values:", fields);
-
-    res.setHeader("Content-Type", "application/json");
-
-    connection.query(query, fields, (err, result) => {
+    connection.query(sql, updateFields, (err, result) => {
       if (err) {
-        console.error("❌ SQL error:", err);
-        return res.status(500).json({ message: "Failed to update profile" });
+        console.error("❌ SQL Error:", err);
+        return res.status(500).json({ message: "Profile update failed" });
       }
-
-      console.log("✅ Profile update successful for", userId);
-      return res.status(200).json({ message: " Profile updated successfully!" });
+      console.log("✅ Profile updated for:", userId);
+      return res.status(200).json({ message: "Profile updated successfully!" });
     });
+
   } catch (err) {
-    console.error("❌ Server error:", err);
+    console.error("❌ Error:", err);
     if (file && fs.existsSync(file.path)) fs.unlinkSync(file.path);
-    res.setHeader("Content-Type", "application/json");
-    return res.status(500).json({ message: "Internal error occurred" });
+    return res.status(500).json({ message: "Server error" });
   }
 });
+
 
 // 🚀 Start server (only once!)
 app.listen(PORT, () => {
@@ -3966,3 +3974,4 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
     });
   });
 });
+
