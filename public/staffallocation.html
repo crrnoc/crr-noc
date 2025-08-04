@@ -7,174 +7,271 @@
   <link rel="icon" href="crrengglogo.png" />
   <link href="https://fonts.googleapis.com/css2?family=Segoe+UI&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      margin: 0;
-      background-color: #f1f1f1;
-    }
+ <style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', sans-serif;
+  }
 
-    .sidebar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 260px;
-      height: 100%;
-      background-color: #20232a;
-      padding-top: 20px;
-      color: white;
-    }
+  body {
+    display: flex;
+    min-height: 100vh;
+    background: linear-gradient(to right, #e0eafc, #cfdef3);
+    color: #222;
+    overflow-x: hidden;
+  }
 
-    .sidebar h2 {
-      text-align: center;
-      margin-bottom: 20px;
-      font-size: 20px;
-    }
+  .sidebar {
+    width: 250px;
+    background: linear-gradient(180deg, #2C3E50, #34495E);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    color: white;
+    z-index: 100;
+  }
 
-    .sidebar ul {
-      list-style: none;
-      padding: 0;
-    }
+  .sidebar h2 {
+    text-align: center;
+    font-weight: bold;
+    font-size: 20px;
+    margin-bottom: 30px;
+    color: #3cb6ff;
+  }
 
-    .sidebar ul li {
-      padding: 12px 20px;
-      cursor: pointer;
-      border-bottom: 1px solid #333;
-    }
+  .sidebar ul {
+    list-style: none;
+    padding: 0;
+  }
 
-    .sidebar ul li:hover, .sidebar ul li.active {
-      background-color: #4a90e2;
-    }
+  .sidebar li {
+    display: block;
+    padding: 12px;
+    border-radius: 8px;
+    margin: 8px 0;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.1);
+  }
 
-    .main {
-      margin-left: 260px;
-      padding: 20px;
-    }
+  .sidebar li:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateX(5px);
+  }
 
-    h1 {
-      margin-top: 0;
-      font-size: 26px;
-    }
+  .sidebar li.active {
+    background: rgba(255, 255, 255, 0.3);
+    font-weight: bold;
+  }
 
-    form {
-      background-color: #fff;
-      padding: 20px;
-      border-radius: 10px;
-      margin-bottom: 30px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
+  .sidebar button {
+    background-color: #E67E22;
+    border: none;
+    color: white;
+    padding: 12px;
+    border-radius: 20px;
+    margin-top: auto;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
 
-    input, select, button {
-      padding: 10px;
-      margin: 5px 0;
-      width: 100%;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
+  .sidebar button:hover {
+    background-color: #CA6F1E;
+  }
 
-    label {
-      margin-top: 10px;
-      display: block;
-    }
+  .mobile-toggle {
+    display: none;
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    background: #2C3E50;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    z-index: 200;
+  }
 
-    button {
-      background-color: #007bff;
-      color: white;
-      border: none;
-      font-weight: bold;
-      cursor: pointer;
-    }
+  .main {
+    flex: 1;
+    margin-left: 250px;
+    padding: 40px;
+    margin-top: 36px;
+    transition: filter 0.3s ease;
+  }
 
-    button:hover {
-      background-color: #0056b3;
-    }
+  .main.shifted {
+    filter: blur(2px);
+    pointer-events: none;
+  }
 
-    .topbar {
-      background-color: #007bff;
-      padding: 10px 20px;
-      color: white;
-      font-size: 18px;
-      margin-left: 260px;
-    }
-  </style>
+  form {
+    background: white;
+    padding: 25px;
+    border-radius: 16px;
+    max-width: 700px;
+    margin: auto;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+  }
+
+  h1 {
+    font-size: 24px;
+    margin-bottom: 20px;
+    text-align: center;
+    color: #333;
+  }
+
+  label {
+    display: block;
+    margin-top: 15px;
+    font-weight: 500;
+  }
+
+  input, select, button {
+    padding: 10px;
+    margin-top: 5px;
+    width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+  }
+
+  button {
+    margin-top: 25px;
+    background-color: #007bff;
+    color: white;
+    font-weight: bold;
+    border: none;
+    transition: background 0.3s ease;
+  }
+
+  button:hover {
+    background-color: #0056b3;
+  }
+
+  @media (max-width: 768px) {
+    .sidebar { left: -250px; transition: 0.4s ease; }
+    .sidebar.open { left: 0; }
+    .mobile-toggle { display: block; }
+    .main { margin-left: 0; padding: 80px 20px 20px; }
+  }
+</style>
 </head>
-<body>
-  <div class="sidebar">
-    <h2>🧑‍💼 Admin Panel</h2>
-    <ul>
-      <li onclick="navigateTo('/dashboard')">🏠 Dashboard</li>
-      <li onclick="navigateTo('/uploadattendance')">📤 Upload Attendance</li>
-      <li onclick="navigateTo('/uploadmidmarks')">📥 Upload Mid Marks</li>
-      <li onclick="navigateTo('/uploadstudentdata')">👨‍🎓 Upload Student Data</li>
-      <li class="active">🧑‍🏫 Staff Period Allocation</li>
-    </ul>
-  </div>
+<div class="mobile-toggle" onclick="toggleSidebar()">☰</div>
 
-  <div class="topbar">🧑‍🏫 Staff Period Allocation</div>
-
-  <div class="main">
-    <form id="allocationForm">
-      <h1>Allocate Periods to Staff</h1>
-
-      <label>Staff ID</label>
-      <input type="text" name="staff_id" id="staff_id" required />
-
-      <label>Staff Name</label>
-      <input type="text" name="staff_name" id="staff_name" readonly />
-
-      <label>Department</label>
-      <select name="dept_code" id="dept_code" required></select>
-
-      <label>Course</label>
-      <select name="course" id="course" required></select>
-
-      <label>Year</label>
-      <select name="year" id="year" required></select>
-
-      <label>Section</label>
-      <select name="section" id="section" required></select>
-       <div class="col-md-4 mb-3">
-  <label for="semester" class="form-label">Semester</label>
-  <select class="form-select" name="semester" id="semester" required>
-    <option value="" selected disabled>Select Semester</option>
-    <option value="1-1">1-1</option>
-    <option value="1-2">1-2</option>
-    <option value="2-1">2-1</option>
-    <option value="2-2">2-2</option>
-    <option value="3-1">3-1</option>
-    <option value="3-2">3-2</option>
-    <option value="4-1">4-1</option>
-    <option value="4-2">4-2</option>
-  </select>
+<div class="sidebar" id="sidebar">
+  <h2>Admin Panel</h2>
+  <ul>
+    <li onclick="navigateTo('/dashboard')">🏠 Dashboard</li>
+    <li onclick="navigateTo('/uploadattendance')">🗓 Upload Attendance</li>
+    <li onclick="navigateTo('/uploadmidmarks')">📊 Upload Mid Marks</li>
+    <li onclick="navigateTo('/uploadstudentdata')">👨‍🎓 Upload Student Data</li>
+    <li class="active">🧑‍🏫 Staff Period Allocation</li>
+  </ul>
+  <button onclick="logout()">🚪 Logout</button>
 </div>
 
-      <label>Day</label>
-      <select name="day" required>
-        <option value="">Select</option>
-        <option value="Monday">Monday</option>
-        <option value="Tuesday">Tuesday</option>
-        <option value="Wednesday">Wednesday</option>
-        <option value="Thursday">Thursday</option>
-        <option value="Friday">Friday</option>
-        <option value="Saturday">Saturday</option>
-      </select>
+<div class="main" id="main-content">
+  <form id="allocationForm">
+    <h1>Allocate Periods to Staff</h1>
 
-      <label>Period 1</label><input type="text" name="period1">
-      <label>Period 2</label><input type="text" name="period2">
-      <label>Period 3</label><input type="text" name="period3">
-      <label>Period 4</label><input type="text" name="period4">
-      <label>Period 5</label><input type="text" name="period5">
-      <label>Period 6</label><input type="text" name="period6">
-      <label>Period 7</label><input type="text" name="period7">
+    <label>Staff ID</label>
+    <input type="text" name="staff_id" id="staff_id" required />
 
-      <button type="submit">Allocate</button>
-    </form>
-  </div>
+    <label>Staff Name</label>
+    <input type="text" name="staff_name" id="staff_name" readonly />
 
+    <label>Department</label>
+    <select name="dept_code" id="dept_code" required></select>
+
+    <label>Course</label>
+    <select name="course" id="course" required></select>
+
+    <label>Year</label>
+    <select name="year" id="year" required></select>
+
+    <label>Section</label>
+    <select name="section" id="section" required></select>
+
+    <label>Semester</label>
+    <select name="semester" id="semester" required>
+      <option value="" selected disabled>Select Semester</option>
+      <option value="1-1">1-1</option>
+      <option value="1-2">1-2</option>
+      <option value="2-1">2-1</option>
+      <option value="2-2">2-2</option>
+      <option value="3-1">3-1</option>
+      <option value="3-2">3-2</option>
+      <option value="4-1">4-1</option>
+      <option value="4-2">4-2</option>
+    </select>
+
+    <label>Day</label>
+    <select name="day" required>
+      <option value="">Select</option>
+      <option value="Monday">Monday</option>
+      <option value="Tuesday">Tuesday</option>
+      <option value="Wednesday">Wednesday</option>
+      <option value="Thursday">Thursday</option>
+      <option value="Friday">Friday</option>
+      <option value="Saturday">Saturday</option>
+    </select>
+
+    <label>Period 1</label><input type="text" name="period1">
+    <label>Period 2</label><input type="text" name="period2">
+    <label>Period 3</label><input type="text" name="period3">
+    <label>Period 4</label><input type="text" name="period4">
+    <label>Period 5</label><input type="text" name="period5">
+    <label>Period 6</label><input type="text" name="period6">
+    <label>Period 7</label><input type="text" name="period7">
+
+    <button type="submit">Allocate</button>
+  </form>
+</div>
 <script>
   const baseUrl = "https://crr-noc.onrender.com";
 
-  // 🔍 Get staff name when staff ID is entered
+  const userId = localStorage.getItem("userId");
+  if (!userId) {
+    alert("Please login first.");
+    window.location.href = "index.html";
+  }
+
+  function navigateTo(route) {
+    window.location.href = route;
+  }
+
+  function toggleSidebar() {
+    const sidebar = document.getElementById("sidebar");
+    const main = document.getElementById("main-content");
+    sidebar.classList.toggle("open");
+    main.classList.toggle("shifted");
+  }
+
+  function logout() {
+    fetch("/logout")
+      .then(() => {
+        localStorage.removeItem("userId");
+        window.location.replace("index.html");
+      })
+      .catch((err) => {
+        console.error("Logout failed:", err);
+        alert("Logout failed. Try again.");
+      });
+  }
+
+  // Prevent back nav after logout
+  window.history.pushState(null, "", window.location.href);
+  window.onpopstate = function () {
+    window.history.pushState(null, "", window.location.href);
+  };
+
+  // 👇 Auto-fetch staff name when ID is entered
   document.getElementById("staff_id").addEventListener("blur", async function () {
     const id = this.value;
     if (!id) return;
@@ -188,7 +285,7 @@
     }
   });
 
-  // 🔁 Populate departments on load
+  // Load departments on window load
   window.onload = async function () {
     try {
       const res = await fetch(`${baseUrl}/api/departments`);
@@ -203,7 +300,7 @@
     }
   };
 
-  // 🔁 Populate years based on department
+  // Department -> Year
   document.getElementById("dept_code").addEventListener("change", async function () {
     const dept = this.value;
     const yearSel = document.getElementById("year");
@@ -226,7 +323,7 @@
     }
   });
 
-  // 🔁 Populate courses based on dept + year
+  // Year -> Course
   document.getElementById("year").addEventListener("change", async function () {
     const dept = document.getElementById("dept_code").value;
     const year = this.value;
@@ -248,7 +345,7 @@
     }
   });
 
-  // 🔁 Populate sections based on dept + year + course
+  // Course -> Section
   document.getElementById("course").addEventListener("change", async function () {
     const dept = document.getElementById("dept_code").value;
     const year = document.getElementById("year").value;
@@ -269,7 +366,7 @@
     }
   });
 
-  // ✅ Final submit
+  // Submit the allocation
   document.getElementById("allocationForm").addEventListener("submit", async function (e) {
     e.preventDefault();
     const formData = new FormData(this);
@@ -295,11 +392,6 @@
       console.error("Submit failed", err);
     }
   });
-
-  function navigateTo(path) {
-  window.location.href = path;
-}
-
 </script>
 
 </body>
