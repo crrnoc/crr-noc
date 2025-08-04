@@ -3849,19 +3849,20 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
   }
 
   const query = `
-    SELECT 
-      a.reg_no,
-      s.name,
-      a.subject,
-      COUNT(*) AS total_classes,
-      SUM(CASE WHEN a.status = 'Present' THEN 1 ELSE 0 END) AS attended_classes,
-      ROUND(SUM(CASE WHEN a.status = 'Present' THEN 1 ELSE 0 END) / COUNT(*) * 100, 2) AS percentage
-    FROM daily_attendance a
-    JOIN students s ON a.reg_no = s.reg_no
-    WHERE a.year = ? AND a.course = ? AND a.section = ? 
-      AND a.date BETWEEN ? AND ?
-    GROUP BY a.subject, a.reg_no
-    ORDER BY a.subject, a.reg_no
+SELECT 
+  a.reg_no,
+  s.name,
+  a.subject,
+  COUNT(*) AS total_classes,
+  SUM(CASE WHEN a.status = 'Present' THEN 1 ELSE 0 END) AS attended_classes,
+  ROUND(SUM(CASE WHEN a.status = 'Present' THEN 1 ELSE 0 END) / COUNT(*) * 100, 2) AS percentage
+FROM daily_attendance a
+JOIN students s ON a.reg_no = s.reg_no
+WHERE a.year = ? AND a.course = ? AND a.section = ? 
+  AND a.date BETWEEN ? AND ?
+GROUP BY a.subject, a.reg_no, s.name
+ORDER BY a.subject, a.reg_no
+
   `;
 
   connection.query(query, [year, course, section, from_date, to_date], (err, results) => {
@@ -3945,3 +3946,4 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
     });
   });
 });
+
