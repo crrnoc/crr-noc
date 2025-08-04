@@ -231,8 +231,9 @@ function showEditForm(data) {
   c.innerHTML = `
     <form id="editForm" enctype="multipart/form-data">
       <input type="hidden" name="userId" value="${data.userId}" />
+      <label>Reg No</label><input name="reg_no" value="${data.reg_no}" required />
       <label>Name</label><input name="name" value="${data.name}" required />
-      <label>DOB</label><input type="date" name="dob" value="${data.dob?.split('T')[0]}" required />
+      <label>DOB</label><input type="date" name="dob" value="${data.dob ? data.dob.split('T')[0] : ''}" required />
       <label>Unique ID</label><input name="uniqueId" value="${data.uniqueId}" required />
       <label>Aadhar No</label><input name="aadhar_no" value="${data.aadhar_no || ''}" />
       <label>Mobile No</label><input name="mobile_no" value="${data.mobile_no || ''}" required />
