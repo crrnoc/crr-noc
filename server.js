@@ -3849,9 +3849,13 @@ app.get("/api/fetch-courses-sections", (req, res) => {
 
 // download section wise attendance
 
+const PDFDocument = require("pdfkit");
+const fs = require("fs");
+const path = require("path");
+
 app.get("/api/download-all-subjects-attendance", (req, res) => {
-  const { year, course, section, from_date, to_date } = req.query;
-  if (!year || !course || !section || !from_date || !to_date) {
+  const { year, course, section, semester, from_date, to_date } = req.query;
+  if (!year || !course || !section || !semester || !from_date || !to_date) {
     return res.status(400).json({ error: "Missing query parameters." });
   }
 
@@ -3880,98 +3884,119 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
       return res.status(404).json({ error: "No attendance data found" });
     }
 
-    // Step 1: Get all subjects
     const allSubjects = [...new Set(results.map(r => r.subject))];
 
-    // Step 2: Build student-wise matrix
     const studentMap = {};
     results.forEach(r => {
       if (!studentMap[r.reg_no]) {
-        studentMap[r.reg_no] = { name: r.name, regno: r.reg_no, subjects: {}, total_attended: 0, total_classes: 0 };
+        studentMap[r.reg_no] = {
+          name: r.name,
+          regno: r.reg_no,
+          subjects: {},
+          total_attended: 0,
+          total_classes: 0
+        };
       }
       studentMap[r.reg_no].subjects[r.subject] = `${r.attended}/${r.total_classes}`;
       studentMap[r.reg_no].total_attended += r.attended;
       studentMap[r.reg_no].total_classes += r.total_classes;
     });
 
-    // Step 3: Generate PDF
     const doc = new PDFDocument({ margin: 30, size: 'A4', layout: 'landscape' });
-    const fileName = `Section_Attendance_${Date.now()}.pdf`;
+    const fileName = `DOC-${new Date().toISOString().slice(0,10).replace(/-/g, '')}-WA0015.pdf`;
     const filePath = path.join(__dirname, "uploads", fileName);
     const stream = fs.createWriteStream(filePath);
     doc.pipe(stream);
 
-    // Logo and Header
+    // 📌 Header
     doc.image(path.join(__dirname, "public", "crrengglogo.png"), 30, 20, { width: 50 });
     doc.fontSize(16).text("SIR C.R.REDDY COLLEGE OF ENGINEERING (Autonomous)", 100, 20);
-    doc.fontSize(12).text(`B.Tech Year - ${year}  Sem - ?  Branch - ${course}  Section - ${section}`, 100, 40);
+    doc.fontSize(12).text(`B.Tech Year - ${year} Sem - ${semester} Branch - ${course} Section - ${section}`, 100, 40);
     doc.text("STATEMENT OF ATTENDANCE REPORT", 100, 60);
     doc.text("Vatluru, Eluru - 534007, Eluru Dist. A.P.", 100, 80);
     doc.text(`From : ${from_date} To: ${to_date}`, 100, 100);
-    doc.moveDown(2);
+    doc.moveDown(1.5);
 
-    // Build header row
-    const tableTop = doc.y;
-    const colWidth = 60;
+    // 📌 Table Setup
+    const tableTop = doc.y + 10;
+    const colWidths = {
+      reg: 70,
+      subject: 65,
+      total: 60,
+      percent: 60
+    };
+    const subjectColWidth = 65;
+
+    const drawBox = (x, y, w, h) => {
+      doc.rect(x, y, w, h).stroke();
+    };
+
+    // 📌 Draw Header
     let x = 30;
-    doc.font("Helvetica-Bold").fontSize(8);
-    doc.text("Regd.No", x, tableTop, { width: 55 }); x += 55;
+    let y = tableTop;
+    doc.font("Helvetica-Bold").fontSize(7);
+    drawBox(x, y, colWidths.reg, 20); doc.text("Regd.No", x + 3, y + 6, { width: colWidths.reg - 6 }); x += colWidths.reg;
 
     allSubjects.forEach(sub => {
-      doc.text(sub, x, tableTop, { width: colWidth, align: "center" });
-      x += colWidth;
+      drawBox(x, y, subjectColWidth, 20);
+      doc.text(sub, x + 3, y + 6, { width: subjectColWidth - 6, align: "center" });
+      x += subjectColWidth;
     });
 
-    doc.text("TOTAL", x, tableTop, { width: 55, align: "center" }); x += 55;
-    doc.text("PERCENT", x, tableTop, { width: 55, align: "center" });
+    drawBox(x, y, colWidths.total, 20); doc.text("TOTAL", x + 3, y + 6, { width: colWidths.total - 6, align: "center" }); x += colWidths.total;
+    drawBox(x, y, colWidths.percent, 20); doc.text("PERCENT", x + 3, y + 6, { width: colWidths.percent - 6, align: "center" });
 
-    // Rows for each student
-    doc.font("Helvetica").moveDown(0.5);
-    let rowY = tableTop + 20;
+    y += 20;
 
-    Object.values(studentMap).forEach(std => {
-      x = 30;
-      doc.text(std.regno, x, rowY, { width: 55 }); x += 55;
+    // 📌 Draw Rows
+    doc.font("Helvetica").fontSize(7);
+    Object.values(studentMap).forEach((std, index) => {
+      let x = 30;
+      let rowHeight = 20;
+      drawBox(x, y, colWidths.reg, rowHeight); doc.text(std.regno, x + 3, y + 6, { width: colWidths.reg - 6 }); x += colWidths.reg;
 
       allSubjects.forEach(sub => {
+        drawBox(x, y, subjectColWidth, rowHeight);
         const val = std.subjects[sub] || "-";
-        doc.text(val, x, rowY, { width: colWidth, align: "center" });
-        x += colWidth;
+        doc.text(val, x + 3, y + 6, { width: subjectColWidth - 6, align: "center" });
+        x += subjectColWidth;
       });
 
-      doc.text(`${std.total_attended}/${std.total_classes}`, x, rowY, { width: 55, align: "center" }); x += 55;
-      const percent = ((std.total_attended / std.total_classes) * 100).toFixed(2);
-      doc.text(percent, x, rowY, { width: 55, align: "center" });
+      drawBox(x, y, colWidths.total, rowHeight);
+      const totalVal = `${std.total_attended}/${std.total_classes}`;
+      doc.text(totalVal, x + 3, y + 6, { width: colWidths.total - 6, align: "center" }); x += colWidths.total;
 
-      rowY += 20;
-      if (rowY > 520) {  // break to new page
+      drawBox(x, y, colWidths.percent, rowHeight);
+      const percent = ((std.total_attended / std.total_classes) * 100).toFixed(2);
+      doc.text(percent, x + 3, y + 6, { width: colWidths.percent - 6, align: "center" });
+
+      y += rowHeight;
+      if (y > 500) {
         doc.addPage();
-        rowY = 50;
+        y = 50;
       }
     });
 
-    // Footer: Signature
-    doc.moveDown(2);
-    doc.fontSize(10);
-    doc.text("Faculty Signature", 30, 500);
-    doc.text("HOD Signature", 600, 500);
+    // 📌 Footer
+    doc.moveDown(3);
+    doc.fontSize(10).text("Faculty Signature", 50, 520);
+    doc.text("HOD Signature", 650, 520);
 
     doc.end();
 
     stream.on("finish", () => {
-      res.download(filePath, fileName, (err) => {
+      res.download(filePath, fileName, err => {
         if (err) {
-          console.error("❌ Download error:", err);
-          res.status(500).json({ error: "File download failed" });
+          console.error("❌ File send error:", err);
+          return res.status(500).json({ error: "Could not send PDF file" });
         }
         fs.unlink(filePath, () => {}); // optional cleanup
       });
     });
 
-    stream.on("error", (err) => {
+    stream.on("error", err => {
       console.error("❌ PDF stream error:", err);
-      res.status(500).json({ error: "PDF creation failed" });
+      res.status(500).json({ error: "PDF creation failed." });
     });
   });
 });
-
