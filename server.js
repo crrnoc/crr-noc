@@ -3555,10 +3555,11 @@ app.get("/api/staff-allocation", (req, res) => {
   }
 
   const sql = `
-    SELECT DISTINCT year, course, section, day, period1, period2, period3, period4, period5, period6, period7
-    FROM staff_period_allocation
-    WHERE staff_id = ?
-  `;
+  SELECT DISTINCT year, course, semester, section, day,
+    period1, period2, period3, period4, period5, period6, period7
+  FROM staff_period_allocation
+  WHERE staff_id = ?
+`;
 
   connection.query(sql, [staff_id], (err, result) => {
     if (err) {
@@ -3807,3 +3808,4 @@ app.get("/api/download-attendance-pdf", (req, res) => {
     doc.end();
   });
 });
+
