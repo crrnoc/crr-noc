@@ -2,482 +2,235 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Edit Student Profile</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Edit Student</title>
   <link rel="icon" href="crrengglogo.png" type="image/png" />
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
+    /* 💅 Same styles as your Add Student page */
     * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  }
-
-  body {
-    background-color: #1d1d1d;
-    color: #000;
-  }
-
-  .main-container {
-    display: flex;
-    min-height: 100vh;
-    flex-direction: row;
-  }
-
-  .sidebar {
-    width: 270px;
-    background-color: rgb(247, 201, 155);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    padding: 20px;
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    z-index: 100;
-    overflow-y: auto;
-    transition: top 0.3s ease-in-out;
-  }
-
-  .sidebar h2 {
-    margin: 40px 20px 20px 20px;
-    color: black;
-    font-size: 18px;
-  }
-
-  .menu {
-    list-style-type: none;
-    padding: 0;
-  }
-
-  .menu li {
-    margin-bottom: 15px;
-  }
-
-  .menu li a {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 16px;
-    color: black;
-    padding: 12px 20px;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-    text-decoration: none;
-  }
-
-  .menu li a:hover,
-  .menu li.active a {
-    background-color: #d4d4d4;
-    font-weight: bold;
-    transform: translateX(5px);
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
-  }
-
-  .logout {
-    background-color: #f09000;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 20px;
-    cursor: pointer;
-    font-size: 16px;
-    width: 50%;
-    margin: 20px auto;
-  }
-
-  .logout:hover {
-    background-color: #d07900;
-  }
-
-  .content {
-    flex-grow: 1;
-    background-color: white;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 40px 20px;
-    margin-left: 270px;
-  }
-
-  #searchContainer {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    padding: 40px 0;
-  }
-
-  .search-box {
-    background: linear-gradient(to right, #67b26f, #4ca2cd);
-    padding: 30px;
-    border-radius: 20px;
-    color: white;
-    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
-    width: 100%;
-    max-width: 500px;
-    text-align: center;
-  }
-
-  .search-box input {
-    width: 80%;
-    padding: 10px;
-    font-size: 16px;
-    border: none;
-    border-radius: 10px;
-    margin-bottom: 20px;
-  }
-
-  .search-box button {
-    background-color: #000000;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background 0.3s ease, transform 0.2s ease;
-  }
-
-  .search-box button:hover {
-    background-color: #333;
-    transform: scale(1.05);
-  }
-
-  .edit-form {
-    margin-top: 30px;
-    padding: 35px;
-    background: linear-gradient(135deg, rgba(0, 164, 228, 0.85), rgba(0, 120, 180, 0.85));
-    color: white;
-    border-radius: 20px;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    box-shadow: 0 15px 25px rgba(0, 0, 0, 0.3), 0 10px 15px rgba(0, 0, 0, 0.2);
-    width: 100%;
-    max-width: 800px;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-  }
-
-  .edit-form:hover {
-    transform: scale(1.01);
-    box-shadow: 0 18px 30px rgba(0, 0, 0, 0.4);
-  }
-
-  .edit-form label {
-    font-weight: bold;
-    margin-bottom: 5px;
-    color: #fff;
-  }
-
-  .edit-form input,
-  .edit-form select {
-    width: 100%;
-    padding: 10px;
-    border-radius: 8px;
-    border: none;
-    background-color: #f0f9ff;
-    color: #000;
-    font-size: 15px;
-    transition: box-shadow 0.3s ease;
-  }
-
-  .edit-form input:focus,
-  .edit-form select:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.4);
-  }
-
-  .edit-form button {
-    margin-top: 20px;
-    background-color: #28a745;
-    color: white;
-    border: none;
-    padding: 12px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 16px;
-    transition: background 0.3s ease, transform 0.2s ease;
-  }
-
-  .edit-form button:hover {
-    background-color: #218838;
-    transform: scale(1.03);
-  }
-
-  .mobile-toggle {
-    display: none;
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: #1f75cb;
-    color: white;
-    font-size: 24px;
-    padding: 12px 18px;
-    border-radius: 50px;
-    z-index: 9999;
-    cursor: pointer;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-  }
-
-  @media (max-width: 768px) {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    body {
+      background-color: #1d1d1d;
+    }
     .main-container {
-      flex-direction: column;
+      display: flex;
+      height: 100vh;
     }
-
     .sidebar {
-      width: 100%;
-      top: -100%;
-      max-height: 90vh;
-    }
-
-    .sidebar.open {
+      width: 270px;
+      background-color: rgb(247, 201, 155);
+      padding: 20px;
+      position: fixed;
       top: 0;
+      bottom: 0;
+      left: 0;
+      overflow-y: auto;
+      z-index: 100;
     }
-
-    .content {
-      margin-left: 0;
-      padding: 20px;
+    .sidebar h2 {
+      margin: 40px 0 20px;
+      color: black;
+      font-size: 18px;
     }
-
-    .edit-form {
-      max-width: 95%;
-      padding: 20px;
+    .menu {
+      list-style: none;
+      padding: 0;
     }
-
-    .mobile-toggle {
+    .menu li {
+      margin-bottom: 15px;
+    }
+    .menu li a {
+      color: black;
+      text-decoration: none;
+      padding: 12px 20px;
       display: block;
+      border-radius: 8px;
+      transition: all 0.3s ease;
     }
-
-    .search-box input,
-    .search-box button {
+    .menu li a:hover, .menu li.active a {
+      background-color: #d4d4d4;
+      font-weight: bold;
+    }
+    .logout {
+      background-color: #f09000;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 20px;
+      width: 60%;
+    }
+    .main {
+      margin-left: 270px;
+      flex-grow: 1;
+      padding: 40px;
+      background: white;
+      overflow-y: auto;
+    }
+    .form-box {
+      background: linear-gradient(135deg, rgba(54, 169, 225, 0.85), rgba(30, 130, 190, 0.85));
+      padding: 30px;
+      border-radius: 20px;
+      max-width: 700px;
+      color: white;
+      margin: 0 auto;
+    }
+    .form-box input,
+    .form-box select {
       width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 6px;
+      border: none;
+      font-size: 14px;
+      color: #000;
     }
-  }
+    .form-box label {
+      font-weight: bold;
+    }
+    .form-box button {
+      width: 100%;
+      padding: 12px;
+      background-color: #1D73D2;
+      color: white;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+    .form-box button:disabled {
+      background-color: #999;
+      cursor: not-allowed;
+    }
+    #preview {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
-  <div class="main-container">
-    <div class="sidebar">
-      <h2><strong>ID:</strong> <span id="userId">Loading...</span></h2>
-      <ul class="menu">
-        <li><a href="knowaboutstd1.html">👤 Know about Student</a></li>
-        <li class="active"><a href="#">✏️ Edit Student Details</a></li>
-        <li><a href="sendnotification.html">📨 Send Notification</a></li>
-        <li><a href="updatefee.html">💵 Update Fee</a></li>
-        <li><a href="imposefines.html">💰 Impose Fines</a></li>
-        <li><a href="addstudent.html">➕ Add Student</a></li>
-        <li><a href="backlogs.html">📚 Find Backlogs</a></li>
-        <li><a href="mycounselling.html">📋 View Counselling</a></li>
-        <li><a href="staffsettings.html">⚙️ Settings</a></li>
-      </ul>
-      <button class="logout" onclick="logout()">Logout</button>
-    </div>
-
-    <div class="content">
-      <div id="searchContainer">
-        <div class="search-box">
-          <h2>Enter Student Reg. No to Edit</h2>
-          <input type="text" id="studentRegInput" placeholder="e.g., 22A91A05G5" />
-          <br />
-          <button onclick="fetchStudentData()">Fetch Student</button>
-        </div>
-      </div>
-
-      <div id="editFormContainer"></div>
-    </div>
-  </div>
-
-  <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
-
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-  // 🔐 Unauthorized login check
   const userId = localStorage.getItem("userId");
   if (!userId) {
-    Swal.fire({
-      icon: 'warning',
-      title: 'Login Required',
-      text: 'Please login to access this page.'
-    }).then(() => {
+    Swal.fire({ icon: "warning", title: "Unauthorized", text: "Please login to access this page" }).then(() => {
       window.location.href = "index.html";
     });
-  } else {
-    document.getElementById("userId").textContent = userId;
-
-    function toggleMobileMenu() {
-      document.querySelector('.sidebar').classList.toggle('open');
-    }
-
-    function logout() {
-      localStorage.clear();
-      window.location.href = "index.html";
-    }
-
-    function fetchStudentData() {
-      const regNo = document.getElementById("studentRegInput").value.trim();
-      if (!regNo) {
-        Swal.fire("Enter Reg.No", "Please enter a valid registration number", "warning");
-        return;
-      }
-
-      fetch(`https://crr-noc.onrender.com/student/${regNo}`)
-        .then(res => {
-          if (!res.ok) throw new Error("Student not found");
-          return res.json();
-        })
-        .then(data => {
-          displayEditForm(data);
-        })
-        .catch(err => {
-          Swal.fire("Error", err.message, "error");
-        });
-    }
-
-    function displayEditForm(data) {
-      document.getElementById("searchContainer").style.display = "none";
-
-      const formHtml = `
-        <form class="edit-form" onsubmit="submitUpdate(event, '${data.userId}')">
-          <h3>Edit Student Profile</h3>
-
-          <label>Name</label>
-          <input type="text" id="name" value="${data.name}" required oninput="this.value = this.value.toUpperCase()">
-
-          <label>DOB</label>
-          <input type="date" id="dob" value="${data.dob?.split('T')[0] || ''}" required>
-
-          <label>Course</label>
-          <select id="course" required>
-            <option value="">Select Course</option>
-            <option>B.Tech-CSE</option>
-            <option>B.Tech-CSE(CYBER SECURITY)</option>
-            <option>CSE(AI&ML)</option>
-            <option>CSE(AI&DS)</option>
-          </select>
-
-          <label>Semester</label>
-          <select id="semester" required>
-            <option value="">Select Semester</option>
-            <option>1-1</option>
-            <option>1-2</option>
-            <option>2-1</option>
-            <option>2-2</option>
-            <option>3-1</option>
-            <option>3-2</option>
-            <option>4-1</option>
-            <option>4-2</option>
-          </select>
-
-          <label>Section</label>
-          <input type="text" id="section" maxlength="1" value="${data.section}" required oninput="this.value = this.value.toUpperCase().replace(/[^A-Z]/g, '')">
-
-          <label>Year</label>
-          <select id="year" required>
-            <option value="">Select Year</option>
-            <option>1</option>
-            <option>2</option>
-            <option>3</option>
-            <option>4</option>
-          </select>
-
-          <label>Father Name</label>
-          <input type="text" id="father_name" value="${data.father_name}" required oninput="this.value = this.value.toUpperCase()">
-
-          <label>Father Mobile</label>
-          <input type="text" id="father_mobile" value="${data.father_mobile}" required maxlength="10" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-
-          <label>Student Mobile</label>
-          <input type="text" id="mobile_no" value="${data.mobile_no}" required maxlength="10" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-
-          <label>Email</label>
-          <input type="email" id="email" value="${data.email}" required>
-
-          <label>Admission Type</label>
-          <select id="admission_type" required>
-            <option value="">Select Admission Type</option>
-            <option>Convener</option>
-            <option>Management</option>
-            <option>Spot</option>
-          </select>
-
-          <label>Counsellor Name</label>
-          <input type="text" id="counsellor_name" value="${data.counsellor_name}" required oninput="this.value = this.value.toUpperCase().replace(/[^A-Z ]/g, '')">
-
-          <label>Counsellor Mobile</label>
-          <input type="text" id="counsellor_mobile" value="${data.counsellor_mobile}" required maxlength="10" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-
-          <label>Unique ID</label>
-          <input type="text" id="uniqueId" value="${data.uniqueId}" required>
-
-          <button type="submit">Save Changes</button>
-        </form>
-      `;
-      document.getElementById("editFormContainer").innerHTML = formHtml;
-
-      document.getElementById("course").value = data.course;
-      document.getElementById("semester").value = data.semester;
-      document.getElementById("year").value = data.year;
-      document.getElementById("admission_type").value = data.admission_type;
-    }
-
-    async function submitUpdate(e, userId) {
-      e.preventDefault();
-
-      const dob = new Date(document.getElementById("dob").value);
-      const today = new Date();
-      const age = today.getFullYear() - dob.getFullYear();
-
-      if (age < 16) {
-        Swal.fire("Invalid DOB", "Student must be at least 16 years old.", "warning");
-        return;
-      }
-
-      const email = document.getElementById("email").value;
-      if (!email.includes('@') || email.split('@')[1].length < 3) {
-        Swal.fire("Invalid Email", "Please enter a valid email address.", "warning");
-        return;
-      }
-
-      const formData = {
-        userId,
-        name: document.getElementById("name").value,
-        dob: document.getElementById("dob").value,
-        course: document.getElementById("course").value,
-        semester: document.getElementById("semester").value,
-        section: document.getElementById("section").value,
-        year: document.getElementById("year").value,
-        father_name: document.getElementById("father_name").value,
-        father_mobile: document.getElementById("father_mobile").value,
-        mobile_no: document.getElementById("mobile_no").value,
-        email,
-        admission_type: document.getElementById("admission_type").value,
-        counsellor_name: document.getElementById("counsellor_name").value,
-        counsellor_mobile: document.getElementById("counsellor_mobile").value
-      };
-
-      try {
-        const res = await fetch("https://crr-noc.onrender.com/staff/update-student", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData)
-        });
-
-        const result = await res.json();
-        if (result.success) {
-          Swal.fire("Success", "Student profile updated successfully", "success");
-        } else {
-          throw new Error(result.message || "Update failed");
-        }
-      } catch (err) {
-        Swal.fire("Error", err.message, "error");
-      }
-    }
   }
+</script>
+
+<div class="main-container">
+  <div class="sidebar">
+    <h2><strong>ID:</strong> <span id="userId">Staff</span></h2>
+    <ul class="menu">
+        <li><a href="knowaboutstd1.html"><span>👤</span> Know about Student</a></li>
+        <li class="active"><a href="#"><span>✏️</span> Edit Student Details</a></li>
+        <li><a href="sendnotification.html"><span>📨</span> Send Notification</a></li>
+        <li><a href="updatefee.html"><span>💵</span> Update Fee</a></li>
+        <li><a href="imposefines.html"><span>💰</span> Impose Fines</a></li>
+        <li><a href="addstudent.html"><span>➕</span> Add Student</a></li>
+        <li><a href="backlogs.html"><span>📚</span> Find Backlogs</a></li>
+        <li><a href="mycounselling.html"><span>📋</span> View Counselling</a></li>
+        <li><a href="staffsettings.html"><span>⚙️</span> Settings</a></li>
+    </ul>
+    <button class="logout" onclick="logout()">Logout</button>
+  </div>
+
+  <div class="main">
+    <div class="form-box">
+      <h2>Edit Student Profile</h2>
+      <div id="fetchBox">
+        <input id="regInput" placeholder="Enter Reg No" />
+        <button onclick="fetchStudentData()">Fetch</button>
+      </div>
+      <div id="formContainer"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+function logout() {
+  localStorage.removeItem("userId");
+  location.href = "index.html";
+}
+
+function fetchStudentData() {
+  const reg = document.getElementById("regInput").value.trim();
+  if (!reg) return Swal.fire("Enter registration number");
+
+  fetch(`https://crr-noc.onrender.com/student/${reg}`)
+    .then(res => res.json())
+    .then(data => showEditForm(data))
+    .catch(() => Swal.fire("Student not found"));
+}
+
+function showEditForm(data) {
+  document.getElementById("fetchBox").style.display = "none";
+  const c = document.getElementById("formContainer");
+  c.innerHTML = `
+    <form id="editForm" enctype="multipart/form-data">
+      <input type="hidden" name="userId" value="${data.userId}" />
+      <label>Name</label><input name="name" value="${data.name}" required />
+      <label>DOB</label><input type="date" name="dob" value="${data.dob?.split('T')[0]}" required />
+      <label>Unique ID</label><input name="uniqueId" value="${data.uniqueId}" required />
+      <label>Aadhar No</label><input name="aadhar_no" value="${data.aadhar_no || ''}" />
+      <label>Mobile No</label><input name="mobile_no" value="${data.mobile_no}" required />
+      <label>Email</label><input type="email" name="email" value="${data.email}" required />
+      <label>Course</label><input name="course" value="${data.course}" required />
+      <label>Dept Code</label><input name="dept_code" value="${data.dept_code || ''}" />
+      <label>Year</label><input name="year" value="${data.year}" required />
+      <label>Semester</label><input name="semester" value="${data.semester}" required />
+      <label>Section</label><input name="section" value="${data.section}" required />
+      <label>Father Name</label><input name="father_name" value="${data.father_name}" required />
+      <label>Father Mobile</label><input name="father_mobile" value="${data.father_mobile}" required />
+      <label>Counsellor Name</label><input name="counsellor_name" value="${data.counsellor_name}" required />
+      <label>Counsellor Mobile</label><input name="counsellor_mobile" value="${data.counsellor_mobile}" required />
+      <label>Admission Type</label><input name="admission_type" value="${data.admission_type}" required />
+      <label>Upload New Photo (max 100KB)</label>
+      <input type="file" name="photo" accept="image/*" onchange="previewPhoto(this)" />
+      <img id="preview" src="${data.photo_url || ''}" />
+      <button type="submit" id="submitBtn">Update</button>
+    </form>
+  `;
+
+  document.getElementById("editForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+    const form = e.target;
+    const btn = document.getElementById("submitBtn");
+    const file = form.querySelector("input[name='photo']").files[0];
+    if (file && file.size > 102400) {
+      return Swal.fire("File too large", "Max size: 100KB", "error");
+    }
+    btn.disabled = true;
+    const formData = new FormData(form);
+    const res = await fetch("https://crr-noc.onrender.com/editprofile", { method: "POST", body: formData });
+    const out = await res.json();
+    Swal.fire(out.message.includes("success") ? "Success" : "Error", out.message, out.message.includes("success") ? "success" : "error");
+    btn.disabled = false;
+    if (out.message.includes("success")) {
+      form.remove();
+      document.getElementById("fetchBox").style.display = "block";
+    }
+  });
+}
+
+function previewPhoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => document.getElementById("preview").src = e.target.result;
+  reader.readAsDataURL(file);
+}
 </script>
 </body>
 </html>
