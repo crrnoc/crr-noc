@@ -69,9 +69,16 @@
 <label for="semester">Semester</label>
 <select id="semester" required>
   <option value="">Select Semester</option>
-  <option value="1">1</option>
-  <option value="2">2</option>
+  <option value="1-1">1-1</option>
+  <option value="1-2">1-2</option>
+  <option value="2-1">2-1</option>
+  <option value="2-2">2-2</option>
+  <option value="3-1">3-1</option>
+  <option value="3-2">3-2</option>
+  <option value="4-1">4-1</option>
+  <option value="4-2">4-2</option>
 </select>
+
 
     <label for="course">Course</label>
     <select id="course" required></select>
@@ -132,11 +139,10 @@
       const from_date = document.getElementById("from_date").value;
       const to_date = document.getElementById("to_date").value;
 
-      if (!course || !section || !year || !from_date || !to_date) {
-        Swal.fire("⚠️", "Please fill all fields", "warning");
-        return;
-      }
-
+if (!course || !section || !year || !from_date || !to_date || !semester) {
+  Swal.fire("⚠️", "Please fill all fields", "warning");
+  return;
+}
       const url = `/api/download-all-subjects-attendance?year=${year}&course=${encodeURIComponent(course)}&section=${section}&semester=${semester}&from_date=${from_date}&to_date=${to_date}`;
       window.open(url, '_blank');
     };
