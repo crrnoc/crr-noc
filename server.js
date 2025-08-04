@@ -3814,6 +3814,29 @@ app.get("/api/download-attendance-pdf", (req, res) => {
     doc.end();
   });
 });
+//fetch course and section by dept_code
+app.get("/api/fetch-courses-sections", (req, res) => {
+  const { dept_code, year } = req.query;
+
+  if (!dept_code || !year) {
+    return res.status(400).json({ error: "Missing parameters" });
+  }
+
+  const sql = `
+    SELECT DISTINCT course, section 
+    FROM students 
+    WHERE dept_code = ? AND year = ?
+  `;
+
+  connection.query(sql, [dept_code, year], (err, results) => {
+    if (err) {
+      console.error("❌ DB error:", err);
+      return res.status(500).json({ error: "DB error" });
+    }
+
+    res.json(results);
+  });
+});
 
 
 // download section wise attendance
@@ -3923,6 +3946,7 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
     doc.end();
   });
 });
+
 
 
 
