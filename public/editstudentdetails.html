@@ -263,8 +263,9 @@ function showEditForm(data) {
     if (file && file.size > 102400) {
       return Swal.fire("File too large", "Max size: 100KB", "error");
     }
-    btn.disabled = true;
-    const formData = new FormData(form);
+   if (!validateFormFields(form)) return;
+btn.disabled = true;
+const formData = new FormData(form);
     const res = await fetch("https://crr-noc.onrender.com/editprofile", { method: "POST", body: formData });
     const out = await res.json();
     Swal.fire(out.message.includes("success") ? "Success" : "Error", out.message, out.message.includes("success") ? "success" : "error");
@@ -283,6 +284,74 @@ function previewPhoto(input) {
   reader.onload = e => document.getElementById("preview").src = e.target.result;
   reader.readAsDataURL(file);
 }
+ function validateFormFields(form) {
+  const name = form.name.value.trim().toUpperCase();
+  const uniqueId = form.uniqueId.value.trim().toUpperCase();
+  const aadhar = form.aadhar_no.value.trim();
+  const mobile = form.mobile_no.value.trim();
+  const email = form.email.value.trim();
+  const fatherName = form.father_name.value.trim().toUpperCase();
+  const fatherMobile = form.father_mobile.value.trim();
+  const counsellorName = form.counsellor_name.value.trim().toUpperCase();
+  const counsellorMobile = form.counsellor_mobile.value.trim();
+
+  // Name validations
+  if (!/^[A-Z\s]+$/.test(name)) {
+    Swal.fire("Invalid Name", "Name must contain only alphabets in CAPITAL letters.", "error");
+    return false;
+  }
+
+  if (!/^[A-Z0-9]{16}$/.test(uniqueId)) {
+    Swal.fire("Invalid Unique ID", "Unique ID must be 16 characters, CAPITAL letters/numbers only.", "error");
+    return false;
+  }
+
+  if (!/^[0-9]{12}$/.test(aadhar)) {
+    Swal.fire("Invalid Aadhar", "Aadhar number must be exactly 12 digits.", "error");
+    return false;
+  }
+
+  if (!/^[0-9]{10}$/.test(mobile)) {
+    Swal.fire("Invalid Mobile", "Mobile number must be exactly 10 digits.", "error");
+    return false;
+  }
+
+  if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}$/i.test(email)) {
+    Swal.fire("Invalid Email", "Enter a valid email address like abc@example.com", "error");
+    return false;
+  }
+
+  // Father & Counsellor name validation
+  if (!/^[A-Z\s]+$/.test(fatherName)) {
+    Swal.fire("Invalid Father Name", "Father name must contain only CAPITAL letters.", "error");
+    return false;
+  }
+
+  if (!/^[0-9]{10}$/.test(fatherMobile)) {
+    Swal.fire("Invalid Father Mobile", "Father mobile number must be exactly 10 digits.", "error");
+    return false;
+  }
+
+  if (!/^[A-Z\s]+$/.test(counsellorName)) {
+    Swal.fire("Invalid Counsellor Name", "Counsellor name must contain only CAPITAL letters.", "error");
+    return false;
+  }
+
+  if (!/^[0-9]{10}$/.test(counsellorMobile)) {
+    Swal.fire("Invalid Counsellor Mobile", "Counsellor mobile number must be exactly 10 digits.", "error");
+    return false;
+  }
+
+  // Auto-CAPS
+  form.name.value = name;
+  form.uniqueId.value = uniqueId;
+  form.father_name.value = fatherName;
+  form.counsellor_name.value = counsellorName;
+
+  return true;
+}
+
+
 </script>
 </body>
 </html>
