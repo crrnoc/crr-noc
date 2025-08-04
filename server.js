@@ -2936,7 +2936,6 @@ app.get('/check-session', (req, res) => {
   }
 });
 
-// staff updates student profile (editstudentdetails.html)
 app.post('/staff/update-student', (req, res) => {
   const {
     userId,
@@ -2955,7 +2954,10 @@ app.post('/staff/update-student', (req, res) => {
     counsellor_mobile
   } = req.body;
 
-  // Fix string "null" values to actual NULL
+  if (!userId) {
+    return res.status(400).json({ success: false, message: "Missing userId" });
+  }
+
   const safe_admission_type = (admission_type && admission_type !== "null") ? admission_type : null;
   const safe_section = (section && section !== "null") ? section : null;
 
@@ -2978,6 +2980,10 @@ app.post('/staff/update-student', (req, res) => {
     if (err) {
       console.error("❌ SQL error while updating student:", err);
       return res.status(500).json({ success: false, message: "Server error while updating student." });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, message: "No student found with the given userId." });
     }
 
     res.json({ success: true, message: "Student profile updated successfully." });
@@ -3808,4 +3814,5 @@ app.get("/api/download-attendance-pdf", (req, res) => {
     doc.end();
   });
 });
+
 
