@@ -3814,5 +3814,119 @@ app.get("/api/download-attendance-pdf", (req, res) => {
     doc.end();
   });
 });
+// download section wise attendance
+const express = require('express');
+const PDFDocument = require('pdfkit');
+const fs = require('fs');
+const path = require('path');
+const app = express();
+const connection = require('./db'); // your MySQL connection
+
+app.get("/api/download-all-subjects-attendance", (req, res) => {
+  const { year, course, section, from_date, to_date } = req.query;
+
+  if (!year || !course || !section || !from_date || !to_date) {
+    return res.status(400).send("Missing required parameters.");
+  }
+
+  const query = `
+    SELECT 
+      a.reg_no,
+      s.name,
+      a.subject,
+      COUNT(*) AS total_classes,
+      SUM(CASE WHEN a.status = 'Present' THEN 1 ELSE 0 END) AS attended_classes,
+      ROUND(SUM(CASE WHEN a.status = 'Present' THEN 1 ELSE 0 END) / COUNT(*) * 100, 2) AS percentage
+    FROM daily_attendance a
+    JOIN students s ON a.reg_no = s.reg_no
+    WHERE a.year = ? AND a.course = ? AND a.section = ? AND a.date BETWEEN ? AND ?
+    GROUP BY a.subject, a.reg_no
+    ORDER BY a.subject, a.reg_no
+  `;
+
+  connection.query(query, [year, course, section, from_date, to_date], (err, rows) => {
+    if (err) {
+      console.error("❌ DB error:", err);
+      return res.status(500).send("Database error.");
+    }
+
+    if (!rows.length) {
+      return res.status(404).send("No attendance records found.");
+    }
+
+    const doc = new PDFDocument({ margin: 40, size: 'A4' });
+    const filename = `Attendance_AllSubjects_${course}_${section}_Y${year}.pdf`;
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    doc.pipe(res);
+
+    // 📌 HEADER with logo
+    const logoPath = path.join(__dirname, 'public', 'crrengglogo.png');
+    if (fs.existsSync(logoPath)) {
+      doc.image(logoPath, 40, 30, { width: 60 });
+    }
+
+    doc.fontSize(16).text("SIR C R REDDY COLLEGE OF ENGINEERING", 110, 35, { align: "left" });
+    doc.fontSize(10).text("Approved by AICTE, Affiliated to AU, NAAC Accredited", 110, 53);
+    doc.fontSize(10).text("Eluru – 534007, West Godavari Dist., Andhra Pradesh", 110, 67);
+    doc.fontSize(12).text("Autonomous", 110, 82);
+    doc.moveDown(2);
+
+    doc.fontSize(14).text(`📝 STATEMENT OF ATTENDANCE REPORT`, { align: "center", underline: true });
+    doc.moveDown(0.5);
+    doc.fontSize(11).text(`Course: ${course}`);
+    doc.text(`Year: ${year}`);
+    doc.text(`Section: ${section}`);
+    doc.text(`From Date: ${from_date}`);
+    doc.text(`To Date: ${to_date}`);
+    doc.moveDown(1);
+
+    // 🧮 Group by subject
+    const subjectGroups = {};
+    rows.forEach(row => {
+      if (!subjectGroups[row.subject]) subjectGroups[row.subject] = [];
+      subjectGroups[row.subject].push(row);
+    });
+
+    for (const subject in subjectGroups) {
+      doc.fontSize(13).text(`📘 Subject: ${subject}`, { underline: true });
+      doc.moveDown(0.3);
+
+      // Table headers
+      doc.font('Helvetica-Bold');
+      doc.text('Reg No', 50, doc.y);
+      doc.text('Name', 120, doc.y);
+      doc.text('Total', 300, doc.y);
+      doc.text('Attended', 370, doc.y);
+      doc.text('%', 450, doc.y);
+      doc.moveDown(0.2);
+      doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+      doc.moveDown(0.4);
+      doc.font('Helvetica');
+
+      subjectGroups[subject].forEach(row => {
+        doc.text(row.reg_no, 50);
+        doc.text(row.name, 120);
+        doc.text(row.total_classes.toString(), 300);
+        doc.text(row.attended_classes.toString(), 370);
+        doc.text(`${row.percentage}%`, 450);
+        doc.moveDown(0.3);
+      });
+
+      doc.moveDown(1.5);
+    }
+
+    // Footer
+    doc.moveDown(2);
+    doc.text("_______________________", 60, doc.y);
+    doc.text("Faculty Signature", 70, doc.y + 12);
+
+    doc.text("_______________________", 400, doc.y - 12);
+    doc.text("HOD Signature", 420, doc.y + 12);
+
+    doc.end();
+  });
+});
 
 
