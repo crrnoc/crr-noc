@@ -316,10 +316,10 @@ function previewPhoto(input) {
     return false;
   }
 
-  if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}$/i.test(email)) {
-    Swal.fire("Invalid Email", "Enter a valid email address like abc@example.com", "error");
-    return false;
-  }
+ if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(email)) {
+  Swal.fire("Invalid Email", "Enter a valid email address like abc@example.com", "error");
+  return false;
+}
 
   // Father & Counsellor name validation
   if (!/^[A-Z\s]+$/.test(fatherName)) {
