@@ -3814,14 +3814,9 @@ app.get("/api/download-attendance-pdf", (req, res) => {
     doc.end();
   });
 });
-// download section wise attendance
-const express = require('express');
-const PDFDocument = require('pdfkit');
-const fs = require('fs');
-const path = require('path');
-const app = express();
-const connection = require('./db'); // your MySQL connection
 
+
+// download section wise attendance
 app.get("/api/download-all-subjects-attendance", (req, res) => {
   const { year, course, section, from_date, to_date } = req.query;
 
@@ -3928,5 +3923,6 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
     doc.end();
   });
 });
+
 
 
