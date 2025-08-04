@@ -3872,14 +3872,8 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
   `;
 
   connection.query(query, [year, course, section, semester, from_date, to_date], (err, results) => {
-    if (err) {
-      console.error("❌ DB error:", err);
-      return res.status(500).json({ error: "DB error" });
-    }
-
-    if (!results.length) {
-      return res.status(404).json({ error: "No attendance data found" });
-    }
+    if (err) return res.status(500).json({ error: "DB error" });
+    if (!results.length) return res.status(404).json({ error: "No data found" });
 
     const allSubjects = [...new Set(results.map(r => r.subject))];
 
@@ -3907,63 +3901,62 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
 
     // Header
     doc.image(path.join(__dirname, "public", "crrengglogo.png"), 40, 20, { width: 50 });
-    doc.fontSize(16).font("Helvetica-Bold").text("SIR C.R.REDDY COLLEGE OF ENGINEERING (Autonomous)", {
-      align: "center"
-    });
-    doc.fontSize(12).text(`B.Tech Year - ${year}   Sem - ${semester}   Branch - ${course}   Section - ${section}`, {
-      align: "center"
-    });
+    doc.fontSize(16).font("Helvetica-Bold").text("SIR C.R.REDDY COLLEGE OF ENGINEERING (Autonomous)", { align: "center" });
+    doc.fontSize(12).text(`B.Tech Year - ${year}   Sem - ${semester}   Branch - ${course}   Section - ${section}`, { align: "center" });
     doc.text("STATEMENT OF ATTENDANCE REPORT", { align: "center" });
     doc.text("Vatluru, Eluru - 534007, Eluru Dist. A.P.", { align: "center" });
     doc.text(`From: ${from_date}  To: ${to_date}`, { align: "center" });
-    doc.moveDown(1.5);
+    doc.moveDown();
 
-    // Table Headers
-    const headerRow = [
-      { label: "Regd.No", options: { fontSize: 9 } },
-      ...allSubjects.map(subject => ({ label: subject, options: { fontSize: 9, align: "center" } })),
-      { label: "TOTAL", options: { fontSize: 9, align: "center" } },
-      { label: "PERCENT", options: { fontSize: 9, align: "center" } },
-    ];
+    // Table layout
+    const startX = 40;
+    let startY = 200;
+    const rowHeight = 25;
+    const colWidths = [80, ...Array(allSubjects.length).fill(60), 80, 70];
+    const headers = ["Regd.No", ...allSubjects, "TOTAL", "PERCENT"];
 
-    // Table Data
-    const tableRows = Object.values(studentMap).map(std => {
-      const subjectData = allSubjects.map(subject => std.subjects[subject] || "-");
-      const percent = std.total_classes > 0 ? ((std.total_attended / std.total_classes) * 100).toFixed(2) : "0.00";
-      return [
-        std.regno,
-        ...subjectData,
-        `${std.total_attended}/${std.total_classes}`,
-        percent
-      ];
+    // Draw Header Row
+    headers.forEach((header, i) => {
+      const x = startX + colWidths.slice(0, i).reduce((a, b) => a + b, 0);
+      doc.rect(x, startY, colWidths[i], rowHeight).fillAndStroke("#007acc", "black");
+      doc.fillColor("white").font("Helvetica-Bold").fontSize(9).text(header, x + 4, startY + 8, {
+        width: colWidths[i] - 8,
+        align: "center"
+      });
     });
 
-    // Custom row formatting for red color if % < 75
-    doc.table(
-      {
-        headers: headerRow,
-        rows: tableRows,
-      },
-      {
-        prepareHeader: () => doc.font("Helvetica-Bold").fillColor("white"),
-        prepareRow: (row, i, rectRow, rectCell) => {
-          const percentStr = row[row.length - 1];
-          const percent = parseFloat(percentStr);
-          if (percent < 75) {
-            doc.fillColor("red");
-          } else {
-            doc.fillColor("black");
-          }
-          doc.font("Helvetica");
-        },
-        headerBackgroundColor: "#007acc",
-        columnSpacing: 4,
-        columnsSize: [70, ...Array(allSubjects.length).fill(60), 70, 70],
-        border: true,
-      }
-    );
+    startY += rowHeight;
 
-    // Footer Signatures
+    // Draw Rows
+    Object.values(studentMap).forEach(std => {
+      const row = [
+        std.regno,
+        ...allSubjects.map(subject => std.subjects[subject] || "-"),
+        `${std.total_attended}/${std.total_classes}`,
+        ((std.total_attended / std.total_classes) * 100).toFixed(2)
+      ];
+
+      row.forEach((val, i) => {
+        const x = startX + colWidths.slice(0, i).reduce((a, b) => a + b, 0);
+        doc.rect(x, startY, colWidths[i], rowHeight).stroke();
+
+        const isPercent = i === row.length - 1;
+        if (isPercent && parseFloat(val) < 75) {
+          doc.fillColor("red");
+        } else {
+          doc.fillColor("black");
+        }
+
+        doc.font("Helvetica").fontSize(9).text(val, x + 4, startY + 8, {
+          width: colWidths[i] - 8,
+          align: "center"
+        });
+      });
+
+      startY += rowHeight;
+    });
+
+    // Footer
     doc.moveDown(2);
     doc.fontSize(10);
     doc.text("Faculty Signature", 50, doc.y);
@@ -3972,18 +3965,14 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
     doc.end();
 
     stream.on("finish", () => {
-      res.download(filePath, fileName, (err) => {
-        if (err) {
-          console.error("❌ Download error:", err);
-          res.status(500).json({ error: "File download failed" });
-        }
-        fs.unlink(filePath, () => {}); // Optional cleanup
+      res.download(filePath, fileName, err => {
+        if (err) res.status(500).json({ error: "Download error" });
+        fs.unlink(filePath, () => {}); // optional cleanup
       });
     });
 
-    stream.on("error", (err) => {
-      console.error("❌ PDF stream error:", err);
-      res.status(500).json({ error: "PDF creation failed" });
+    stream.on("error", () => {
+      res.status(500).json({ error: "PDF error" });
     });
   });
 });
