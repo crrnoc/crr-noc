@@ -89,7 +89,6 @@
     const sectionSelect = document.getElementById("section");
     const form = document.getElementById("attendanceForm");
 
-    // Load course and section when year & dept_code are filled
     async function loadCourseAndSections() {
       const dept = deptInput.value;
       const year = yearSelect.value;
@@ -97,6 +96,10 @@
 
       try {
         const res = await fetch(`/api/fetch-courses-sections?dept_code=${dept}&year=${year}`);
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error("Server responded with: " + text);
+        }
         const data = await res.json();
 
         const courses = [...new Set(data.map(d => d.course))];
@@ -133,4 +136,3 @@
   </script>
 </body>
 </html>
-
