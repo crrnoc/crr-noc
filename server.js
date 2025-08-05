@@ -3647,22 +3647,24 @@ app.get("/api/students-by-course-section", (req, res) => {
 
 
 //Backend Route to Submit Attendance 
+// Backend Route to Submit Attendance (Supports Multiple Periods)
 app.post("/api/submit-attendance", (req, res) => {
-  const { staff_id, date, course, year, semester, section, subject, present, absent } = req.body;
+  const { staff_id, date, course, year, semester, section, subjects, present, absent } = req.body;
 
   // Validate required fields
-  if (!staff_id || !date || !course || !year || !semester || !section || !subject) {
-    return res.status(400).json({ error: "Missing required fields" });
+  if (!staff_id || !date || !course || !year || !semester || !section || !subjects || !Array.isArray(subjects)) {
+    return res.status(400).json({ error: "Missing or invalid required fields" });
   }
 
   const values = [];
 
-  present.forEach(reg_no => {
-    values.push([reg_no, date, staff_id, course, year, semester, section, subject, 'Present']);
-  });
-
-  absent.forEach(reg_no => {
-    values.push([reg_no, date, staff_id, course, year, semester, section, subject, 'Absent']);
+  subjects.forEach(subject => {
+    present.forEach(reg_no => {
+      values.push([reg_no, date, staff_id, course, year, semester, section, subject, 'Present']);
+    });
+    absent.forEach(reg_no => {
+      values.push([reg_no, date, staff_id, course, year, semester, section, subject, 'Absent']);
+    });
   });
 
   const sql = `
@@ -4026,4 +4028,5 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
     });
   });
 });
+
 
