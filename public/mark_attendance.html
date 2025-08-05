@@ -159,14 +159,13 @@
 
         staffAllocData = data;
 
-        // Populate basic dropdowns
         courseSelect.innerHTML = [...new Set(data.map(r => r.course))].map(c => `<option value="${c}">${c}</option>`).join('');
         yearSelect.innerHTML = [...new Set(data.map(r => r.year))].map(y => `<option value="${y}">${y}</option>`).join('');
         semesterSelect.innerHTML = [...new Set(data.map(r => r.semester))].map(s => `<option value="${s}">${s}</option>`).join('');
         sectionSelect.innerHTML = [...new Set(data.map(r => r.section))].map(s => `<option value="${s}">${s}</option>`).join('');
         daySelect.innerHTML = [...new Set(data.map(r => r.day))].map(d => `<option value="${d}">${d}</option>`).join('');
 
-        [courseSelect, yearSelect, sectionSelect, daySelect].forEach(el => {
+        [courseSelect, yearSelect, semesterSelect, sectionSelect, daySelect].forEach(el => {
           el.addEventListener("change", updatePeriodOptions);
         });
       });
@@ -174,15 +173,17 @@
 
   function updatePeriodOptions() {
     const course = courseSelect.value;
-    const year = yearSelect.value;
+    const year = parseInt(yearSelect.value);
+    const semester = semesterSelect.value;
     const section = sectionSelect.value;
     const day = daySelect.value;
 
-    if (!course || !year || !section || !day) return;
+    if (!course || !year || !section || !day || !semester) return;
 
     const match = staffAllocData.find(row =>
       row.course === course &&
-      row.year === year &&
+      parseInt(row.year) === year &&
+      row.semester === semester &&
       row.section === section &&
       row.day === day
     );
@@ -278,7 +279,7 @@
   form.onsubmit = async (e) => {
     e.preventDefault();
     const present = Array.from(document.querySelectorAll('input[name="attendance"]:checked')).map(cb => cb.value);
-    const absent = Array.from(document.querySelectorAll('input[name="attendance"]:not(:checked')).map(cb => cb.value);
+    const absent = Array.from(document.querySelectorAll('input[name="attendance"]:not(:checked')]).map(cb => cb.value);
     const selectedPeriods = Array.from(periodSelect.selectedOptions).map(opt => opt.value);
 
     if (!selectedPeriods.length) {
@@ -332,7 +333,6 @@
     window.location.href = "index.html";
   }
 </script>
-
 
 </body>
 </html>
