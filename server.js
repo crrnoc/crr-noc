@@ -3913,187 +3913,196 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
     }
     if (!results.length) return res.status(404).json({ error: "No data found" });
 
-    // Collect subjects and per-subject total classes (use max since it's same for all students)
+    // Subjects list and per-subject total classes (max observed, since total_classes same for all)
     const allSubjects = Array.from(new Set(results.map(r => r.subject)));
-    const subjectTotals = {}; // subject -> total_classes (max observed)
+    const subjectTotals = {};
     results.forEach(r => {
       const tc = parseInt(r.total_classes || 0, 10);
       if (!subjectTotals[r.subject] || tc > subjectTotals[r.subject]) subjectTotals[r.subject] = tc;
     });
 
-    // Build per-student attendance map
-    const studentMap = {}; // reg_no -> { regno, subjects: {subject: attended}, total_attended }
+    // Student map: regno -> { regno, subjects: {subject: attended}, total_attended }
+    const studentMap = {};
     results.forEach(r => {
       const reg = r.reg_no;
       const attended = parseInt(r.attended || 0, 10);
-      if (!studentMap[reg]) {
-        studentMap[reg] = { regno: reg, subjects: {}, total_attended: 0 };
-      }
-      studentMap[reg].subjects[r.subject] = attended; // store number of presents for that subject
+      if (!studentMap[reg]) studentMap[reg] = { regno: reg, subjects: {}, total_attended: 0 };
+      studentMap[reg].subjects[r.subject] = attended;
       studentMap[reg].total_attended += attended;
     });
 
-    // Total possible classes per student = sum of subjectTotals
+    // total possible across all subjects (denominator)
     const totalPossiblePerStudent = allSubjects.reduce((s, sub) => s + (subjectTotals[sub] || 0), 0);
 
-    // Setup PDF
+    // PDF setup
     const doc = new PDFDocument({ margin: 40, size: "A4", layout: "landscape" });
     const fileName = `AttendanceReport-${Date.now()}.pdf`;
     const filePath = path.join(__dirname, "uploads", fileName);
     const writeStream = fs.createWriteStream(filePath);
     doc.pipe(writeStream);
 
-    // Helpers for layout
+    // Layout constants
     const pageWidth = doc.page.width;
     const pageHeight = doc.page.height;
     const leftMargin = doc.page.margins.left;
     const rightMargin = doc.page.margins.right;
     const usableWidth = pageWidth - leftMargin - rightMargin;
-    const signatureHeight = 90; // reserved bottom space for signature area on every page
-    const topYStart = doc.y;
+    const bottomMargin = doc.page.margins.bottom;
+    const signatureAreaHeight = 90; // reserved on last page only
     const headerFontSize = 12;
     const cellFontSize = 8;
     const rowHeight = 20;
+    let regColWidth = 80;
 
-    // We will allocate column widths:
-    // Regd.No column fixed, remaining distributed among subjects + TOTAL + PERCENT
-    const regColWidth = 80;
-    const otherColsCount = allSubjects.length + 2; // subjects + TOTAL + PERCENT
-    // ensure minimum col width
-    const minColWidth = 50;
-    let remainingWidth = usableWidth - regColWidth;
-    let colWidth = Math.floor(remainingWidth / otherColsCount);
+    // columns: Regd.No + subjects + TOTAL + PERCENT
+    const otherColsCount = allSubjects.length + 2;
+    const minColWidth = 48;
+    let colWidth = Math.floor((usableWidth - regColWidth) / otherColsCount);
+
+    // fallback: reduce regColWidth if there are many columns
     if (colWidth < minColWidth) {
-      colWidth = minColWidth;
-      // If too many columns, shrink Regd.No if necessary
-      // recalc remaining: if total width exceeds usableWidth, we allow horizontal overflow by reducing regColWidth
-      const totalNeeded = regColWidth + (colWidth * otherColsCount);
-      if (totalNeeded > usableWidth) {
-        const diff = totalNeeded - usableWidth;
-        // reduce reg column
-        const newReg = Math.max(50, regColWidth - diff);
-        // if still overflow, we'll still keep those widths (they will overflow visually)
-        // but attempts to keep columns reasonable
-      }
+      // attempt to shrink regcol
+      const needed = otherColsCount * minColWidth;
+      const newReg = Math.max(50, Math.floor(usableWidth - needed));
+      if (newReg > 50) regColWidth = newReg;
+      colWidth = Math.floor((usableWidth - regColWidth) / otherColsCount);
+      // if still small, keep minColWidth and allow overflow visually (text will still be drawn)
+      if (colWidth < minColWidth) colWidth = minColWidth;
     }
 
-    // function to render page header (title + table headers + "Total Classes" row)
-    function renderPageHeader(y) {
-      // college title top only on first page centered
-      if (doc.page.number === 1) {
-        doc.image(path.join(__dirname, "public", "crrengglogo.png"), leftMargin, 20, { width: 50 });
-        doc.fontSize(16).font("Helvetica-Bold").text("SIR C.R.REDDY COLLEGE OF ENGINEERING (Autonomous)", leftMargin + 60, 20, { align: "center", width: usableWidth - 60 });
-        doc.moveDown(0.5);
-        doc.fontSize(11).font("Helvetica").text(`B.Tech Year - ${year}   Sem - ${semester}   Branch - ${course}   Section - ${section}`, { align: "center" });
-        doc.fontSize(11).text("STATEMENT OF ATTENDANCE REPORT", { align: "center" });
-        doc.fontSize(9).text("Vatluru, Eluru - 534007, Eluru Dist. A.P.", { align: "center" });
-        doc.fontSize(9).text(`From: ${from_date}  To: ${to_date}`, { align: "center" });
-        y = doc.y + 10;
-      } else {
-        // on subsequent pages keep a small top gap
-        y = doc.page.margins.top;
+    // render header (college + date + table headers + total classes row)
+    function renderHeader() {
+      // Top margin area
+      doc.fontSize(16).font("Helvetica-Bold").fillColor("black");
+      // Draw logo + title centered
+      try {
+        const logoPath = path.join(__dirname, "public", "crrengglogo.png");
+        if (fs.existsSync(logoPath)) {
+          doc.image(logoPath, leftMargin, 20, { width: 50 });
+        }
+      } catch (e) {
+        /* ignore missing logo */
       }
+      doc.text("SIR C.R.REDDY COLLEGE OF ENGINEERING (Autonomous)", leftMargin + 60, 20, {
+        align: "center",
+        width: usableWidth - 60,
+      });
+      doc.moveDown(0.3);
+      doc.fontSize(10).font("Helvetica").text(`B.Tech Year - ${year}   Sem - ${semester}   Branch - ${course}   Section - ${section}`, {
+        align: "center",
+      });
+      doc.fontSize(10).text("STATEMENT OF ATTENDANCE REPORT", { align: "center" });
+      doc.fontSize(9).text("Vatluru, Eluru - 534007, Eluru Dist. A.P.", { align: "center" });
+      doc.fontSize(9).text(`From: ${from_date}    To: ${to_date}`, { align: "center" });
 
-      // draw a horizontal rule under heading
-      doc.moveTo(leftMargin, y).lineTo(pageWidth - rightMargin, y).stroke();
-      y += 8;
+      // small gap then horizontal rule
+      doc.moveDown(0.5);
+      const headerY = doc.y;
+      doc.moveTo(leftMargin, headerY).lineTo(pageWidth - rightMargin, headerY).stroke();
+      doc.moveDown(0.5);
 
       // Table header row
       const headers = ["Regd.No", ...allSubjects, "TOTAL", "PERCENT"];
-      // header background
       let x = leftMargin;
       doc.fontSize(cellFontSize).font("Helvetica-Bold");
       headers.forEach((h, i) => {
         const w = (i === 0) ? regColWidth : colWidth;
-        doc.rect(x, y, w, rowHeight).fillAndStroke("#007acc", "black");
-        doc.fillColor("white").text(h.length > 20 ? h.substring(0, 20) + "..." : h, x + 3, y + 5, { width: w - 6, align: "center" });
+        doc.rect(x, doc.y, w, rowHeight).fillAndStroke("#007acc", "black");
+        doc.fillColor("white").text(h.length > 22 ? h.substring(0, 22) + "..." : h, x + 3, doc.y + 5, {
+          width: w - 6,
+          align: "center",
+        });
         x += w;
       });
-      y += rowHeight;
+      // move cursor after header row
+      doc.moveDown( Math.ceil(rowHeight / 12) ); // approximate
+      // adjust exact y to top of next row
+      const headerRowY = doc.y - 6;
+      doc.y = headerRowY + rowHeight;
 
-      // Total Classes row (single row under headers)
+      // Total Classes row under headers
       x = leftMargin;
       doc.fontSize(cellFontSize).font("Helvetica-Bold").fillColor("black");
-      // "Total Classes" label in reg column
-      doc.rect(x, y, regColWidth, rowHeight).stroke();
-      doc.text("Total Classes", x + 3, y + 5, { width: regColWidth - 6, align: "center" });
+      // Regd.No cell with label
+      doc.rect(x, doc.y, regColWidth, rowHeight).stroke();
+      doc.text("Total Classes", x + 3, doc.y + 5, { width: regColWidth - 6, align: "center" });
       x += regColWidth;
       // subject totals
       allSubjects.forEach((sub) => {
         const w = colWidth;
         const val = subjectTotals[sub] != null ? String(subjectTotals[sub]) : "-";
-        doc.rect(x, y, w, rowHeight).stroke();
-        doc.text(val, x + 3, y + 5, { width: w - 6, align: "center" });
+        doc.rect(x, doc.y, w, rowHeight).stroke();
+        doc.text(val, x + 3, doc.y + 5, { width: w - 6, align: "center" });
         x += w;
       });
       // TOTAL cell (sum of subject totals)
-      doc.rect(x, y, colWidth, rowHeight).stroke();
-      doc.text(String(totalPossiblePerStudent), x + 3, y + 5, { width: colWidth - 6, align: "center" });
+      doc.rect(x, doc.y, colWidth, rowHeight).stroke();
+      doc.text(String(totalPossiblePerStudent), x + 3, doc.y + 5, { width: colWidth - 6, align: "center" });
       x += colWidth;
-      // PERCENT column empty for total row
-      doc.rect(x, y, colWidth, rowHeight).stroke();
-      doc.text("-", x + 3, y + 5, { width: colWidth - 6, align: "center" });
-      y += rowHeight;
+      // PERCENT cell empty
+      doc.rect(x, doc.y, colWidth, rowHeight).stroke();
+      doc.text("-", x + 3, doc.y + 5, { width: colWidth - 6, align: "center" });
 
-      return y;
+      // Move down to start rows
+      doc.moveDown(Math.ceil(rowHeight / 12) + 0.2);
     }
 
-    // Start first page header
-    let y = renderPageHeader(doc.y);
+    // start first page header
+    renderHeader();
 
-    // Draw student rows
+    // compute available bottom Y for rows (for current page)
+    function availableBottomY() {
+      // If it's last page we need signature area; but we don't know yet which is last;
+      // For page flow logic, reserve signature area on every page to avoid crowding bottom.
+      return pageHeight - bottomMargin - signatureAreaHeight;
+    }
+
     doc.fontSize(cellFontSize).font("Helvetica");
     const regs = Object.values(studentMap);
+    let y = doc.y;
+
     regs.forEach((std, idx) => {
-      // build row cells
+      // build row values: regno, per subject attended (count), total attended, percent
       const rowCells = [
         std.regno,
-        ...allSubjects.map(sub => {
-          // show only attended count (not "attended/total") as user requested earlier
-          const att = std.subjects[sub] != null ? String(std.subjects[sub]) : "-";
-          return att;
-        }),
+        ...allSubjects.map(sub => (std.subjects[sub] != null ? String(std.subjects[sub]) : "-")),
         String(std.total_attended),
         totalPossiblePerStudent > 0 ? ((std.total_attended / totalPossiblePerStudent) * 100).toFixed(2) : "0.00"
       ];
 
-      // Check if adding this row would overflow the usable area (reserve signatureHeight at bottom)
-      if (y + rowHeight > pageHeight - doc.page.margins.bottom - signatureHeight) {
-        // draw signature area at bottom of current page before adding a new page
-        const sigY = pageHeight - doc.page.margins.bottom - (signatureHeight - 30);
-        doc.fontSize(10).fillColor("black").text("Faculty Signature", leftMargin + 10, sigY);
-        doc.text("HOD Signature", pageWidth - rightMargin - 160, sigY);
+      // page overflow check
+      if (doc.y + rowHeight > availableBottomY()) {
+        // add a page and render header again (no signatures on intermediate pages)
         doc.addPage();
-        y = renderPageHeader(doc.y);
-        doc.fontSize(cellFontSize).font("Helvetica");
+        renderHeader();
       }
 
-      // Draw the row cells
+      // draw the row
       let x = leftMargin;
       rowCells.forEach((cell, i) => {
         const w = (i === 0) ? regColWidth : colWidth;
-        // Percent column coloring
+        // percent coloring
         if (i === rowCells.length - 1) {
           const perc = parseFloat(cell) || 0;
-          if (perc < 75) doc.fillColor("red");
-          else doc.fillColor("black");
-        } else {
-          doc.fillColor("black");
-        }
-        doc.rect(x, y, w, rowHeight).stroke();
-        doc.text(String(cell), x + 3, y + 5, { width: w - 6, align: "center" });
+          doc.fillColor(perc < 75 ? "red" : "black");
+        } else doc.fillColor("black");
+
+        doc.rect(x, doc.y, w, rowHeight).stroke();
+        doc.text(String(cell), x + 3, doc.y + 5, { width: w - 6, align: "center" });
         x += w;
       });
-
-      y += rowHeight;
+      // move down a row
+      doc.moveDown(Math.ceil(rowHeight / 12));
     });
 
-    // After finishing rows, ensure we leave the signature area on the last page
-    const finalSigY = pageHeight - doc.page.margins.bottom - (signatureHeight - 30);
-    doc.fontSize(10).fillColor("black").text("Faculty Signature", leftMargin + 10, finalSigY);
+    // After all rows: ensure space for signatures at bottom of last page
+    const finalSigY = pageHeight - bottomMargin - signatureAreaHeight + 20;
+    doc.moveTo(leftMargin, finalSigY - 6).lineTo(pageWidth - rightMargin, finalSigY - 6).stroke();
+    doc.fontSize(10).fillColor("black");
+    doc.text("Faculty Signature", leftMargin + 10, finalSigY);
     doc.text("HOD Signature", pageWidth - rightMargin - 160, finalSigY);
 
-    // finalize
+    // finalize pdf
     doc.end();
 
     writeStream.on("finish", () => {
