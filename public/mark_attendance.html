@@ -190,56 +190,57 @@
   };
 
   // 🔄 Update periods when dropdowns change
-  function updatePeriodOptions() {
-    const course = courseSelect.value;
-    const year = parseInt(yearSelect.value);
-    const semester = semesterSelect.value;
-    const section = sectionSelect.value;
-    const day = daySelect.value;
+function updatePeriodOptions() {
+  const course = courseSelect.value;
+  const year = parseInt(yearSelect.value);
+  const semester = semesterSelect.value;
+  const section = sectionSelect.value;
+  const day = daySelect.value;
 
-    if (!course || !year || !semester || !section || !day) return;
+  if (!course || !year || !semester || !section || !day) return;
 
-    const match = staffAllocData.find(row =>
-      row.course === course &&
-      parseInt(row.year) === year &&
-      row.semester === semester &&
-      row.section === section &&
-      row.day === day
-    );
+  const match = staffAllocData.find(row =>
+    row.course === course &&
+    parseInt(row.year) === year &&
+    row.semester.toString() === semester.toString() &&
+    row.section === section &&
+    row.day === day
+  );
 
-    periodSelect.innerHTML = "";
-    const existingHint = document.getElementById("multiHint");
-    if (existingHint) existingHint.remove();
+  periodSelect.innerHTML = "";
+  const existingHint = document.getElementById("multiHint");
+  if (existingHint) existingHint.remove();
 
-    if (!match) {
-      periodSelect.innerHTML = `<option disabled selected>No periods found</option>`;
-      return;
-    }
+  if (!match) {
+    periodSelect.innerHTML = `<option disabled selected>No periods found</option>`;
+    return;
+  }
 
-    const periods = [];
-    for (let i = 1; i <= 7; i++) {
-      const subject = match[`period${i}`];
-      if (subject && !periods.includes(subject)) {
-        periods.push(subject);
-      }
-    }
-
-    periodSelect.innerHTML = periods.map(p => `<option value="${p}">${p}</option>`).join('');
-
-    if (periods.length > 1) {
-      periodSelect.setAttribute("multiple", "multiple");
-      periodSelect.style.height = "120px";
-
-      const hint = document.createElement("small");
-      hint.id = "multiHint";
-      hint.style.color = "gray";
-      hint.innerText = "(Hold Ctrl/Cmd to select multiple)";
-      periodSelect.parentElement.appendChild(hint);
-    } else {
-      periodSelect.removeAttribute("multiple");
-      periodSelect.style.height = "auto";
+  const options = [];
+  for (let i = 1; i <= 7; i++) {
+    const subject = match[`period${i}`];
+    if (subject) {
+      options.push({ label: `${i}ᵗʰ Period - ${subject}`, value: `period${i}:${subject}` });
     }
   }
+
+  periodSelect.innerHTML = options.map(o => `<option value="${o.value}">${o.label}</option>`).join('');
+
+  if (options.length > 1) {
+    periodSelect.setAttribute("multiple", "multiple");
+    periodSelect.style.height = "120px";
+
+    const hint = document.createElement("small");
+    hint.id = "multiHint";
+    hint.style.color = "gray";
+    hint.innerText = "(Hold Ctrl/Cmd to select multiple)";
+    periodSelect.parentElement.appendChild(hint);
+  } else {
+    periodSelect.removeAttribute("multiple");
+    periodSelect.style.height = "auto";
+  }
+}
+
 
   // 🟨 Show info about selected periods
   periodSelect.addEventListener('change', () => {
