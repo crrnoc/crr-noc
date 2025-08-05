@@ -3890,11 +3890,7 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
       studentMap[r.reg_no].total_classes += parseInt(r.total_classes);
     });
 
-    const PDFDocument = require('pdfkit');
-    const fs = require('fs');
-    const path = require('path');
     const doc = new PDFDocument({ margin: 40, size: "A4", layout: "landscape" });
-
     const fileName = `AttendanceReport-${Date.now()}.pdf`;
     const filePath = path.join(__dirname, "uploads", fileName);
     const writeStream = fs.createWriteStream(filePath);
@@ -3911,22 +3907,25 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
     doc.moveTo(40, doc.y).lineTo(800, doc.y).stroke();
     doc.moveDown(1);
 
-    // Table Drawing
-    const startX = 50;
+    // Auto column width based on A4 landscape
+    const usableWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
+    const totalCols = allSubjects.length + 2 + 1; // subjects + TOTAL + PERCENT + Regd.No
+    const colWidth = Math.floor(usableWidth / totalCols);
+
+    const startX = doc.page.margins.left;
     let y = doc.y;
     const cellHeight = 20;
-    const subjectWidth = 100;  // widened for long names
 
     const headers = ["Regd.No", ...allSubjects, "TOTAL", "PERCENT"];
 
     // Draw Header Row
     headers.forEach((header, i) => {
-      const x = startX + i * subjectWidth;
-      doc.rect(x, y, subjectWidth, cellHeight).fillAndStroke("#007acc", "black");
-      doc.fillColor("white").font("Helvetica-Bold").fontSize(9).text(
-        header.length > 20 ? header.substring(0, 20) + '...' : header,
+      const x = startX + i * colWidth;
+      doc.rect(x, y, colWidth, cellHeight).fillAndStroke("#007acc", "black");
+      doc.fillColor("white").font("Helvetica-Bold").fontSize(8).text(
+        header.length > 25 ? header.substring(0, 22) + "..." : header,
         x + 3, y + 5, {
-          width: subjectWidth - 6,
+          width: colWidth - 6,
           align: "center"
         }
       );
@@ -3935,32 +3934,35 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
 
     // Draw student rows
     Object.values(studentMap).forEach((std) => {
+      const percentVal = std.total_classes > 0 ? ((std.total_attended / std.total_classes) * 100).toFixed(2) : "0.00";
       const row = [
         std.regno,
         ...allSubjects.map(sub => std.subjects[sub] || "-"),
         `${std.total_attended}/${std.total_classes}`,
-        std.total_classes > 0 ? ((std.total_attended / std.total_classes) * 100).toFixed(2) : "0.00"
+        percentVal
       ];
 
       row.forEach((cell, i) => {
-        const x = startX + i * subjectWidth;
+        const x = startX + i * colWidth;
         const isPercent = i === row.length - 1;
-        const percentVal = parseFloat(row[row.length - 1]);
+        const percent = parseFloat(percentVal);
 
-        if (isPercent && percentVal < 75) doc.fillColor("red");
+        if (isPercent && percent < 75) doc.fillColor("red");
         else doc.fillColor("black");
 
-        doc.rect(x, y, subjectWidth, cellHeight).stroke();
-        doc.font("Helvetica").fontSize(9).text(cell, x + 3, y + 5, {
-          width: subjectWidth - 6,
+        doc.rect(x, y, colWidth, cellHeight).stroke();
+        doc.font("Helvetica").fontSize(8).text(cell, x + 3, y + 5, {
+          width: colWidth - 6,
           align: "center"
         });
       });
 
       y += cellHeight;
-      if (y > 520) {
+
+      // Page overflow handling
+      if (y > doc.page.height - doc.page.margins.bottom - 50) {
         doc.addPage();
-        y = 50;
+        y = doc.page.margins.top;
       }
     });
 
