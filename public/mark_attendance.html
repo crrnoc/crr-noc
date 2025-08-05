@@ -87,6 +87,10 @@
           <label>Day:</label>
           <select id="daySelect" required></select>
         </div>
+        <div class="form-row">
+  <label>Select Date:</label>
+  <input type="date" id="attendanceDate" required value="2025-08-05" />
+</div>
        <div class="form-row">
   <label>Subject / Periods:</label>
   <div id="periodOptions" style="display: flex; flex-direction: column; gap: 8px;"></div>
@@ -270,44 +274,73 @@ function updatePeriodOptions() {
   }
 
   // ✅ Submit attendance
-  form.onsubmit = async (e) => {
-    e.preventDefault();
-    const present = Array.from(document.querySelectorAll('input[name="attendance"]:checked')).map(cb => cb.value);
-    const absent = Array.from(document.querySelectorAll('input[name="attendance"]:not(:checked')).map(cb => cb.value);
-   const selectedPeriods = Array.from(document.querySelectorAll('input[name="periodSelection"]:checked')).map(cb => cb.value);
+ form.onsubmit = async (e) => {
+  e.preventDefault();
 
+  const present = Array.from(document.querySelectorAll('input[name="attendance"]:checked')).map(cb => cb.value);
+  const absent = Array.from(document.querySelectorAll('input[name="attendance"]:not(:checked'))).map(cb => cb.value);
+  const selectedPeriods = Array.from(document.querySelectorAll('input[name="periodSelection"]:checked')).map(cb => cb.value);
+  const date = document.getElementById("attendanceDate").value;
 
-    if (!selectedPeriods.length) {
-      Swal.fire("⚠️ Select at least one period before submitting.");
-      return;
-    }
+  if (!selectedPeriods.length) {
+    Swal.fire("⚠️ Select at least one period before submitting.");
+    return;
+  }
 
-    const payload = {
-      staff_id,
-      date: new Date().toISOString().split("T")[0],
-      course: courseSelect.value,
-      year: yearSelect.value,
-      semester: semesterSelect.value,
-      section: sectionSelect.value,
-      day: daySelect.value,
-      subjects: selectedPeriods,
-      present,
-      absent
-    };
+  if (!date) {
+    Swal.fire("⚠️ Please select a date for attendance.");
+    return;
+  }
 
-    const res = await fetch('/api/submit-attendance', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+  const attendanceEntries = [];
+
+  selectedPeriods.forEach(period => {
+    const [, subject] = period.split(":"); // Extract subject name only
+
+    present.forEach(reg_no => {
+      attendanceEntries.push({
+        reg_no,
+        date,
+        staff_id,
+        course: courseSelect.value,
+        year: yearSelect.value,
+        semester: semesterSelect.value,
+        section: sectionSelect.value,
+        subject,
+        status: "Present"
+      });
     });
-    const result = await res.json();
-    if (res.ok) {
-      Swal.fire("✅ Attendance Marked");
-      studentsTable.innerHTML = "";
-    } else {
-      Swal.fire("❌ Failed", result.error || "Unknown error", "error");
-    }
-  };
+
+    absent.forEach(reg_no => {
+      attendanceEntries.push({
+        reg_no,
+        date,
+        staff_id,
+        course: courseSelect.value,
+        year: yearSelect.value,
+        semester: semesterSelect.value,
+        section: sectionSelect.value,
+        subject,
+        status: "Absent"
+      });
+    });
+  });
+
+  const res = await fetch('/api/submit-attendance', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ entries: attendanceEntries })
+  });
+
+  const result = await res.json();
+  if (res.ok) {
+    Swal.fire("✅ Attendance Marked");
+    studentsTable.innerHTML = "";
+  } else {
+    Swal.fire("❌ Failed", result.error || "Unknown error", "error");
+  }
+};
+
 
   // 📄 Download PDF
   document.getElementById("downloadPdfBtn").addEventListener("click", () => {
