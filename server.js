@@ -3648,24 +3648,24 @@ app.get("/api/students-by-course-section", (req, res) => {
 
 //Backend Route to Submit Attendance 
 // Backend Route to Submit Attendance (Supports Multiple Periods)
-app.post("/api/submit-attendance", (req, res) => {
-  const { staff_id, date, course, year, semester, section, subjects, present, absent } = req.body;
+app.post('/api/submit-attendance', (req, res) => {
+  const { entries } = req.body;
 
-  // Validate required fields
-  if (!staff_id || !date || !course || !year || !semester || !section || !subjects || !Array.isArray(subjects)) {
-    return res.status(400).json({ error: "Missing or invalid required fields" });
+  if (!Array.isArray(entries) || entries.length === 0) {
+    return res.status(400).json({ success: false, message: "No attendance entries submitted" });
   }
 
-  const values = [];
-
-  subjects.forEach(subject => {
-    present.forEach(reg_no => {
-      values.push([reg_no, date, staff_id, course, year, semester, section, subject, 'Present']);
-    });
-    absent.forEach(reg_no => {
-      values.push([reg_no, date, staff_id, course, year, semester, section, subject, 'Absent']);
-    });
-  });
+  const values = entries.map(e => [
+    e.reg_no,
+    e.date,
+    e.staff_id,
+    e.course,
+    e.year,
+    e.semester,
+    e.section,
+    e.subject,
+    e.status
+  ]);
 
   const sql = `
     INSERT INTO daily_attendance 
@@ -3675,10 +3675,10 @@ app.post("/api/submit-attendance", (req, res) => {
 
   connection.query(sql, [values], (err, result) => {
     if (err) {
-      console.error("❌ Error saving attendance:", err);
-      return res.status(500).json({ error: "Database insert failed" });
+      console.error("❌ Attendance insert failed:", err);
+      return res.status(500).json({ success: false, message: "Database error" });
     }
-    res.json({ success: true, message: "✅ Attendance submitted successfully." });
+    res.json({ success: true, inserted: result.affectedRows });
   });
 });
 
@@ -4028,5 +4028,6 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
     });
   });
 });
+
 
 
