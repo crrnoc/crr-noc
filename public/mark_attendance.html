@@ -126,46 +126,37 @@
 <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
 
 <script>
-  // 🌐 Get userId and staff_id from localStorage
-  let userId = localStorage.getItem("userId");
-  let staff_id = localStorage.getItem("staff_id");
-
   const courseSelect = document.getElementById("courseSelect");
   const yearSelect = document.getElementById("yearSelect");
   const semesterSelect = document.getElementById("semesterSelect");
   const sectionSelect = document.getElementById("sectionSelect");
   const daySelect = document.getElementById("daySelect");
-  const periodSelect = document.getElementById("periodSelect");
   const studentsTable = document.querySelector("#studentsTable tbody");
   const form = document.getElementById("attendanceForm");
   const allocationInfo = document.getElementById("allocationInfo");
   let staffAllocData = [];
 
-  // 🔐 Login check
-  if (!userId) {
-    console.warn("⚠️ userId not found in localStorage");
-    document.getElementById("userId").textContent = "Not Logged In";
-    Swal.fire({
-      icon: 'warning',
-      title: 'Please Login',
-      text: 'You are not logged in as staff.'
-    }).then(() => window.location.href = "index.html");
-  } else {
-    // ✅ Set ID in sidebar
+  window.onload = () => {
+    let userId = localStorage.getItem("userId");
+    let staff_id = localStorage.getItem("staff_id");
+
+    if (!userId) {
+      document.getElementById("userId").textContent = "Not Logged In";
+      Swal.fire({
+        icon: 'warning',
+        title: 'Please Login',
+        text: 'You are not logged in as staff.'
+      }).then(() => window.location.href = "index.html");
+      return;
+    }
+
     document.getElementById("userId").textContent = userId;
 
-    // 🛠️ If staff_id is not set, set it now
     if (!staff_id) {
       staff_id = userId;
       localStorage.setItem("staff_id", staff_id);
     }
 
-    console.log("✅ userId:", userId);
-    console.log("✅ staff_id:", staff_id);
-  }
-
-  // 📦 Load staff allocation on window load
-  window.onload = () => {
     fetch(`/api/staff-allocation?staff_id=${staff_id}`)
       .then(res => res.json())
       .then(data => {
@@ -190,67 +181,132 @@
         console.error("❌ Failed to fetch staff allocation:", err);
         Swal.fire("Error fetching data", err.message, "error");
       });
+
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+
+      const present = Array.from(document.querySelectorAll('input[name="attendance"]:checked')).map(cb => cb.value);
+      const absent = Array.from(document.querySelectorAll('input[name="attendance"]:not(:checked'))).map(cb => cb.value);
+      const selectedPeriods = Array.from(document.querySelectorAll('input[name="periodSelection"]:checked')).map(cb => cb.value);
+      const date = document.getElementById("attendanceDate").value;
+
+      if (!selectedPeriods.length) {
+        Swal.fire("⚠️ Select at least one period before submitting.");
+        return;
+      }
+
+      if (!date) {
+        Swal.fire("⚠️ Please select a date for attendance.");
+        return;
+      }
+
+      const attendanceEntries = [];
+
+      selectedPeriods.forEach(period => {
+        const [, subject] = period.split(":");
+
+        present.forEach(reg_no => {
+          attendanceEntries.push({
+            reg_no,
+            date,
+            staff_id,
+            course: courseSelect.value,
+            year: yearSelect.value,
+            semester: semesterSelect.value,
+            section: sectionSelect.value,
+            subject,
+            status: "Present"
+          });
+        });
+
+        absent.forEach(reg_no => {
+          attendanceEntries.push({
+            reg_no,
+            date,
+            staff_id,
+            course: courseSelect.value,
+            year: yearSelect.value,
+            semester: semesterSelect.value,
+            section: sectionSelect.value,
+            subject,
+            status: "Absent"
+          });
+        });
+      });
+
+      const res = await fetch('/api/submit-attendance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ entries: attendanceEntries })
+      });
+
+      const result = await res.json();
+      if (res.ok) {
+        Swal.fire("✅ Attendance Marked");
+        studentsTable.innerHTML = "";
+      } else {
+        Swal.fire("❌ Failed", result.error || "Unknown error", "error");
+      }
+    };
   };
 
-  // 🔄 Update periods when dropdowns change
-function updatePeriodOptions() {
-  const course = courseSelect.value;
-  const year = parseInt(yearSelect.value);
-  const semester = semesterSelect.value;
-  const section = sectionSelect.value;
-  const day = daySelect.value;
+  function updatePeriodOptions() {
+    const course = courseSelect.value;
+    const year = parseInt(yearSelect.value);
+    const semester = semesterSelect.value;
+    const section = sectionSelect.value;
+    const day = daySelect.value;
 
-  const periodOptions = document.getElementById("periodOptions");
-  periodOptions.innerHTML = ""; // Clear existing
+    const periodOptions = document.getElementById("periodOptions");
+    periodOptions.innerHTML = "";
 
-  if (!course || !year || !semester || !section || !day) return;
+    if (!course || !year || !semester || !section || !day) return;
 
-  const match = staffAllocData.find(row =>
-    row.course === course &&
-    parseInt(row.year) === year &&
-    row.semester.toString() === semester.toString() &&
-    row.section === section &&
-    row.day === day
-  );
+    const match = staffAllocData.find(row =>
+      row.course === course &&
+      parseInt(row.year) === year &&
+      row.semester.toString() === semester.toString() &&
+      row.section === section &&
+      row.day === day
+    );
 
-  if (!match) {
-    periodOptions.innerHTML = `<span style="color:red;">⚠️ No periods found for selected filters</span>`;
-    return;
-  }
+    if (!match) {
+      periodOptions.innerHTML = `<span style="color:red;">⚠️ No periods found for selected filters</span>`;
+      return;
+    }
 
-  let found = false;
+    let found = false;
 
-  for (let i = 1; i <= 7; i++) {
-    const subject = match[`period${i}`];
-    if (subject) {
-      found = true;
-      const checkbox = document.createElement("input");
-      checkbox.type = "checkbox";
-      checkbox.id = `period${i}`;
-      checkbox.name = "periodSelection";
-      checkbox.value = `period${i}:${subject}`;
+    for (let i = 1; i <= 7; i++) {
+      const subject = match[`period${i}`];
+      if (subject) {
+        found = true;
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.id = `period${i}`;
+        checkbox.name = "periodSelection";
+        checkbox.value = `period${i}:${subject}`;
 
-      const label = document.createElement("label");
-      label.setAttribute("for", `period${i}`);
-      label.textContent = `${i}ᵗʰ Period - ${subject}`;
-      label.style.display = "flex";
-      label.style.alignItems = "center";
-      label.style.gap = "8px";
+        const label = document.createElement("label");
+        label.setAttribute("for", `period${i}`);
+        label.textContent = `${i}ᵗʰ Period - ${subject}`;
+        label.style.display = "flex";
+        label.style.alignItems = "center";
+        label.style.gap = "8px";
 
-      const wrapper = document.createElement("div");
-      wrapper.appendChild(checkbox);
-      wrapper.appendChild(label);
+        const wrapper = document.createElement("div");
+        wrapper.appendChild(checkbox);
+        wrapper.appendChild(label);
 
-      periodOptions.appendChild(wrapper);
+        periodOptions.appendChild(wrapper);
+      }
+    }
+
+    if (!found) {
+      periodOptions.innerHTML = `<span style="color:red;">⚠️ No subjects assigned for selected day</span>`;
     }
   }
 
-  if (!found) {
-    periodOptions.innerHTML = `<span style="color:red;">⚠️ No subjects assigned for selected day</span>`;
-  }
-}
-
-  // 👨‍🎓 Load students
   function fetchStudents() {
     const course = courseSelect.value, section = sectionSelect.value, year = yearSelect.value, semester = semesterSelect.value;
     if (!course || !section || !year || !semester) {
@@ -273,76 +329,6 @@ function updatePeriodOptions() {
       });
   }
 
-  // ✅ Submit attendance
- form.onsubmit = async (e) => {
-  e.preventDefault();
-
-  const present = Array.from(document.querySelectorAll('input[name="attendance"]:checked')).map(cb => cb.value);
-  const absent = Array.from(document.querySelectorAll('input[name="attendance"]:not(:checked'))).map(cb => cb.value);
-  const selectedPeriods = Array.from(document.querySelectorAll('input[name="periodSelection"]:checked')).map(cb => cb.value);
-  const date = document.getElementById("attendanceDate").value);
-
-  if (!selectedPeriods.length) {
-    Swal.fire("⚠️ Select at least one period before submitting.");
-    return;
-  }
-
-  if (!date) {
-    Swal.fire("⚠️ Please select a date for attendance.");
-    return;
-  }
-
-  const attendanceEntries = [];
-
-  selectedPeriods.forEach(period => {
-    const [, subject] = period.split(":"); // Extract subject name only
-
-    present.forEach(reg_no => {
-      attendanceEntries.push({
-        reg_no,
-        date,
-        staff_id,
-        course: courseSelect.value,
-        year: yearSelect.value,
-        semester: semesterSelect.value,
-        section: sectionSelect.value,
-        subject,
-        status: "Present"
-      });
-    });
-
-    absent.forEach(reg_no => {
-      attendanceEntries.push({
-        reg_no,
-        date,
-        staff_id,
-        course: courseSelect.value,
-        year: yearSelect.value,
-        semester: semesterSelect.value,
-        section: sectionSelect.value,
-        subject,
-        status: "Absent"
-      });
-    });
-  });
-
-  const res = await fetch('/api/submit-attendance', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ entries: attendanceEntries })
-  });
-
-  const result = await res.json();
-  if (res.ok) {
-    Swal.fire("✅ Attendance Marked");
-    studentsTable.innerHTML = "";
-  } else {
-    Swal.fire("❌ Failed", result.error || "Unknown error", "error");
-  }
-};
-
-
-  // 📄 Download PDF
   document.getElementById("downloadPdfBtn").addEventListener("click", () => {
     const course = courseSelect.value, section = sectionSelect.value, year = yearSelect.value, semester = semesterSelect.value;
     const subjects = Array.from(document.querySelectorAll('input[name="periodSelection"]:checked')).map(cb => cb.value);
@@ -353,22 +339,18 @@ function updatePeriodOptions() {
     window.open(`/api/download-attendance-pdf?year=${year}&semester=${semester}&course=${course}&section=${section}&subject=${encodeURIComponent(subjects.join(","))}`, '_blank');
   });
 
-  // 📱 Toggle mobile sidebar
   function toggleMobileMenu() {
     document.querySelector('.sidebar').classList.toggle('open');
   }
 
-  // 🚪 Logout
   function logout() {
     localStorage.clear();
     window.location.href = "index.html";
   }
 
-  // ☑️ Master checkbox
   function toggleAll(master) {
     document.querySelectorAll('input[name="attendance"]').forEach(cb => cb.checked = master.checked);
   }
 </script>
-
 </body>
 </html>
