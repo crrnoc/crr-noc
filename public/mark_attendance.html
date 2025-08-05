@@ -251,37 +251,42 @@
     };
   };
 
-  function updatePeriodOptions() {
-    const course = courseSelect.value;
-    const year = parseInt(yearSelect.value);
-    const semester = semesterSelect.value;
-    const section = sectionSelect.value;
-    const day = daySelect.value;
+function updatePeriodOptions() {
+  const course = courseSelect.value;
+  const year = parseInt(yearSelect.value);
+  const semester = semesterSelect.value;
+  const section = sectionSelect.value;
+  const day = daySelect.value;
 
-    const periodOptions = document.getElementById("periodOptions");
-    periodOptions.innerHTML = "";
+  const periodOptions = document.getElementById("periodOptions");
+  periodOptions.innerHTML = ""; // Clear existing
 
-    if (!course || !year || !semester || !section || !day) return;
+  if (!course || !year || !semester || !section || !day) return;
 
-    const match = staffAllocData.find(row =>
-      row.course === course &&
-      parseInt(row.year) === year &&
-      row.semester.toString() === semester.toString() &&
-      row.section === section &&
-      row.day === day
-    );
+  // 🔍 Find ALL matches, not just the first one
+  const matches = staffAllocData.filter(row =>
+    row.course === course &&
+    parseInt(row.year) === year &&
+    row.semester.toString() === semester.toString() &&
+    row.section === section &&
+    row.day === day
+  );
 
-    if (!match) {
-      periodOptions.innerHTML = `<span style="color:red;">⚠️ No periods found for selected filters</span>`;
-      return;
-    }
+  if (!matches.length) {
+    periodOptions.innerHTML = `<span style="color:red;">⚠️ No periods found for selected filters</span>`;
+    return;
+  }
 
-    let found = false;
+  const addedPeriods = new Set();
+  let found = false;
 
+  matches.forEach(match => {
     for (let i = 1; i <= 7; i++) {
       const subject = match[`period${i}`];
-      if (subject) {
+      if (subject && !addedPeriods.has(`period${i}:${subject}`)) {
         found = true;
+        addedPeriods.add(`period${i}:${subject}`);
+
         const checkbox = document.createElement("input");
         checkbox.type = "checkbox";
         checkbox.id = `period${i}`;
@@ -302,11 +307,12 @@
         periodOptions.appendChild(wrapper);
       }
     }
+  });
 
-    if (!found) {
-      periodOptions.innerHTML = `<span style="color:red;">⚠️ No subjects assigned for selected day</span>`;
-    }
+  if (!found) {
+    periodOptions.innerHTML = `<span style="color:red;">⚠️ No subjects assigned for selected day</span>`;
   }
+}
 
   function fetchStudents() {
     const course = courseSelect.value, section = sectionSelect.value, year = yearSelect.value, semester = semesterSelect.value;
