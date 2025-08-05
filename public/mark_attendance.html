@@ -63,63 +63,64 @@
       <button class="logout" onclick="logout()">Logout</button>
     </div>
 
-    <div class="content">
-      <div class="header">📋 Mark Attendance</div>
-      <div class="form-container">
-        <form id="attendanceForm">
-          <div class="form-row">
-            <label>Course:</label>
-            <select id="courseSelect" required></select>
-          </div>
-          <div class="form-row">
-            <label>Year:</label>
-            <select id="yearSelect" required></select>
-          </div>
-          <div class="form-row">
-            <label>Semester:</label>
-            <select id="semesterSelect" required></select>
-          </div>
-          <div class="form-row">
-            <label>Section:</label>
-            <select id="sectionSelect" required></select>
-          </div>
-          <div class="form-row">
-            <label>Day:</label>
-            <select id="daySelect" required></select>
-          </div>
-          <div class="form-row">
-            <label>Subject:</label>
-            <select id="periodSelect" required></select>
-          </div>
-
-          <!-- Day & Periods info -->
-          <div id="allocationInfo"></div>
-
-          <div class="form-row">
-            <button type="button" onclick="fetchStudents()">📥 Load Students</button>
-          </div>
-
-          <table id="studentsTable">
-            <thead>
-              <tr>
-                <th>Reg No</th><th>Name</th>
-                <th>Present<br><input type="checkbox" id="markAll" onclick="toggleAll(this)"></th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-
-          <div style="margin-top:20px;">
-            <button type="submit">✅ Submit Attendance</button>
-          </div>
-        </form>
-        <div style="margin-top:20px;">
-          <button id="downloadPdfBtn">📄 Download Attendance PDF</button>
+     <div class="content">
+    <div class="header">📋 Mark Attendance</div>
+    <div class="form-container">
+      <form id="attendanceForm">
+        <div class="form-row">
+          <label>Course:</label>
+          <select id="courseSelect" required></select>
         </div>
+        <div class="form-row">
+          <label>Year:</label>
+          <select id="yearSelect" required></select>
+        </div>
+        <div class="form-row">
+          <label>Semester:</label>
+          <select id="semesterSelect" required></select>
+        </div>
+        <div class="form-row">
+          <label>Section:</label>
+          <select id="sectionSelect" required></select>
+        </div>
+        <div class="form-row">
+          <label>Day:</label>
+          <select id="daySelect" required></select>
+        </div>
+        <div class="form-row">
+          <label>Subject / Periods:</label>
+          <select id="periodSelect" multiple required style="height: 120px;"></select>
+          <small style="color: gray;">(Hold Ctrl/Cmd to select multiple)</small>
+        </div>
+
+        <div id="allocationInfo"></div>
+
+        <div class="form-row">
+          <button type="button" onclick="fetchStudents()">📥 Load Students</button>
+        </div>
+
+        <table id="studentsTable">
+          <thead>
+            <tr>
+              <th>Reg No</th><th>Name</th>
+              <th>Present<br><input type="checkbox" id="markAll" onclick="toggleAll(this)"></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+
+        <div style="margin-top:20px;">
+          <button type="submit">✅ Submit Attendance</button>
+        </div>
+      </form>
+      <div style="margin-top:20px;">
+        <button id="downloadPdfBtn">📄 Download Attendance PDF</button>
       </div>
     </div>
   </div>
-  <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
+</div>
+
+<div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
 
 <script>
   const userId = localStorage.getItem("userId") || "";
@@ -136,76 +137,89 @@
   let staffAllocData = [];
 
   if (!userId) {
-    Swal.fire({icon:'warning', title:'Please Login', text:'You are not logged in as staff.'})
-    .then(()=> window.location.href="index.html");
+    Swal.fire({ icon: 'warning', title: 'Please Login', text: 'You are not logged in as staff.' })
+      .then(() => window.location.href = "index.html");
   } else {
     document.getElementById("userId").textContent = userId;
     if (!staff_id) staff_id = userId;
   }
 
-  function toggleAll(master){
+  function toggleAll(master) {
     document.querySelectorAll('input[name="attendance"]').forEach(cb => cb.checked = master.checked);
   }
 
   window.onload = () => {
     fetch(`/api/staff-allocation?staff_id=${staff_id}`)
-      .then(res=>res.json())
-      .then(data=>{
-        if (!data.length){
-          Swal.fire("❌ No Allocation Found","Contact admin.","info");
+      .then(res => res.json())
+      .then(data => {
+        if (!data.length) {
+          Swal.fire("❌ No Allocation Found", "Contact admin.", "info");
           return;
         }
         staffAllocData = data;
 
-        // Populate dropdowns from allocation data
-        courseSelect.innerHTML = [...new Set(data.map(r=>r.course))].map(c=>`<option value="${c}">${c}</option>`).join('');
-        yearSelect.innerHTML = [...new Set(data.map(r=>r.year))].map(y=>`<option value="${y}">${y}</option>`).join('');
-        semesterSelect.innerHTML = [...new Set(data.map(r=>r.semester))].map(s=>`<option value="${s}">${s}</option>`).join('');
-        sectionSelect.innerHTML = [...new Set(data.map(r=>r.section))].map(s=>`<option value="${s}">${s}</option>`).join('');
-        daySelect.innerHTML = [...new Set(data.map(r=>r.day))].map(d=>`<option value="${d}">${d}</option>`).join('');
+        courseSelect.innerHTML = [...new Set(data.map(r => r.course))].map(c => `<option value="${c}">${c}</option>`).join('');
+        yearSelect.innerHTML = [...new Set(data.map(r => r.year))].map(y => `<option value="${y}">${y}</option>`).join('');
+        semesterSelect.innerHTML = [...new Set(data.map(r => r.semester))].map(s => `<option value="${s}">${s}</option>`).join('');
+        sectionSelect.innerHTML = [...new Set(data.map(r => r.section))].map(s => `<option value="${s}">${s}</option>`).join('');
+        daySelect.innerHTML = [...new Set(data.map(r => r.day))].map(d => `<option value="${d}">${d}</option>`).join('');
 
-        // Populate subjects
         const subjects = new Set();
-        data.forEach(r=>{ for(let i=1;i<=7;i++){ if(r[`period${i}`]) subjects.add(r[`period${i}`]); } });
-        periodSelect.innerHTML = [...subjects].map(p=>`<option value="${p}">${p}</option>`).join('');
+        data.forEach(r => {
+          for (let i = 1; i <= 7; i++) {
+            if (r[`period${i}`]) subjects.add(r[`period${i}`]);
+          }
+        });
+        periodSelect.innerHTML = [...subjects].map(p => `<option value="${p}">${p}</option>`).join('');
       });
   };
 
-  periodSelect.addEventListener('change',()=>{
-    const subject = periodSelect.value, course = courseSelect.value, section = sectionSelect.value, day = daySelect.value;
-    allocationInfo.style.display = "none";
-    if(!subject||!course||!section||!day) return;
+  periodSelect.addEventListener('change', () => {
+    const selectedOptions = Array.from(periodSelect.selectedOptions).map(opt => opt.value);
+    const course = courseSelect.value, section = sectionSelect.value, day = daySelect.value;
 
-    const match = staffAllocData.find(row=>{
-      const hasSub = Array.from({length:7},(_,i)=>row[`period${i+1}`]).includes(subject);
-      return row.course===course && row.section===section && row.day===day && hasSub;
+    allocationInfo.style.display = "none";
+    if (!selectedOptions.length || !course || !section || !day) return;
+
+    const matches = staffAllocData.filter(row => {
+      const hasSubject = selectedOptions.some(sub =>
+        Array.from({ length: 7 }, (_, i) => row[`period${i + 1}`]).includes(sub)
+      );
+      return row.course === course && row.section === section && row.day === day && hasSubject;
     });
 
-    if(match){
-      const periods = [];
-      for(let i=1;i<=7;i++){
-        if(match[`period${i}`]===subject) periods.push(i);
-      }
-      allocationInfo.innerHTML = `<b>Allocated Day:</b> ${match.day} <br><b>Periods:</b> ${periods.join(", ")}`;
+    if (matches.length > 0) {
+      const allPeriods = new Set();
+      matches.forEach(match => {
+        selectedOptions.forEach(subject => {
+          for (let i = 1; i <= 7; i++) {
+            if (match[`period${i}`] === subject) allPeriods.add(i);
+          }
+        });
+      });
+
+      allocationInfo.innerHTML = `<b>Allocated Day:</b> ${day}<br><b>Periods:</b> ${[...allPeriods].sort((a, b) => a - b).join(", ")}`;
       allocationInfo.style.display = "block";
     } else {
-      allocationInfo.innerHTML = `<span style="color:red;">⚠️ No allocation found for this subject</span>`;
+      allocationInfo.innerHTML = `<span style="color:red;">⚠️ No allocation found for selected subjects</span>`;
       allocationInfo.style.display = "block";
     }
   });
 
-  function fetchStudents(){
-    const course=courseSelect.value, section=sectionSelect.value, year=yearSelect.value, semester=semesterSelect.value;
-    if(!course||!section||!year||!semester){
-      Swal.fire("⚠️ Please select all fields"); return;
+  function fetchStudents() {
+    const course = courseSelect.value, section = sectionSelect.value, year = yearSelect.value, semester = semesterSelect.value;
+    if (!course || !section || !year || !semester) {
+      Swal.fire("⚠️ Please select all fields");
+      return;
     }
     fetch(`/api/students-by-course-section?year=${year}&semester=${semester}&course=${course}&section=${section}`)
-      .then(res=>res.json())
-      .then(students=>{
-        if(!students.length){
-          studentsTable.innerHTML = `<tr><td colspan="3">No students found</td></tr>`; return;
+      .then(res => res.json())
+      .then(students => {
+        if (!students.length) {
+          studentsTable.innerHTML = `<tr><td colspan="3">No students found</td></tr>`;
+          return;
         }
-        studentsTable.innerHTML = students.map(s=>`
+        studentsTable.innerHTML = students.map(s => `
           <tr>
             <td>${s.reg_no}</td>
             <td>${s.name}</td>
@@ -214,37 +228,61 @@
       });
   }
 
-  form.onsubmit = async (e)=>{
+  form.onsubmit = async (e) => {
     e.preventDefault();
-    const present = Array.from(document.querySelectorAll('input[name="attendance"]:checked')).map(cb=>cb.value);
-    const absent = Array.from(document.querySelectorAll('input[name="attendance"]:not(:checked')).map(cb=>cb.value);
+    const present = Array.from(document.querySelectorAll('input[name="attendance"]:checked')).map(cb => cb.value);
+    const absent = Array.from(document.querySelectorAll('input[name="attendance"]:not(:checked')).map(cb => cb.value);
+    const selectedPeriods = Array.from(periodSelect.selectedOptions).map(opt => opt.value);
+
+    if (!selectedPeriods.length) {
+      Swal.fire("⚠️ Select at least one period before submitting.");
+      return;
+    }
+
     const payload = {
-      staff_id, date:new Date().toISOString().split("T")[0],
-      course:courseSelect.value, year:yearSelect.value, semester:semesterSelect.value,
-      section:sectionSelect.value, day:daySelect.value, subject:periodSelect.value,
-      present, absent
+      staff_id,
+      date: new Date().toISOString().split("T")[0],
+      course: courseSelect.value,
+      year: yearSelect.value,
+      semester: semesterSelect.value,
+      section: sectionSelect.value,
+      day: daySelect.value,
+      subjects: selectedPeriods,
+      present,
+      absent
     };
-    const res = await fetch('/api/submit-attendance',{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
+
+    const res = await fetch('/api/submit-attendance', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
     const result = await res.json();
-    if(res.ok){ Swal.fire("✅ Attendance Marked"); studentsTable.innerHTML=""; }
-    else Swal.fire("❌ Failed", result.error || "Unknown error","error");
+    if (res.ok) {
+      Swal.fire("✅ Attendance Marked");
+      studentsTable.innerHTML = "";
+    } else {
+      Swal.fire("❌ Failed", result.error || "Unknown error", "error");
+    }
   };
 
-  document.getElementById("downloadPdfBtn").addEventListener("click",()=>{
-    const course=courseSelect.value, section=sectionSelect.value, year=yearSelect.value, semester=semesterSelect.value, subject=periodSelect.value;
-    if(!course||!section||!year||!semester||!subject){
-      Swal.fire("⚠️ Please select all fields before downloading PDF"); return;
+  document.getElementById("downloadPdfBtn").addEventListener("click", () => {
+    const course = courseSelect.value, section = sectionSelect.value, year = yearSelect.value, semester = semesterSelect.value;
+    const subjects = Array.from(periodSelect.selectedOptions).map(opt => opt.value);
+    if (!course || !section || !year || !semester || !subjects.length) {
+      Swal.fire("⚠️ Please select all fields before downloading PDF");
+      return;
     }
-    window.open(`/api/download-attendance-pdf?year=${year}&semester=${semester}&course=${course}&section=${section}&subject=${encodeURIComponent(subject)}`,'_blank');
+    window.open(`/api/download-attendance-pdf?year=${year}&semester=${semester}&course=${course}&section=${section}&subject=${encodeURIComponent(subjects.join(","))}`, '_blank');
   });
 
-  function toggleMobileMenu(){
+  function toggleMobileMenu() {
     document.querySelector('.sidebar').classList.toggle('open');
   }
 
-  function logout(){
+  function logout() {
     localStorage.clear();
-    window.location.href="index.html";
+    window.location.href = "index.html";
   }
 </script>
 </body>
