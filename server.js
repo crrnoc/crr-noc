@@ -3915,47 +3915,42 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
     }
     if (!results.length) return res.status(404).json({ error: "No data found" });
 
-    // subjects list in order of appearance
     const allSubjects = [...new Set(results.map(r => r.subject))];
 
-    // subjectTotals: subject -> total_classes (we pick MAX per subject to be safe)
+    // pick safe totals per subject (max total_classes found for that subject)
     const subjectTotals = {};
     results.forEach(r => {
-      const s = r.subject;
       const tc = parseInt(r.total_classes, 10) || 0;
-      if (!subjectTotals[s] || tc > subjectTotals[s]) subjectTotals[s] = tc;
+      if (!subjectTotals[r.subject] || tc > subjectTotals[r.subject]) subjectTotals[r.subject] = tc;
     });
 
-    // Build studentMap (reg_no -> { regno, subjects: { subj: attended }, sumAttended })
+    // build student map with numeric attended totals per subject and sumAttended
     const studentMap = {};
     results.forEach(r => {
       const reg = r.reg_no;
-      if (!studentMap[reg]) {
-        studentMap[reg] = { regno: reg, subjects: {}, sumAttended: 0 };
-      }
+      if (!studentMap[reg]) studentMap[reg] = { regno: reg, subjects: {}, sumAttended: 0 };
       const attended = parseInt(r.attended, 10) || 0;
-      studentMap[reg].subjects[r.subject] = attended; // store number only
+      studentMap[reg].subjects[r.subject] = attended;
       studentMap[reg].sumAttended += attended;
     });
 
-    // total possible classes across all subjects (for percent denominator)
-    const totalPossible = allSubjects.reduce((sum, sub) => sum + (subjectTotals[sub] || 0), 0);
+    const totalPossible = allSubjects.reduce((s, sub) => s + (subjectTotals[sub] || 0), 0);
 
-    // --- PDF generation (pdfkit, no pdfkit-table) ---
+    // PDF setup
     const doc = new PDFDocument({ margin: 40, size: "A4", layout: "landscape" });
     const fileName = `AttendanceReport-${Date.now()}.pdf`;
     const filePath = path.join(__dirname, "uploads", fileName);
     const writeStream = fs.createWriteStream(filePath);
     doc.pipe(writeStream);
 
-    // Header
+    // Header block (college header)
     try {
       const logoPath = path.join(__dirname, "public", "crrengglogo.png");
       if (fs.existsSync(logoPath)) doc.image(logoPath, 40, 20, { width: 50 });
-    } catch (e) { /* ignore missing logo */ }
+    } catch (e) { /* ignore */ }
 
     doc.fontSize(16).font("Helvetica-Bold").text("SIR C.R.REDDY COLLEGE OF ENGINEERING (Autonomous)", { align: "center" });
-    doc.moveDown(0.25);
+    doc.moveDown(0.2);
     doc.fontSize(11).font("Helvetica").text(`B.Tech Year - ${year}   Sem - ${semester}   Branch - ${course}   Section - ${section}`, { align: "center" });
     doc.moveDown(0.15);
     doc.fontSize(12).text("STATEMENT OF ATTENDANCE REPORT", { align: "center" });
@@ -3965,114 +3960,119 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
     doc.text(`From: ${from_date}  To: ${to_date}`, { align: "center" });
     doc.moveDown(0.5);
 
-    // horizontal rule
+    // layout math
     const leftMargin = doc.page.margins.left;
     const rightLimit = doc.page.width - doc.page.margins.right;
-    doc.moveTo(leftMargin, doc.y).lineTo(rightLimit, doc.y).stroke();
-    doc.moveDown(0.5);
+    const usableWidth = rightLimit - leftMargin;
+    const subjectCount = allSubjects.length;
+    const columnsCount = 1 + subjectCount + 2; // RegdNo + subjects + TOTAL + PERCENT
 
-    // Columns auto-size
-    const usableWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
-    // columns: Regd.No + subjects + TOTAL + PERCENT
-    const columnsCount = 1 + allSubjects.length + 2;
-    // set a reasonable min and max width per column
-    const minCol = 50;
-    const maxCol = 110;
-    let colWidth = Math.floor(usableWidth / columnsCount);
-    if (colWidth < minCol) {
-      // If too many columns, shrink but ensure readability by switching to smaller font later if needed
-      colWidth = minCol;
-    } else if (colWidth > maxCol) {
-      colWidth = Math.min(maxCol, colWidth);
-    }
-    // if there is leftover space, put it into the Regd.No column
-    const startX = leftMargin;
+    // fixed reg column width; remaining distributed
+    const regColWidth = 80;
+    const remainingWidth = usableWidth - regColWidth;
+    // min width per column to avoid collapse
+    const minCol = 40;
+    let commonCol = Math.floor(remainingWidth / (subjectCount + 2));
+    if (commonCol < minCol) commonCol = minCol;
+    // recompute usable if some leftover
+    const colWidths = [regColWidth, ...Array(subjectCount + 2).fill(commonCol)];
+
     const cellH = 18;
     let y = doc.y;
 
-    // Header row
-    const headers = ["Regd.No", ...allSubjects, "TOTAL", "PERCENT"];
-    doc.font("Helvetica-Bold").fontSize(8);
-    headers.forEach((h, i) => {
-      const x = startX + i * colWidth;
-      // header background
-      doc.rect(x, y, colWidth, cellH).fillAndStroke("#007acc", "#000000");
-      doc.fillColor("white").text(h.length > 25 ? (h.substring(0, 22) + "...") : h, x + 3, y + 3, { width: colWidth - 6, align: "center" });
-    });
-    y += cellH;
+    // helper to draw header + total-classes row (and used when creating a new page)
+    function drawTableHeader(atY) {
+      doc.font("Helvetica-Bold").fontSize(8);
+      // header row background color & text
+      const headers = ["Regd.No", ...allSubjects, "TOTAL", "PERCENT"];
+      headers.forEach((h, i) => {
+        const x = leftMargin + colWidths.slice(0, i).reduce((a, b) => a + b, 0);
+        doc.rect(x, atY, colWidths[i], cellH).fillAndStroke("#007acc", "#000000");
+        doc.fillColor("white").text(h.length > 28 ? (h.substring(0, 25) + "...") : h, x + 3, atY + 3, { width: colWidths[i] - 6, align: "center" });
+      });
 
-    // Total classes row (single row below headers)
-    doc.font("Helvetica-Bold").fontSize(8);
-    // Label cell for total classes
-    doc.rect(startX, y, colWidth, cellH).stroke();
-    doc.fillColor("black").text("Total Classes", startX + 3, y + 3, { width: colWidth - 6, align: "center" });
-    // For each subject show subjectTotals[sub]
-    allSubjects.forEach((sub, i) => {
-      const x = startX + (i + 1) * colWidth; // +1 because Regd.No is first col
-      doc.rect(x, y, colWidth, cellH).stroke();
-      doc.text(String(subjectTotals[sub] || 0), x + 3, y + 3, { width: colWidth - 6, align: "center" });
-    });
-    // TOTAL and PERCENT cells for the Totals row — TOTAL will show sum of subjectTotals, PERCENT left blank
-    const totalX = startX + (1 + allSubjects.length) * colWidth;
-    doc.rect(totalX, y, colWidth, cellH).stroke();
-    doc.text(String(totalPossible), totalX + 3, y + 3, { width: colWidth - 6, align: "center" });
+      // total-classes row below header
+      const y2 = atY + cellH;
+      doc.font("Helvetica-Bold").fontSize(8);
+      // Regd.No cell label
+      doc.rect(leftMargin, y2, colWidths[0], cellH).stroke();
+      doc.fillColor("black").text("Total Classes", leftMargin + 3, y2 + 3, { width: colWidths[0] - 6, align: "center" });
 
-    const percentX = startX + (1 + allSubjects.length + 1) * colWidth;
-    doc.rect(percentX, y, colWidth, cellH).stroke();
-    doc.text("-", percentX + 3, y + 3, { width: colWidth - 6, align: "center" });
+      // subject totals
+      allSubjects.forEach((sub, idx) => {
+        const x = leftMargin + colWidths.slice(0, idx + 1).reduce((a, b) => a + b, 0);
+        doc.rect(x, y2, colWidths[idx + 1], cellH).stroke();
+        doc.text(String(subjectTotals[sub] || 0), x + 3, y2 + 3, { width: colWidths[idx + 1] - 6, align: "center" });
+      });
 
-    y += cellH;
+      // TOTAL (sum of subject totals)
+      const totalX = leftMargin + colWidths.slice(0, 1 + subjectCount).reduce((a, b) => a + b, 0);
+      doc.rect(totalX, y2, colWidths[1 + subjectCount], cellH).stroke();
+      doc.text(String(totalPossible), totalX + 3, y2 + 3, { width: colWidths[1 + subjectCount] - 6, align: "center" });
 
-    // Student rows (only regno and attended numbers per subject)
+      // PERCENT cell blank for header area
+      const percentX = totalX + colWidths[1 + subjectCount];
+      doc.rect(percentX, y2, colWidths[1 + subjectCount + 1], cellH).stroke();
+      doc.text("-", percentX + 3, y2 + 3, { width: colWidths[1 + subjectCount + 1] - 6, align: "center" });
+
+      return y2 + cellH; // new y after header and totals
+    }
+
+    // first draw header
+    y = drawTableHeader(y);
+
+    // draw student rows (only regno + attended numbers, total & percent)
     doc.font("Helvetica").fontSize(8);
     const regs = Object.values(studentMap);
-    for (let idx = 0; idx < regs.length; idx++) {
-      const std = regs[idx];
+    for (let i = 0; i < regs.length; i++) {
+      const std = regs[i];
 
-      // row values
-      const rowValues = [
+      // compute row values
+      const rowVals = [
         std.regno,
-        ...allSubjects.map(sub => (typeof std.subjects[sub] !== 'undefined' ? String(std.subjects[sub]) : "-")),
+        ...allSubjects.map(sub => (typeof std.subjects[sub] !== "undefined" ? String(std.subjects[sub]) : "-")),
         String(std.sumAttended || 0),
         totalPossible > 0 ? ((std.sumAttended / totalPossible) * 100).toFixed(2) : "0.00"
       ];
 
-      rowValues.forEach((cell, i) => {
-        const x = startX + i * colWidth;
-        const isPercent = (i === rowValues.length - 1);
-        // color percent red if < 75
+      // check page overflow before drawing the row
+      if (y + cellH > doc.page.height - doc.page.margins.bottom - 60) {
+        doc.addPage({ layout: "landscape" });
+        // repeat header on new page
+        y = doc.page.margins.top;
+        y = drawTableHeader(y);
+        doc.font("Helvetica").fontSize(8);
+      }
+
+      // draw cells for this row
+      rowVals.forEach((cell, ci) => {
+        const x = leftMargin + colWidths.slice(0, ci).reduce((a, b) => a + b, 0);
+        const isPercent = (ci === rowVals.length - 1);
         if (isPercent && parseFloat(cell) < 75) doc.fillColor("red");
         else doc.fillColor("black");
 
-        doc.rect(x, y, colWidth, cellH).stroke();
-        doc.text(cell, x + 3, y + 3, { width: colWidth - 6, align: "center" });
+        doc.rect(x, y, colWidths[ci], cellH).stroke();
+        doc.text(cell, x + 3, y + 3, { width: colWidths[ci] - 6, align: "center" });
       });
 
       y += cellH;
-
-      // page overflow
-      if (y > doc.page.height - doc.page.margins.bottom - 60) {
-        doc.addPage({ layout: "landscape" });
-        y = doc.page.margins.top;
-      }
     }
 
-    // Footer signature lines
-    doc.moveTo(leftMargin, y + 8).lineTo(leftMargin + 180, y + 8).stroke();
-    doc.text("Faculty Signature", leftMargin, y + 10);
-    doc.moveTo(doc.page.width - doc.page.margins.right - 180, y + 8).lineTo(doc.page.width - doc.page.margins.right, y + 8).stroke();
-    doc.text("HOD Signature", doc.page.width - doc.page.margins.right - 180, y + 10);
+    // footer signature lines
+    const sigY = Math.min(y + 12, doc.page.height - doc.page.margins.bottom - 40);
+    doc.moveTo(leftMargin, sigY).lineTo(leftMargin + 180, sigY).stroke();
+    doc.text("Faculty Signature", leftMargin, sigY + 4);
+    doc.moveTo(doc.page.width - doc.page.margins.right - 180, sigY).lineTo(doc.page.width - doc.page.margins.right, sigY).stroke();
+    doc.text("HOD Signature", doc.page.width - doc.page.margins.right - 180, sigY + 4);
 
-    // finalize
     doc.end();
 
     writeStream.on("finish", () => {
-      return res.download(filePath, fileName, (err) => {
-        if (err) {
-          console.error("Download error:", err);
+      res.download(filePath, fileName, (dlErr) => {
+        if (dlErr) {
+          console.error("Download error:", dlErr);
           return res.status(500).json({ error: "File download failed" });
         }
-        // cleanup
         fs.unlink(filePath, () => {});
       });
     });
