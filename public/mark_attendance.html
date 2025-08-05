@@ -123,8 +123,9 @@
 <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
 
 <script>
-  const userId = localStorage.getItem("userId") || "";
-  let staff_id = localStorage.getItem("staff_id") || "";
+  const userId = localStorage.getItem("userId");
+  let staff_id = localStorage.getItem("staff_id");
+
   const courseSelect = document.getElementById("courseSelect");
   const yearSelect = document.getElementById("yearSelect");
   const semesterSelect = document.getElementById("semesterSelect");
@@ -136,12 +137,22 @@
   const allocationInfo = document.getElementById("allocationInfo");
   let staffAllocData = [];
 
+  // 🛑 If not logged in, redirect to login page
   if (!userId) {
-    Swal.fire({ icon: 'warning', title: 'Please Login', text: 'You are not logged in as staff.' })
-      .then(() => window.location.href = "index.html");
+    document.getElementById("userId").textContent = "Not logged in";
+    Swal.fire({
+      icon: 'warning',
+      title: 'Please Login',
+      text: 'You are not logged in as staff.'
+    }).then(() => window.location.href = "index.html");
   } else {
     document.getElementById("userId").textContent = userId;
-    if (!staff_id) staff_id = userId;
+    if (!staff_id) {
+      staff_id = userId; // fallback
+      localStorage.setItem("staff_id", staff_id);
+    }
+    console.log("✅ userId:", userId);
+    console.log("✅ staff_id:", staff_id);
   }
 
   function toggleAll(master) {
@@ -168,6 +179,10 @@
         [courseSelect, yearSelect, semesterSelect, sectionSelect, daySelect].forEach(el => {
           el.addEventListener("change", updatePeriodOptions);
         });
+      })
+      .catch(err => {
+        console.error("⚠️ Failed to fetch staff allocation:", err);
+        Swal.fire("Error fetching data", err.message, "error");
       });
   };
 
@@ -178,7 +193,7 @@
     const section = sectionSelect.value;
     const day = daySelect.value;
 
-    if (!course || !year || !section || !day || !semester) return;
+    if (!course || !year || !semester || !section || !day) return;
 
     const match = staffAllocData.find(row =>
       row.course === course &&
