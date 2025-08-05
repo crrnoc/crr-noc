@@ -123,7 +123,8 @@
 <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
 
 <script>
-  const userId = localStorage.getItem("userId");
+  // 🌐 Get userId and staff_id from localStorage
+  let userId = localStorage.getItem("userId");
   let staff_id = localStorage.getItem("staff_id");
 
   const courseSelect = document.getElementById("courseSelect");
@@ -137,28 +138,30 @@
   const allocationInfo = document.getElementById("allocationInfo");
   let staffAllocData = [];
 
-  // 🛑 If not logged in, redirect to login page
+  // 🔐 Login check
   if (!userId) {
-    document.getElementById("userId").textContent = "Not logged in";
+    console.warn("⚠️ userId not found in localStorage");
+    document.getElementById("userId").textContent = "Not Logged In";
     Swal.fire({
       icon: 'warning',
       title: 'Please Login',
       text: 'You are not logged in as staff.'
     }).then(() => window.location.href = "index.html");
   } else {
+    // ✅ Set ID in sidebar
     document.getElementById("userId").textContent = userId;
+
+    // 🛠️ If staff_id is not set, set it now
     if (!staff_id) {
-      staff_id = userId; // fallback
+      staff_id = userId;
       localStorage.setItem("staff_id", staff_id);
     }
+
     console.log("✅ userId:", userId);
     console.log("✅ staff_id:", staff_id);
   }
 
-  function toggleAll(master) {
-    document.querySelectorAll('input[name="attendance"]').forEach(cb => cb.checked = master.checked);
-  }
-
+  // 📦 Load staff allocation on window load
   window.onload = () => {
     fetch(`/api/staff-allocation?staff_id=${staff_id}`)
       .then(res => res.json())
@@ -181,11 +184,12 @@
         });
       })
       .catch(err => {
-        console.error("⚠️ Failed to fetch staff allocation:", err);
+        console.error("❌ Failed to fetch staff allocation:", err);
         Swal.fire("Error fetching data", err.message, "error");
       });
   };
 
+  // 🔄 Update periods when dropdowns change
   function updatePeriodOptions() {
     const course = courseSelect.value;
     const year = parseInt(yearSelect.value);
@@ -237,6 +241,7 @@
     }
   }
 
+  // 🟨 Show info about selected periods
   periodSelect.addEventListener('change', () => {
     const selectedOptions = Array.from(periodSelect.selectedOptions).map(opt => opt.value);
     const course = courseSelect.value, section = sectionSelect.value, day = daySelect.value;
@@ -269,6 +274,7 @@
     }
   });
 
+  // 👨‍🎓 Load students
   function fetchStudents() {
     const course = courseSelect.value, section = sectionSelect.value, year = yearSelect.value, semester = semesterSelect.value;
     if (!course || !section || !year || !semester) {
@@ -291,10 +297,11 @@
       });
   }
 
+  // ✅ Submit attendance
   form.onsubmit = async (e) => {
     e.preventDefault();
     const present = Array.from(document.querySelectorAll('input[name="attendance"]:checked')).map(cb => cb.value);
-    const absent = Array.from(document.querySelectorAll('input[name="attendance"]:not(:checked')]).map(cb => cb.value);
+    const absent = Array.from(document.querySelectorAll('input[name="attendance"]:not(:checked')).map(cb => cb.value);
     const selectedPeriods = Array.from(periodSelect.selectedOptions).map(opt => opt.value);
 
     if (!selectedPeriods.length) {
@@ -329,6 +336,7 @@
     }
   };
 
+  // 📄 Download PDF
   document.getElementById("downloadPdfBtn").addEventListener("click", () => {
     const course = courseSelect.value, section = sectionSelect.value, year = yearSelect.value, semester = semesterSelect.value;
     const subjects = Array.from(periodSelect.selectedOptions).map(opt => opt.value);
@@ -339,13 +347,20 @@
     window.open(`/api/download-attendance-pdf?year=${year}&semester=${semester}&course=${course}&section=${section}&subject=${encodeURIComponent(subjects.join(","))}`, '_blank');
   });
 
+  // 📱 Toggle mobile sidebar
   function toggleMobileMenu() {
     document.querySelector('.sidebar').classList.toggle('open');
   }
 
+  // 🚪 Logout
   function logout() {
     localStorage.clear();
     window.location.href = "index.html";
+  }
+
+  // ☑️ Master checkbox
+  function toggleAll(master) {
+    document.querySelectorAll('input[name="attendance"]').forEach(cb => cb.checked = master.checked);
   }
 </script>
 
