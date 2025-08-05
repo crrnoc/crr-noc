@@ -280,7 +280,7 @@ function updatePeriodOptions() {
   const present = Array.from(document.querySelectorAll('input[name="attendance"]:checked')).map(cb => cb.value);
   const absent = Array.from(document.querySelectorAll('input[name="attendance"]:not(:checked'))).map(cb => cb.value);
   const selectedPeriods = Array.from(document.querySelectorAll('input[name="periodSelection"]:checked')).map(cb => cb.value);
-  const date = document.getElementById("attendanceDate").value;
+  const date = document.getElementById("attendanceDate").value);
 
   if (!selectedPeriods.length) {
     Swal.fire("⚠️ Select at least one period before submitting.");
