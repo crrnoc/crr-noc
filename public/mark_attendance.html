@@ -89,7 +89,7 @@
         </div>
         <div class="form-row">
   <label>Select Date:</label>
-  <input type="date" id="attendanceDate" required value="2025-08-05" />
+  <input type="date" id="attendanceDate" required />
 </div>
        <div class="form-row">
   <label>Subject / Periods:</label>
@@ -137,7 +137,7 @@
   let staffAllocData = [];
 
   window.onload = () => {
-    let userId = localStorage.getItem("userId");
+    const userId = localStorage.getItem("userId");
     let staff_id = localStorage.getItem("staff_id");
 
     if (!userId) {
@@ -151,6 +151,7 @@
     }
 
     document.getElementById("userId").textContent = userId;
+    document.getElementById("attendanceDate").valueAsDate = new Date();
 
     if (!staff_id) {
       staff_id = userId;
@@ -186,7 +187,7 @@
       e.preventDefault();
 
       const present = Array.from(document.querySelectorAll('input[name="attendance"]:checked')).map(cb => cb.value);
-      const absent = Array.from(document.querySelectorAll('input[name="attendance"]:not(:checked'))).map(cb => cb.value);
+      const absent = Array.from(document.querySelectorAll('input[name="attendance"]:not(:checked)')).map(cb => cb.value);
       const selectedPeriods = Array.from(document.querySelectorAll('input[name="periodSelection"]:checked')).map(cb => cb.value);
       const date = document.getElementById("attendanceDate").value;
 
