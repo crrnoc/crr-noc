@@ -3890,10 +3890,12 @@ app.get("/api/fetch-courses-sections", (req, res) => {
 // download section wise attendance
 app.get("/api/download-all-subjects-attendance", (req, res) => {
   const { year, course, section, semester, from_date, to_date } = req.query;
-  if (!year || !course || !section || !from_date || !to_date || !semester)
+  if (!year || !course || !section || !from_date || !to_date || !semester) {
     return res.status(400).json({ error: "Missing query parameters." });
+  }
 
-  const query = `
+  // Query A: student-subject attended + total_classes per student per subject
+  const studentQuery = `
     SELECT 
       a.reg_no,
       s.name,
@@ -3908,126 +3910,256 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
     ORDER BY a.reg_no, a.subject
   `;
 
-  connection.query(query, [year, course, section, semester, from_date, to_date], (err, results) => {
-    if (err) return res.status(500).json({ error: "DB error" });
-    if (!results.length) return res.status(404).json({ error: "No data found" });
+  // Query B: subject-level total classes (denominator per subject)
+  const subjectTotalsQuery = `
+    SELECT subject, COUNT(*) AS total_classes
+    FROM daily_attendance
+    WHERE year = ? AND course = ? AND section = ? AND semester = ?
+      AND date BETWEEN ? AND ?
+    GROUP BY subject
+  `;
 
-    const allSubjects = [...new Set(results.map(r => r.subject))];
-    const studentMap = {};
+  // Run both queries (nested callbacks to keep simple)
+  connection.query(studentQuery, [year, course, section, semester, from_date, to_date], (err, studentResults) => {
+    if (err) {
+      console.error("DB error (studentQuery):", err);
+      return res.status(500).json({ error: "DB error" });
+    }
+    if (!studentResults.length) {
+      return res.status(404).json({ error: "No attendance data found for the given filters." });
+    }
 
-    results.forEach(r => {
-      if (!studentMap[r.reg_no]) {
-        studentMap[r.reg_no] = {
-          regno: r.reg_no,
-          name: r.name,
-          subjects: {},
-          total_attended: 0,
-          total_classes: 0,
-        };
+    connection.query(subjectTotalsQuery, [year, course, section, semester, from_date, to_date], (err2, subjectTotals) => {
+      if (err2) {
+        console.error("DB error (subjectTotalsQuery):", err2);
+        return res.status(500).json({ error: "DB error" });
       }
-      studentMap[r.reg_no].subjects[r.subject] = `${r.attended}/${r.total_classes}`;
-      studentMap[r.reg_no].total_attended += parseInt(r.attended);
-      studentMap[r.reg_no].total_classes += parseInt(r.total_classes);
-    });
+      if (!subjectTotals.length) {
+        return res.status(404).json({ error: "No subject totals found (unexpected)." });
+      }
 
-    const doc = new PDFDocument({ margin: 40, size: "A4", layout: "landscape" });
-    const fileName = `AttendanceReport-${Date.now()}.pdf`;
-    const filePath = path.join(__dirname, "uploads", fileName);
-    const writeStream = fs.createWriteStream(filePath);
-    doc.pipe(writeStream);
+      // Map subject -> total_classes
+      const subjectTotalMap = {};
+      subjectTotals.forEach(s => {
+        subjectTotalMap[s.subject] = parseInt(s.total_classes, 10);
+      });
 
-    // Header
-    doc.image(path.join(__dirname, "public", "crrengglogo.png"), 40, 20, { width: 50 });
-    doc.fontSize(16).font("Helvetica-Bold").text("SIR C.R.REDDY COLLEGE OF ENGINEERING (Autonomous)", { align: "center" });
-    doc.fontSize(12).text(`B.Tech Year - ${year}   Sem - ${semester}   Branch - ${course}   Section - ${section}`, { align: "center" });
-    doc.text("STATEMENT OF ATTENDANCE REPORT", { align: "center" });
-    doc.text("Vatluru, Eluru - 534007, Eluru Dist. A.P.", { align: "center" });
-    doc.text(`From: ${from_date}  To: ${to_date}`, { align: "center" });
-    doc.moveDown(0.5);
-    doc.moveTo(40, doc.y).lineTo(800, doc.y).stroke();
-    doc.moveDown(1);
+      // Unique subjects in a stable order (use subjectTotals order)
+      const allSubjects = subjectTotals.map(s => s.subject);
 
-    // Auto column width based on A4 landscape
-    const usableWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
-    const totalCols = allSubjects.length + 2 + 1; // subjects + TOTAL + PERCENT + Regd.No
-    const colWidth = Math.floor(usableWidth / totalCols);
-
-    const startX = doc.page.margins.left;
-    let y = doc.y;
-    const cellHeight = 20;
-
-    const headers = ["Regd.No", ...allSubjects, "TOTAL", "PERCENT"];
-
-    // Draw Header Row
-    headers.forEach((header, i) => {
-      const x = startX + i * colWidth;
-      doc.rect(x, y, colWidth, cellHeight).fillAndStroke("#007acc", "black");
-      doc.fillColor("white").font("Helvetica-Bold").fontSize(8).text(
-        header.length > 25 ? header.substring(0, 22) + "..." : header,
-        x + 3, y + 5, {
-          width: colWidth - 6,
-          align: "center"
+      // Build student map with numeric counts
+      const studentMap = {}; // reg_no -> { regno, name, attendance: {subject: attended}, total_attended }
+      studentResults.forEach(r => {
+        const reg = r.reg_no;
+        if (!studentMap[reg]) {
+          studentMap[reg] = { regno: reg, name: r.name, attendance: {}, total_attended: 0 };
         }
-      );
-    });
-    y += cellHeight;
+        const attended = parseInt(r.attended || 0, 10);
+        studentMap[reg].attendance[r.subject] = attended;
+        studentMap[reg].total_attended += attended;
+      });
 
-    // Draw student rows
-    Object.values(studentMap).forEach((std) => {
-      const percentVal = std.total_classes > 0 ? ((std.total_attended / std.total_classes) * 100).toFixed(2) : "0.00";
-      const row = [
-        std.regno,
-        ...allSubjects.map(sub => std.subjects[sub] || "-"),
-        `${std.total_attended}/${std.total_classes}`,
-        percentVal
-      ];
+      // Denominator: sum of subject total classes (same for all students)
+      const denominator = allSubjects.reduce((acc, sub) => acc + (subjectTotalMap[sub] || 0), 0);
 
-      row.forEach((cell, i) => {
-        const x = startX + i * colWidth;
-        const isPercent = i === row.length - 1;
-        const percent = parseFloat(percentVal);
+      // PDF Setup
+      const doc = new PDFDocument({ margin: 36, size: "A4", layout: "landscape" });
+      const fileName = `AttendanceReport-${Date.now()}.pdf`;
+      const filePath = path.join(__dirname, "uploads", fileName);
+      const writeStream = fs.createWriteStream(filePath);
+      doc.pipe(writeStream);
 
-        if (isPercent && percent < 75) doc.fillColor("red");
-        else doc.fillColor("black");
+      // Helper: draw page header + table header + subject totals row
+      function drawPageHeader(pageTopY) {
+        // College header
+        const logoPath = path.join(__dirname, "public", "crrengglogo.png");
+        try { doc.image(logoPath, 40, pageTopY - 8, { width: 50 }); } catch (e) { /* ignore missing image */ }
 
-        doc.rect(x, y, colWidth, cellHeight).stroke();
-        doc.font("Helvetica").fontSize(8).text(cell, x + 3, y + 5, {
-          width: colWidth - 6,
-          align: "center"
+        doc.fontSize(16).font("Helvetica-Bold").text("SIR C.R.REDDY COLLEGE OF ENGINEERING (Autonomous)", 0, pageTopY, { align: "center" });
+        doc.fontSize(11).font("Helvetica").text(`B.Tech Year - ${year}   Sem - ${semester}   Branch - ${course}   Section - ${section}`, { align: "center" });
+        doc.moveDown(0.2);
+        doc.fontSize(12).font("Helvetica-Bold").text("STATEMENT OF ATTENDANCE REPORT", { align: "center" });
+        doc.fontSize(9).font("Helvetica").text("Vatluru, Eluru - 534007, Eluru Dist. A.P.", { align: "center" });
+        doc.fontSize(9).font("Helvetica").text(`From: ${from_date}  To: ${to_date}`, { align: "center" });
+        doc.moveDown(0.2);
+        const dividerY = doc.y;
+        doc.moveTo(doc.page.margins.left, dividerY).lineTo(doc.page.width - doc.page.margins.right, dividerY).stroke();
+        doc.moveDown(0.5);
+      }
+
+      // Auto column width / chunking logic
+      const pageWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
+      const fixedLeftWidth = 40 + 90 + 180; // SNo(40) + Regd.No(90) + Name(180) -> tune as needed
+      const availableForSubjects = pageWidth - fixedLeftWidth - (70 + 60); // leave space for TOTAL (70) and PERCENT (60)
+      const minSubCol = 50;
+      const maxSubColsFit = Math.floor(availableForSubjects / minSubCol);
+      // chunk size:
+      const subjectsPerPage = Math.max(1, Math.min(allSubjects.length, maxSubColsFit));
+
+      // We'll render in chunks if too many subjects
+      const subjectChunks = [];
+      for (let i = 0; i < allSubjects.length; i += subjectsPerPage) {
+        subjectChunks.push(allSubjects.slice(i, i + subjectsPerPage));
+      }
+
+      // Column widths (for SNo, Regd, Name, each subject, TOTAL, PERCENT)
+      function getColWidths(subjectsInChunk) {
+        const snoW = 40;
+        const regW = 90;
+        const nameW = 180;
+        const totW = 70;
+        const pctW = 60;
+        const spaceLeft = pageWidth - (snoW + regW + nameW + totW + pctW);
+        const subW = Math.max(minSubCol, Math.floor(spaceLeft / subjectsInChunk.length));
+        const arr = [snoW, regW, nameW, ...Array(subjectsInChunk.length).fill(subW), totW, pctW];
+        return arr;
+      }
+
+      // Draw table for each chunk (each chunk will produce one or more pages)
+      const students = Object.values(studentMap);
+      let globalSno = 1;
+
+      subjectChunks.forEach((subjectsChunk, chunkIndex) => {
+        // Start new page for every chunk except first
+        if (chunkIndex > 0) doc.addPage();
+
+        // top header for this page
+        drawPageHeader(doc.y);
+        let y = doc.y + 6;
+
+        const colWidths = getColWidths(subjectsChunk);
+        const cols = ["SNo", "Regd.No", "Name", ...subjectsChunk, "TOTAL", "PERCENT"];
+
+        // helper to draw header row and subject totals row
+        function drawTableHeader(headerY) {
+          // Header background
+          let x = doc.page.margins.left;
+          const cellH = 20;
+
+          // Header row (subject names)
+          for (let i = 0; i < cols.length; i++) {
+            doc.rect(x, headerY, colWidths[i], cellH).fillAndStroke("#007acc", "#000");
+            doc.fillColor("white").font("Helvetica-Bold").fontSize(8);
+
+            // allow subject to wrap into 2 lines if long
+            const headerText = cols[i];
+            const textOptions = { width: colWidths[i] - 6, align: "center" };
+            // For SNo/Regd/Name show left/center appropriately
+            doc.text(headerText, x + 3, headerY + 4, textOptions);
+            x += colWidths[i];
+          }
+
+          // Subject totals row (light grey background) only under subject columns; for first three cols show blank
+          const totalsY = headerY + cellH;
+          x = doc.page.margins.left;
+          for (let i = 0; i < cols.length; i++) {
+            if (i < 3) {
+              doc.rect(x, totalsY, colWidths[i], cellH).fillAndStroke("#f0f0f0", "#ccc");
+              doc.fillColor("black").font("Helvetica").fontSize(8).text("", x + 3, totalsY + 5, { width: colWidths[i] - 6, align: "center" });
+            } else if (i >= 3 && i < 3 + subjectsChunk.length) {
+              const subj = subjectsChunk[i - 3];
+              const tot = subjectTotalMap[subj] || 0;
+              doc.rect(x, totalsY, colWidths[i], cellH).fillAndStroke("#f0f0f0", "#ccc");
+              doc.fillColor("black").font("Helvetica").fontSize(8).text(String(tot), x + 3, totalsY + 5, { width: colWidths[i] - 6, align: "center" });
+            } else if (cols[i] === "TOTAL") {
+              doc.rect(x, totalsY, colWidths[i], cellH).fillAndStroke("#f0f0f0", "#ccc");
+              doc.fillColor("black").font("Helvetica").fontSize(8).text(String(denominator), x + 3, totalsY + 5, { width: colWidths[i] - 6, align: "center" });
+            } else { // PERCENT
+              doc.rect(x, totalsY, colWidths[i], cellH).fillAndStroke("#f0f0f0", "#ccc");
+              doc.fillColor("black").font("Helvetica").fontSize(8).text("%", x + 3, totalsY + 5, { width: colWidths[i] - 6, align: "center" });
+            }
+            x += colWidths[i];
+          }
+
+          return totalsY + cellH; // next available y
+        }
+
+        // draw header and totals
+        y = drawTableHeader(y);
+
+        // Draw student rows
+        const rowH = 18;
+        students.forEach((std, idx) => {
+          // check page overflow
+          if (y + rowH > doc.page.height - doc.page.margins.bottom - 60) {
+            doc.addPage();
+            drawPageHeader(doc.y);
+            y = drawTableHeader(doc.y + 6);
+          }
+
+          let x = doc.page.margins.left;
+          const totalAttendedForStd = std.total_attended;
+          const percent = denominator > 0 ? (totalAttendedForStd / denominator) * 100 : 0;
+          const totalDisplay = `${totalAttendedForStd}/${denominator}`;
+
+          // SNo
+          doc.rect(x, y, colWidths[0], rowH).stroke();
+          doc.fillColor("black").font("Helvetica").fontSize(8).text(String(globalSno++), x + 3, y + 4, { width: colWidths[0] - 6, align: "center" });
+          x += colWidths[0];
+
+          // Regd.No
+          doc.rect(x, y, colWidths[1], rowH).stroke();
+          doc.text(std.regno, x + 4, y + 4, { width: colWidths[1] - 8, align: "center" });
+          x += colWidths[1];
+
+          // Name (left aligned, may wrap)
+          doc.rect(x, y, colWidths[2], rowH).stroke();
+          doc.text(std.name || "", x + 4, y + 2, { width: colWidths[2] - 8, align: "left", ellipsis: true });
+          x += colWidths[2];
+
+          // Subjects in this chunk: show attended numbers (0 if missing)
+          for (let si = 0; si < subjectsChunk.length; si++) {
+            const subj = subjectsChunk[si];
+            const att = std.attendance[subj] != null ? std.attendance[subj] : 0;
+            doc.rect(x, y, colWidths[3 + si], rowH).stroke();
+            doc.text(String(att), x + 3, y + 4, { width: colWidths[3 + si] - 6, align: "center" });
+            x += colWidths[3 + si];
+          }
+
+          // TOTAL
+          doc.rect(x, y, colWidths[colWidths.length - 2], rowH).stroke();
+          doc.text(totalDisplay, x + 3, y + 4, { width: colWidths[colWidths.length - 2] - 6, align: "center" });
+          x += colWidths[colWidths.length - 2];
+
+          // PERCENT
+          doc.rect(x, y, colWidths[colWidths.length - 1], rowH).stroke();
+          if (percent < 75) doc.fillColor("#d32f2f");
+          else doc.fillColor("black");
+          doc.text(percent.toFixed(2), x + 3, y + 4, { width: colWidths[colWidths.length - 1] - 6, align: "center" });
+          doc.fillColor("black");
+
+          y += rowH;
+        });
+
+        // After finishing chunk, add small gap (footer/signatures will be appended at final chunk)
+        if (chunkIndex === subjectChunks.length - 1) {
+          // Footer signatures at the bottom of the page (or next page if lack space)
+          if (y + 80 > doc.page.height - doc.page.margins.bottom) {
+            doc.addPage();
+            drawPageHeader(doc.y);
+            y = doc.y + 10;
+          }
+          doc.moveTo(doc.page.margins.left, y + 10);
+          doc.fontSize(10).text("Faculty Signature", doc.page.margins.left, y + 12);
+          doc.text("HOD Signature", doc.page.width - doc.page.margins.right - 120, y + 12);
+        }
+      });
+
+      // finalize
+      doc.end();
+
+      writeStream.on("finish", () => {
+        res.download(filePath, fileName, (err) => {
+          if (err) console.error("Download error:", err);
+          // cleanup
+          fs.unlink(filePath, () => {});
         });
       });
 
-      y += cellHeight;
-
-      // Page overflow handling
-      if (y > doc.page.height - doc.page.margins.bottom - 50) {
-        doc.addPage();
-        y = doc.page.margins.top;
-      }
-    });
-
-    // Footer
-    doc.moveDown(2);
-    doc.fillColor("black").fontSize(10);
-    doc.text("Faculty Signature", 60, doc.y);
-    doc.text("HOD Signature", 600, doc.y);
-
-    doc.end();
-
-    // Final download
-    writeStream.on("finish", () => {
-      res.download(filePath, fileName, (err) => {
-        if (err) res.status(500).json({ error: "File download error" });
-        fs.unlink(filePath, () => {});
+      writeStream.on("error", (err) => {
+        console.error("PDF writeStream error:", err);
+        res.status(500).json({ error: "PDF stream error" });
       });
-    });
-
-    writeStream.on("error", (err) => {
-      console.error("❌ PDF Stream error:", err);
-      res.status(500).json({ error: "PDF stream error" });
     });
   });
 });
-
-
-
