@@ -3874,6 +3874,7 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
 
     const allSubjects = [...new Set(results.map(r => r.subject))];
     const studentMap = {};
+
     results.forEach(r => {
       if (!studentMap[r.reg_no]) {
         studentMap[r.reg_no] = {
@@ -3885,12 +3886,16 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
         };
       }
       studentMap[r.reg_no].subjects[r.subject] = `${r.attended}/${r.total_classes}`;
-      studentMap[r.reg_no].total_attended += r.attended;
-      studentMap[r.reg_no].total_classes += r.total_classes;
+      studentMap[r.reg_no].total_attended += parseInt(r.attended);
+      studentMap[r.reg_no].total_classes += parseInt(r.total_classes);
     });
 
+    const PDFDocument = require('pdfkit');
+    const fs = require('fs');
+    const path = require('path');
     const doc = new PDFDocument({ margin: 40, size: "A4", layout: "landscape" });
-    const fileName = `DOC-${Date.now()}.pdf`;
+
+    const fileName = `AttendanceReport-${Date.now()}.pdf`;
     const filePath = path.join(__dirname, "uploads", fileName);
     const writeStream = fs.createWriteStream(filePath);
     doc.pipe(writeStream);
@@ -3902,13 +3907,15 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
     doc.text("STATEMENT OF ATTENDANCE REPORT", { align: "center" });
     doc.text("Vatluru, Eluru - 534007, Eluru Dist. A.P.", { align: "center" });
     doc.text(`From: ${from_date}  To: ${to_date}`, { align: "center" });
-    doc.moveDown();
+    doc.moveDown(0.5);
+    doc.moveTo(40, doc.y).lineTo(800, doc.y).stroke();
+    doc.moveDown(1);
 
     // Table Drawing
     const startX = 50;
-    let y = doc.y + 10;
+    let y = doc.y;
     const cellHeight = 20;
-    const subjectWidth = 70;
+    const subjectWidth = 100;  // widened for long names
 
     const headers = ["Regd.No", ...allSubjects, "TOTAL", "PERCENT"];
 
@@ -3916,10 +3923,13 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
     headers.forEach((header, i) => {
       const x = startX + i * subjectWidth;
       doc.rect(x, y, subjectWidth, cellHeight).fillAndStroke("#007acc", "black");
-      doc.fillColor("white").font("Helvetica-Bold").fontSize(9).text(header, x + 3, y + 5, {
-        width: subjectWidth - 6,
-        align: "center"
-      });
+      doc.fillColor("white").font("Helvetica-Bold").fontSize(9).text(
+        header.length > 20 ? header.substring(0, 20) + '...' : header,
+        x + 3, y + 5, {
+          width: subjectWidth - 6,
+          align: "center"
+        }
+      );
     });
     y += cellHeight;
 
@@ -3935,7 +3945,9 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
       row.forEach((cell, i) => {
         const x = startX + i * subjectWidth;
         const isPercent = i === row.length - 1;
-        if (isPercent && parseFloat(cell) < 75) doc.fillColor("red");
+        const percentVal = parseFloat(row[row.length - 1]);
+
+        if (isPercent && percentVal < 75) doc.fillColor("red");
         else doc.fillColor("black");
 
         doc.rect(x, y, subjectWidth, cellHeight).stroke();
@@ -3957,7 +3969,7 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
     doc.fillColor("black").fontSize(10);
     doc.text("Faculty Signature", 60, doc.y);
     doc.text("HOD Signature", 600, doc.y);
-    
+
     doc.end();
 
     // Final download
@@ -3974,4 +3986,3 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
     });
   });
 });
-
