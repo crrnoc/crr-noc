@@ -3535,27 +3535,65 @@ app.post("/api/allocate", (req, res) => {
     return res.status(400).json({ success: false, error: "Missing required fields" });
   }
 
-  const sql = `
-    INSERT INTO staff_period_allocation (
-      staff_id, year, course, dept_code, section,
-      semester, day, period1, period2, period3,
-      period4, period5, period6, period7
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  // First, check for conflicts on the same day and periods for this staff
+  const checkSql = `
+    SELECT * FROM staff_period_allocation
+    WHERE staff_id = ? AND day = ?
   `;
 
-  const values = [
-    staff_id, year, course, dept_code, section,
-    semester, day, period1, period2, period3,
-    period4, period5, period6, period7
-  ];
-
-  connection.query(sql, values, (err, result) => {
+  connection.query(checkSql, [staff_id, day], (err, rows) => {
     if (err) {
-      console.error("❌ Allocation insert error:", err);
+      console.error("❌ Error checking for conflicts:", err);
       return res.status(500).json({ success: false, error: "Database error" });
     }
 
-    res.json({ success: true, message: "Period allocation saved successfully!" });
+    // Check each period value for conflict
+    const periods = [period1, period2, period3, period4, period5, period6, period7];
+    const existingPeriods = [];
+
+    rows.forEach(row => {
+      for (let i = 1; i <= 7; i++) {
+        if (row[`period${i}`]) existingPeriods.push(`period${i}`);
+      }
+    });
+
+    const conflictPeriods = [];
+    for (let i = 0; i < periods.length; i++) {
+      if (periods[i] && existingPeriods.includes(`period${i + 1}`)) {
+        conflictPeriods.push(`Period ${i + 1}`);
+      }
+    }
+
+    if (conflictPeriods.length > 0) {
+      return res.status(400).json({
+        success: false,
+        error: `Conflict: Staff already allocated for ${conflictPeriods.join(", ")} on ${day}`
+      });
+    }
+
+    // No conflicts – proceed with allocation
+    const insertSql = `
+      INSERT INTO staff_period_allocation (
+        staff_id, year, course, dept_code, section,
+        semester, day, period1, period2, period3,
+        period4, period5, period6, period7
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+
+    const values = [
+      staff_id, year, course, dept_code, section,
+      semester, day, period1, period2, period3,
+      period4, period5, period6, period7
+    ];
+
+    connection.query(insertSql, values, (err, result) => {
+      if (err) {
+        console.error("❌ Allocation insert error:", err);
+        return res.status(500).json({ success: false, error: "Database error" });
+      }
+
+      res.json({ success: true, message: "Period allocation saved successfully!" });
+    });
   });
 });
 
@@ -3988,3 +4026,4 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
     });
   });
 });
+
