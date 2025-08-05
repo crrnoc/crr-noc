@@ -87,11 +87,10 @@
           <label>Day:</label>
           <select id="daySelect" required></select>
         </div>
-        <div class="form-row">
-          <label>Subject / Periods:</label>
-          <select id="periodSelect" multiple required style="height: 120px;"></select>
-          <small style="color: gray;">(Hold Ctrl/Cmd to select multiple)</small>
-        </div>
+       <div class="form-row">
+  <label>Subject / Periods:</label>
+  <div id="periodOptions" style="display: flex; flex-direction: column; gap: 8px;"></div>
+</div>
 
         <div id="allocationInfo"></div>
 
@@ -197,6 +196,9 @@ function updatePeriodOptions() {
   const section = sectionSelect.value;
   const day = daySelect.value;
 
+  const periodOptions = document.getElementById("periodOptions");
+  periodOptions.innerHTML = ""; // Clear existing
+
   if (!course || !year || !semester || !section || !day) return;
 
   const match = staffAllocData.find(row =>
@@ -207,73 +209,42 @@ function updatePeriodOptions() {
     row.day === day
   );
 
-  periodSelect.innerHTML = "";
-  const existingHint = document.getElementById("multiHint");
-  if (existingHint) existingHint.remove();
-
   if (!match) {
-    periodSelect.innerHTML = `<option disabled selected>No periods found</option>`;
+    periodOptions.innerHTML = `<span style="color:red;">⚠️ No periods found for selected filters</span>`;
     return;
   }
 
-  const options = [];
+  let found = false;
+
   for (let i = 1; i <= 7; i++) {
     const subject = match[`period${i}`];
     if (subject) {
-      options.push({ label: `${i}ᵗʰ Period - ${subject}`, value: `period${i}:${subject}` });
+      found = true;
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.id = `period${i}`;
+      checkbox.name = "periodSelection";
+      checkbox.value = `period${i}:${subject}`;
+
+      const label = document.createElement("label");
+      label.setAttribute("for", `period${i}`);
+      label.textContent = `${i}ᵗʰ Period - ${subject}`;
+      label.style.display = "flex";
+      label.style.alignItems = "center";
+      label.style.gap = "8px";
+
+      const wrapper = document.createElement("div");
+      wrapper.appendChild(checkbox);
+      wrapper.appendChild(label);
+
+      periodOptions.appendChild(wrapper);
     }
   }
 
-  periodSelect.innerHTML = options.map(o => `<option value="${o.value}">${o.label}</option>`).join('');
-
-  if (options.length > 1) {
-    periodSelect.setAttribute("multiple", "multiple");
-    periodSelect.style.height = "120px";
-
-    const hint = document.createElement("small");
-    hint.id = "multiHint";
-    hint.style.color = "gray";
-    hint.innerText = "(Hold Ctrl/Cmd to select multiple)";
-    periodSelect.parentElement.appendChild(hint);
-  } else {
-    periodSelect.removeAttribute("multiple");
-    periodSelect.style.height = "auto";
+  if (!found) {
+    periodOptions.innerHTML = `<span style="color:red;">⚠️ No subjects assigned for selected day</span>`;
   }
 }
-
-
-  // 🟨 Show info about selected periods
-  periodSelect.addEventListener('change', () => {
-    const selectedOptions = Array.from(periodSelect.selectedOptions).map(opt => opt.value);
-    const course = courseSelect.value, section = sectionSelect.value, day = daySelect.value;
-
-    allocationInfo.style.display = "none";
-    if (!selectedOptions.length || !course || !section || !day) return;
-
-    const matches = staffAllocData.filter(row => {
-      const hasSubject = selectedOptions.some(sub =>
-        Array.from({ length: 7 }, (_, i) => row[`period${i + 1}`]).includes(sub)
-      );
-      return row.course === course && row.section === section && row.day === day && hasSubject;
-    });
-
-    if (matches.length > 0) {
-      const allPeriods = new Set();
-      matches.forEach(match => {
-        selectedOptions.forEach(subject => {
-          for (let i = 1; i <= 7; i++) {
-            if (match[`period${i}`] === subject) allPeriods.add(i);
-          }
-        });
-      });
-
-      allocationInfo.innerHTML = `<b>Allocated Day:</b> ${day}<br><b>Selected Period(s):</b> ${[...allPeriods].sort((a, b) => a - b).join(", ")}`;
-      allocationInfo.style.display = "block";
-    } else {
-      allocationInfo.innerHTML = `<span style="color:red;">⚠️ No allocation found for selected subjects</span>`;
-      allocationInfo.style.display = "block";
-    }
-  });
 
   // 👨‍🎓 Load students
   function fetchStudents() {
@@ -303,7 +274,8 @@ function updatePeriodOptions() {
     e.preventDefault();
     const present = Array.from(document.querySelectorAll('input[name="attendance"]:checked')).map(cb => cb.value);
     const absent = Array.from(document.querySelectorAll('input[name="attendance"]:not(:checked')).map(cb => cb.value);
-    const selectedPeriods = Array.from(periodSelect.selectedOptions).map(opt => opt.value);
+   const selectedPeriods = Array.from(document.querySelectorAll('input[name="periodSelection"]:checked')).map(cb => cb.value);
+
 
     if (!selectedPeriods.length) {
       Swal.fire("⚠️ Select at least one period before submitting.");
@@ -340,7 +312,7 @@ function updatePeriodOptions() {
   // 📄 Download PDF
   document.getElementById("downloadPdfBtn").addEventListener("click", () => {
     const course = courseSelect.value, section = sectionSelect.value, year = yearSelect.value, semester = semesterSelect.value;
-    const subjects = Array.from(periodSelect.selectedOptions).map(opt => opt.value);
+    const subjects = Array.from(document.querySelectorAll('input[name="periodSelection"]:checked')).map(cb => cb.value);
     if (!course || !section || !year || !semester || !subjects.length) {
       Swal.fire("⚠️ Please select all fields before downloading PDF");
       return;
