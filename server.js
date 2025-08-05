@@ -3894,32 +3894,29 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
     return res.status(400).json({ error: "Missing query parameters." });
   }
 
-  // Query A: student-subject attended + total_classes per student per subject
+  // Student-subject attended counts
   const studentQuery = `
     SELECT 
       a.reg_no,
-      s.name,
       a.subject,
-      COUNT(*) AS total_classes,
       SUM(CASE WHEN a.status = 'Present' THEN 1 ELSE 0 END) AS attended
     FROM daily_attendance a
-    JOIN students s ON a.reg_no = s.reg_no
     WHERE a.year = ? AND a.course = ? AND a.section = ? AND a.semester = ?
       AND a.date BETWEEN ? AND ?
-    GROUP BY a.reg_no, a.subject, s.name
+    GROUP BY a.reg_no, a.subject
     ORDER BY a.reg_no, a.subject
   `;
 
-  // Query B: subject-level total classes (denominator per subject)
+  // Subject-level total classes (denominator per subject)
   const subjectTotalsQuery = `
     SELECT subject, COUNT(*) AS total_classes
     FROM daily_attendance
     WHERE year = ? AND course = ? AND section = ? AND semester = ?
       AND date BETWEEN ? AND ?
     GROUP BY subject
+    ORDER BY subject
   `;
 
-  // Run both queries (nested callbacks to keep simple)
   connection.query(studentQuery, [year, course, section, semester, from_date, to_date], (err, studentResults) => {
     if (err) {
       console.error("DB error (studentQuery):", err);
@@ -3935,7 +3932,7 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
         return res.status(500).json({ error: "DB error" });
       }
       if (!subjectTotals.length) {
-        return res.status(404).json({ error: "No subject totals found (unexpected)." });
+        return res.status(404).json({ error: "No subject totals found." });
       }
 
       // Map subject -> total_classes
@@ -3944,214 +3941,187 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
         subjectTotalMap[s.subject] = parseInt(s.total_classes, 10);
       });
 
-      // Unique subjects in a stable order (use subjectTotals order)
+      // Keep subject order from subjectTotals
       const allSubjects = subjectTotals.map(s => s.subject);
 
-      // Build student map with numeric counts
-      const studentMap = {}; // reg_no -> { regno, name, attendance: {subject: attended}, total_attended }
+      // Build student map
+      const studentMap = {}; // reg_no -> { regno, attendance: {sub: attended}, total_attended }
       studentResults.forEach(r => {
         const reg = r.reg_no;
-        if (!studentMap[reg]) {
-          studentMap[reg] = { regno: reg, name: r.name, attendance: {}, total_attended: 0 };
-        }
+        if (!studentMap[reg]) studentMap[reg] = { regno: reg, attendance: {}, total_attended: 0 };
         const attended = parseInt(r.attended || 0, 10);
         studentMap[reg].attendance[r.subject] = attended;
         studentMap[reg].total_attended += attended;
       });
 
-      // Denominator: sum of subject total classes (same for all students)
-      const denominator = allSubjects.reduce((acc, sub) => acc + (subjectTotalMap[sub] || 0), 0);
+      // Grand denominator for TOTAL column: sum of subject totals
+      const grandDenominator = allSubjects.reduce((acc, s) => acc + (subjectTotalMap[s] || 0), 0);
 
-      // PDF Setup
+      // PDF setup
       const doc = new PDFDocument({ margin: 36, size: "A4", layout: "landscape" });
       const fileName = `AttendanceReport-${Date.now()}.pdf`;
       const filePath = path.join(__dirname, "uploads", fileName);
       const writeStream = fs.createWriteStream(filePath);
       doc.pipe(writeStream);
 
-      // Helper: draw page header + table header + subject totals row
-      function drawPageHeader(pageTopY) {
-        // College header
-        const logoPath = path.join(__dirname, "public", "crrengglogo.png");
-        try { doc.image(logoPath, 40, pageTopY - 8, { width: 50 }); } catch (e) { /* ignore missing image */ }
+      // Header
+      const logoPath = path.join(__dirname, "public", "crrengglogo.png");
+      try { doc.image(logoPath, 36, 20, { width: 50 }); } catch (e) { /* ignore missing image */ }
+      doc.fontSize(16).font("Helvetica-Bold").text("SIR C.R.REDDY COLLEGE OF ENGINEERING (Autonomous)", { align: "center" });
+      doc.fontSize(11).font("Helvetica").text(`B.Tech Year - ${year}   Sem - ${semester}   Branch - ${course}   Section - ${section}`, { align: "center" });
+      doc.moveDown(0.15);
+      doc.fontSize(12).font("Helvetica-Bold").text("STATEMENT OF ATTENDANCE REPORT", { align: "center" });
+      doc.fontSize(9).font("Helvetica").text("Vatluru, Eluru - 534007, Eluru Dist. A.P.", { align: "center" });
+      doc.fontSize(9).font("Helvetica").text(`From: ${from_date}  To: ${to_date}`, { align: "center" });
+      doc.moveDown(0.2);
+      doc.moveTo(doc.page.margins.left, doc.y).lineTo(doc.page.width - doc.page.margins.right, doc.y).stroke();
+      doc.moveDown(0.5);
 
-        doc.fontSize(16).font("Helvetica-Bold").text("SIR C.R.REDDY COLLEGE OF ENGINEERING (Autonomous)", 0, pageTopY, { align: "center" });
-        doc.fontSize(11).font("Helvetica").text(`B.Tech Year - ${year}   Sem - ${semester}   Branch - ${course}   Section - ${section}`, { align: "center" });
-        doc.moveDown(0.2);
-        doc.fontSize(12).font("Helvetica-Bold").text("STATEMENT OF ATTENDANCE REPORT", { align: "center" });
-        doc.fontSize(9).font("Helvetica").text("Vatluru, Eluru - 534007, Eluru Dist. A.P.", { align: "center" });
-        doc.fontSize(9).font("Helvetica").text(`From: ${from_date}  To: ${to_date}`, { align: "center" });
-        doc.moveDown(0.2);
-        const dividerY = doc.y;
-        doc.moveTo(doc.page.margins.left, dividerY).lineTo(doc.page.width - doc.page.margins.right, dividerY).stroke();
-        doc.moveDown(0.5);
-      }
-
-      // Auto column width / chunking logic
+      // Layout math: determine how many subject columns fit; chunk if required
       const pageWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
-      const fixedLeftWidth = 40 + 90 + 180; // SNo(40) + Regd.No(90) + Name(180) -> tune as needed
-      const availableForSubjects = pageWidth - fixedLeftWidth - (70 + 60); // leave space for TOTAL (70) and PERCENT (60)
-      const minSubCol = 50;
-      const maxSubColsFit = Math.floor(availableForSubjects / minSubCol);
-      // chunk size:
-      const subjectsPerPage = Math.max(1, Math.min(allSubjects.length, maxSubColsFit));
-
-      // We'll render in chunks if too many subjects
+      const snoW = 40;
+      const regW = 110;
+      const totW = 80;
+      const pctW = 60;
+      const minSubjectCol = 60;
+      const spaceForSubjects = pageWidth - (snoW + regW + totW + pctW + 10); // 10 padding
+      const maxSubjectsFit = Math.max(1, Math.floor(spaceForSubjects / minSubjectCol));
+      const subjectsPerChunk = Math.min(allSubjects.length, maxSubjectsFit);
       const subjectChunks = [];
-      for (let i = 0; i < allSubjects.length; i += subjectsPerPage) {
-        subjectChunks.push(allSubjects.slice(i, i + subjectsPerPage));
+      for (let i = 0; i < allSubjects.length; i += subjectsPerChunk) {
+        subjectChunks.push(allSubjects.slice(i, i + subjectsPerChunk));
       }
 
-      // Column widths (for SNo, Regd, Name, each subject, TOTAL, PERCENT)
-      function getColWidths(subjectsInChunk) {
-        const snoW = 40;
-        const regW = 90;
-        const nameW = 180;
-        const totW = 70;
-        const pctW = 60;
-        const spaceLeft = pageWidth - (snoW + regW + nameW + totW + pctW);
-        const subW = Math.max(minSubCol, Math.floor(spaceLeft / subjectsInChunk.length));
-        const arr = [snoW, regW, nameW, ...Array(subjectsInChunk.length).fill(subW), totW, pctW];
-        return arr;
-      }
-
-      // Draw table for each chunk (each chunk will produce one or more pages)
       const students = Object.values(studentMap);
       let globalSno = 1;
 
-      subjectChunks.forEach((subjectsChunk, chunkIndex) => {
-        // Start new page for every chunk except first
-        if (chunkIndex > 0) doc.addPage();
+      // helper to draw header + subject totals for a given chunk
+      function drawHeaderAndSubjectTotals(subjectsChunk) {
+        // header row: SNo, Regd.No, each subject, TOTAL, PERCENT
+        const colWidths = [];
+        colWidths.push(snoW, regW);
+        const subjectAvailable = pageWidth - (snoW + regW + totW + pctW);
+        const subColW = Math.floor(subjectAvailable / subjectsChunk.length);
+        for (let i = 0; i < subjectsChunk.length; i++) colWidths.push(subColW);
+        colWidths.push(totW, pctW);
 
-        // top header for this page
-        drawPageHeader(doc.y);
-        let y = doc.y + 6;
-
-        const colWidths = getColWidths(subjectsChunk);
-        const cols = ["SNo", "Regd.No", "Name", ...subjectsChunk, "TOTAL", "PERCENT"];
-
-        // helper to draw header row and subject totals row
-        function drawTableHeader(headerY) {
-          // Header background
-          let x = doc.page.margins.left;
-          const cellH = 20;
-
-          // Header row (subject names)
-          for (let i = 0; i < cols.length; i++) {
-            doc.rect(x, headerY, colWidths[i], cellH).fillAndStroke("#007acc", "#000");
-            doc.fillColor("white").font("Helvetica-Bold").fontSize(8);
-
-            // allow subject to wrap into 2 lines if long
-            const headerText = cols[i];
-            const textOptions = { width: colWidths[i] - 6, align: "center" };
-            // For SNo/Regd/Name show left/center appropriately
-            doc.text(headerText, x + 3, headerY + 4, textOptions);
-            x += colWidths[i];
-          }
-
-          // Subject totals row (light grey background) only under subject columns; for first three cols show blank
-          const totalsY = headerY + cellH;
-          x = doc.page.margins.left;
-          for (let i = 0; i < cols.length; i++) {
-            if (i < 3) {
-              doc.rect(x, totalsY, colWidths[i], cellH).fillAndStroke("#f0f0f0", "#ccc");
-              doc.fillColor("black").font("Helvetica").fontSize(8).text("", x + 3, totalsY + 5, { width: colWidths[i] - 6, align: "center" });
-            } else if (i >= 3 && i < 3 + subjectsChunk.length) {
-              const subj = subjectsChunk[i - 3];
-              const tot = subjectTotalMap[subj] || 0;
-              doc.rect(x, totalsY, colWidths[i], cellH).fillAndStroke("#f0f0f0", "#ccc");
-              doc.fillColor("black").font("Helvetica").fontSize(8).text(String(tot), x + 3, totalsY + 5, { width: colWidths[i] - 6, align: "center" });
-            } else if (cols[i] === "TOTAL") {
-              doc.rect(x, totalsY, colWidths[i], cellH).fillAndStroke("#f0f0f0", "#ccc");
-              doc.fillColor("black").font("Helvetica").fontSize(8).text(String(denominator), x + 3, totalsY + 5, { width: colWidths[i] - 6, align: "center" });
-            } else { // PERCENT
-              doc.rect(x, totalsY, colWidths[i], cellH).fillAndStroke("#f0f0f0", "#ccc");
-              doc.fillColor("black").font("Helvetica").fontSize(8).text("%", x + 3, totalsY + 5, { width: colWidths[i] - 6, align: "center" });
-            }
-            x += colWidths[i];
-          }
-
-          return totalsY + cellH; // next available y
+        // store x positions
+        const xs = [];
+        let x = doc.page.margins.left;
+        for (let w of colWidths) {
+          xs.push(x);
+          x += w;
         }
 
-        // draw header and totals
-        y = drawTableHeader(y);
+        const headerY = doc.y;
+        const headerH = 20;
+        // draw header boxes and text
+        doc.fontSize(8).font("Helvetica-Bold");
+        const headers = ["SNo", "Regd.No", ...subjectsChunk, "TOTAL", "PERCENTAGE"];
+        for (let i = 0; i < headers.length; i++) {
+          doc.rect(xs[i], headerY, colWidths[i], headerH).fillAndStroke("#007acc", "#000");
+          doc.fillColor("white").text(headers[i].length > 24 ? headers[i].slice(0, 21) + "..." : headers[i], xs[i] + 2, headerY + 5, { width: colWidths[i] - 4, align: "center" });
+        }
 
-        // Draw student rows
+        // subject totals row (light gray)
+        const totalsY = headerY + headerH;
+        doc.fontSize(8).font("Helvetica");
+        for (let i = 0; i < headers.length; i++) {
+          doc.rect(xs[i], totalsY, colWidths[i], headerH).fillAndStroke("#f3f3f3", "#ccc");
+          doc.fillColor("black");
+          if (i >= 2 && i < 2 + subjectsChunk.length) {
+            const subj = subjectsChunk[i - 2];
+            const tot = subjectTotalMap[subj] || 0;
+            doc.text(String(tot), xs[i] + 2, totalsY + 5, { width: colWidths[i] - 4, align: "center" });
+          } else if (headers[i] === "TOTAL") {
+            // grand denominator
+            doc.text(String(grandDenominator), xs[i] + 2, totalsY + 5, { width: colWidths[i] - 4, align: "center" });
+          } else if (headers[i] === "PERCENT") {
+            doc.text("%", xs[i] + 2, totalsY + 5, { width: colWidths[i] - 4, align: "center" });
+          }
+        }
+
+        // move cursor below header+totals
+        doc.y = totalsY + headerH + 4;
+        return { colWidths, xs };
+      }
+
+      // render each chunk
+      subjectChunks.forEach((subjectsChunk, chunkIndex) => {
+        if (chunkIndex > 0) {
+          doc.addPage();
+          // repeat top header
+          try { doc.image(logoPath, 36, 20, { width: 50 }); } catch (e) {}
+          doc.fontSize(12).font("Helvetica-Bold").text("STATEMENT OF ATTENDANCE REPORT", { align: "center" });
+          doc.moveDown(0.2);
+        }
+
+        const layout = drawHeaderAndSubjectTotals(subjectsChunk);
+        const colWidths = layout.colWidths;
+        const xs = layout.xs;
         const rowH = 18;
-        students.forEach((std, idx) => {
-          // check page overflow
-          if (y + rowH > doc.page.height - doc.page.margins.bottom - 60) {
+
+        // render students
+        for (let s = 0; s < students.length; s++) {
+          const std = students[s];
+
+          // page overflow check
+          if (doc.y + rowH > doc.page.height - doc.page.margins.bottom - 50) {
             doc.addPage();
-            drawPageHeader(doc.y);
-            y = drawTableHeader(doc.y + 6);
+            drawHeaderAndSubjectTotals(subjectsChunk);
           }
 
-          let x = doc.page.margins.left;
-          const totalAttendedForStd = std.total_attended;
-          const percent = denominator > 0 ? (totalAttendedForStd / denominator) * 100 : 0;
-          const totalDisplay = `${totalAttendedForStd}/${denominator}`;
-
           // SNo
-          doc.rect(x, y, colWidths[0], rowH).stroke();
-          doc.fillColor("black").font("Helvetica").fontSize(8).text(String(globalSno++), x + 3, y + 4, { width: colWidths[0] - 6, align: "center" });
-          x += colWidths[0];
+          doc.rect(xs[0], doc.y, colWidths[0], rowH).stroke();
+          doc.fillColor("black").font("Helvetica").fontSize(8).text(String(globalSno++), xs[0] + 2, doc.y + 4, { width: colWidths[0] - 4, align: "center" });
 
           // Regd.No
-          doc.rect(x, y, colWidths[1], rowH).stroke();
-          doc.text(std.regno, x + 4, y + 4, { width: colWidths[1] - 8, align: "center" });
-          x += colWidths[1];
+          doc.rect(xs[1], doc.y, colWidths[1], rowH).stroke();
+          doc.text(std.regno, xs[1] + 2, doc.y + 4, { width: colWidths[1] - 4, align: "center" });
 
-          // Name (left aligned, may wrap)
-          doc.rect(x, y, colWidths[2], rowH).stroke();
-          doc.text(std.name || "", x + 4, y + 2, { width: colWidths[2] - 8, align: "left", ellipsis: true });
-          x += colWidths[2];
-
-          // Subjects in this chunk: show attended numbers (0 if missing)
+          // subject cells
           for (let si = 0; si < subjectsChunk.length; si++) {
             const subj = subjectsChunk[si];
             const att = std.attendance[subj] != null ? std.attendance[subj] : 0;
-            doc.rect(x, y, colWidths[3 + si], rowH).stroke();
-            doc.text(String(att), x + 3, y + 4, { width: colWidths[3 + si] - 6, align: "center" });
-            x += colWidths[3 + si];
+            doc.rect(xs[2 + si], doc.y, colWidths[2 + si], rowH).stroke();
+            doc.text(String(att), xs[2 + si] + 2, doc.y + 4, { width: colWidths[2 + si] - 4, align: "center" });
           }
 
-          // TOTAL
-          doc.rect(x, y, colWidths[colWidths.length - 2], rowH).stroke();
-          doc.text(totalDisplay, x + 3, y + 4, { width: colWidths[colWidths.length - 2] - 6, align: "center" });
-          x += colWidths[colWidths.length - 2];
+          // TOTAL (display attended / grandDenominator)
+          doc.rect(xs[xs.length - 2], doc.y, colWidths[colWidths.length - 2], rowH).stroke();
+          const totalAtt = std.total_attended || 0;
+          doc.text(`${totalAtt}/${grandDenominator}`, xs[xs.length - 2] + 2, doc.y + 4, { width: colWidths[colWidths.length - 2] - 4, align: "center" });
 
           // PERCENT
-          doc.rect(x, y, colWidths[colWidths.length - 1], rowH).stroke();
+          doc.rect(xs[xs.length - 1], doc.y, colWidths[colWidths.length - 1], rowH).stroke();
+          const percent = grandDenominator > 0 ? (totalAtt / grandDenominator) * 100 : 0;
           if (percent < 75) doc.fillColor("#d32f2f");
           else doc.fillColor("black");
-          doc.text(percent.toFixed(2), x + 3, y + 4, { width: colWidths[colWidths.length - 1] - 6, align: "center" });
+          doc.text(percent.toFixed(2), xs[xs.length - 1] + 2, doc.y + 4, { width: colWidths[colWidths.length - 1] - 4, align: "center" });
           doc.fillColor("black");
 
-          y += rowH;
-        });
+          doc.y += rowH;
+        }
 
-        // After finishing chunk, add small gap (footer/signatures will be appended at final chunk)
+        // draw signatures only after last chunk
         if (chunkIndex === subjectChunks.length - 1) {
-          // Footer signatures at the bottom of the page (or next page if lack space)
-          if (y + 80 > doc.page.height - doc.page.margins.bottom) {
+          if (doc.y + 80 > doc.page.height - doc.page.margins.bottom) {
             doc.addPage();
-            drawPageHeader(doc.y);
-            y = doc.y + 10;
           }
-          doc.moveTo(doc.page.margins.left, y + 10);
-          doc.fontSize(10).text("Faculty Signature", doc.page.margins.left, y + 12);
-          doc.text("HOD Signature", doc.page.width - doc.page.margins.right - 120, y + 12);
+          doc.moveDown(2);
+          doc.text("Faculty Signature", doc.page.margins.left, doc.y);
+          doc.text("HOD Signature", doc.page.width - doc.page.margins.right - 140, doc.y);
         }
       });
 
-      // finalize
+      // finalize PDF
       doc.end();
 
+      // stream handling
       writeStream.on("finish", () => {
         res.download(filePath, fileName, (err) => {
-          if (err) console.error("Download error:", err);
-          // cleanup
+          if (err) console.error("Download err:", err);
+          // cleanup file after download attempt
           fs.unlink(filePath, () => {});
         });
       });
