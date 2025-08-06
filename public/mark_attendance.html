@@ -42,6 +42,10 @@
       .content {margin-left:0; margin-top:100px; padding:20px;}
       .mobile-toggle {display:block;}
     }
+    button[type="submit"]:hover {
+  background-color: #218838;
+}
+
   </style>
 </head>
 <body>
@@ -113,7 +117,7 @@
         </table>
 
         <div style="margin-top:20px;">
-          <button type="submit">✅ Submit Attendance</button>
+         <button type="submit" style="background-color:#28a745; padding:12px 20px; font-size:16px; border-radius:8px; font-weight:bold; color:white; border:none; cursor:pointer; transition:0.3s all;">✅ Submit Attendance</button>
         </div>
       </form>
       <div style="margin-top:20px;">
@@ -168,7 +172,7 @@
         yearSelect.innerHTML = [...new Set(data.map(r => r.year))].map(y => `<option value="${y}">${y}</option>`).join('');
         semesterSelect.innerHTML = [...new Set(data.map(r => r.semester))].map(s => `<option value="${s}">${s}</option>`).join('');
         sectionSelect.innerHTML = [...new Set(data.map(r => r.section))].map(s => `<option value="${s}">${s}</option>`).join('');
-        daySelect.innerHTML = [...new Set(data.map(r => r.day))].map(d => `<option value="${d}">${d}</option>`).join('');
+        daySelect.innerHTML = `<option value="">Select</option>` + [...new Set(data.map(r => r.day))].map(d => `<option value="${d}">${d}</option>`).join('');
 
         [courseSelect, yearSelect, semesterSelect, sectionSelect, daySelect].forEach(el => {
           el.addEventListener("change", updatePeriodOptions);
