@@ -1,0 +1,181 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Edit Attendance</title>
+  <style>
+    body { font-family: system-ui, sans-serif; padding:20px; }
+    select,input,button { padding:8px; margin:6px 0; }
+    table { border-collapse: collapse; width:100%; margin-top:12px; }
+    th,td { border:1px solid #ccc; padding:6px; text-align:center; }
+    tr.absent { background:#fff6f6; }
+    button.mark { background: #28a745; color:white; border:none; padding:6px 10px; cursor:pointer; }
+    button.mark[disabled] { background:#bbb; cursor:default; }
+  </style>
+</head>
+<body>
+  <h2>Edit Attendance</h2>
+
+  <label>Dept Code: <input id="dept" value="CSE" /></label>
+  <label>Year:
+    <select id="year">
+      <option value="">Select</option>
+      <option>1</option><option>2</option><option>3</option><option>4</option>
+    </select>
+  </label>
+
+  <label>Course:
+    <select id="course"><option value="">Select dept+year</option></select>
+  </label>
+
+  <label>Section:
+    <select id="section"><option>Select course</option></select>
+  </label>
+
+  <label>Date: <input type="date" id="date" /></label>
+
+  <button id="getAbsents">Get Absents</button>
+
+  <div id="msg" style="color:red;margin-top:8px"></div>
+
+  <table id="absentTable" style="display:none">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Regd.No</th>
+        <th>Name</th>
+        <th>Subject</th>
+        <th>Date</th>
+        <th>Status</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+<script>
+const deptInput = document.getElementById('dept');
+const yearSelect = document.getElementById('year');
+const courseSelect = document.getElementById('course');
+const sectionSelect = document.getElementById('section');
+const dateInput = document.getElementById('date');
+const getBtn = document.getElementById('getAbsents');
+const tbl = document.getElementById('absentTable');
+const tbody = tbl.querySelector('tbody');
+const msg = document.getElementById('msg');
+
+// load courses/sections when dept/year change
+async function fetchCoursesSections(){
+  const dept = deptInput.value.trim();
+  const year = yearSelect.value;
+  if(!dept || !year) return;
+  try {
+    const res = await fetch(`/api/fetch-courses-sections?dept_code=${encodeURIComponent(dept)}&year=${encodeURIComponent(year)}`);
+    if(!res.ok) throw new Error(await res.text());
+    const rows = await res.json();
+    // rows: array of {course, section}. build options
+    const courses = [...new Set(rows.map(r=>r.course))];
+    courseSelect.innerHTML = '<option value="">Select course</option>' + courses.map(c=>`<option>${c}</option>`).join('');
+    // If you want to auto-populate sections of first course:
+    sectionSelect.innerHTML = '<option value="">Select section</option>';
+    if(rows.length){
+      const firstCourse = courses[0];
+      const secs = rows.filter(r=>r.course===firstCourse).map(r=>r.section);
+      sectionSelect.innerHTML = '<option value="">Select section</option>' + [...new Set(secs)].map(s=>`<option>${s}</option>`).join('');
+    }
+  } catch(e){
+    msg.textContent = 'Error fetching courses/sections';
+    console.error(e);
+  }
+}
+deptInput.addEventListener('change', fetchCoursesSections);
+yearSelect.addEventListener('change', fetchCoursesSections);
+courseSelect.addEventListener('change', async ()=>{
+  // populate sections for selected course
+  const dept = deptInput.value.trim(), year = yearSelect.value, course = courseSelect.value;
+  if(!dept||!year||!course) return;
+  try{
+    const res = await fetch(`/api/fetch-courses-sections?dept_code=${encodeURIComponent(dept)}&year=${encodeURIComponent(year)}`);
+    const rows = await res.json();
+    const secs = rows.filter(r=>r.course===course).map(r=>r.section);
+    sectionSelect.innerHTML = '<option value="">Select section</option>' + [...new Set(secs)].map(s=>`<option>${s}</option>`).join('');
+  }catch(e){ console.error(e) }
+});
+
+getBtn.addEventListener('click', async ()=>{
+  msg.textContent = '';
+  tbody.innerHTML = '';
+  const year = yearSelect.value;
+  const course = courseSelect.value;
+  const section = sectionSelect.value;
+  const date = dateInput.value;
+  if(!year||!course||!section||!date){ msg.textContent = 'Fill all fields'; return; }
+
+  getBtn.disabled = true;
+  try{
+    const q = `/api/get-absents?year=${encodeURIComponent(year)}&course=${encodeURIComponent(course)}&section=${encodeURIComponent(section)}&date=${encodeURIComponent(date)}`;
+    const res = await fetch(q);
+    if(!res.ok) throw new Error(await res.text());
+    const rows = await res.json();
+    if(!rows.length){ msg.textContent = 'No absents found'; tbl.style.display='none'; getBtn.disabled=false; return; }
+
+    rows.forEach((r, i) => {
+      const tr = document.createElement('tr');
+      tr.className = 'absent';
+      tr.innerHTML = `
+        <td>${i+1}</td>
+        <td>${r.reg_no}</td>
+        <td>${r.name || '-'}</td>
+        <td>${r.subject}</td>
+        <td>${r.date}</td>
+        <td class="status">${r.status}</td>
+        <td><button class="mark" data-id="${r.id}">Mark Present</button></td>
+      `;
+      tbody.appendChild(tr);
+    });
+    tbl.style.display='table';
+  }catch(e){
+    msg.textContent = 'Error fetching absents';
+    console.error(e);
+  } finally {
+    getBtn.disabled = false;
+  }
+});
+
+// delegate click on mark-present
+tbody.addEventListener('click', async (ev)=>{
+  const btn = ev.target.closest('button.mark');
+  if(!btn) return;
+  const id = btn.dataset.id;
+  if(!id) return;
+  btn.disabled = true;
+  btn.textContent = 'Updating...';
+  try{
+    const res = await fetch('/api/mark-present', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json' },
+      body: JSON.stringify({ attendance_id: id })
+    });
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.error || 'Server error');
+    if(data.updated){
+      // update the row
+      const tr = btn.closest('tr');
+      tr.querySelector('.status').textContent = 'Present';
+      btn.disabled = true;
+      btn.textContent = 'Present';
+      tr.classList.remove('absent');
+      // optionally remove the row or visually mark it
+    } else {
+      btn.textContent = 'Already Present';
+    }
+  }catch(e){
+    console.error(e);
+    btn.disabled = false;
+    btn.textContent = 'Mark Present';
+    alert('Failed to update');
+  }
+});
+</script>
+</body>
+</html>
