@@ -4112,3 +4112,69 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
     });
   });
 });
+
+// 1) Get courses & sections for dept + year
+app.get("/api/fetch-courses-sections", (req, res) => {
+  const { dept_code, year } = req.query;
+  if (!dept_code || !year) return res.status(400).json({ error: "Missing" });
+
+  const query = `
+    SELECT DISTINCT course, section
+    FROM students
+    WHERE dept_code = ? AND year = ?
+    ORDER BY course, section
+  `;
+  connection.query(query, [dept_code, year], (err, rows) => {
+    if (err) return res.status(500).json({ error: "DB error" });
+    // return as array of { course, section }
+    res.json(rows);
+  });
+});
+// 2) Get absent students for a specific course/section/date
+app.get("/api/get-absents", (req, res) => {
+  const { year, course, section, date, semester } = req.query;
+  if (!year || !course || !section || !date) return res.status(400).json({ error: "Missing" });
+
+  const q = `
+    SELECT a.id, a.reg_no, s.name, a.status, a.subject, a.date, a.semester
+    FROM daily_attendance a
+    JOIN students s ON a.reg_no = s.reg_no
+    WHERE a.year = ? AND a.course = ? AND a.section = ? AND a.date = ?
+      AND a.status = 'Absent'
+    ORDER BY s.reg_no
+  `;
+  connection.query(q, [year, course, section, date], (err, rows) => {
+    if (err) return res.status(500).json({ error: "DB error" });
+    res.json(rows); // each row has attendance id (a.id) — important for updates
+  });
+});
+
+// 3) Mark a student present (idempotent, atomic)
+app.post("/api/mark-present", (req, res) => {
+  const { attendance_id } = req.body;
+  if (!attendance_id) return res.status(400).json({ error: "Missing attendance_id" });
+
+  // make it safe: check current status, update only if Absent
+  connection.beginTransaction(err => {
+    if (err) return res.status(500).json({ error: "DB error" });
+
+    const checkQ = `SELECT status FROM daily_attendance WHERE id = ? FOR UPDATE`;
+    connection.query(checkQ, [attendance_id], (err, rows) => {
+      if (err) return connection.rollback(() => res.status(500).json({ error: "DB error" }));
+      if (!rows.length) return connection.rollback(() => res.status(404).json({ error: "Not found" }));
+      if (rows[0].status === "Present") {
+        return connection.rollback(() => res.json({ ok: true, updated: false, status: "already present" }));
+      }
+
+      const updQ = `UPDATE daily_attendance SET status = 'Present' WHERE id = ?`;
+      connection.query(updQ, [attendance_id], (err, result) => {
+        if (err) return connection.rollback(() => res.status(500).json({ error: "DB error" }));
+        connection.commit(err => {
+          if (err) return connection.rollback(() => res.status(500).json({ error: "DB error" }));
+          res.json({ ok: true, updated: true });
+        });
+      });
+    });
+  });
+});
+
