@@ -133,8 +133,8 @@
   const daySelect = document.getElementById("daySelect");
   const studentsTable = document.querySelector("#studentsTable tbody");
   const form = document.getElementById("attendanceForm");
-  const allocationInfo = document.getElementById("allocationInfo");
   let staffAllocData = [];
+  let isSubmitting = false;
 
   window.onload = () => {
     const userId = localStorage.getItem("userId");
@@ -142,11 +142,8 @@
 
     if (!userId) {
       document.getElementById("userId").textContent = "Not Logged In";
-      Swal.fire({
-        icon: 'warning',
-        title: 'Please Login',
-        text: 'You are not logged in as staff.'
-      }).then(() => window.location.href = "index.html");
+      Swal.fire({ icon: 'warning', title: 'Please Login', text: 'You are not logged in as staff.' })
+        .then(() => window.location.href = "index.html");
       return;
     }
 
@@ -167,7 +164,6 @@
         }
 
         staffAllocData = data;
-
         courseSelect.innerHTML = [...new Set(data.map(r => r.course))].map(c => `<option value="${c}">${c}</option>`).join('');
         yearSelect.innerHTML = [...new Set(data.map(r => r.year))].map(y => `<option value="${y}">${y}</option>`).join('');
         semesterSelect.innerHTML = [...new Set(data.map(r => r.semester))].map(s => `<option value="${s}">${s}</option>`).join('');
@@ -182,144 +178,151 @@
         console.error("❌ Failed to fetch staff allocation:", err);
         Swal.fire("Error fetching data", err.message, "error");
       });
-
-    form.onsubmit = async (e) => {
-      e.preventDefault();
-
-      const present = Array.from(document.querySelectorAll('input[name="attendance"]:checked')).map(cb => cb.value);
-      const absent = Array.from(document.querySelectorAll('input[name="attendance"]:not(:checked)')).map(cb => cb.value);
-      const selectedPeriods = Array.from(document.querySelectorAll('input[name="periodSelection"]:checked')).map(cb => cb.value);
-      const date = document.getElementById("attendanceDate").value;
-
-      if (!selectedPeriods.length) {
-        Swal.fire("⚠️ Select at least one period before submitting.");
-        return;
-      }
-
-      if (!date) {
-        Swal.fire("⚠️ Please select a date for attendance.");
-        return;
-      }
-
-      const attendanceEntries = [];
-
-      selectedPeriods.forEach(period => {
-        const [, subject] = period.split(":");
-
-        present.forEach(reg_no => {
-          attendanceEntries.push({
-            reg_no,
-            date,
-            staff_id,
-            course: courseSelect.value,
-            year: yearSelect.value,
-            semester: semesterSelect.value,
-            section: sectionSelect.value,
-            subject,
-            status: "Present"
-          });
-        });
-
-        absent.forEach(reg_no => {
-          attendanceEntries.push({
-            reg_no,
-            date,
-            staff_id,
-            course: courseSelect.value,
-            year: yearSelect.value,
-            semester: semesterSelect.value,
-            section: sectionSelect.value,
-            subject,
-            status: "Absent"
-          });
-        });
-      });
-
-      const res = await fetch('/api/submit-attendance', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ entries: attendanceEntries })
-      });
-
-      const result = await res.json();
-      if (res.ok) {
-        Swal.fire("✅ Attendance Marked");
-        studentsTable.innerHTML = "";
-      } else {
-        Swal.fire("❌ Failed", result.error || "Unknown error", "error");
-      }
-    };
   };
 
-function updatePeriodOptions() {
-  const course = courseSelect.value;
-  const year = parseInt(yearSelect.value);
-  const semester = semesterSelect.value;
-  const section = sectionSelect.value;
-  const day = daySelect.value;
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+    if (isSubmitting) return;
+    isSubmitting = true;
 
-  const periodOptions = document.getElementById("periodOptions");
-  periodOptions.innerHTML = ""; // Clear existing
+    const present = Array.from(document.querySelectorAll('input[name="attendance"]:checked')).map(cb => cb.value);
+    const absent = Array.from(document.querySelectorAll('input[name="attendance"]:not(:checked)')).map(cb => cb.value);
+    const selectedPeriods = Array.from(document.querySelectorAll('input[name="periodSelection"]:checked')).map(cb => cb.value);
+    const date = document.getElementById("attendanceDate").value;
 
-  if (!course || !year || !semester || !section || !day) return;
+    if (!selectedPeriods.length) {
+      Swal.fire("⚠️ Select at least one period before submitting.");
+      isSubmitting = false;
+      return;
+    }
 
-  // 🔍 Find ALL matches, not just the first one
-  const matches = staffAllocData.filter(row =>
-    row.course === course &&
-    parseInt(row.year) === year &&
-    row.semester.toString() === semester.toString() &&
-    row.section === section &&
-    row.day === day
-  );
+    if (!date) {
+      Swal.fire("⚠️ Please select a date for attendance.");
+      isSubmitting = false;
+      return;
+    }
 
-  if (!matches.length) {
-    periodOptions.innerHTML = `<span style="color:red;">⚠️ No periods found for selected filters</span>`;
-    return;
-  }
+    if (absent.length > 0) {
+      const absentList = absent.join(", ");
+      const confirmResult = await Swal.fire({
+        title: "Confirm Submission",
+        html: `<strong>Absent Count:</strong> ${absent.length}<br/><strong>Absent Reg Nos:</strong><br>${absentList}`,
+        icon: "info",
+        showCancelButton: true,
+        confirmButtonText: "✅ Submit Attendance",
+        cancelButtonText: "🔙 Go Back"
+      });
 
-  const addedPeriods = new Set();
-  let found = false;
-
-  matches.forEach(match => {
-    for (let i = 1; i <= 7; i++) {
-      const subject = match[`period${i}`];
-      if (subject && !addedPeriods.has(`period${i}:${subject}`)) {
-        found = true;
-        addedPeriods.add(`period${i}:${subject}`);
-
-        const checkbox = document.createElement("input");
-        checkbox.type = "checkbox";
-        checkbox.id = `period${i}`;
-        checkbox.name = "periodSelection";
-        checkbox.value = `period${i}:${subject}`;
-
-        const label = document.createElement("label");
-        label.setAttribute("for", `period${i}`);
-        label.textContent = `${i}ᵗʰ Period - ${subject}`;
-        label.style.display = "flex";
-        label.style.alignItems = "center";
-        label.style.gap = "8px";
-
-        const wrapper = document.createElement("div");
-        wrapper.appendChild(checkbox);
-        wrapper.appendChild(label);
-
-        periodOptions.appendChild(wrapper);
+      if (!confirmResult.isConfirmed) {
+        isSubmitting = false;
+        return;
       }
     }
-  });
 
-  if (!found) {
-    periodOptions.innerHTML = `<span style="color:red;">⚠️ No subjects assigned for selected day</span>`;
+    const attendanceEntries = [];
+    selectedPeriods.forEach(period => {
+      const [, subject] = period.split(":");
+      present.forEach(reg_no => {
+        attendanceEntries.push({
+          reg_no, date, staff_id,
+          course: courseSelect.value,
+          year: yearSelect.value,
+          semester: semesterSelect.value,
+          section: sectionSelect.value,
+          subject, status: "Present"
+        });
+      });
+      absent.forEach(reg_no => {
+        attendanceEntries.push({
+          reg_no, date, staff_id,
+          course: courseSelect.value,
+          year: yearSelect.value,
+          semester: semesterSelect.value,
+          section: sectionSelect.value,
+          subject, status: "Absent"
+        });
+      });
+    });
+
+    const res = await fetch('/api/submit-attendance', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ entries: attendanceEntries })
+    });
+
+    const result = await res.json();
+    if (res.ok) {
+      Swal.fire("✅ Attendance Marked Successfully");
+      studentsTable.innerHTML = "";
+    } else {
+      Swal.fire("❌ Failed", result.error || "Unknown error", "error");
+    }
+
+    isSubmitting = false;
+  };
+
+  function updatePeriodOptions() {
+    const course = courseSelect.value;
+    const year = parseInt(yearSelect.value);
+    const semester = semesterSelect.value;
+    const section = sectionSelect.value;
+    const day = daySelect.value;
+    const periodOptions = document.getElementById("periodOptions");
+    periodOptions.innerHTML = "";
+
+    if (!course || !year || !semester || !section || !day) return;
+
+    const matches = staffAllocData.filter(row =>
+      row.course === course &&
+      parseInt(row.year) === year &&
+      row.semester.toString() === semester.toString() &&
+      row.section === section &&
+      row.day === day
+    );
+
+    const addedPeriods = new Set();
+    matches.forEach(match => {
+      for (let i = 1; i <= 7; i++) {
+        const subject = match[`period${i}`];
+        if (subject && !addedPeriods.has(`period${i}:${subject}`)) {
+          addedPeriods.add(`period${i}:${subject}`);
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.id = `period${i}`;
+          checkbox.name = "periodSelection";
+          checkbox.value = `period${i}:${subject}`;
+
+          const label = document.createElement("label");
+          label.setAttribute("for", `period${i}`);
+          label.textContent = `${i}ᵗʰ Period - ${subject}`;
+          label.style.display = "flex";
+          label.style.alignItems = "center";
+          label.style.gap = "8px";
+
+          const wrapper = document.createElement("div");
+          wrapper.appendChild(checkbox);
+          wrapper.appendChild(label);
+          periodOptions.appendChild(wrapper);
+        }
+      }
+    });
+
+    if (!matches.length || addedPeriods.size === 0) {
+      periodOptions.innerHTML = `<span style="color:red;">⚠️ No subjects assigned for selected day</span>`;
+    }
   }
-}
 
   function fetchStudents() {
-    const course = courseSelect.value, section = sectionSelect.value, year = yearSelect.value, semester = semesterSelect.value;
+    const course = courseSelect.value;
+    const section = sectionSelect.value;
+    const year = yearSelect.value;
+    const semester = semesterSelect.value;
+
     if (!course || !section || !year || !semester) {
       Swal.fire("⚠️ Please select all fields");
       return;
     }
+
     fetch(`/api/students-by-course-section?year=${year}&semester=${semester}&course=${course}&section=${section}`)
       .then(res => res.json())
       .then(students => {
@@ -337,17 +340,40 @@ function updatePeriodOptions() {
   }
 
   document.getElementById("downloadPdfBtn").addEventListener("click", () => {
-    const course = courseSelect.value, section = sectionSelect.value, year = yearSelect.value, semester = semesterSelect.value;
+    const course = courseSelect.value;
+    const section = sectionSelect.value;
+    const year = yearSelect.value;
+    const semester = semesterSelect.value;
     const subjects = Array.from(document.querySelectorAll('input[name="periodSelection"]:checked')).map(cb => cb.value);
+
     if (!course || !section || !year || !semester || !subjects.length) {
       Swal.fire("⚠️ Please select all fields before downloading PDF");
       return;
     }
+
     window.open(`/api/download-attendance-pdf?year=${year}&semester=${semester}&course=${course}&section=${section}&subject=${encodeURIComponent(subjects.join(","))}`, '_blank');
   });
 
-  function toggleMobileMenu() {
-    document.querySelector('.sidebar').classList.toggle('open');
+  document.getElementById("daySelect").addEventListener("change", () => {
+    const selectedDay = daySelect.value;
+    const dateInput = document.getElementById("attendanceDate");
+    dateInput.value = "";
+    dateInput.setAttribute("min", "2023-01-01");
+    dateInput.removeAttribute("max");
+
+    dateInput.oninput = () => {
+      const selectedDate = new Date(dateInput.value);
+      const dayName = selectedDate.toLocaleDateString('en-US', { weekday: 'long' });
+
+      if (dayName !== selectedDay) {
+        Swal.fire(`❌ Please select a ${selectedDay}`);
+        dateInput.value = "";
+      }
+    };
+  });
+
+  function toggleAll(master) {
+    document.querySelectorAll('input[name="attendance"]').forEach(cb => cb.checked = master.checked);
   }
 
   function logout() {
@@ -355,9 +381,10 @@ function updatePeriodOptions() {
     window.location.href = "index.html";
   }
 
-  function toggleAll(master) {
-    document.querySelectorAll('input[name="attendance"]').forEach(cb => cb.checked = master.checked);
+  function toggleMobileMenu() {
+    document.querySelector('.sidebar').classList.toggle('open');
   }
 </script>
+
 </body>
 </html>
