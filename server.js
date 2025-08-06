@@ -127,7 +127,6 @@ app.get("/uploadmidmarks", requireAdminSession, (req, res) => {
 app.get("/addmycounselling", requireAdminSession, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "addmycounselling.html"));
 });
-
 app.get("/examcell", requireAdminSession, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "examcell.html"));
 });
@@ -143,6 +142,10 @@ app.get("/downloadattendance", requireAdminSession, (req, res) => {
 app.get("/editattendance", requireAdminSession, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "editattendance.html"));
 });
+app.get("/adminpanel", requireAdminSession, (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "adminpanel.html"));
+});
+
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads"))); // for previews
 
@@ -4184,5 +4187,6 @@ app.post("/api/mark-present", (req, res) => {
     });
   });
 });
+
 
 
