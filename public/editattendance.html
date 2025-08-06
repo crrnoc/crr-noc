@@ -88,6 +88,46 @@
     .sidebar button:hover {
       background-color: #CA6F1E;
     }
+      table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-top: 20px;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  overflow: hidden;
+  font-size: 15px;
+}
+
+th, td {
+  border: 1px solid #ccc;
+  padding: 10px 12px;
+  text-align: center;
+}
+
+th {
+  background-color: #007acc;
+  color: white;
+  font-weight: bold;
+}
+
+tr.absent {
+  background-color: #fff6f6;
+}
+
+button.mark {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+button.mark[disabled] {
+  background: #ccc;
+  cursor: not-allowed;
+}
 
     .mobile-toggle {
       display: none;
