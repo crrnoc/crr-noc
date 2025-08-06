@@ -137,6 +137,13 @@ app.get("/studentsfeesearch", requireAdminSession, (req, res) => {
 app.get("/staffallocation", requireAdminSession, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "staffallocation.html"));
 });
+app.get("/downloadattendance", requireAdminSession, (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "downloadattendance.html"));
+});
+app.get("/editattendance", requireAdminSession, (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "editattendance.html"));
+});
+
 app.use("/uploads", express.static(path.join(__dirname, "uploads"))); // for previews
 
 // ✅ MySQL connection
@@ -4177,4 +4184,5 @@ app.post("/api/mark-present", (req, res) => {
     });
   });
 });
+
 
