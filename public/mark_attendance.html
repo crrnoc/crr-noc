@@ -42,10 +42,6 @@
       .content {margin-left:0; margin-top:100px; padding:20px;}
       .mobile-toggle {display:block;}
     }
-    button[type="submit"]:hover {
-  background-color: #218838;
-}
-
   </style>
 </head>
 <body>
@@ -137,12 +133,14 @@
   const daySelect = document.getElementById("daySelect");
   const studentsTable = document.querySelector("#studentsTable tbody");
   const form = document.getElementById("attendanceForm");
+
   let staffAllocData = [];
   let isSubmitting = false;
+  let staff_id = ""; // ✅ global variable
 
   window.onload = () => {
     const userId = localStorage.getItem("userId");
-    let staff_id = localStorage.getItem("staff_id");
+    staff_id = localStorage.getItem("staff_id");
 
     if (!userId) {
       document.getElementById("userId").textContent = "Not Logged In";
@@ -206,6 +204,8 @@
       return;
     }
 
+    let proceed = true;
+
     if (absent.length > 0) {
       const absentList = absent.join(", ");
       const confirmResult = await Swal.fire({
@@ -217,10 +217,12 @@
         cancelButtonText: "🔙 Go Back"
       });
 
-      if (!confirmResult.isConfirmed) {
-        isSubmitting = false;
-        return;
-      }
+      proceed = confirmResult.isConfirmed;
+    }
+
+    if (!proceed) {
+      isSubmitting = false;
+      return;
     }
 
     const attendanceEntries = [];
@@ -256,7 +258,7 @@
 
     const result = await res.json();
     if (res.ok) {
-      Swal.fire("✅ Attendance Marked Successfully");
+      Swal.fire("✅ Attendance Submitted Successfully", "All attendance data saved!", "success");
       studentsTable.innerHTML = "";
     } else {
       Swal.fire("❌ Failed", result.error || "Unknown error", "error");
@@ -389,6 +391,7 @@
     document.querySelector('.sidebar').classList.toggle('open');
   }
 </script>
+
 
 </body>
 </html>
