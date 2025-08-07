@@ -480,7 +480,15 @@
         body: JSON.stringify({ allocations: fullPayload })
       });
 
-      const result = await res.json();
+      try {
+  const resData = await res.json();
+  console.log("Response Data:", resData);
+  Swal.fire("Success", "Periods allocated successfully!", "success");
+} catch (err) {
+  console.error("Submit failed", err);
+  Swal.fire("Server Error", "Please try again later.", "error");
+}
+
 
       if (result.success) {
         Swal.fire("✅ Success", result.message, "success");
