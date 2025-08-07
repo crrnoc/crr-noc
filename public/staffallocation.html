@@ -331,13 +331,12 @@
       });
   }
 
-  // Prevent back nav after logout
   window.history.pushState(null, "", window.location.href);
   window.onpopstate = function () {
     window.history.pushState(null, "", window.location.href);
   };
 
-  // 👇 Auto-fetch staff name when ID is entered
+  // 👇 Auto-fetch staff name
   document.getElementById("staff_id").addEventListener("blur", async function () {
     const id = this.value;
     if (!id) return;
@@ -351,7 +350,7 @@
     }
   });
 
-  // Load departments on window load
+  // 👇 Load departments
   window.onload = async function () {
     try {
       const res = await fetch(`${baseUrl}/api/departments`);
@@ -366,7 +365,7 @@
     }
   };
 
-  // Department -> Year
+  // 👇 Department -> Year
   document.getElementById("dept_code").addEventListener("change", async function () {
     const dept = this.value;
     const yearSel = document.getElementById("year");
@@ -389,7 +388,7 @@
     }
   });
 
-  // Year -> Course
+  // 👇 Year -> Course
   document.getElementById("year").addEventListener("change", async function () {
     const dept = document.getElementById("dept_code").value;
     const year = this.value;
@@ -411,7 +410,7 @@
     }
   });
 
-  // Course -> Section
+  // 👇 Course -> Section
   document.getElementById("course").addEventListener("change", async function () {
     const dept = document.getElementById("dept_code").value;
     const year = document.getElementById("year").value;
@@ -432,17 +431,53 @@
     }
   });
 
-  // Submit the allocation
+  // 👇 Submit full week allocation
   document.getElementById("allocationForm").addEventListener("submit", async function (e) {
     e.preventDefault();
+
     const formData = new FormData(this);
-    const data = Object.fromEntries(formData.entries());
+    const baseData = {
+      staff_id: formData.get("staff_id"),
+      staff_name: formData.get("staff_name"),
+      dept_code: formData.get("dept_code"),
+      year: formData.get("year"),
+      course: formData.get("course"),
+      section: formData.get("section"),
+      semester: formData.get("semester"),
+    };
+
+    const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const fullPayload = [];
+
+    days.forEach(day => {
+      const dayPayload = {
+        ...baseData,
+        day,
+        period1: formData.get(`period1_${day}`) || "",
+        period2: formData.get(`period2_${day}`) || "",
+        period3: formData.get(`period3_${day}`) || "",
+        period4: formData.get(`period4_${day}`) || "",
+        period5: formData.get(`period5_${day}`) || "",
+        period6: formData.get(`period6_${day}`) || "",
+        period7: formData.get(`period7_${day}`) || ""
+      };
+
+      // Only push if at least one period is filled
+      if (Object.values(dayPayload).some(v => v && v !== "" && !["staff_id", "staff_name", "dept_code", "year", "course", "section", "semester", "day"].includes(v))) {
+        fullPayload.push(dayPayload);
+      }
+    });
+
+    if (fullPayload.length === 0) {
+      Swal.fire("⚠️ Warning", "Please fill at least one period to submit.", "warning");
+      return;
+    }
 
     try {
-      const res = await fetch(`${baseUrl}/api/allocate`, {
+      const res = await fetch(`${baseUrl}/api/allocate/multi`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
+        body: JSON.stringify({ allocations: fullPayload })
       });
 
       const result = await res.json();
@@ -459,6 +494,5 @@
     }
   });
 </script>
-
 </body>
 </html>
