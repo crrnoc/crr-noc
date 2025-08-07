@@ -181,61 +181,123 @@
 </div>
 
 <div class="main" id="main-content">
-  <form id="allocationForm">
-    <h1>Allocate Periods to Staff</h1>
+<form id="allocationForm">
+  <h1>Allocate Periods to Staff</h1>
 
-    <label>Staff ID</label>
-    <input type="text" name="staff_id" id="staff_id" required />
+  <label>Staff ID</label>
+  <input type="text" name="staff_id" id="staff_id" required />
 
-    <label>Staff Name</label>
-    <input type="text" name="staff_name" id="staff_name" readonly />
+  <label>Staff Name</label>
+  <input type="text" name="staff_name" id="staff_name" readonly />
 
-    <label>Department</label>
-    <select name="dept_code" id="dept_code" required></select>
+  <label>Department</label>
+  <select name="dept_code" id="dept_code" required></select>
 
-    <label>Course</label>
-    <select name="course" id="course" required></select>
+  <label>Course</label>
+  <select name="course" id="course" required></select>
 
-    <label>Year</label>
-    <select name="year" id="year" required></select>
+  <label>Year</label>
+  <select name="year" id="year" required></select>
 
-    <label>Section</label>
-    <select name="section" id="section" required></select>
+  <label>Section</label>
+  <select name="section" id="section" required></select>
 
-    <label>Semester</label>
-    <select name="semester" id="semester" required>
-      <option value="" selected disabled>Select Semester</option>
-      <option value="1-1">1-1</option>
-      <option value="1-2">1-2</option>
-      <option value="2-1">2-1</option>
-      <option value="2-2">2-2</option>
-      <option value="3-1">3-1</option>
-      <option value="3-2">3-2</option>
-      <option value="4-1">4-1</option>
-      <option value="4-2">4-2</option>
-    </select>
+  <label>Semester</label>
+  <select name="semester" id="semester" required>
+    <option value="" selected disabled>Select Semester</option>
+    <option value="1-1">1-1</option>
+    <option value="1-2">1-2</option>
+    <option value="2-1">2-1</option>
+    <option value="2-2">2-2</option>
+    <option value="3-1">3-1</option>
+    <option value="3-2">3-2</option>
+    <option value="4-1">4-1</option>
+    <option value="4-2">4-2</option>
+  </select>
 
-    <label>Day</label>
-    <select name="day" required>
-      <option value="">Select</option>
-      <option value="Monday">Monday</option>
-      <option value="Tuesday">Tuesday</option>
-      <option value="Wednesday">Wednesday</option>
-      <option value="Thursday">Thursday</option>
-      <option value="Friday">Friday</option>
-      <option value="Saturday">Saturday</option>
-    </select>
+  <label>Weekly Period Allocation</label>
+  <div style="overflow-x:auto;">
+    <table border="1" cellpadding="6" cellspacing="0" style="width:100%; text-align:center; border-collapse: collapse; margin-top:10px;">
+      <thead style="background:#007bff; color:white;">
+        <tr>
+          <th>Day</th>
+          <th>Period 1</th>
+          <th>Period 2</th>
+          <th>Period 3</th>
+          <th>Period 4</th>
+          <th>Period 5</th>
+          <th>Period 6</th>
+          <th>Period 7</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Monday</td>
+          <td><input type="text" name="monday_p1" /></td>
+          <td><input type="text" name="monday_p2" /></td>
+          <td><input type="text" name="monday_p3" /></td>
+          <td><input type="text" name="monday_p4" /></td>
+          <td><input type="text" name="monday_p5" /></td>
+          <td><input type="text" name="monday_p6" /></td>
+          <td><input type="text" name="monday_p7" /></td>
+        </tr>
+        <tr>
+          <td>Tuesday</td>
+          <td><input type="text" name="tuesday_p1" /></td>
+          <td><input type="text" name="tuesday_p2" /></td>
+          <td><input type="text" name="tuesday_p3" /></td>
+          <td><input type="text" name="tuesday_p4" /></td>
+          <td><input type="text" name="tuesday_p5" /></td>
+          <td><input type="text" name="tuesday_p6" /></td>
+          <td><input type="text" name="tuesday_p7" /></td>
+        </tr>
+        <tr>
+          <td>Wednesday</td>
+          <td><input type="text" name="wednesday_p1" /></td>
+          <td><input type="text" name="wednesday_p2" /></td>
+          <td><input type="text" name="wednesday_p3" /></td>
+          <td><input type="text" name="wednesday_p4" /></td>
+          <td><input type="text" name="wednesday_p5" /></td>
+          <td><input type="text" name="wednesday_p6" /></td>
+          <td><input type="text" name="wednesday_p7" /></td>
+        </tr>
+        <tr>
+          <td>Thursday</td>
+          <td><input type="text" name="thursday_p1" /></td>
+          <td><input type="text" name="thursday_p2" /></td>
+          <td><input type="text" name="thursday_p3" /></td>
+          <td><input type="text" name="thursday_p4" /></td>
+          <td><input type="text" name="thursday_p5" /></td>
+          <td><input type="text" name="thursday_p6" /></td>
+          <td><input type="text" name="thursday_p7" /></td>
+        </tr>
+        <tr>
+          <td>Friday</td>
+          <td><input type="text" name="friday_p1" /></td>
+          <td><input type="text" name="friday_p2" /></td>
+          <td><input type="text" name="friday_p3" /></td>
+          <td><input type="text" name="friday_p4" /></td>
+          <td><input type="text" name="friday_p5" /></td>
+          <td><input type="text" name="friday_p6" /></td>
+          <td><input type="text" name="friday_p7" /></td>
+        </tr>
+        <tr>
+          <td>Saturday</td>
+          <td><input type="text" name="saturday_p1" /></td>
+          <td><input type="text" name="saturday_p2" /></td>
+          <td><input type="text" name="saturday_p3" /></td>
+          <td><input type="text" name="saturday_p4" /></td>
+          <td><input type="text" name="saturday_p5" /></td>
+          <td><input type="text" name="saturday_p6" /></td>
+          <td><input type="text" name="saturday_p7" /></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 
-    <label>Period 1</label><input type="text" name="period1">
-    <label>Period 2</label><input type="text" name="period2">
-    <label>Period 3</label><input type="text" name="period3">
-    <label>Period 4</label><input type="text" name="period4">
-    <label>Period 5</label><input type="text" name="period5">
-    <label>Period 6</label><input type="text" name="period6">
-    <label>Period 7</label><input type="text" name="period7">
+  <button type="submit">Allocate</button>
+</form>
 
-    <button type="submit">Allocate</button>
-  </form>
 </div>
 <script>
   const baseUrl = "https://crr-noc.onrender.com";
