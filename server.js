@@ -4265,11 +4265,10 @@ app.post("/api/set-staff-allocation", (req, res) => {
   });
 });
 
-// staff-period-allocation.js or wherever you handle routes
 app.post("/api/allocate/multi", (req, res) => {
   const { allocations } = req.body;
 
-  // Log the incoming data (debug)
+  // Log the incoming data (for debugging)
   console.log("Received Allocations:", allocations);
 
   if (!Array.isArray(allocations) || allocations.length === 0) {
@@ -4300,12 +4299,15 @@ app.post("/api/allocate/multi", (req, res) => {
     row.semester,
   ]);
 
-  db.query(sql, [values], (err, result) => {
+  // ✅ Now using correct variable `sql` here:
+  connection.query(sql, [values], (err, result) => {
     if (err) {
-      console.error("DB Insert Error:", err); // 👈 debug log
-      return res.status(500).json({ error: "Database error" }); // 👈 very important to return JSON
+      console.error("❌ Error inserting multiple allocations:", err);
+      return res.status(500).json({ error: "Failed to insert allocations" });
     }
 
-    res.status(200).json({ success: true, message: "Staff allocation saved!" });
+    console.log("✅ Multiple allocations inserted successfully!");
+    res.json({ success: true, message: "Multiple allocations inserted successfully" });
   });
 });
+
