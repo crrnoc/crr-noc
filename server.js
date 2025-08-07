@@ -4269,48 +4269,43 @@ app.post("/api/set-staff-allocation", (req, res) => {
 app.post("/api/allocate/multi", (req, res) => {
   const { allocations } = req.body;
 
-  if (!Array.isArray(allocations)) {
-    return res.status(400).json({ success: false, message: "Invalid format" });
-  }
+  // Log the incoming data (debug)
+  console.log("Received Allocations:", allocations);
 
-  const values = allocations.map(alloc => [
-    alloc.staff_id,
-    alloc.dept_code, // 💡 This should match your frontend field, not `department`
-    alloc.course,
-    alloc.year,
-    alloc.semester,
-    alloc.section,
-    alloc.day,
-    alloc.period1 || null,
-    alloc.period2 || null,
-    alloc.period3 || null,
-    alloc.period4 || null,
-    alloc.period5 || null,
-    alloc.period6 || null,
-    alloc.period7 || null
-  ]);
+  if (!Array.isArray(allocations) || allocations.length === 0) {
+    return res.status(400).json({ error: "Invalid or empty allocation data" });
+  }
 
   const sql = `
     INSERT INTO staff_period_allocation (
-      staff_id, dept_code, course, year, semester, section,
-      day, period1, period2, period3, period4, period5, period6, period7
+      staff_id, year, course, dept_code, section, day,
+      period1, period2, period3, period4, period5, period6, period7, semester
     ) VALUES ?
-    ON DUPLICATE KEY UPDATE
-      period1=VALUES(period1),
-      period2=VALUES(period2),
-      period3=VALUES(period3),
-      period4=VALUES(period4),
-      period5=VALUES(period5),
-      period6=VALUES(period6),
-      period7=VALUES(period7)
   `;
+
+  const values = allocations.map((row) => [
+    row.staff_id,
+    row.year,
+    row.course,
+    row.dept_code,
+    row.section,
+    row.day,
+    row.period1,
+    row.period2,
+    row.period3,
+    row.period4,
+    row.period5,
+    row.period6,
+    row.period7,
+    row.semester,
+  ]);
 
   db.query(sql, [values], (err, result) => {
     if (err) {
-      console.error("Error inserting allocation data:", err);
-      return res.status(500).json({ success: false, message: "Database error" });
+      console.error("DB Insert Error:", err); // 👈 debug log
+      return res.status(500).json({ error: "Database error" }); // 👈 very important to return JSON
     }
-    res.json({ success: true, message: "Allocations inserted successfully" });
+
+    res.status(200).json({ success: true, message: "Staff allocation saved!" });
   });
 });
-
