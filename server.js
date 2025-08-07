@@ -4190,3 +4190,77 @@ app.post("/api/mark-present", (req, res) => {
 
 
 
+
+// Route to insert/update full week staff allocation
+app.post("/api/set-staff-allocation", (req, res) => {
+  const { staff_id, year, course, semester, section, allocations } = req.body;
+
+  if (!staff_id || !year || !course || !semester || !section || !allocations) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
+  const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const queries = [];
+
+  days.forEach((day) => {
+    const dayAlloc = allocations[day];
+    if (!dayAlloc) return; // Skip if no allocation for that day
+
+    const { period1, period2, period3, period4, period5, period6, period7 } = dayAlloc;
+
+    const sql = `
+      INSERT INTO staff_period_allocation (
+        staff_id, year, course, semester, section, day,
+        period1, period2, period3, period4, period5, period6, period7
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON DUPLICATE KEY UPDATE
+        period1 = VALUES(period1),
+        period2 = VALUES(period2),
+        period3 = VALUES(period3),
+        period4 = VALUES(period4),
+        period5 = VALUES(period5),
+        period6 = VALUES(period6),
+        period7 = VALUES(period7)
+    `;
+
+    const values = [
+      staff_id,
+      year,
+      course,
+      semester,
+      section,
+      day,
+      period1,
+      period2,
+      period3,
+      period4,
+      period5,
+      period6,
+      period7,
+    ];
+
+    queries.push({ sql, values });
+  });
+
+  let completed = 0;
+  let hasError = false;
+
+  queries.forEach(({ sql, values }) => {
+    connection.query(sql, values, (err) => {
+      if (err) {
+        console.error("❌ Error inserting/updating allocation:", err);
+        hasError = true;
+      }
+
+      completed++;
+      if (completed === queries.length) {
+        if (hasError) {
+          return res.status(500).json({ error: "Some allocations failed" });
+        } else {
+          return res.json({ success: true, message: "All allocations saved successfully" });
+        }
+      }
+    });
+  });
+});
