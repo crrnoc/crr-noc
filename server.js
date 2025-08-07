@@ -4264,3 +4264,53 @@ app.post("/api/set-staff-allocation", (req, res) => {
     });
   });
 });
+
+// staff-period-allocation.js or wherever you handle routes
+app.post("/api/allocate/multi", (req, res) => {
+  const allocations = req.body;
+
+  if (!Array.isArray(allocations)) {
+    return res.status(400).json({ success: false, message: "Invalid format" });
+  }
+
+  const values = allocations.map(alloc => [
+    alloc.staff_id,
+    alloc.department,
+    alloc.course,
+    alloc.year,
+    alloc.semester,
+    alloc.section,
+    alloc.day,
+    alloc.period1 || null,
+    alloc.period2 || null,
+    alloc.period3 || null,
+    alloc.period4 || null,
+    alloc.period5 || null,
+    alloc.period6 || null,
+    alloc.period7 || null
+  ]);
+
+  const sql = `
+    INSERT INTO staff_period_allocation (
+      staff_id, department, course, year, semester, section,
+      day, period1, period2, period3, period4, period5, period6, period7
+    ) VALUES ?
+    ON DUPLICATE KEY UPDATE
+      period1=VALUES(period1),
+      period2=VALUES(period2),
+      period3=VALUES(period3),
+      period4=VALUES(period4),
+      period5=VALUES(period5),
+      period6=VALUES(period6),
+      period7=VALUES(period7)
+  `;
+
+  db.query(sql, [values], (err, result) => {
+    if (err) {
+      console.error("Error inserting allocation data:", err);
+      return res.status(500).json({ success: false, message: "Database error" });
+    }
+    res.json({ success: true, message: "Allocations inserted successfully" });
+  });
+});
+
