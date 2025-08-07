@@ -4267,7 +4267,7 @@ app.post("/api/set-staff-allocation", (req, res) => {
 
 // staff-period-allocation.js or wherever you handle routes
 app.post("/api/allocate/multi", (req, res) => {
-  const allocations = req.body;
+  const { allocations } = req.body;
 
   if (!Array.isArray(allocations)) {
     return res.status(400).json({ success: false, message: "Invalid format" });
@@ -4275,7 +4275,7 @@ app.post("/api/allocate/multi", (req, res) => {
 
   const values = allocations.map(alloc => [
     alloc.staff_id,
-    alloc.department,
+    alloc.dept_code, // 💡 This should match your frontend field, not `department`
     alloc.course,
     alloc.year,
     alloc.semester,
@@ -4292,7 +4292,7 @@ app.post("/api/allocate/multi", (req, res) => {
 
   const sql = `
     INSERT INTO staff_period_allocation (
-      staff_id, department, course, year, semester, section,
+      staff_id, dept_code, course, year, semester, section,
       day, period1, period2, period3, period4, period5, period6, period7
     ) VALUES ?
     ON DUPLICATE KEY UPDATE
