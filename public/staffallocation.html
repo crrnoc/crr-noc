@@ -432,75 +432,81 @@
   });
 
   // 👇 Submit full week allocation
-  document.getElementById("allocationForm").addEventListener("submit", async function (e) {
-    e.preventDefault();
+document.getElementById("allocationForm").addEventListener("submit", async function (e) {
+  e.preventDefault();
 
-    const formData = new FormData(this);
-    const baseData = {
-      staff_id: formData.get("staff_id"),
-      staff_name: formData.get("staff_name"),
-      dept_code: formData.get("dept_code"),
-      year: formData.get("year"),
-      course: formData.get("course"),
-      section: formData.get("section"),
-      semester: formData.get("semester"),
+  const formData = new FormData(this);
+  const baseData = {
+    staff_id: formData.get("staff_id"),
+    staff_name: formData.get("staff_name"),
+    dept_code: formData.get("dept_code"),
+    year: formData.get("year"),
+    course: formData.get("course"),
+    section: formData.get("section"),
+    semester: formData.get("semester"),
+  };
+
+  const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const fullPayload = [];
+
+  days.forEach(day => {
+    const dayLower = day.toLowerCase();
+
+    const dayPayload = {
+      ...baseData,
+      day,
+      period1: formData.get(`${dayLower}_p1`) || "",
+      period2: formData.get(`${dayLower}_p2`) || "",
+      period3: formData.get(`${dayLower}_p3`) || "",
+      period4: formData.get(`${dayLower}_p4`) || "",
+      period5: formData.get(`${dayLower}_p5`) || "",
+      period6: formData.get(`${dayLower}_p6`) || "",
+      period7: formData.get(`${dayLower}_p7`) || ""
     };
 
-    const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-    const fullPayload = [];
+    const periods = [
+      dayPayload.period1,
+      dayPayload.period2,
+      dayPayload.period3,
+      dayPayload.period4,
+      dayPayload.period5,
+      dayPayload.period6,
+      dayPayload.period7
+    ];
 
-    days.forEach(day => {
-      const dayPayload = {
-        ...baseData,
-        day,
-        period1: formData.get(`period1_${day}`) || "",
-        period2: formData.get(`period2_${day}`) || "",
-        period3: formData.get(`period3_${day}`) || "",
-        period4: formData.get(`period4_${day}`) || "",
-        period5: formData.get(`period5_${day}`) || "",
-        period6: formData.get(`period6_${day}`) || "",
-        period7: formData.get(`period7_${day}`) || ""
-      };
-
-      // Only push if at least one period is filled
-      if (Object.values(dayPayload).some(v => v && v !== "" && !["staff_id", "staff_name", "dept_code", "year", "course", "section", "semester", "day"].includes(v))) {
-        fullPayload.push(dayPayload);
-      }
-    });
-
-    if (fullPayload.length === 0) {
-      Swal.fire("⚠️ Warning", "Please fill at least one period to submit.", "warning");
-      return;
-    }
-
-    try {
-      const res = await fetch(`${baseUrl}/api/allocate/multi`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ allocations: fullPayload })
-      });
-
-      try {
-  const resData = await res.json();
-  console.log("Response Data:", resData);
-  Swal.fire("Success", "Periods allocated successfully!", "success");
-} catch (err) {
-  console.error("Submit failed", err);
-  Swal.fire("Server Error", "Please try again later.", "error");
-}
-
-
-      if (result.success) {
-        Swal.fire("✅ Success", result.message, "success");
-        this.reset();
-      } else {
-        Swal.fire("❌ Failed", result.error || "Allocation failed", "error");
-      }
-    } catch (err) {
-      Swal.fire("❌ Error", "Server/Network error", "error");
-      console.error("Submit failed", err);
+    // ✅ Push only if at least one period is filled
+    if (periods.some(p => p.trim() !== "")) {
+      fullPayload.push(dayPayload);
     }
   });
+
+  if (fullPayload.length === 0) {
+    Swal.fire("⚠️ Warning", "Please fill at least one period to submit.", "warning");
+    return;
+  }
+
+  try {
+    const res = await fetch(`${baseUrl}/api/allocate/multi`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ allocations: fullPayload })
+    });
+
+    const result = await res.json();
+    console.log("Response:", result);
+
+    if (result.success) {
+      Swal.fire("✅ Success", result.message, "success");
+      this.reset();
+    } else {
+      Swal.fire("❌ Failed", result.error || "Allocation failed", "error");
+    }
+  } catch (err) {
+    Swal.fire("❌ Error", "Server/Network error", "error");
+    console.error("Submit failed", err);
+  }
+});
+
 </script>
 </body>
 </html>
