@@ -142,12 +142,9 @@
   function getCommencementDate(allocation, year) {
     if (!allocation) return "2023-01-01";
     if (year === "2") {
-      const regDate = new Date(allocation.commence_regular);
-      const latDate = new Date(allocation.commence_lateral);
-      // pick the LATER date for fairness
-      return (regDate > latDate) ? allocation.commence_regular : allocation.commence_lateral;
+      return allocation.commence_lateral || allocation.commence_regular || "2023-01-01";
     }
-    return allocation.commence_regular;
+    return allocation.commence_regular || "2023-01-01";
   }
 
   window.onload = () => {
@@ -369,6 +366,10 @@
           return new Date(s.joining_date) <= new Date(selectedDate);
         });
 
+        if (filtered.length < students.length) {
+          Swal.fire(`ℹ️ ${students.length - filtered.length} student(s) not shown — joined after ${selectedDate}`);
+        }
+
         if (!filtered.length) {
           studentsTable.innerHTML = `<tr><td colspan="3">No students eligible for this date</td></tr>`;
           return;
@@ -415,25 +416,36 @@
       row.semester.toString() === semester.toString()
     );
 
-    const minDate = getCommencementDate(match, year);
-    dateInput.setAttribute("min", minDate);
-    dateInput.removeAttribute("max");
+    // 📅 Find earliest joining_date or allocation min date
+    fetch(`/api/students-by-course-section?year=${year}&semester=${semester}&course=${course}&section=${section}`)
+      .then(res => res.json())
+      .then(students => {
+        const minStudentDate = students.reduce((min, s) => {
+          if (!s.joining_date) return min;
+          const jd = new Date(s.joining_date);
+          return (!min || jd < min) ? jd : min;
+        }, null);
 
-    dateInput.oninput = () => {
-      const selectedDate = new Date(dateInput.value);
-      const dayName = selectedDate.toLocaleDateString('en-US', { weekday: 'long' });
+        const minDate = minStudentDate ? minStudentDate.toISOString().split("T")[0] : getCommencementDate(match, year);
+        dateInput.setAttribute("min", minDate);
+        dateInput.removeAttribute("max");
 
-      if (dayName !== selectedDay) {
-        Swal.fire(`❌ Please select a ${selectedDay}`);
-        dateInput.value = "";
-        return;
-      }
+        dateInput.oninput = () => {
+          const selectedDate = new Date(dateInput.value);
+          const dayName = selectedDate.toLocaleDateString('en-US', { weekday: 'long' });
 
-      if (new Date(dateInput.value) < new Date(minDate)) {
-        Swal.fire(`❌ Attendance cannot be marked before ${minDate}`);
-        dateInput.value = "";
-      }
-    };
+          if (dayName !== selectedDay) {
+            Swal.fire(`❌ Please select a ${selectedDay}`);
+            dateInput.value = "";
+            return;
+          }
+
+          if (new Date(dateInput.value) < new Date(minDate)) {
+            Swal.fire(`❌ Attendance cannot be marked before ${minDate}`);
+            dateInput.value = "";
+          }
+        };
+      });
   });
 
   function toggleAll(master) {
