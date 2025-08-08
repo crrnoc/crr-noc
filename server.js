@@ -3660,7 +3660,7 @@ app.get("/api/students-by-course-section", (req, res) => {
 
 //Backend Route to Submit Attendance 
 // Backend Route to Submit Attendance (Supports Multiple Periods)
-// ✅ Submit Attendance
+// ✅ Submit Attendance Route
 app.post('/api/submit-attendance', (req, res) => {
   const { entries } = req.body;
 
@@ -3695,7 +3695,8 @@ app.post('/api/submit-attendance', (req, res) => {
   });
 });
 
-// ✅ Get Period Info
+
+// ✅ Get Period Info Route
 app.get("/api/get-period-info", (req, res) => {
   const { staff_id, subject } = req.query;
 
@@ -3724,7 +3725,7 @@ app.get("/api/get-period-info", (req, res) => {
   `;
 
   const params = [
-    subject, subject, subject, subject, subject, subject, subject,
+    subject, subject, subject, subject, subject, subject, subject, subject,
     staff_id,
     subject, subject, subject, subject, subject, subject
   ];
@@ -3742,11 +3743,13 @@ app.get("/api/get-period-info", (req, res) => {
   });
 });
 
-// ✅ Fetch Students by Course/Section (Fairness Filter using joining_date)
-app.get("/api/students-by-course-section", (req, res) => {
-  const { year, semester, course, section, date } = req.query;
 
-  if (!year || !semester || !course || !section || !date) {
+// ✅ Get Students by Course, Section, Year, Semester
+//    Includes joining_date so frontend can filter lateral students correctly
+app.get('/api/students-by-course-section', (req, res) => {
+  const { year, semester, course, section } = req.query;
+
+  if (!year || !semester || !course || !section) {
     return res.status(400).json({ error: "Missing required parameters" });
   }
 
@@ -3754,26 +3757,17 @@ app.get("/api/students-by-course-section", (req, res) => {
     SELECT reg_no, name, joining_date
     FROM students
     WHERE year = ? AND semester = ? AND course = ? AND section = ?
+    ORDER BY reg_no
   `;
 
-  connection.query(sql, [year, semester, course, section], (err, result) => {
+  connection.query(sql, [year, semester, course, section], (err, results) => {
     if (err) {
-      console.error("❌ Students fetch failed:", err);
+      console.error("❌ Error fetching students:", err);
       return res.status(500).json({ error: "Database error" });
     }
-
-    const selectedDate = new Date(date);
-
-    // 🔹 Filter based on joining_date
-    const filtered = result.filter(s => {
-      if (!s.joining_date) return true;
-      return new Date(s.joining_date) <= selectedDate;
-    });
-
-    res.json(filtered);
+    res.json(results);
   });
 });
-
 
 
 app.get('/api/staff/semesters/:staffId', (req, res) => {
@@ -4420,5 +4414,6 @@ app.post("/api/allocate/multi", (req, res) => {
     }
   });
 });
+
 
 
