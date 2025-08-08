@@ -3643,7 +3643,8 @@ app.get("/api/students-by-course-section", (req, res) => {
   }
 
   const sql = `
-    SELECT reg_no, name FROM students
+    SELECT reg_no, name, joining_date
+    FROM students
     WHERE year = ? AND semester = ? AND course = ? AND section = ?
     ORDER BY reg_no
   `;
@@ -3656,6 +3657,7 @@ app.get("/api/students-by-course-section", (req, res) => {
     res.json(result);
   });
 });
+
 
 
 //Backend Route to Submit Attendance 
@@ -4414,6 +4416,7 @@ app.post("/api/allocate/multi", (req, res) => {
     }
   });
 });
+
 
 
 
