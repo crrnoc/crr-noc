@@ -2,187 +2,62 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>🧑‍🏫 Staff Period Allocation</title>
-  <link rel="icon" href="crrengglogo.png" />
-  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI&display=swap" rel="stylesheet" />
+  <link rel="icon" href="crrengglogo.png"/>
+  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI&display=swap" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
- <style>
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Segoe UI', sans-serif;
-  }
-
-  body {
-    display: flex;
-    min-height: 100vh;
-    background: linear-gradient(to right, #e0eafc, #cfdef3);
-    color: #222;
-    overflow-x: hidden;
-  }
-
-  .sidebar {
-    width: 250px;
-    background: linear-gradient(180deg, #2C3E50, #34495E);
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    position: fixed;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    color: white;
-    z-index: 100;
-  }
-
-  .sidebar h2 {
-    text-align: center;
-    font-weight: bold;
-    font-size: 20px;
-    margin-bottom: 30px;
-    color: #3cb6ff;
-  }
-
-  .sidebar ul {
-    list-style: none;
-    padding: 0;
-  }
-
-  .sidebar li {
-    display: block;
-    padding: 12px;
-    border-radius: 8px;
-    margin: 8px 0;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    background: rgba(255, 255, 255, 0.1);
-  }
-
-  .sidebar li:hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: translateX(5px);
-  }
-
-  .sidebar li.active {
-    background: rgba(255, 255, 255, 0.3);
-    font-weight: bold;
-  }
-
-  .sidebar button {
-    background-color: #E67E22;
-    border: none;
-    color: white;
-    padding: 12px;
-    border-radius: 20px;
-    margin-top: auto;
-    cursor: pointer;
-    transition: background 0.3s ease;
-  }
-
-  .sidebar button:hover {
-    background-color: #CA6F1E;
-  }
-
-  .mobile-toggle {
-    display: none;
-    position: fixed;
-    top: 15px;
-    left: 15px;
-    background: #2C3E50;
-    color: white;
-    padding: 10px 15px;
-    border-radius: 8px;
-    cursor: pointer;
-    z-index: 200;
-  }
-
-  .main {
-    flex: 1;
-    margin-left: 250px;
-    padding: 40px;
-    margin-top: 36px;
-    transition: filter 0.3s ease;
-  }
-
-  .main.shifted {
-    filter: blur(2px);
-    pointer-events: none;
-  }
-
-  form {
-    background: white;
-    padding: 25px;
-    border-radius: 16px;
-    max-width: 700px;
-    margin: auto;
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
-  }
-
-  h1 {
-    font-size: 24px;
-    margin-bottom: 20px;
-    text-align: center;
-    color: #333;
-  }
-
-  label {
-    display: block;
-    margin-top: 15px;
-    font-weight: 500;
-  }
-
-  input, select, button {
-    padding: 10px;
-    margin-top: 5px;
-    width: 100%;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-  }
-
-  button {
-    margin-top: 25px;
-    background-color: #007bff;
-    color: white;
-    font-weight: bold;
-    border: none;
-    transition: background 0.3s ease;
-  }
-
-  button:hover {
-    background-color: #0056b3;
-  }
-
-  @media (max-width: 768px) {
-    .sidebar { left: -250px; transition: 0.4s ease; }
-    .sidebar.open { left: 0; }
-    .mobile-toggle { display: block; }
-    .main { margin-left: 0; padding: 80px 20px 20px; }
-  }
-</style>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      padding: 20px;
+      background: #f0f4f7;
+    }
+    form {
+      max-width: 900px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    }
+    label {
+      font-weight: bold;
+      margin-top: 15px;
+      display: block;
+    }
+    input, select {
+      padding: 8px;
+      width: 100%;
+      margin-top: 5px;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    table th, table td {
+      border: 1px solid #ccc;
+      padding: 10px;
+    }
+    table th {
+      background: #007bff;
+      color: white;
+    }
+  </style>
 </head>
-<div class="mobile-toggle" onclick="toggleSidebar()">☰</div>
+<body>
 
-<div class="sidebar" id="sidebar">
-  <h2>Admin Panel</h2>
-  <ul>
-    <li onclick="navigateTo('/uploadattendance')">🗓️ Upload Attendance</li>
-    <li onclick="navigateTo('/uploadmidmarks')">📈 Upload Mid Marks</li>
-    <li onclick="navigateTo('/addmycounselling')">👥 Assign Counselling</li>
-    <li onclick="navigateTo('/dumatch')">🔍 DU Match Status</li>
-    <li onclick="navigateTo('/removestudents')">🗑️ Delete Students</li>
-    <li onclick="navigateTo('/uploadstudents')">📚 Upload Student Data</li>
-    <li onclick="navigateTo('/staffallocation')">🧑‍🏫 Staff Period Allocation</li>
-    <li onclick="navigateTo('/downloadattendance')">📥 Download Attendance</li>
-    <li onclick="navigateTo('/editattendance')">✏️ Edit Attendance</li>
-  </ul>
-  <button onclick="logout()">🚪 Logout</button>
-</div>
-
-<div class="main" id="main-content">
 <form id="allocationForm">
-  <h1>Allocate Periods to Staff</h1>
+  <h2>🧑‍🏫 Staff Period Allocation</h2>
 
   <label>Staff ID</label>
   <input type="text" name="staff_id" id="staff_id" required />
@@ -193,18 +68,17 @@
   <label>Department</label>
   <select name="dept_code" id="dept_code" required></select>
 
-  <label>Course</label>
-  <select name="course" id="course" required></select>
-
   <label>Year</label>
   <select name="year" id="year" required></select>
+
+  <label>Course</label>
+  <select name="course" id="course" required></select>
 
   <label>Section</label>
   <select name="section" id="section" required></select>
 
   <label>Semester</label>
-  <select name="semester" id="semester" required>
-    <option value="" selected disabled>Select Semester</option>
+  <select name="semester" required>
     <option value="1-1">1-1</option>
     <option value="1-2">1-2</option>
     <option value="2-1">2-1</option>
@@ -214,196 +88,98 @@
     <option value="4-1">4-1</option>
     <option value="4-2">4-2</option>
   </select>
-  <!-- Commencement of Class Work Dates -->
-<div id="commencementDates"></div>
+
+  <div id="commencementDates"></div>
 
   <label>Weekly Period Allocation</label>
-  <div style="overflow-x:auto;">
-    <table border="1" cellpadding="6" cellspacing="0" style="width:100%; text-align:center; border-collapse: collapse; margin-top:10px;">
-      <thead style="background:#007bff; color:white;">
-        <tr>
-          <th>Day</th>
-          <th>Period 1</th>
-          <th>Period 2</th>
-          <th>Period 3</th>
-          <th>Period 4</th>
-          <th>Period 5</th>
-          <th>Period 6</th>
-          <th>Period 7</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>Monday</td>
-          <td><input type="text" name="monday_p1" /></td>
-          <td><input type="text" name="monday_p2" /></td>
-          <td><input type="text" name="monday_p3" /></td>
-          <td><input type="text" name="monday_p4" /></td>
-          <td><input type="text" name="monday_p5" /></td>
-          <td><input type="text" name="monday_p6" /></td>
-          <td><input type="text" name="monday_p7" /></td>
-        </tr>
-        <tr>
-          <td>Tuesday</td>
-          <td><input type="text" name="tuesday_p1" /></td>
-          <td><input type="text" name="tuesday_p2" /></td>
-          <td><input type="text" name="tuesday_p3" /></td>
-          <td><input type="text" name="tuesday_p4" /></td>
-          <td><input type="text" name="tuesday_p5" /></td>
-          <td><input type="text" name="tuesday_p6" /></td>
-          <td><input type="text" name="tuesday_p7" /></td>
-        </tr>
-        <tr>
-          <td>Wednesday</td>
-          <td><input type="text" name="wednesday_p1" /></td>
-          <td><input type="text" name="wednesday_p2" /></td>
-          <td><input type="text" name="wednesday_p3" /></td>
-          <td><input type="text" name="wednesday_p4" /></td>
-          <td><input type="text" name="wednesday_p5" /></td>
-          <td><input type="text" name="wednesday_p6" /></td>
-          <td><input type="text" name="wednesday_p7" /></td>
-        </tr>
-        <tr>
-          <td>Thursday</td>
-          <td><input type="text" name="thursday_p1" /></td>
-          <td><input type="text" name="thursday_p2" /></td>
-          <td><input type="text" name="thursday_p3" /></td>
-          <td><input type="text" name="thursday_p4" /></td>
-          <td><input type="text" name="thursday_p5" /></td>
-          <td><input type="text" name="thursday_p6" /></td>
-          <td><input type="text" name="thursday_p7" /></td>
-        </tr>
-        <tr>
-          <td>Friday</td>
-          <td><input type="text" name="friday_p1" /></td>
-          <td><input type="text" name="friday_p2" /></td>
-          <td><input type="text" name="friday_p3" /></td>
-          <td><input type="text" name="friday_p4" /></td>
-          <td><input type="text" name="friday_p5" /></td>
-          <td><input type="text" name="friday_p6" /></td>
-          <td><input type="text" name="friday_p7" /></td>
-        </tr>
-        <tr>
-          <td>Saturday</td>
-          <td><input type="text" name="saturday_p1" /></td>
-          <td><input type="text" name="saturday_p2" /></td>
-          <td><input type="text" name="saturday_p3" /></td>
-          <td><input type="text" name="saturday_p4" /></td>
-          <td><input type="text" name="saturday_p5" /></td>
-          <td><input type="text" name="saturday_p6" /></td>
-          <td><input type="text" name="saturday_p7" /></td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Day</th>
+        <th>Period 1</th>
+        <th>Period 2</th>
+        <th>Period 3</th>
+        <th>Period 4</th>
+        <th>Period 5</th>
+        <th>Period 6</th>
+        <th>Period 7</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Monday</td><td><input name="monday_p1"/></td><td><input name="monday_p2"/></td><td><input name="monday_p3"/></td><td><input name="monday_p4"/></td><td><input name="monday_p5"/></td><td><input name="monday_p6"/></td><td><input name="monday_p7"/></td></tr>
+      <tr><td>Tuesday</td><td><input name="tuesday_p1"/></td><td><input name="tuesday_p2"/></td><td><input name="tuesday_p3"/></td><td><input name="tuesday_p4"/></td><td><input name="tuesday_p5"/></td><td><input name="tuesday_p6"/></td><td><input name="tuesday_p7"/></td></tr>
+      <tr><td>Wednesday</td><td><input name="wednesday_p1"/></td><td><input name="wednesday_p2"/></td><td><input name="wednesday_p3"/></td><td><input name="wednesday_p4"/></td><td><input name="wednesday_p5"/></td><td><input name="wednesday_p6"/></td><td><input name="wednesday_p7"/></td></tr>
+      <tr><td>Thursday</td><td><input name="thursday_p1"/></td><td><input name="thursday_p2"/></td><td><input name="thursday_p3"/></td><td><input name="thursday_p4"/></td><td><input name="thursday_p5"/></td><td><input name="thursday_p6"/></td><td><input name="thursday_p7"/></td></tr>
+      <tr><td>Friday</td><td><input name="friday_p1"/></td><td><input name="friday_p2"/></td><td><input name="friday_p3"/></td><td><input name="friday_p4"/></td><td><input name="friday_p5"/></td><td><input name="friday_p6"/></td><td><input name="friday_p7"/></td></tr>
+      <tr><td>Saturday</td><td><input name="saturday_p1"/></td><td><input name="saturday_p2"/></td><td><input name="saturday_p3"/></td><td><input name="saturday_p4"/></td><td><input name="saturday_p5"/></td><td><input name="saturday_p6"/></td><td><input name="saturday_p7"/></td></tr>
+    </tbody>
+  </table>
 
-  <button type="submit">Allocate</button>
+  <button type="submit">Allocate Periods</button>
 </form>
 
-</div>
 <script>
-  const baseUrl = "https://crr-noc.onrender.com";
+const baseUrl = "https://crr-noc.onrender.com";
 
-  const userId = localStorage.getItem("userId");
-  if (!userId) {
-    alert("Please login first.");
-    window.location.href = "index.html";
+document.getElementById("staff_id").addEventListener("blur", async function () {
+  const id = this.value;
+  if (!id) return;
+  try {
+    const res = await fetch(`${baseUrl}/api/staff/${id}`);
+    const data = await res.json();
+    document.getElementById("staff_name").value = data.staff_name || "";
+  } catch {
+    document.getElementById("staff_name").value = "";
   }
+});
 
-  function navigateTo(route) {
-    window.location.href = route;
+window.onload = async () => {
+  try {
+    const res = await fetch(`${baseUrl}/api/departments`);
+    const data = await res.json();
+    const deptSel = document.getElementById("dept_code");
+    deptSel.innerHTML = `<option value="">Select</option>`;
+    data.forEach(d => {
+      deptSel.innerHTML += `<option value="${d.dept_code}">${d.dept_code}</option>`;
+    });
+  } catch (err) {
+    console.error("Failed to load departments", err);
   }
+};
 
-  function toggleSidebar() {
-    const sidebar = document.getElementById("sidebar");
-    const main = document.getElementById("main-content");
-    sidebar.classList.toggle("open");
-    main.classList.toggle("shifted");
+document.getElementById("dept_code").addEventListener("change", async function () {
+  const dept = this.value;
+  const yearSel = document.getElementById("year");
+  const courseSel = document.getElementById("course");
+  const sectionSel = document.getElementById("section");
+
+  yearSel.innerHTML = `<option value="">Loading...</option>`;
+  courseSel.innerHTML = `<option value="">Select</option>`;
+  sectionSel.innerHTML = `<option value="">Select</option>`;
+
+  try {
+    const res = await fetch(`${baseUrl}/api/years/${dept}`);
+    const data = await res.json();
+    yearSel.innerHTML = `<option value="">Select</option>`;
+    data.forEach(d => {
+      yearSel.innerHTML += `<option value="${d.year}">${d.year}</option>`;
+    });
+  } catch (err) {
+    console.error("Error loading years", err);
   }
+});
 
-  function logout() {
-    fetch("/logout")
-      .then(() => {
-        localStorage.removeItem("userId");
-        window.location.replace("index.html");
-      })
-      .catch((err) => {
-        console.error("Logout failed:", err);
-        alert("Logout failed. Try again.");
-      });
-  }
-
-  window.history.pushState(null, "", window.location.href);
-  window.onpopstate = function () {
-    window.history.pushState(null, "", window.location.href);
-  };
-
-  // 👇 Auto-fetch staff name
-  document.getElementById("staff_id").addEventListener("blur", async function () {
-    const id = this.value;
-    if (!id) return;
-    try {
-      const res = await fetch(`${baseUrl}/api/staff/${id}`);
-      const data = await res.json();
-      document.getElementById("staff_name").value = data.staff_name || "";
-    } catch (err) {
-      document.getElementById("staff_name").value = "";
-      console.error("Error fetching staff:", err);
-    }
-  });
-
-  // 👇 Load departments
-  window.onload = async function () {
-    try {
-      const res = await fetch(`${baseUrl}/api/departments`);
-      const data = await res.json();
-      const deptSel = document.getElementById("dept_code");
-      deptSel.innerHTML = `<option value="">Select</option>`;
-      data.forEach(d => {
-        deptSel.innerHTML += `<option value="${d.dept_code}">${d.dept_code}</option>`;
-      });
-    } catch (err) {
-      console.error("Failed to load departments", err);
-    }
-  };
-
-  // 👇 Department -> Year
-  document.getElementById("dept_code").addEventListener("change", async function () {
-    const dept = this.value;
-    const yearSel = document.getElementById("year");
-    const courseSel = document.getElementById("course");
-    const sectionSel = document.getElementById("section");
-
-    yearSel.innerHTML = `<option value="">Loading...</option>`;
-    courseSel.innerHTML = `<option value="">Select</option>`;
-    sectionSel.innerHTML = `<option value="">Select</option>`;
-
-    try {
-      const res = await fetch(`${baseUrl}/api/years/${dept}`);
-      const data = await res.json();
-      yearSel.innerHTML = `<option value="">Select</option>`;
-      data.forEach(d => {
-        yearSel.innerHTML += `<option value="${d.year}">${d.year}</option>`;
-      });
-    } catch (err) {
-      console.error("Error loading years", err);
-    }
-  });
-
-  // 👇 Year -> Course
- document.getElementById("year").addEventListener("change", async function () {
+document.getElementById("year").addEventListener("change", async function () {
   const dept = document.getElementById("dept_code").value;
   const year = this.value;
   const courseSel = document.getElementById("course");
   const sectionSel = document.getElementById("section");
   const dateDiv = document.getElementById("commencementDates");
 
-  // Reset fields
   courseSel.innerHTML = `<option value="">Loading...</option>`;
   sectionSel.innerHTML = `<option value="">Select</option>`;
   dateDiv.innerHTML = "";
 
-  // Load courses
   try {
     const res = await fetch(`${baseUrl}/api/courses-by-year?dept_code=${dept}&year=${year}`);
     const data = await res.json();
@@ -415,100 +191,84 @@
     console.error("Error loading courses", err);
   }
 
-  // Show correct Commencement input(s)
   if (year === "2") {
     dateDiv.innerHTML = `
       <label>Commencement of Class Work (Regular)</label>
-      <input type="date" id="commence_regular" name="commence_regular" required>
-
+      <input type="date" name="commence_regular" required>
       <label>Commencement of Class Work (Lateral)</label>
-      <input type="date" id="commence_lateral" name="commence_lateral" required>
+      <input type="date" name="commence_lateral" required>
     `;
-  } else if (year === "1" || year === "3" || year === "4") {
+  } else if (["1", "3", "4"].includes(year)) {
     dateDiv.innerHTML = `
       <label>Commencement of Class Work</label>
-      <input type="date" id="commence_common" name="commence_common" required>
+      <input type="date" name="commence_common" required>
     `;
   }
 });
 
-  // 👇 Course -> Section
-  document.getElementById("course").addEventListener("change", async function () {
-    const dept = document.getElementById("dept_code").value;
-    const year = document.getElementById("year").value;
-    const course = this.value;
-    const sectionSel = document.getElementById("section");
+document.getElementById("course").addEventListener("change", async function () {
+  const dept = document.getElementById("dept_code").value;
+  const year = document.getElementById("year").value;
+  const course = this.value;
+  const sectionSel = document.getElementById("section");
 
-    sectionSel.innerHTML = `<option value="">Loading...</option>`;
+  sectionSel.innerHTML = `<option value="">Loading...</option>`;
 
-    try {
-      const res = await fetch(`${baseUrl}/api/sections?dept_code=${dept}&year=${year}&course=${course}`);
-      const data = await res.json();
-      sectionSel.innerHTML = `<option value="">Select</option>`;
-      data.forEach(d => {
-        sectionSel.innerHTML += `<option value="${d.section}">${d.section}</option>`;
-      });
-    } catch (err) {
-      console.error("Error loading sections", err);
-    }
-  });
+  try {
+    const res = await fetch(`${baseUrl}/api/sections?dept_code=${dept}&year=${year}&course=${course}`);
+    const data = await res.json();
+    sectionSel.innerHTML = `<option value="">Select</option>`;
+    data.forEach(d => {
+      sectionSel.innerHTML += `<option value="${d.section}">${d.section}</option>`;
+    });
+  } catch (err) {
+    console.error("Error loading sections", err);
+  }
+});
 
-  // 👇 Submit full week allocation
+// ✅ Submit allocation
 document.getElementById("allocationForm").addEventListener("submit", async function (e) {
   e.preventDefault();
 
   const formData = new FormData(this);
+  const year = formData.get("year");
+
   const baseData = {
     staff_id: formData.get("staff_id"),
     staff_name: formData.get("staff_name"),
     dept_code: formData.get("dept_code"),
-    year: formData.get("year"),
+    year: year,
     course: formData.get("course"),
     section: formData.get("section"),
-    semester: formData.get("semester"),
-    // Add commencement dates
-const year = formData.get("year");
-
-if (year === "2") {
-  baseData.commence_regular = formData.get("commence_regular");
-  baseData.commence_lateral = formData.get("commence_lateral");
-} else {
-  baseData.commence_common = formData.get("commence_common");
-}
-
+    semester: formData.get("semester")
   };
+
+  if (year === "2") {
+    baseData.commence_regular = formData.get("commence_regular");
+    baseData.commence_lateral = formData.get("commence_lateral");
+  } else {
+    baseData.commence_common = formData.get("commence_common");
+  }
 
   const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   const fullPayload = [];
 
   days.forEach(day => {
-    const dayLower = day.toLowerCase();
-
-    const dayPayload = {
+    const d = day.toLowerCase();
+    const payload = {
       ...baseData,
       day,
-      period1: formData.get(`${dayLower}_p1`) || "",
-      period2: formData.get(`${dayLower}_p2`) || "",
-      period3: formData.get(`${dayLower}_p3`) || "",
-      period4: formData.get(`${dayLower}_p4`) || "",
-      period5: formData.get(`${dayLower}_p5`) || "",
-      period6: formData.get(`${dayLower}_p6`) || "",
-      period7: formData.get(`${dayLower}_p7`) || ""
+      period1: formData.get(`${d}_p1`) || "",
+      period2: formData.get(`${d}_p2`) || "",
+      period3: formData.get(`${d}_p3`) || "",
+      period4: formData.get(`${d}_p4`) || "",
+      period5: formData.get(`${d}_p5`) || "",
+      period6: formData.get(`${d}_p6`) || "",
+      period7: formData.get(`${d}_p7`) || ""
     };
 
-    const periods = [
-      dayPayload.period1,
-      dayPayload.period2,
-      dayPayload.period3,
-      dayPayload.period4,
-      dayPayload.period5,
-      dayPayload.period6,
-      dayPayload.period7
-    ];
-
-    // ✅ Push only if at least one period is filled
-    if (periods.some(p => p.trim() !== "")) {
-      fullPayload.push(dayPayload);
+    if (Object.values(payload).some(v => v.trim() !== "" && v !== day && !["staff_id", "staff_name", "dept_code", "year", "course", "section", "semester", "commence_regular", "commence_lateral", "commence_common"].includes(v))) {
+      fullPayload.push(payload);
     }
   });
 
@@ -525,8 +285,6 @@ if (year === "2") {
     });
 
     const result = await res.json();
-    console.log("Response:", result);
-
     if (result.success) {
       Swal.fire("✅ Success", result.message, "success");
       this.reset();
@@ -538,7 +296,6 @@ if (year === "2") {
     console.error("Submit failed", err);
   }
 });
-
 </script>
 </body>
 </html>
