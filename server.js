@@ -4266,11 +4266,10 @@ app.post("/api/set-staff-allocation", (req, res) => {
     });
   });
 });
-
+// allocate time table and class work starting
 app.post("/api/allocate/multi", (req, res) => {
   const { allocations } = req.body;
 
-  // Log the incoming data (for debugging)
   console.log("Received Allocations:", allocations);
 
   if (!Array.isArray(allocations) || allocations.length === 0) {
@@ -4301,16 +4300,79 @@ app.post("/api/allocate/multi", (req, res) => {
     row.semester,
   ]);
 
-  // ✅ Now using correct variable `sql` here:
   connection.query(sql, [values], (err, result) => {
     if (err) {
       console.error("❌ Error inserting multiple allocations:", err);
       return res.status(500).json({ error: "Failed to insert allocations" });
     }
 
-    console.log("✅ Multiple allocations inserted successfully!");
-    res.json({ success: true, message: "Multiple allocations inserted successfully" });
+    // ✅ Insert joining date into students table
+    const first = allocations[0]; // All allocations are from same year/course/section
+
+    let dateSql = "";
+    let dateValues = [];
+
+    if (first.year === "2") {
+      if (first.commence_regular) {
+        dateSql += `
+          UPDATE students 
+          SET joining_date = ? 
+          WHERE dept_code = ? AND year = ? AND course = ? AND section = ? AND admission_type = 'Regular';
+        `;
+        dateValues.push(
+          first.commence_regular,
+          first.dept_code,
+          first.year,
+          first.course,
+          first.section
+        );
+      }
+
+      if (first.commence_lateral) {
+        dateSql += `
+          UPDATE students 
+          SET joining_date = ? 
+          WHERE dept_code = ? AND year = ? AND course = ? AND section = ? AND admission_type = 'Lateral';
+        `;
+        dateValues.push(
+          first.commence_lateral,
+          first.dept_code,
+          first.year,
+          first.course,
+          first.section
+        );
+      }
+
+    } else if (["1", "3", "4"].includes(first.year)) {
+      if (first.commence_common) {
+        dateSql = `
+          UPDATE students 
+          SET joining_date = ? 
+          WHERE dept_code = ? AND year = ? AND course = ? AND section = ?;
+        `;
+        dateValues = [
+          first.commence_common,
+          first.dept_code,
+          first.year,
+          first.course,
+          first.section
+        ];
+      }
+    }
+
+    if (dateSql) {
+      connection.query(dateSql, dateValues, (dateErr, dateResult) => {
+        if (dateErr) {
+          console.error("❌ Failed to update joining date:", dateErr);
+          return res.status(500).json({ error: "Joining date update failed" });
+        }
+
+        console.log("✅ Joining date updated in students table!");
+        return res.json({ success: true, message: "Multiple allocations and joining date inserted successfully" });
+      });
+    } else {
+      console.log("⚠️ No joining date provided, skipping update.");
+      return res.json({ success: true, message: "Allocations inserted (no joining date to update)" });
+    }
   });
 });
-
-
