@@ -327,62 +327,65 @@
     }
   }
 
-  function fetchStudents() {
-    const course = courseSelect.value;
-    const section = sectionSelect.value;
-    const year = yearSelect.value;
-    const semester = semesterSelect.value;
-    const selectedDate = document.getElementById("attendanceDate").value;
+function fetchStudents() {
+  const course = courseSelect.value;
+  const section = sectionSelect.value;
+  const year = yearSelect.value;
+  const semester = semesterSelect.value;
+  const selectedDate = document.getElementById("attendanceDate").value;
 
-    if (!course || !section || !year || !semester || !selectedDate) {
-      Swal.fire("⚠️ Please select all fields and date");
-      return;
-    }
-
-    const allocation = staffAllocData.find(row =>
-      row.course === course &&
-      row.year.toString() === year.toString() &&
-      row.section === section &&
-      row.semester.toString() === semester.toString()
-    );
-
-    const minDate = getCommencementDate(allocation, year);
-
-    if (new Date(selectedDate) < new Date(minDate)) {
-      Swal.fire(`❌ Attendance cannot be marked before ${minDate}`);
-      return;
-    }
-
-    fetch(`/api/students-by-course-section?year=${year}&semester=${semester}&course=${course}&section=${section}`)
-      .then(res => res.json())
-      .then(students => {
-        if (!students.length) {
-          studentsTable.innerHTML = `<tr><td colspan="3">No students found</td></tr>`;
-          return;
-        }
-
-        const filtered = students.filter(s => {
-          if (!s.joining_date) return true;
-          return new Date(s.joining_date) <= new Date(selectedDate);
-        });
-
-        if (filtered.length < students.length) {
-          Swal.fire(`ℹ️ ${students.length - filtered.length} student(s) not shown — joined after ${selectedDate}`);
-        }
-
-        if (!filtered.length) {
-          studentsTable.innerHTML = `<tr><td colspan="3">No students eligible for this date</td></tr>`;
-          return;
-        }
-
-        studentsTable.innerHTML = filtered.map(s => `
-          <tr>
-            <td>${s.reg_no}</td>
-            <td>${s.name}</td>
-            <td><input type="checkbox" name="attendance" value="${s.reg_no}" checked></td>
-          </tr>`).join('');
-      });
+  if (!course || !section || !year || !semester || !selectedDate) {
+    Swal.fire("⚠️ Please select all fields and date");
+    return;
   }
+
+  const allocation = staffAllocData.find(row =>
+    row.course === course &&
+    row.year.toString() === year.toString() &&
+    row.section === section &&
+    row.semester.toString() === semester.toString()
+  );
+
+  const minDate = getCommencementDate(allocation, year);
+
+  if (new Date(selectedDate) < new Date(minDate)) {
+    Swal.fire(`❌ Attendance cannot be marked before ${minDate}`);
+    return;
+  }
+
+  fetch(`/api/students-by-course-section?year=${year}&semester=${semester}&course=${course}&section=${section}`)
+    .then(res => res.json())
+    .then(students => {
+      if (!students.length) {
+        studentsTable.innerHTML = `<tr><td colspan="3">No students found</td></tr>`;
+        return;
+      }
+
+      // ✅ New filtering based on joining_date
+      const filtered = students.filter(s => {
+        if (!s.joining_date) return true; // No joining date → always show
+        const joinDate = new Date(s.joining_date);
+        const selDate = new Date(selectedDate);
+        return selDate >= joinDate; // Show if same day or after joining date
+      });
+
+      if (filtered.length < students.length) {
+        Swal.fire(`ℹ️ ${students.length - filtered.length} student(s) not shown — joined after ${selectedDate}`);
+      }
+
+      if (!filtered.length) {
+        studentsTable.innerHTML = `<tr><td colspan="3">No students eligible for this date</td></tr>`;
+        return;
+      }
+
+      studentsTable.innerHTML = filtered.map(s => `
+        <tr>
+          <td>${s.reg_no}</td>
+          <td>${s.name}</td>
+          <td><input type="checkbox" name="attendance" value="${s.reg_no}" checked></td>
+        </tr>`).join('');
+    });
+}
 
   document.getElementById("downloadPdfBtn").addEventListener("click", () => {
     const course = courseSelect.value;
