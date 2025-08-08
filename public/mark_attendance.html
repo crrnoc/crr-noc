@@ -136,7 +136,19 @@
 
   let staffAllocData = [];
   let isSubmitting = false;
-  let staff_id = ""; // ✅ global variable
+  let staff_id = "";
+
+  // ✅ Utility: Get commencement date based on allocation & year
+  function getCommencementDate(allocation, year) {
+    if (!allocation) return "2023-01-01";
+    if (year === "2") {
+      const regDate = new Date(allocation.commence_regular);
+      const latDate = new Date(allocation.commence_lateral);
+      // pick the LATER date for fairness
+      return (regDate > latDate) ? allocation.commence_regular : allocation.commence_lateral;
+    }
+    return allocation.commence_regular;
+  }
 
   window.onload = () => {
     const userId = localStorage.getItem("userId");
@@ -318,68 +330,59 @@
     }
   }
 
-function fetchStudents() {
-  const course = courseSelect.value;
-  const section = sectionSelect.value;
-  const year = yearSelect.value;
-  const semester = semesterSelect.value;
-  const selectedDate = document.getElementById("attendanceDate").value;
+  function fetchStudents() {
+    const course = courseSelect.value;
+    const section = sectionSelect.value;
+    const year = yearSelect.value;
+    const semester = semesterSelect.value;
+    const selectedDate = document.getElementById("attendanceDate").value;
 
-  if (!course || !section || !year || !semester || !selectedDate) {
-    Swal.fire("⚠️ Please select all fields and date");
-    return;
-  }
-
-  // 🔹 Find allocation to get commencement date
-  const allocation = staffAllocData.find(row =>
-    row.course === course &&
-    row.year.toString() === year.toString() &&
-    row.section === section &&
-    row.semester.toString() === semester.toString()
-  );
-
-  if (allocation) {
-    let minDate = allocation.commence_regular;
-    if (year === "2") {
-      // Pick earliest start date based on admission type logic
-      const regDate = new Date(allocation.commence_regular);
-      const latDate = new Date(allocation.commence_lateral);
-      minDate = (regDate < latDate) ? allocation.commence_regular : allocation.commence_lateral;
+    if (!course || !section || !year || !semester || !selectedDate) {
+      Swal.fire("⚠️ Please select all fields and date");
+      return;
     }
+
+    const allocation = staffAllocData.find(row =>
+      row.course === course &&
+      row.year.toString() === year.toString() &&
+      row.section === section &&
+      row.semester.toString() === semester.toString()
+    );
+
+    const minDate = getCommencementDate(allocation, year);
 
     if (new Date(selectedDate) < new Date(minDate)) {
       Swal.fire(`❌ Attendance cannot be marked before ${minDate}`);
       return;
     }
+
+    fetch(`/api/students-by-course-section?year=${year}&semester=${semester}&course=${course}&section=${section}`)
+      .then(res => res.json())
+      .then(students => {
+        if (!students.length) {
+          studentsTable.innerHTML = `<tr><td colspan="3">No students found</td></tr>`;
+          return;
+        }
+
+        const filtered = students.filter(s => {
+          if (!s.joining_date) return true;
+          return new Date(s.joining_date) <= new Date(selectedDate);
+        });
+
+        if (!filtered.length) {
+          studentsTable.innerHTML = `<tr><td colspan="3">No students eligible for this date</td></tr>`;
+          return;
+        }
+
+        studentsTable.innerHTML = filtered.map(s => `
+          <tr>
+            <td>${s.reg_no}</td>
+            <td>${s.name}</td>
+            <td><input type="checkbox" name="attendance" value="${s.reg_no}" checked></td>
+          </tr>`).join('');
+      });
   }
 
-  fetch(`/api/students-by-course-section?year=${year}&semester=${semester}&course=${course}&section=${section}`)
-    .then(res => res.json())
-    .then(students => {
-      if (!students.length) {
-        studentsTable.innerHTML = `<tr><td colspan="3">No students found</td></tr>`;
-        return;
-      }
-
-      // 🔹 Filter by student joining date too
-      const filtered = students.filter(s => {
-        if (!s.joining_date) return true;
-        return new Date(s.joining_date) <= new Date(selectedDate);
-      });
-
-      if (!filtered.length) {
-        studentsTable.innerHTML = `<tr><td colspan="3">No students eligible for this date</td></tr>`;
-        return;
-      }
-
-      studentsTable.innerHTML = filtered.map(s => `
-        <tr>
-          <td>${s.reg_no}</td>
-          <td>${s.name}</td>
-          <td><input type="checkbox" name="attendance" value="${s.reg_no}" checked></td>
-        </tr>`).join('');
-    });
-}
   document.getElementById("downloadPdfBtn").addEventListener("click", () => {
     const course = courseSelect.value;
     const section = sectionSelect.value;
@@ -395,7 +398,6 @@ function fetchStudents() {
     window.open(`/api/download-attendance-pdf?year=${year}&semester=${semester}&course=${course}&section=${section}&subject=${encodeURIComponent(subjects.join(","))}`, '_blank');
   });
 
-  // ✅ Updated to block attendance before commencement date
   document.getElementById("daySelect").addEventListener("change", () => {
     const selectedDay = daySelect.value;
     const dateInput = document.getElementById("attendanceDate");
@@ -406,7 +408,6 @@ function fetchStudents() {
     const section = sectionSelect.value;
     const semester = semesterSelect.value;
 
-    let minDate = "2023-01-01";
     const match = staffAllocData.find(row =>
       row.course === course &&
       row.year.toString() === year.toString() &&
@@ -414,16 +415,7 @@ function fetchStudents() {
       row.semester.toString() === semester.toString()
     );
 
-    if (match) {
-      if (year === "2") {
-        const regDate = new Date(match.commence_regular);
-        const latDate = new Date(match.commence_lateral);
-        minDate = (regDate < latDate) ? match.commence_regular : match.commence_lateral;
-      } else {
-        minDate = match.commence_regular;
-      }
-    }
-
+    const minDate = getCommencementDate(match, year);
     dateInput.setAttribute("min", minDate);
     dateInput.removeAttribute("max");
 
