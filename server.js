@@ -4306,18 +4306,17 @@ app.post("/api/allocate/multi", (req, res) => {
       return res.status(500).json({ error: "Failed to insert allocations" });
     }
 
-    // ✅ Insert joining date into students table
-    const first = allocations[0]; // All allocations are from same year/course/section
-
+    const first = allocations[0];
     let dateSql = "";
     let dateValues = [];
 
+    // ✅ Year 2: Different dates for Lateral vs Others
     if (first.year === "2") {
       if (first.commence_regular) {
         dateSql += `
           UPDATE students 
           SET joining_date = ? 
-          WHERE dept_code = ? AND year = ? AND course = ? AND section = ? AND admission_type = 'Regular';
+          WHERE dept_code = ? AND year = ? AND course = ? AND section = ? AND (admission_type IS NULL OR admission_type != 'Lateral');
         `;
         dateValues.push(
           first.commence_regular,
@@ -4363,12 +4362,12 @@ app.post("/api/allocate/multi", (req, res) => {
     if (dateSql) {
       connection.query(dateSql, dateValues, (dateErr, dateResult) => {
         if (dateErr) {
-          console.error("❌ Failed to update joining date:", dateErr);
+          console.error("❌ Failed to update joining date:", dateErr.message);
           return res.status(500).json({ error: "Joining date update failed" });
         }
 
         console.log("✅ Joining date updated in students table!");
-        return res.json({ success: true, message: "Multiple allocations and joining date inserted successfully" });
+        return res.json({ success: true, message: "Allocations and joining date inserted successfully" });
       });
     } else {
       console.log("⚠️ No joining date provided, skipping update.");
