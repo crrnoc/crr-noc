@@ -323,9 +323,10 @@
     const section = sectionSelect.value;
     const year = yearSelect.value;
     const semester = semesterSelect.value;
+    const selectedDate = document.getElementById("attendanceDate").value;
 
-    if (!course || !section || !year || !semester) {
-      Swal.fire("⚠️ Please select all fields");
+    if (!course || !section || !year || !semester || !selectedDate) {
+      Swal.fire("⚠️ Please select all fields and date");
       return;
     }
 
@@ -336,7 +337,19 @@
           studentsTable.innerHTML = `<tr><td colspan="3">No students found</td></tr>`;
           return;
         }
-        studentsTable.innerHTML = students.map(s => `
+
+        // 🔹 Filter students who joined after selected date
+        const filtered = students.filter(s => {
+          if (!s.joining_date) return true;
+          return new Date(s.joining_date) <= new Date(selectedDate);
+        });
+
+        if (!filtered.length) {
+          studentsTable.innerHTML = `<tr><td colspan="3">No students eligible for this date</td></tr>`;
+          return;
+        }
+
+        studentsTable.innerHTML = filtered.map(s => `
           <tr>
             <td>${s.reg_no}</td>
             <td>${s.name}</td>
@@ -391,7 +404,6 @@
     document.querySelector('.sidebar').classList.toggle('open');
   }
 </script>
-
 
 </body>
 </html>
