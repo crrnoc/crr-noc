@@ -3667,72 +3667,78 @@ app.post('/api/submit-attendance', (req, res) => {
     return res.status(400).json({ success: false, message: "No attendance entries submitted" });
   }
 
-  const values = entries.map(e => [
-    e.reg_no,
-    e.date,
-    e.staff_id,
-    e.course,
-    e.year,
-    e.semester,
-    e.section,
-    e.subject,
-    e.status
-  ]);
+  // Extract info from first entry for commencement date check
+  const { course, year, semester, section, date } = entries[0];
 
-  const sql = `
-    INSERT INTO daily_attendance 
-    (reg_no, date, staff_id, course, year, semester, section, subject, status)
-    VALUES ?
-  `;
-
-  connection.query(sql, [values], (err, result) => {
-    if (err) {
-      console.error("❌ Attendance insert failed:", err);
-      return res.status(500).json({ success: false, message: "Database error" });
-    }
-    res.json({ success: true, inserted: result.affectedRows });
-  });
-});
-
-app.get("/api/get-period-info", (req, res) => {
-  const { staff_id, subject } = req.query;
-
-  if (!staff_id || !subject) {
-    return res.status(400).json({ error: "Missing staff_id or subject" });
-  }
-
-  const sql = `
-    SELECT year, semester, day, 
-      CASE 
-        WHEN period1 = ? THEN '1'
-        WHEN period2 = ? THEN '2'
-        WHEN period3 = ? THEN '3'
-        WHEN period4 = ? THEN '4'
-        WHEN period5 = ? THEN '5'
-        WHEN period6 = ? THEN '6'
-        WHEN period7 = ? THEN '7'
-        ELSE null 
-      END AS period
+  // 1️⃣ Get commencement dates from allocation
+  const allocSql = `
+    SELECT commence_regular, commence_lateral 
     FROM staff_period_allocation
-    WHERE staff_id = ? AND (
-      period1 = ? OR period2 = ? OR period3 = ? OR
-      period4 = ? OR period5 = ? OR period6 = ? OR period7 = ?
-    )
+    WHERE course = ? AND year = ? AND semester = ? AND section = ?
     LIMIT 1
   `;
-
-  const params = [subject, subject, subject, subject, subject, subject, subject, subject, staff_id, subject, subject, subject, subject, subject, subject];
-
-  connection.query(sql, params, (err, result) => {
+  connection.query(allocSql, [course, year, semester, section], (err, allocResult) => {
     if (err) {
-      console.error("Error:", err);
-      return res.status(500).json({ error: "Database error" });
+      console.error("❌ Allocation lookup failed:", err);
+      return res.status(500).json({ success: false, message: "Database error" });
     }
-    if (result.length === 0) {
-      return res.status(404).json({ error: "No matching period found" });
+    if (allocResult.length === 0) {
+      return res.status(400).json({ success: false, message: "No allocation found" });
     }
 
-    res.json(result[0]);
+    let minDate = allocResult[0].commence_regular;
+    if (year.toString() === "2") {
+      const regDate = new Date(allocResult[0].commence_regular);
+      const latDate = new Date(allocResult[0].commence_lateral);
+      // Pick later date for fairness
+      minDate = (regDate > latDate) ? allocResult[0].commence_regular : allocResult[0].commence_lateral;
+    }
+
+    if (new Date(date) < new Date(minDate)) {
+      return res.status(400).json({ success: false, message: `Attendance cannot be marked before ${minDate}` });
+    }
+
+    // 2️⃣ Get student joining dates
+    const regNos = [...new Set(entries.map(e => e.reg_no))];
+    const studentSql = `SELECT reg_no, joining_date FROM students WHERE reg_no IN (?)`;
+    connection.query(studentSql, [regNos], (err, studentResult) => {
+      if (err) {
+        console.error("❌ Student lookup failed:", err);
+        return res.status(500).json({ success: false, message: "Database error" });
+      }
+
+      const joinDateMap = {};
+      studentResult.forEach(s => joinDateMap[s.reg_no] = s.joining_date);
+
+      // Filter valid entries based on joining_date
+      const validEntries = entries.filter(e => {
+        const jd = joinDateMap[e.reg_no];
+        return !jd || new Date(jd) <= new Date(date);
+      });
+
+      if (validEntries.length === 0) {
+        return res.status(400).json({ success: false, message: "No students eligible for attendance on this date" });
+      }
+
+      // 3️⃣ Insert only valid records
+      const values = validEntries.map(e => [
+        e.reg_no, e.date, e.staff_id, e.course, e.year, e.semester, e.section, e.subject, e.status
+      ]);
+
+      const insertSql = `
+        INSERT INTO daily_attendance 
+        (reg_no, date, staff_id, course, year, semester, section, subject, status)
+        VALUES ?
+      `;
+
+      connection.query(insertSql, [values], (err, result) => {
+        if (err) {
+          console.error("❌ Attendance insert failed:", err);
+          return res.status(500).json({ success: false, message: "Database error" });
+        }
+        res.json({ success: true, inserted: result.affectedRows, skipped: entries.length - validEntries.length });
+      });
+    });
   });
 });
 
@@ -4381,3 +4387,4 @@ app.post("/api/allocate/multi", (req, res) => {
     }
   });
 });
+
