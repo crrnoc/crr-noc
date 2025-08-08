@@ -373,11 +373,36 @@
     window.open(`/api/download-attendance-pdf?year=${year}&semester=${semester}&course=${course}&section=${section}&subject=${encodeURIComponent(subjects.join(","))}`, '_blank');
   });
 
+  // ✅ Updated to block attendance before commencement date
   document.getElementById("daySelect").addEventListener("change", () => {
     const selectedDay = daySelect.value;
     const dateInput = document.getElementById("attendanceDate");
     dateInput.value = "";
-    dateInput.setAttribute("min", "2023-01-01");
+
+    const course = courseSelect.value;
+    const year = yearSelect.value;
+    const section = sectionSelect.value;
+    const semester = semesterSelect.value;
+
+    let minDate = "2023-01-01";
+    const match = staffAllocData.find(row =>
+      row.course === course &&
+      row.year.toString() === year.toString() &&
+      row.section === section &&
+      row.semester.toString() === semester.toString()
+    );
+
+    if (match) {
+      if (year === "2") {
+        const regDate = new Date(match.commence_regular);
+        const latDate = new Date(match.commence_lateral);
+        minDate = (regDate < latDate) ? match.commence_regular : match.commence_lateral;
+      } else {
+        minDate = match.commence_regular;
+      }
+    }
+
+    dateInput.setAttribute("min", minDate);
     dateInput.removeAttribute("max");
 
     dateInput.oninput = () => {
@@ -386,6 +411,12 @@
 
       if (dayName !== selectedDay) {
         Swal.fire(`❌ Please select a ${selectedDay}`);
+        dateInput.value = "";
+        return;
+      }
+
+      if (new Date(dateInput.value) < new Date(minDate)) {
+        Swal.fire(`❌ Attendance cannot be marked before ${minDate}`);
         dateInput.value = "";
       }
     };
