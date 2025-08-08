@@ -3609,6 +3609,7 @@ app.post("/api/allocate", (req, res) => {
 
 //Get Allocated Periods by Staff ID
 // Route to get staff's period allocations
+// Get Allocated Periods by Staff ID
 app.get("/api/staff-allocation", (req, res) => {
   const { staff_id } = req.query;
 
@@ -3617,20 +3618,21 @@ app.get("/api/staff-allocation", (req, res) => {
   }
 
   const sql = `
-  SELECT DISTINCT year, course, semester, section, day,
-    period1, period2, period3, period4, period5, period6, period7
-  FROM staff_period_allocation
-  WHERE staff_id = ?
-`;
+    SELECT year, course, semester, section, dept_code, day,
+      period1, period2, period3, period4, period5, period6, period7
+    FROM staff_period_allocation
+    WHERE TRIM(staff_id) = TRIM(?)
+  `;
 
   connection.query(sql, [staff_id], (err, result) => {
     if (err) {
-      console.error("❌ Error in query:", err);
+      console.error("❌ Error fetching allocations:", err);
       return res.status(500).json({ error: "Internal server error" });
     }
     res.json(result);
   });
 });
+
 
 // Get Students by Year, Semester, Course & Section
 app.get("/api/students-by-course-section", (req, res) => {
@@ -4310,4 +4312,5 @@ app.post("/api/allocate/multi", (req, res) => {
     res.json({ success: true, message: "Multiple allocations inserted successfully" });
   });
 });
+
 
