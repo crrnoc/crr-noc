@@ -214,6 +214,8 @@
     <option value="4-1">4-1</option>
     <option value="4-2">4-2</option>
   </select>
+  <!-- Commencement of Class Work Dates -->
+<div id="commencementDates"></div>
 
   <label>Weekly Period Allocation</label>
   <div style="overflow-x:auto;">
@@ -389,26 +391,46 @@
   });
 
   // 👇 Year -> Course
-  document.getElementById("year").addEventListener("change", async function () {
-    const dept = document.getElementById("dept_code").value;
-    const year = this.value;
-    const courseSel = document.getElementById("course");
-    const sectionSel = document.getElementById("section");
+ document.getElementById("year").addEventListener("change", async function () {
+  const dept = document.getElementById("dept_code").value;
+  const year = this.value;
+  const courseSel = document.getElementById("course");
+  const sectionSel = document.getElementById("section");
+  const dateDiv = document.getElementById("commencementDates");
 
-    courseSel.innerHTML = `<option value="">Loading...</option>`;
-    sectionSel.innerHTML = `<option value="">Select</option>`;
+  // Reset fields
+  courseSel.innerHTML = `<option value="">Loading...</option>`;
+  sectionSel.innerHTML = `<option value="">Select</option>`;
+  dateDiv.innerHTML = "";
 
-    try {
-      const res = await fetch(`${baseUrl}/api/courses-by-year?dept_code=${dept}&year=${year}`);
-      const data = await res.json();
-      courseSel.innerHTML = `<option value="">Select</option>`;
-      data.forEach(d => {
-        courseSel.innerHTML += `<option value="${d.course}">${d.course}</option>`;
-      });
-    } catch (err) {
-      console.error("Error loading courses", err);
-    }
-  });
+  // Load courses
+  try {
+    const res = await fetch(`${baseUrl}/api/courses-by-year?dept_code=${dept}&year=${year}`);
+    const data = await res.json();
+    courseSel.innerHTML = `<option value="">Select</option>`;
+    data.forEach(d => {
+      courseSel.innerHTML += `<option value="${d.course}">${d.course}</option>`;
+    });
+  } catch (err) {
+    console.error("Error loading courses", err);
+  }
+
+  // Show correct Commencement input(s)
+  if (year === "2") {
+    dateDiv.innerHTML = `
+      <label>Commencement of Class Work (Regular)</label>
+      <input type="date" id="commence_regular" name="commence_regular" required>
+
+      <label>Commencement of Class Work (Lateral)</label>
+      <input type="date" id="commence_lateral" name="commence_lateral" required>
+    `;
+  } else if (year === "1" || year === "3" || year === "4") {
+    dateDiv.innerHTML = `
+      <label>Commencement of Class Work</label>
+      <input type="date" id="commence_common" name="commence_common" required>
+    `;
+  }
+});
 
   // 👇 Course -> Section
   document.getElementById("course").addEventListener("change", async function () {
@@ -444,6 +466,16 @@ document.getElementById("allocationForm").addEventListener("submit", async funct
     course: formData.get("course"),
     section: formData.get("section"),
     semester: formData.get("semester"),
+    // Add commencement dates
+const year = formData.get("year");
+
+if (year === "2") {
+  baseData.commence_regular = formData.get("commence_regular");
+  baseData.commence_lateral = formData.get("commence_lateral");
+} else {
+  baseData.commence_common = formData.get("commence_common");
+}
+
   };
 
   const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
