@@ -3946,6 +3946,7 @@ app.get("/api/fetch-courses-sections", (req, res) => {
 });
 
 // download section wise attendance with joining_date-based percentage
+// download section wise attendance with joining_date-based percentage
 app.get("/api/download-all-subjects-attendance", (req, res) => {
   const { year, course, section, semester, from_date, to_date } = req.query;
   if (!year || !course || !section || !from_date || !to_date || !semester) {
@@ -3958,12 +3959,13 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
       a.subject,
       COUNT(*) AS total_classes,
       SUM(CASE WHEN a.status = 'Present' THEN 1 ELSE 0 END) AS attended,
-      s.joining_date
+      s.joining_date,
+      s.admission_type
     FROM daily_attendance a
     JOIN students s ON a.reg_no = s.reg_no
     WHERE a.year = ? AND a.course = ? AND a.section = ? AND a.semester = ?
       AND a.date BETWEEN ? AND ?
-    GROUP BY a.reg_no, a.subject, s.joining_date
+    GROUP BY a.reg_no, a.subject, s.joining_date, s.admission_type
     ORDER BY a.reg_no, a.subject
   `;
 
@@ -3983,6 +3985,7 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
       const attended = parseInt(r.attended || 0, 10);
       const total_classes = parseInt(r.total_classes || 0, 10);
       const joinDate = r.joining_date ? new Date(r.joining_date) : null;
+      const admissionType = r.admission_type || "";
 
       if (!studentMap[reg]) {
         studentMap[reg] = {
@@ -3990,7 +3993,8 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
           subjects: {},
           total_attended: 0,
           subjectTotals: {},
-          joining_date: joinDate
+          joining_date: joinDate,
+          admission_type: admissionType
         };
       }
       studentMap[reg].subjects[r.subject] = attended;
@@ -4087,17 +4091,26 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
     const regs = Object.values(studentMap);
     let y = doc.y;
     regs.forEach(std => {
-      // calculate possible classes considering joining date
-      let possibleClasses = 0;
-      const joinCutoff = std.joining_date && std.joining_date > new Date(from_date) ? std.joining_date : new Date(from_date);
+      // Adjust total classes for lateral students
+      let totalClassesForRow = 0;
       allSubjects.forEach(sub => {
         const totalForSubject = std.subjectTotals[sub] || 0;
-        possibleClasses += totalForSubject; // already counted only between from_date & to_date
+
+        if (std.admission_type && std.admission_type.toLowerCase() === 'lateral') {
+          if (std.joining_date && std.joining_date > new Date(from_date)) {
+            totalClassesForRow += totalForSubject; // counted only after join
+          }
+        } else {
+          totalClassesForRow += totalForSubject;
+        }
       });
-      const percent = possibleClasses > 0 ? ((std.total_attended / possibleClasses) * 100).toFixed(2) : "0.00";
+
+      const percent = totalClassesForRow > 0
+        ? ((std.total_attended / totalClassesForRow) * 100).toFixed(2)
+        : "0.00";
 
       const attendedCells = allSubjects.map(sub => (std.subjects[sub] != null ? String(std.subjects[sub]) : "-"));
-      const rowCells = [std.regno, ...attendedCells, String(std.total_attended), percent];
+      const rowCells = [std.regno, ...attendedCells, String(totalClassesForRow), percent];
 
       const bottomLimit = pageHeight - doc.page.margins.bottom - signatureHeight;
       if (y + 20 > bottomLimit) {
@@ -4146,6 +4159,7 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
     });
   });
 });
+
 
 // 1) Get courses & sections for dept + year
 app.get("/api/fetch-courses-sections", (req, res) => {
@@ -4507,3 +4521,4 @@ app.post('/api/send-sms', (req, res) => {
     }
   });
 });
+
