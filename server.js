@@ -3964,28 +3964,29 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
 
     const allSubjects = Array.from(new Set(results.map(r => r.subject)));
 
-    // build student map
+    // Build student map
     const studentMap = {};
+    const subjectTotals = {};
     results.forEach(r => {
       const reg = r.reg_no;
       const attended = parseInt(r.attended || 0, 10);
       const total_classes = parseInt(r.total_classes || 0, 10);
-      const joinDate = r.joining_date ? new Date(r.joining_date) : null;
-
       if (!studentMap[reg]) {
-        studentMap[reg] = {
-          regno: reg,
-          subjects: {},
-          total_attended: 0,
-          subjectTotals: {},
-          joining_date: joinDate
-        };
+        studentMap[reg] = { regno: reg, subjects: {}, total_attended: 0, subjectTotals: {} };
       }
       studentMap[reg].subjects[r.subject] = attended;
       studentMap[reg].total_attended += attended;
       studentMap[reg].subjectTotals[r.subject] = total_classes;
+      // Track max total per subject
+      if (!subjectTotals[r.subject] || total_classes > subjectTotals[r.subject]) {
+        subjectTotals[r.subject] = total_classes;
+      }
     });
 
+    const regs = Object.values(studentMap);
+    const totalPossiblePerStudent = allSubjects.reduce((sum, sub) => sum + (subjectTotals[sub] || 0), 0);
+
+    // PDF setup
     const PDFDocument = require("pdfkit");
     const fs = require("fs");
     const path = require("path");
@@ -4012,83 +4013,70 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
       colWidth = minColWidth;
       const totalNeeded = regColWidth + (colWidth * otherColsCount);
       if (totalNeeded > usableWidth) {
-        const newReg = Math.max(50, regColWidth - (totalNeeded - usableWidth));
-        regColWidth = newReg;
+        regColWidth = Math.max(50, regColWidth - (totalNeeded - usableWidth));
       }
     }
 
     function renderPageHeader() {
-      const logoPath = path.join(__dirname, "public", "crrengglogo.png");
-      const topY = doc.page.margins.top;
-      try {
-        if (fs.existsSync(logoPath)) doc.image(logoPath, leftMargin, topY, { width: 50 });
-      } catch (e) {}
-      const titleX = leftMargin + 60;
-      const titleW = usableWidth - 60;
-      doc.fontSize(14).font("Helvetica-Bold").text("SIR C.R.REDDY COLLEGE OF ENGINEERING (Autonomous)", titleX, topY - 2, { width: titleW, align: "center" });
-      doc.moveDown(0.2);
-      doc.fontSize(10).font("Helvetica").text(`B.Tech Year - ${year}   Sem - ${semester}   Branch - ${course}   Section - ${section}`, { align: "center" });
-      doc.fontSize(10).text("STATEMENT OF ATTENDANCE REPORT", { align: "center" });
-      doc.fontSize(8).text("Vatluru, Eluru - 534007, Eluru Dist. A.P.", { align: "center" });
-      doc.fontSize(8).text(`From: ${from_date}  To: ${to_date}`, { align: "center" });
-      doc.moveDown(0.5);
+      // College header only on first page
+      if (doc.page.number === 1) {
+        const logoPath = path.join(__dirname, "public", "crrengglogo.png");
+        if (fs.existsSync(logoPath)) doc.image(logoPath, leftMargin, 20, { width: 50 });
+        doc.fontSize(14).font("Helvetica-Bold").text("SIR C.R.REDDY COLLEGE OF ENGINEERING (Autonomous)", leftMargin + 60, 18, { width: usableWidth - 60, align: "center" });
+        doc.fontSize(10).font("Helvetica").text(`B.Tech Year - ${year}   Sem - ${semester}   Branch - ${course}   Section - ${section}`, { align: "center" });
+        doc.fontSize(10).text("STATEMENT OF ATTENDANCE REPORT", { align: "center" });
+        doc.fontSize(8).text("Vatluru, Eluru - 534007, Eluru Dist. A.P.", { align: "center" });
+        doc.fontSize(8).text(`From: ${from_date}  To: ${to_date}`, { align: "center" });
+        doc.moveDown(1);
+      }
 
-      let y = doc.y + 6;
-      doc.moveTo(leftMargin, y).lineTo(pageWidth - rightMargin, y).stroke();
-      y += 6;
-
+      // Table headers
       const headers = ["Regd.No", ...allSubjects, "TOTAL", "PERCENT"];
       let x = leftMargin;
       doc.fontSize(cellFontSize).font("Helvetica-Bold");
       headers.forEach((h, i) => {
         const w = (i === 0) ? regColWidth : colWidth;
         doc.save();
-        doc.rect(x, y, w, 20).fillAndStroke("#007acc", "black");
-        doc.fillColor("white").text(h.length > 18 ? h.substring(0, 18) + "..." : h, x + 3, y + 4, { width: w - 6, align: "center" });
+        doc.rect(x, doc.y, w, 20).fillAndStroke("#007acc", "black");
+        doc.fillColor("white").text(h.length > 18 ? h.substring(0, 18) + "..." : h, x + 3, doc.y + 4, { width: w - 6, align: "center" });
         doc.restore();
         x += w;
       });
-      y += 20;
+      doc.y += 20;
 
+      // Total Classes row
       x = leftMargin;
       doc.fontSize(cellFontSize).font("Helvetica-Bold").fillColor("black");
-      doc.rect(x, y, regColWidth, 20).stroke();
-      doc.text("Total Classes", x + 3, y + 4, { width: regColWidth - 6, align: "center" });
+      doc.rect(x, doc.y, regColWidth, 20).stroke();
+      doc.text("Total Classes", x + 3, doc.y + 4, { width: regColWidth - 6, align: "center" });
       x += regColWidth;
-      allSubjects.forEach(() => {
-        doc.rect(x, y, colWidth, 20).stroke();
-        doc.text("-", x + 3, y + 4, { width: colWidth - 6, align: "center" });
+      allSubjects.forEach(sub => {
+        const val = subjectTotals[sub] != null ? String(subjectTotals[sub]) : "-";
+        doc.rect(x, doc.y, colWidth, 20).stroke();
+        doc.text(val, x + 3, doc.y + 4, { width: colWidth - 6, align: "center" });
         x += colWidth;
       });
-      doc.rect(x, y, colWidth, 20).stroke();
-      doc.text("-", x + 3, y + 4, { width: colWidth - 6, align: "center" });
+      doc.rect(x, doc.y, colWidth, 20).stroke();
+      doc.text(String(totalPossiblePerStudent), x + 3, doc.y + 4, { width: colWidth - 6, align: "center" });
       x += colWidth;
-      doc.rect(x, y, colWidth, 20).stroke();
-      doc.text("-", x + 3, y + 4, { width: colWidth - 6, align: "center" });
-      doc.moveTo(leftMargin, y + 20).lineTo(pageWidth - rightMargin, y + 20).stroke();
-      doc.y = y + 26;
+      doc.rect(x, doc.y, colWidth, 20).stroke();
+      doc.text("-", x + 3, doc.y + 4, { width: colWidth - 6, align: "center" });
+      doc.y += 20;
     }
 
     renderPageHeader();
 
-    doc.fontSize(cellFontSize).font("Helvetica");
-    const regs = Object.values(studentMap);
     let y = doc.y;
     regs.forEach(std => {
-      // calculate possible classes considering joining date
-      let possibleClasses = 0;
-      const joinCutoff = std.joining_date && std.joining_date > new Date(from_date) ? std.joining_date : new Date(from_date);
-      allSubjects.forEach(sub => {
-        const totalForSubject = std.subjectTotals[sub] || 0;
-        possibleClasses += totalForSubject; // already counted only between from_date & to_date
-      });
-      const percent = possibleClasses > 0 ? ((std.total_attended / possibleClasses) * 100).toFixed(2) : "0.00";
+      const percent = totalPossiblePerStudent > 0 ? ((std.total_attended / totalPossiblePerStudent) * 100).toFixed(2) : "0.00";
+      const rowCells = [
+        std.regno,
+        ...allSubjects.map(sub => (std.subjects[sub] != null ? String(std.subjects[sub]) : "-")),
+        String(std.total_attended),
+        percent
+      ];
 
-      const attendedCells = allSubjects.map(sub => (std.subjects[sub] != null ? String(std.subjects[sub]) : "-"));
-      const rowCells = [std.regno, ...attendedCells, String(std.total_attended), percent];
-
-      const bottomLimit = pageHeight - doc.page.margins.bottom - signatureHeight;
-      if (y + 20 > bottomLimit) {
+      if (y + 20 > pageHeight - doc.page.margins.bottom - signatureHeight) {
         doc.addPage();
         renderPageHeader();
         y = doc.y;
@@ -4108,9 +4096,9 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
         x += w;
       });
       y += 20;
-      doc.y = y;
     });
 
+    // Signatures only once
     const finalSigY = pageHeight - doc.page.margins.bottom - (signatureHeight - 30);
     doc.fontSize(10).fillColor("black");
     doc.text("Faculty Signature", leftMargin + 10, finalSigY);
@@ -4134,7 +4122,6 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
     });
   });
 });
-
 
 // 1) Get courses & sections for dept + year
 app.get("/api/fetch-courses-sections", (req, res) => {
@@ -4392,6 +4379,7 @@ app.post("/api/allocate/multi", (req, res) => {
     }
   });
 });
+
 
 
 
