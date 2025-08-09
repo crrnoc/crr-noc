@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Admin - Send SMS</title>
+<style>
+body { font-family: Arial, sans-serif; margin: 20px; }
+label { display: block; margin-top: 10px; }
+input, select, button { padding: 6px; margin-top: 5px; width: 100%; }
+button { cursor: pointer; }
+#studentsList { margin-top: 10px; border: 1px solid #ccc; padding: 8px; max-height: 250px; overflow-y: auto; }
+.student-item { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 5px; }
+</style>
+</head>
+<body>
+
+<h2>Send SMS</h2>
+
+<!-- Filter Section -->
+<section>
+  <label>Dept Code</label>
+  <input id="dept_code" placeholder="E.g. CSE">
+
+  <label>Year</label>
+  <input id="year" placeholder="E.g. 3">
+
+  <label>Course</label>
+  <select id="courseSelect"><option value="">Select...</option></select>
+
+  <label>Section</label>
+  <select id="sectionSelect"><option value="">Select...</option></select>
+
+  <p style="text-align:center; margin:10px 0;">OR</p>
+
+  <label>From Reg No</label>
+  <input id="reg_from">
+
+  <label>To Reg No</label>
+  <input id="reg_to">
+
+  <button id="fetchStudents">Fetch Students</button>
+  <button id="selectAll">Select All</button>
+  <button id="clearAll">Clear All</button>
+
+  <div id="studentsList">No students loaded</div>
+</section>
+
+<hr>
+
+<!-- Message Section -->
+<section>
+  <label>Sender ID</label>
+  <select id="senderId">
+    <option value="CRRSTU">CRRSTU</option>
+    <option value="CRRNOC">CRRNOC</option>
+  </select>
+
+  <label>Message Type</label>
+  <select id="templateType">
+    <option value="attendance">Attendance</option>
+    <option value="midmarks">Mid Marks</option>
+    <option value="university_eng">University Results (English)</option>
+    <option value="university_telugu">University Results (Telugu)</option>
+  </select>
+
+  <button id="sendBtn" style="margin-top:15px;">Send SMS</button>
+  <div id="progress" style="margin-top:10px; color:green;"></div>
+</section>
+
+<script>
+// Fetch courses/sections when dept_code or year changes
+async function fetchCoursesAndSections() {
+  const dept_code = document.getElementById('dept_code').value.trim();
+  const year = document.getElementById('year').value.trim();
+  if (!dept_code || !year) return;
+  
+  const res = await fetch(`/api/fetch-courses-sections?dept_code=${dept_code}&year=${year}`);
+  const data = await res.json();
+  
+  const courseSelect = document.getElementById('courseSelect');
+  const sectionSelect = document.getElementById('sectionSelect');
+  courseSelect.innerHTML = `<option value="">Select...</option>`;
+  sectionSelect.innerHTML = `<option value="">Select...</option>`;
+  
+  if (!Array.isArray(data)) return;
+  const courses = [...new Set(data.map(row => row.course))];
+  courses.forEach(c => {
+    courseSelect.innerHTML += `<option value="${c}">${c}</option>`;
+  });
+
+  courseSelect.onchange = () => {
+    sectionSelect.innerHTML = `<option value="">Select...</option>`;
+    data.filter(r => r.course === courseSelect.value)
+        .forEach(r => {
+          sectionSelect.innerHTML += `<option value="${r.section}">${r.section}</option>`;
+        });
+  };
+}
+
+document.getElementById('dept_code').addEventListener('change', fetchCoursesAndSections);
+document.getElementById('year').addEventListener('change', fetchCoursesAndSections);
+
+// Student data
+let students = [];
+
+function renderStudents() {
+  const list = document.getElementById('studentsList');
+  list.innerHTML = '';
+  students.forEach((s, i) => {
+    const div = document.createElement('div');
+    div.className = 'student-item';
+    div.innerHTML = `<label><input type="checkbox" data-i="${i}" ${s.checked ? 'checked' : ''}> ${s.reg_no} - ${s.name}</label><span>${s.father_mobile}</span>`;
+    list.appendChild(div);
+  });
+  list.querySelectorAll('input[type=checkbox]').forEach(chk => {
+    chk.addEventListener('change', e => {
+      students[e.target.dataset.i].checked = e.target.checked;
+    });
+  });
+}
+
+// Fetch students from backend
+document.getElementById('fetchStudents').onclick = async () => {
+  const body = {
+    dept_code: document.getElementById('dept_code').value,
+    year: document.getElementById('year').value,
+    course: document.getElementById('courseSelect').value,
+    section: document.getElementById('sectionSelect').value,
+    reg_from: document.getElementById('reg_from').value,
+    reg_to: document.getElementById('reg_to').value
+  };
+  const res = await fetch('/api/get-students-for-sms', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(body)
+  });
+  const json = await res.json();
+  if (json.success) {
+    students = json.data.map(s => ({...s, checked: true}));
+    renderStudents();
+  } else {
+    alert(json.message || 'Error fetching students');
+  }
+};
+
+// Select/Clear All
+document.getElementById('selectAll').onclick = () => { students.forEach(s => s.checked = true); renderStudents(); };
+document.getElementById('clearAll').onclick = () => { students.forEach(s => s.checked = false); renderStudents(); };
+
+// Send SMS
+document.getElementById('sendBtn').onclick = async () => {
+  const selected = students.filter(s => s.checked).map(s => s.reg_no);
+  if (!selected.length) return alert('No students selected');
+
+  const payload = {
+    reg_nos: selected,
+    senderId: document.getElementById('senderId').value,
+    template: document.getElementById('templateType').value
+  };
+
+  document.getElementById('progress').innerText = 'Sending...';
+  const res = await fetch('/api/send-sms', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(payload)
+  });
+  const json = await res.json();
+  document.getElementById('progress').innerText = json.message || 'Done';
+};
+</script>
+
+</body>
+</html>
