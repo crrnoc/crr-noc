@@ -3940,20 +3940,20 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
     return res.status(400).json({ error: "Missing query parameters." });
   }
 
-const query = `
+  const query = `
     SELECT 
       a.reg_no,
       a.subject,
       COUNT(*) AS total_classes,
-      SUM(CASE WHEN a.status = 'Present' THEN 1 ELSE 0 END) AS attended
+      SUM(CASE WHEN a.status = 'Present' THEN 1 ELSE 0 END) AS attended,
+      s.joining_date
     FROM daily_attendance a
     JOIN students s ON a.reg_no = s.reg_no
     WHERE a.year = ? AND a.course = ? AND a.section = ? AND a.semester = ?
       AND a.date BETWEEN ? AND ?
-    GROUP BY a.reg_no, a.subject
+    GROUP BY a.reg_no, a.subject, s.joining_date
     ORDER BY a.reg_no, a.subject
-`;
-
+  `;
 
   connection.query(query, [year, course, section, semester, from_date, to_date], (err, results) => {
     if (err) {
@@ -3991,7 +3991,7 @@ const query = `
     const path = require("path");
 
     const doc = new PDFDocument({ margin: 40, size: "A4", layout: "landscape" });
-    const fileName = AttendanceReport-${Date.now()}.pdf;
+    const fileName = `AttendanceReport-${Date.now()}.pdf`;
     const filePath = path.join(__dirname, "uploads", fileName);
     const writeStream = fs.createWriteStream(filePath);
     doc.pipe(writeStream);
@@ -4027,10 +4027,10 @@ const query = `
       const titleW = usableWidth - 60;
       doc.fontSize(14).font("Helvetica-Bold").text("SIR C.R.REDDY COLLEGE OF ENGINEERING (Autonomous)", titleX, topY - 2, { width: titleW, align: "center" });
       doc.moveDown(0.2);
-      doc.fontSize(10).font("Helvetica").text(B.Tech Year - ${year}   Sem - ${semester}   Branch - ${course}   Section - ${section}, { align: "center" });
+      doc.fontSize(10).font("Helvetica").text(`B.Tech Year - ${year}   Sem - ${semester}   Branch - ${course}   Section - ${section}`, { align: "center" });
       doc.fontSize(10).text("STATEMENT OF ATTENDANCE REPORT", { align: "center" });
       doc.fontSize(8).text("Vatluru, Eluru - 534007, Eluru Dist. A.P.", { align: "center" });
-      doc.fontSize(8).text(From: ${from_date}  To: ${to_date}, { align: "center" });
+      doc.fontSize(8).text(`From: ${from_date}  To: ${to_date}`, { align: "center" });
       doc.moveDown(0.5);
 
       let y = doc.y + 6;
@@ -4391,6 +4391,7 @@ app.post("/api/allocate/multi", (req, res) => {
     }
   });
 });
+
 
 
 
