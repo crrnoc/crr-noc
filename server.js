@@ -4438,7 +4438,9 @@ app.post('/api/get-students-for-sms', (req, res) => {
 //send sms
 app.post('/api/send-sms', (req, res) => {
   const { reg_nos, senderId, template } = req.body;
-  if (!reg_nos?.length) return res.status(400).json({ success: false, message: 'No students selected' });
+  if (!reg_nos?.length) {
+    return res.status(400).json({ success: false, message: 'No students selected' });
+  }
 
   let sql;
   if (template === 'attendance') {
@@ -4472,24 +4474,25 @@ app.post('/api/send-sms', (req, res) => {
     if (err) return res.status(500).json({ success: false, message: 'DB error', error: err.message });
 
     const studentsData = rows.map(s => {
+      const cleanMobile = (s.father_mobile || '').replace(/\D/g, '').slice(-10); // clean number
       if (template === 'attendance') {
         return {
-          mobile: s.father_mobile,
+          mobile: cleanMobile,
           message: `ప్రియమైన తల్లిదండ్రులకు, మీ కుమారుడు/కుమార్తె ${s.name} (Reg.No: ${s.reg_no}) యొక్క ${s.semester} సెమిస్టర్ హాజరు శాతం: ${s.percentage}%\nదయచేసి మీ పిల్లల నిరంతర హాజరును ఖచ్చితంగా నిర్ధారించండి.\nSIR RAMALINGA REDDY COLLEGE`
         };
       } else if (template === 'midmarks') {
         return {
-          mobile: s.father_mobile,
+          mobile: cleanMobile,
           message: `Dear Parent, Mid marks of Your Ward ${s.name} bearing regno ${s.reg_no} for sem ${s.semester} midmarks: ${s.total_marks} \nSIR RAMALINGA REDDY COLLEGE`
         };
       } else if (template === 'university_eng') {
         return {
-          mobile: s.father_mobile,
+          mobile: cleanMobile,
           message: `Dear Parent, Your Ward ${s.name} bearing regno:${s.reg_no}  has Results of Semester ${s.semester} of Year ${s.year}.  \nSubjects & Grades: ${s.subjects_grades} SGPA: ${s.sgpa}\nSIR RAMALINGA REDDY COLLEGE`
         };
       } else {
         return {
-          mobile: s.father_mobile,
+          mobile: cleanMobile,
           message: `ప్రియమైన తల్లిదండ్రులకు, మీ కుమారుడు/కుమార్తె ${s.name} (Reg.No: ${s.reg_no}) కు ${s.year} సంవత్సరం ${s.semester} సెమిస్టర్ ఫలితాలు విడుదలయ్యాయి.\nవిషయాలు & గ్రేడ్‌లు: ${s.subjects_grades} SGPA: ${s.sgpa}\nSIR RAMALINGA REDDY COLLEGE`
         };
       }
@@ -4505,6 +4508,7 @@ app.post('/api/send-sms', (req, res) => {
       const sms = xml.ele('sendSMS');
       sms.ele('mobile', s.mobile);
       sms.ele('message', s.message);
+      sms.ele('templateid', TEMPLATE_ID_MAP[template]); // send templateid
     });
 
     const options = xml.ele('options');
@@ -4513,12 +4517,13 @@ app.post('/api/send-sms', (req, res) => {
     const xmlString = xml.end({ pretty: true });
 
     try {
+      console.log('XML Sent:', xmlString); // debug
       const url = `https://smslogin.co/v3/xmlapi.php?data=${encodeURIComponent(xmlString)}`;
       const apiResp = await axios.get(url, { timeout: 15000 });
+      console.log('SMS API Response:', apiResp.data); // debug
       res.json({ success: true, message: 'SMS sent', providerResponse: apiResp.data });
     } catch (sendErr) {
       res.status(500).json({ success: false, message: 'SMS API error', error: sendErr.message });
     }
   });
 });
-
