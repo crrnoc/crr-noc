@@ -21,6 +21,7 @@ const PDFParser = require("pdf2json");
 const pdfParse = require("pdf-parse"); 
 require('dotenv').config();
 const axios = require("axios");
+const xmlbuilder = require('xmlbuilder');
 const cloudinary = require("cloudinary").v2;
 const csv = require("csv-parser");
 
@@ -90,6 +91,17 @@ cloudinary.config({
   api_key: "284748761934616",
   api_secret: "SJufb0jcVKNb3rAaTecC2aQPCH0"
 });
+
+const SMS_USERNAME = process.env.SMS_PROVIDER_USERNAME || 'CRREDDYCLGT';
+const SMS_APIKEY = process.env.SMS_PROVIDER_APIKEY || '5144744cfabbae397e8c';
+
+const TEMPLATE_ID_MAP = {
+  attendance: '1207175447438252519',
+  midmarks: '1207175447366458267',
+  university_eng: '1207175447825658891',
+  university_telugu: '1207175447660496054'
+};
+
 
 // ✅ Static files
 app.use(express.static(path.join(__dirname, "public")));
@@ -4391,13 +4403,107 @@ app.post("/api/allocate/multi", (req, res) => {
     }
   });
 });
+//students getting for sms
+app.post('/api/get-students-for-sms', (req, res) => {
+  const { dept_code, year, course, section, reg_from, reg_to } = req.body;
+  let sql = `SELECT reg_no, name, father_mobile FROM students WHERE 1=1`;
+  const params = [];
 
+  if (dept_code) { sql += ` AND dept_code = ?`; params.push(dept_code); }
+  if (year) { sql += ` AND year = ?`; params.push(year); }
+  if (course) { sql += ` AND course = ?`; params.push(course); }
+  if (section) { sql += ` AND section = ?`; params.push(section); }
+  if (reg_from && reg_to) { sql += ` AND reg_no BETWEEN ? AND ?`; params.push(reg_from, reg_to); }
 
+  connection.query(sql, params, (err, rows) => {
+    if (err) return res.status(500).json({ success: false, message: 'DB error', error: err.message });
+    res.json({ success: true, data: rows });
+  });
+});
 
+//send sms
+app.post('/api/send-sms', (req, res) => {
+  const { reg_nos, senderId, template } = req.body;
+  if (!reg_nos?.length) return res.status(400).json({ success: false, message: 'No students selected' });
 
+  let sql;
+  if (template === 'attendance') {
+    sql = `SELECT s.name, s.reg_no, a.semester, a.percentage, s.father_mobile
+           FROM students s
+           JOIN attendance a ON a.regno = s.reg_no
+           WHERE s.reg_no IN (?)`;
+  } else if (template === 'midmarks') {
+    sql = `SELECT s.name, s.reg_no, m.semester,
+              (CAST(m.mid1 AS DECIMAL) + CAST(m.a1 AS DECIMAL) + CAST(m.q1 AS DECIMAL) +
+               CAST(m.mid2 AS DECIMAL) + CAST(m.a2 AS DECIMAL) + CAST(m.q2 AS DECIMAL)) AS total_marks,
+              s.father_mobile
+           FROM students s
+           JOIN midmarks m ON m.hallticket = s.reg_no
+           WHERE s.reg_no IN (?)`;
+  } else if (template === 'university_eng' || template === 'university_telugu') {
+    sql = `SELECT s.name, s.reg_no, s.year, r.semester,
+                  GROUP_CONCAT(CONCAT(r.subname, ' - ', r.grade) SEPARATOR ', ') AS subjects_grades,
+                  r.sgpa, s.father_mobile
+           FROM students s
+           LEFT JOIN (
+             SELECT regno, semester, subname, grade, sgpa FROM autonomous_results
+             UNION ALL
+             SELECT regno, semester, subname, grade, sgpa FROM results
+           ) r ON r.regno = s.reg_no
+           WHERE s.reg_no IN (?)
+           GROUP BY s.reg_no, r.semester, s.year, r.sgpa`;
+  }
 
+  connection.query(sql, [reg_nos], async (err, rows) => {
+    if (err) return res.status(500).json({ success: false, message: 'DB error', error: err.message });
 
+    const studentsData = rows.map(s => {
+      if (template === 'attendance') {
+        return {
+          mobile: s.father_mobile,
+          message: `ప్రియమైన తల్లిదండ్రులకు, మీ కుమారుడు/కుమార్తె ${s.name} (Reg.No: ${s.reg_no}) యొక్క ${s.semester} సెమిస్టర్ హాజరు శాతం: ${s.percentage}%\nదయచేసి మీ పిల్లల నిరంతర హాజరును ఖచ్చితంగా నిర్ధారించండి.\nSIR RAMALINGA REDDY COLLEGE`
+        };
+      } else if (template === 'midmarks') {
+        return {
+          mobile: s.father_mobile,
+          message: `Dear Parent, Mid marks of Your Ward ${s.name} bearing regno ${s.reg_no} for sem ${s.semester} midmarks: ${s.total_marks} \nSIR RAMALINGA REDDY COLLEGE`
+        };
+      } else if (template === 'university_eng') {
+        return {
+          mobile: s.father_mobile,
+          message: `Dear Parent, Your Ward ${s.name} bearing regno:${s.reg_no}  has Results of Semester ${s.semester} of Year ${s.year}.  \nSubjects & Grades: ${s.subjects_grades} SGPA: ${s.sgpa}\nSIR RAMALINGA REDDY COLLEGE`
+        };
+      } else {
+        return {
+          mobile: s.father_mobile,
+          message: `ప్రియమైన తల్లిదండ్రులకు, మీ కుమారుడు/కుమార్తె ${s.name} (Reg.No: ${s.reg_no}) కు ${s.year} సంవత్సరం ${s.semester} సెమిస్టర్ ఫలితాలు విడుదలయ్యాయి.\nవిషయాలు & గ్రేడ్‌లు: ${s.subjects_grades} SGPA: ${s.sgpa}\nSIR RAMALINGA REDDY COLLEGE`
+        };
+      }
+    });
 
+    // Build XML
+    const xml = xmlbuilder.create('xmlapi', { encoding: 'UTF-8' });
+    const auth = xml.ele('auth');
+    auth.ele('username', SMS_USERNAME);
+    auth.ele('apikey', SMS_APIKEY);
 
+    studentsData.forEach(s => {
+      const sms = xml.ele('sendSMS');
+      sms.ele('mobile', s.mobile);
+      sms.ele('message', s.message);
+    });
 
+    const options = xml.ele('options');
+    options.ele('senderid', senderId);
 
+    const xmlString = xml.end({ pretty: true });
+
+    try {
+      const url = `https://smslogin.co/v3/xmlapi.php?data=${encodeURIComponent(xmlString)}`;
+      const apiResp = await axios.get(url, { timeout: 15000 });
+      res.json({ success: true, message: 'SMS sent', providerResponse: apiResp.data });
+    } catch (sendErr) {
+      res.status(500).json({ success: false, message: 'SMS API error', error: sendErr.message });
+    }
+  });
+});
