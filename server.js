@@ -3940,20 +3940,20 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
     return res.status(400).json({ error: "Missing query parameters." });
   }
 
-  const query = 
+const query = `
     SELECT 
       a.reg_no,
       a.subject,
       COUNT(*) AS total_classes,
-      SUM(CASE WHEN a.status = 'Present' THEN 1 ELSE 0 END) AS attended,
-      s.joining_date
+      SUM(CASE WHEN a.status = 'Present' THEN 1 ELSE 0 END) AS attended
     FROM daily_attendance a
     JOIN students s ON a.reg_no = s.reg_no
     WHERE a.year = ? AND a.course = ? AND a.section = ? AND a.semester = ?
       AND a.date BETWEEN ? AND ?
-    GROUP BY a.reg_no, a.subject, s.joining_date
+    GROUP BY a.reg_no, a.subject
     ORDER BY a.reg_no, a.subject
-  ;
+`;
+
 
   connection.query(query, [year, course, section, semester, from_date, to_date], (err, results) => {
     if (err) {
@@ -4391,6 +4391,7 @@ app.post("/api/allocate/multi", (req, res) => {
     }
   });
 });
+
 
 
 
