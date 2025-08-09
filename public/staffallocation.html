@@ -4,18 +4,111 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>🧑‍🏫 Staff Period Allocation</title>
-  <link rel="icon" href="crrengglogo.png"/>
-  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
-    body {
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
       font-family: 'Segoe UI', sans-serif;
-      padding: 20px;
-      background: #f0f4f7;
     }
+
+    body {
+      display: flex;
+      min-height: 100vh;
+      background: linear-gradient(to right, #e0eafc, #cfdef3);
+      color: #222;
+      overflow-x: hidden;
+    }
+
+    .sidebar {
+      width: 250px;
+      background: linear-gradient(180deg, #2C3E50, #34495E);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      color: white;
+      z-index: 100;
+    }
+
+    .sidebar h2 {
+      text-align: center;
+      font-weight: bold;
+      font-size: 20px;
+      margin-bottom: 30px;
+      color: #3cb6ff;
+    }
+
+    .sidebar ul {
+      list-style: none;
+    }
+
+    .sidebar li {
+      display: block;
+      padding: 12px;
+      border-radius: 8px;
+      margin: 8px 0;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      background: rgba(255,255,255,0.1);
+    }
+
+    .sidebar li:hover {
+      background: rgba(255,255,255,0.2);
+      transform: translateX(5px);
+    }
+
+    .sidebar li.active {
+      background: rgba(255,255,255,0.3);
+      font-weight: bold;
+    }
+
+    .sidebar button {
+      background-color: #E67E22;
+      border: none;
+      color: white;
+      padding: 12px;
+      border-radius: 20px;
+      margin-top: auto;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .sidebar button:hover {
+      background-color: #CA6F1E;
+    }
+
+    .mobile-toggle {
+      display: none;
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      background: #2C3E50;
+      color: white;
+      padding: 10px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      z-index: 200;
+    }
+
+    .main {
+      flex: 1;
+      margin-left: 250px;
+      padding: 40px;
+      margin-top: 36px;
+      transition: filter 0.3s ease;
+    }
+
+    .main.shifted {
+      filter: blur(2px);
+      pointer-events: none;
+    }
+
     form {
-      max-width: 900px;
-      margin: auto;
+      max-width: 100%;
       background: white;
       padding: 20px;
       border-radius: 10px;
@@ -31,7 +124,7 @@
       width: 100%;
       margin-top: 5px;
     }
-    button {
+    button[type="submit"] {
       margin-top: 20px;
       padding: 10px 20px;
       background: #007bff;
@@ -52,74 +145,120 @@
       background: #007bff;
       color: white;
     }
+
+    @media (max-width: 768px) {
+      .sidebar { left: -250px; transition: 0.4s ease; }
+      .sidebar.open { left: 0; }
+      .mobile-toggle { display: block; }
+      .main { margin-left: 0; padding: 80px 20px 20px; }
+      table, thead, tbody, th, td, tr {
+        display: block;
+      }
+      tr { margin-bottom: 15px; }
+      td, th { text-align: left; }
+    }
   </style>
 </head>
 <body>
 
-<form id="allocationForm">
-  <h2>🧑‍🏫 Staff Period Allocation</h2>
+<div class="mobile-toggle" onclick="toggleSidebar()">☰</div>
 
-  <label>Staff ID</label>
-  <input type="text" name="staff_id" id="staff_id" required />
+<div class="sidebar" id="sidebar">
+  <h2>Admin Panel</h2>
+  <ul>
+    <li onclick="navigateTo('/uploadattendance')">🗓️ Upload Attendance</li>
+    <li onclick="navigateTo('/uploadmidmarks')">📈 Upload Mid Marks</li>
+    <li onclick="navigateTo('/addmycounselling')">👥 Assign Counselling</li>
+    <li onclick="navigateTo('/dumatch')">🔍 DU Match Status</li>
+    <li onclick="navigateTo('/removestudents')">🗑️ Delete Students</li>
+    <li onclick="navigateTo('/uploadstudents')">📚 Upload Student Data</li>
+    <li class="active" onclick="navigateTo('/staffallocation')">🧑‍🏫 Staff Period Allocation</li>
+    <li onclick="navigateTo('/downloadattendance')">📥 Download Attendance</li>
+    <li onclick="navigateTo('/editattendance')">✏️ Edit Attendance</li>
+    <li><a href="sendsms.html">📝 Mark Attendance</a></li>
+  </ul>
+  <button onclick="logout()">🚪 Logout</button>
+</div>
 
-  <label>Staff Name</label>
-  <input type="text" name="staff_name" id="staff_name" readonly />
+<div class="main" id="main-content">
+  <form id="allocationForm">
+    <h2>🧑‍🏫 Staff Period Allocation</h2>
+    <label>Staff ID</label>
+    <input type="text" name="staff_id" id="staff_id" required />
 
-  <label>Department</label>
-  <select name="dept_code" id="dept_code" required></select>
+    <label>Staff Name</label>
+    <input type="text" name="staff_name" id="staff_name" readonly />
 
-  <label>Year</label>
-  <select name="year" id="year" required></select>
+    <label>Department</label>
+    <select name="dept_code" id="dept_code" required></select>
 
-  <label>Course</label>
-  <select name="course" id="course" required></select>
+    <label>Year</label>
+    <select name="year" id="year" required></select>
 
-  <label>Section</label>
-  <select name="section" id="section" required></select>
+    <label>Course</label>
+    <select name="course" id="course" required></select>
 
-  <label>Semester</label>
-  <select name="semester" required>
-    <option value="1-1">1-1</option>
-    <option value="1-2">1-2</option>
-    <option value="2-1">2-1</option>
-    <option value="2-2">2-2</option>
-    <option value="3-1">3-1</option>
-    <option value="3-2">3-2</option>
-    <option value="4-1">4-1</option>
-    <option value="4-2">4-2</option>
-  </select>
+    <label>Section</label>
+    <select name="section" id="section" required></select>
 
-  <div id="commencementDates"></div>
+    <label>Semester</label>
+    <select name="semester" required>
+      <option value="1-1">1-1</option>
+      <option value="1-2">1-2</option>
+      <option value="2-1">2-1</option>
+      <option value="2-2">2-2</option>
+      <option value="3-1">3-1</option>
+      <option value="3-2">3-2</option>
+      <option value="4-1">4-1</option>
+      <option value="4-2">4-2</option>
+    </select>
 
-  <label>Weekly Period Allocation</label>
-  <table>
-    <thead>
-      <tr>
-        <th>Day</th>
-        <th>Period 1</th>
-        <th>Period 2</th>
-        <th>Period 3</th>
-        <th>Period 4</th>
-        <th>Period 5</th>
-        <th>Period 6</th>
-        <th>Period 7</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr><td>Monday</td><td><input name="monday_p1"/></td><td><input name="monday_p2"/></td><td><input name="monday_p3"/></td><td><input name="monday_p4"/></td><td><input name="monday_p5"/></td><td><input name="monday_p6"/></td><td><input name="monday_p7"/></td></tr>
-      <tr><td>Tuesday</td><td><input name="tuesday_p1"/></td><td><input name="tuesday_p2"/></td><td><input name="tuesday_p3"/></td><td><input name="tuesday_p4"/></td><td><input name="tuesday_p5"/></td><td><input name="tuesday_p6"/></td><td><input name="tuesday_p7"/></td></tr>
-      <tr><td>Wednesday</td><td><input name="wednesday_p1"/></td><td><input name="wednesday_p2"/></td><td><input name="wednesday_p3"/></td><td><input name="wednesday_p4"/></td><td><input name="wednesday_p5"/></td><td><input name="wednesday_p6"/></td><td><input name="wednesday_p7"/></td></tr>
-      <tr><td>Thursday</td><td><input name="thursday_p1"/></td><td><input name="thursday_p2"/></td><td><input name="thursday_p3"/></td><td><input name="thursday_p4"/></td><td><input name="thursday_p5"/></td><td><input name="thursday_p6"/></td><td><input name="thursday_p7"/></td></tr>
-      <tr><td>Friday</td><td><input name="friday_p1"/></td><td><input name="friday_p2"/></td><td><input name="friday_p3"/></td><td><input name="friday_p4"/></td><td><input name="friday_p5"/></td><td><input name="friday_p6"/></td><td><input name="friday_p7"/></td></tr>
-      <tr><td>Saturday</td><td><input name="saturday_p1"/></td><td><input name="saturday_p2"/></td><td><input name="saturday_p3"/></td><td><input name="saturday_p4"/></td><td><input name="saturday_p5"/></td><td><input name="saturday_p6"/></td><td><input name="saturday_p7"/></td></tr>
-    </tbody>
-  </table>
+    <div id="commencementDates"></div>
 
-  <button type="submit">Allocate Periods</button>
-</form>
+    <label>Weekly Period Allocation</label>
+    <table>
+      <thead>
+        <tr>
+          <th>Day</th>
+          <th>Period 1</th>
+          <th>Period 2</th>
+          <th>Period 3</th>
+          <th>Period 4</th>
+          <th>Period 5</th>
+          <th>Period 6</th>
+          <th>Period 7</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Monday</td><td><input name="monday_p1"/></td><td><input name="monday_p2"/></td><td><input name="monday_p3"/></td><td><input name="monday_p4"/></td><td><input name="monday_p5"/></td><td><input name="monday_p6"/></td><td><input name="monday_p7"/></td></tr>
+        <tr><td>Tuesday</td><td><input name="tuesday_p1"/></td><td><input name="tuesday_p2"/></td><td><input name="tuesday_p3"/></td><td><input name="tuesday_p4"/></td><td><input name="tuesday_p5"/></td><td><input name="tuesday_p6"/></td><td><input name="tuesday_p7"/></td></tr>
+        <tr><td>Wednesday</td><td><input name="wednesday_p1"/></td><td><input name="wednesday_p2"/></td><td><input name="wednesday_p3"/></td><td><input name="wednesday_p4"/></td><td><input name="wednesday_p5"/></td><td><input name="wednesday_p6"/></td><td><input name="wednesday_p7"/></td></tr>
+        <tr><td>Thursday</td><td><input name="thursday_p1"/></td><td><input name="thursday_p2"/></td><td><input name="thursday_p3"/></td><td><input name="thursday_p4"/></td><td><input name="thursday_p5"/></td><td><input name="thursday_p6"/></td><td><input name="thursday_p7"/></td></tr>
+        <tr><td>Friday</td><td><input name="friday_p1"/></td><td><input name="friday_p2"/></td><td><input name="friday_p3"/></td><td><input name="friday_p4"/></td><td><input name="friday_p5"/></td><td><input name="friday_p6"/></td><td><input name="friday_p7"/></td></tr>
+        <tr><td>Saturday</td><td><input name="saturday_p1"/></td><td><input name="saturday_p2"/></td><td><input name="saturday_p3"/></td><td><input name="saturday_p4"/></td><td><input name="saturday_p5"/></td><td><input name="saturday_p6"/></td><td><input name="saturday_p7"/></td></tr>
+      </tbody>
+    </table>
+
+    <button type="submit">Allocate Periods</button>
+  </form>
+</div>
 
 <script>
 const baseUrl = "https://crr-noc.onrender.com";
+
+function navigateTo(route) { window.location.href = route; }
+function toggleSidebar() {
+  const sidebar = document.getElementById("sidebar");
+  const main = document.getElementById("main-content");
+  sidebar.classList.toggle("open");
+  main.classList.toggle("shifted");
+}
+function logout() {
+  fetch("/logout").then(() => {
+    localStorage.removeItem("userId");
+    window.location.replace("index.html");
+  });
+}
 
 document.getElementById("staff_id").addEventListener("blur", async function () {
   const id = this.value;
@@ -142,9 +281,7 @@ window.onload = async () => {
     data.forEach(d => {
       deptSel.innerHTML += `<option value="${d.dept_code}">${d.dept_code}</option>`;
     });
-  } catch (err) {
-    console.error("Failed to load departments", err);
-  }
+  } catch (err) { console.error("Failed to load departments", err); }
 };
 
 document.getElementById("dept_code").addEventListener("change", async function () {
@@ -164,9 +301,7 @@ document.getElementById("dept_code").addEventListener("change", async function (
     data.forEach(d => {
       yearSel.innerHTML += `<option value="${d.year}">${d.year}</option>`;
     });
-  } catch (err) {
-    console.error("Error loading years", err);
-  }
+  } catch (err) { console.error("Error loading years", err); }
 });
 
 document.getElementById("year").addEventListener("change", async function () {
@@ -187,9 +322,7 @@ document.getElementById("year").addEventListener("change", async function () {
     data.forEach(d => {
       courseSel.innerHTML += `<option value="${d.course}">${d.course}</option>`;
     });
-  } catch (err) {
-    console.error("Error loading courses", err);
-  }
+  } catch (err) { console.error("Error loading courses", err); }
 
   if (year === "2") {
     dateDiv.innerHTML = `
@@ -221,12 +354,9 @@ document.getElementById("course").addEventListener("change", async function () {
     data.forEach(d => {
       sectionSel.innerHTML += `<option value="${d.section}">${d.section}</option>`;
     });
-  } catch (err) {
-    console.error("Error loading sections", err);
-  }
+  } catch (err) { console.error("Error loading sections", err); }
 });
 
-// ✅ Submit allocation
 document.getElementById("allocationForm").addEventListener("submit", async function (e) {
   e.preventDefault();
 
@@ -267,7 +397,7 @@ document.getElementById("allocationForm").addEventListener("submit", async funct
       period7: formData.get(`${d}_p7`) || ""
     };
 
-    if (Object.values(payload).some(v => v.trim() !== "" && v !== day && !["staff_id", "staff_name", "dept_code", "year", "course", "section", "semester", "commence_regular", "commence_lateral", "commence_common"].includes(v))) {
+    if (Object.values(payload).some(v => v.trim() !== "" && v !== day)) {
       fullPayload.push(payload);
     }
   });
@@ -293,9 +423,9 @@ document.getElementById("allocationForm").addEventListener("submit", async funct
     }
   } catch (err) {
     Swal.fire("❌ Error", "Server/Network error", "error");
-    console.error("Submit failed", err);
   }
 });
 </script>
+
 </body>
 </html>
