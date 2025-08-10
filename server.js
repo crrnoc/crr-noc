@@ -4473,22 +4473,71 @@ const TEMPLATE_ID_MAP = {
   university_telugu: '1207175447660496054'
 };
 
-// DLT templates exactly as registered (with {#var#})
 const TEMPLATE_TEXT = {
-  attendance: `ప్రియమైన తల్లిదండ్రులకు, మీ కుమారుడు/కుమార్తె {#var#} (Reg.No: {#var#}) యొక్క {#var#} సెమిస్టర్ హాజరు శాతం: {#var#}%\nదయచేసి మీ పిల్లల నిరంతర హాజరును ఖచ్చితంగా నిర్ధారించండి.\nSIR RAMALINGA REDDY COLLEGE`,
-  midmarks: `Dear Parent, Mid marks of Your Ward {#var#} bearing regno {#var#} for sem {#var#} midmarks: {#var#} &#10;SIR RAMALINGA REDDY COLLEGE`,
-  university_eng: `Dear Parent, Your Ward {#var#} bearing regno:{#var#}  has Results of Semester {#var#} of Year {#var#}.  &#10;Subjects & Grades: {#var#} SGPA: {#var#}&#10;SIR RAMALINGA REDDY COLLEGE`,
-  university_telugu: `ప్రియమైన తల్లిదండ్రులకు, మీ కుమారుడు/కుమార్తె {#var#} (Reg.No: {#var#}) కు {#var#} సంవత్సరం {#var#} సెమిస్టర్ ఫలితాలు విడుదలయ్యాయి.&#10;విషయాలు & గ్రేడ్‌లు: {#var#} SGPA: {#var#}&#10;SIR RAMALINGA REDDY COLLEGE`
+  attendance: `ప్రియమైన తల్లిదండ్రులకు, మీ కుమారుడు/కుమార్తె {#var#} (Reg.No: {#var#}) యొక్క {#var#} సెమిస్టర్ హాజరు శాతం: {#var#}%
+దయచేసి మీ పిల్లల నిరంతర హాజరును ఖచ్చితంగా నిర్ధారించండి.
+SIR RAMALINGA REDDY COLLEGE`,
+
+  midmarks: `Dear Parent, Mid marks of Your Ward {#var#} bearing regno {#var#} for sem {#var#} midmarks: {#var#}
+SIR RAMALINGA REDDY COLLEGE`,
+
+  university_eng: `Dear Parent, Your Ward {#var#} bearing regno:{#var#} has Results of Semester {#var#} of Year {#var#}.
+Subjects & Grades: {#var#} SGPA: {#var#}
+SIR RAMALINGA REDDY COLLEGE`,
+
+  university_telugu: `ప్రియమైన తల్లిదండ్రులకు, మీ కుమారుడు/కుమార్తె {#var#} (Reg.No: {#var#}) కు {#var#} సంవత్సరం {#var#} సెమిస్టర్ ఫలితాలు విడుదలయ్యాయి.
+విషయాలు & గ్రేడ్‌లు: {#var#} SGPA: {#var#}
+SIR RAMALINGA REDDY COLLEGE`
 };
 
-// sms api
+function formatMessage(templateKey, data) {
+  let msg = TEMPLATE_TEXT[templateKey];
+
+  if (templateKey === 'attendance') {
+    msg = msg
+      .replace('{#var#}', data.name)
+      .replace('{#var#}', data.reg_no)
+      .replace('{#var#}', data.semester)
+      .replace('{#var#}', data.percentage);
+  } else if (templateKey === 'midmarks') {
+    msg = msg
+      .replace('{#var#}', data.name)
+      .replace('{#var#}', data.reg_no)
+      .replace('{#var#}', data.semester)
+      .replace('{#var#}', data.total_marks);
+  } else if (templateKey === 'university_eng') {
+    msg = msg
+      .replace('{#var#}', data.name)
+      .replace('{#var#}', data.reg_no)
+      .replace('{#var#}', data.semester)
+      .replace('{#var#}', data.year)
+      .replace('{#var#}', data.subjects_grades)
+      .replace('{#var#}', data.sgpa);
+  } else if (templateKey === 'university_telugu') {
+    msg = msg
+      .replace('{#var#}', data.name)
+      .replace('{#var#}', data.reg_no)
+      .replace('{#var#}', data.year)
+      .replace('{#var#}', data.semester)
+      .replace('{#var#}', data.subjects_grades)
+      .replace('{#var#}', data.sgpa);
+  }
+
+  return msg;
+}
+
 app.post('/api/send-sms', (req, res) => {
   const { reg_nos, senderId, template } = req.body;
+
   if (!reg_nos?.length) {
     return res.status(400).json({ success: false, message: 'No students selected' });
   }
+  if (!TEMPLATE_ID_MAP[template]) {
+    return res.status(400).json({ success: false, message: 'Invalid template type' });
+  }
 
   let sql;
+
   if (template === 'attendance') {
     sql = `SELECT s.name, s.reg_no, a.semester, a.percentage, s.father_mobile
            FROM students s
@@ -4519,41 +4568,40 @@ app.post('/api/send-sms', (req, res) => {
   connection.query(sql, [reg_nos], async (err, rows) => {
     if (err) return res.status(500).json({ success: false, message: 'DB error', error: err.message });
 
+    if (!rows.length) {
+      return res.status(404).json({ success: false, message: 'No data found for selected students' });
+    }
+
     const studentsData = rows.map(s => {
       const cleanMobile = (s.father_mobile || '').replace(/\D/g, '').slice(-10);
-      let messageTemplate = TEMPLATE_TEXT[template];
 
-      // Replace {#var#} in order for each template type
+      let dataObj;
       if (template === 'attendance') {
-        messageTemplate = messageTemplate
-          .replace('{#var#}', s.name)
-          .replace('{#var#}', s.reg_no)
-          .replace('{#var#}', s.semester)
-          .replace('{#var#}', s.percentage);
+        dataObj = { name: s.name, reg_no: s.reg_no, semester: s.semester, percentage: s.percentage };
       } else if (template === 'midmarks') {
-        messageTemplate = messageTemplate
-          .replace('{#var#}', s.name)
-          .replace('{#var#}', s.reg_no)
-          .replace('{#var#}', s.semester)
-          .replace('{#var#}', s.total_marks);
+        dataObj = { name: s.name, reg_no: s.reg_no, semester: s.semester, total_marks: s.total_marks };
       } else if (template === 'university_eng') {
-        messageTemplate = messageTemplate
-          .replace('{#var#}', s.name)
-          .replace('{#var#}', s.reg_no)
-          .replace('{#var#}', s.semester)
-          .replace('{#var#}', s.year)
-          .replace('{#var#}', s.subjects_grades)
-          .replace('{#var#}', s.sgpa);
+        dataObj = {
+          name: s.name,
+          reg_no: s.reg_no,
+          semester: s.semester,
+          year: s.year,
+          subjects_grades: s.subjects_grades,
+          sgpa: s.sgpa
+        };
       } else {
         // university_telugu
-        messageTemplate = messageTemplate
-          .replace('{#var#}', s.name)
-          .replace('{#var#}', s.reg_no)
-          .replace('{#var#}', s.year)
-          .replace('{#var#}', s.semester)
-          .replace('{#var#}', s.subjects_grades)
-          .replace('{#var#}', s.sgpa);
+        dataObj = {
+          name: s.name,
+          reg_no: s.reg_no,
+          year: s.year,
+          semester: s.semester,
+          subjects_grades: s.subjects_grades,
+          sgpa: s.sgpa
+        };
       }
+
+      const messageTemplate = formatMessage(template, dataObj);
 
       return { mobile: cleanMobile, message: messageTemplate };
     });
@@ -4578,15 +4626,15 @@ app.post('/api/send-sms', (req, res) => {
 
     try {
       console.log('XML Sent to Provider:\n', xmlString);
+
       const url = `https://smslogin.co/v3/xmlapi.php?data=${encodeURIComponent(xmlString)}`;
       const apiResp = await axios.get(url, { timeout: 15000 });
+
       console.log('Provider Response:', apiResp.data);
-      res.json({ success: true, message: 'SMS sent', providerResponse: apiResp.data });
+
+      return res.json({ success: true, message: 'SMS sent', providerResponse: apiResp.data });
     } catch (sendErr) {
-      res.status(500).json({ success: false, message: 'SMS API error', error: sendErr.message });
+      return res.status(500).json({ success: false, message: 'SMS API error', error: sendErr.message });
     }
   });
 });
-
-
-
