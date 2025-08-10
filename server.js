@@ -3934,8 +3934,7 @@ app.get("/api/fetch-courses-sections", (req, res) => {
   });
 });
 
-// download section wise attendance with joining_date-based percentage
-// download section wise attendance with joining_date-based percentage
+// download section wise attendance with joining_date-based percentage + lateral list
 app.get("/api/download-all-subjects-attendance", (req, res) => {
   const { year, course, section, semester, from_date, to_date } = req.query;
   if (!year || !course || !section || !from_date || !to_date || !semester) {
@@ -3974,7 +3973,6 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
       const attended = parseInt(r.attended || 0, 10);
       const total_classes = parseInt(r.total_classes || 0, 10);
       const joinDate = r.joining_date ? new Date(r.joining_date) : null;
-      const admissionType = r.admission_type || "";
 
       if (!studentMap[reg]) {
         studentMap[reg] = {
@@ -3983,7 +3981,7 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
           total_attended: 0,
           subjectTotals: {},
           joining_date: joinDate,
-          admission_type: admissionType
+          admission_type: r.admission_type || 'regular'
         };
       }
       studentMap[reg].subjects[r.subject] = attended;
@@ -4055,23 +4053,7 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
       });
       y += 20;
 
-      x = leftMargin;
-      doc.fontSize(cellFontSize).font("Helvetica-Bold").fillColor("black");
-      doc.rect(x, y, regColWidth, 20).stroke();
-      doc.text("Total Classes", x + 3, y + 4, { width: regColWidth - 6, align: "center" });
-      x += regColWidth;
-      allSubjects.forEach(() => {
-        doc.rect(x, y, colWidth, 20).stroke();
-        doc.text("-", x + 3, y + 4, { width: colWidth - 6, align: "center" });
-        x += colWidth;
-      });
-      doc.rect(x, y, colWidth, 20).stroke();
-      doc.text("-", x + 3, y + 4, { width: colWidth - 6, align: "center" });
-      x += colWidth;
-      doc.rect(x, y, colWidth, 20).stroke();
-      doc.text("-", x + 3, y + 4, { width: colWidth - 6, align: "center" });
-      doc.moveTo(leftMargin, y + 20).lineTo(pageWidth - rightMargin, y + 20).stroke();
-      doc.y = y + 26;
+      doc.y = y;
     }
 
     renderPageHeader();
@@ -4079,27 +4061,19 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
     doc.fontSize(cellFontSize).font("Helvetica");
     const regs = Object.values(studentMap);
     let y = doc.y;
+
     regs.forEach(std => {
-      // Adjust total classes for lateral students
-      let totalClassesForRow = 0;
+      // joining date based total classes
+      let possibleClasses = 0;
+      const joinCutoff = std.joining_date && std.joining_date > new Date(from_date) ? std.joining_date : new Date(from_date);
       allSubjects.forEach(sub => {
         const totalForSubject = std.subjectTotals[sub] || 0;
-
-        if (std.admission_type && std.admission_type.toLowerCase() === 'lateral') {
-          if (std.joining_date && std.joining_date > new Date(from_date)) {
-            totalClassesForRow += totalForSubject; // counted only after join
-          }
-        } else {
-          totalClassesForRow += totalForSubject;
-        }
+        possibleClasses += totalForSubject;
       });
-
-      const percent = totalClassesForRow > 0
-        ? ((std.total_attended / totalClassesForRow) * 100).toFixed(2)
-        : "0.00";
+      const percent = possibleClasses > 0 ? ((std.total_attended / possibleClasses) * 100).toFixed(2) : "0.00";
 
       const attendedCells = allSubjects.map(sub => (std.subjects[sub] != null ? String(std.subjects[sub]) : "-"));
-      const rowCells = [std.regno, ...attendedCells, String(totalClassesForRow), percent];
+      const rowCells = [std.regno, ...attendedCells, String(possibleClasses), percent];
 
       const bottomLimit = pageHeight - doc.page.margins.bottom - signatureHeight;
       if (y + 20 > bottomLimit) {
@@ -4125,10 +4099,22 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
       doc.y = y;
     });
 
+    // Signatures
     const finalSigY = pageHeight - doc.page.margins.bottom - (signatureHeight - 30);
     doc.fontSize(10).fillColor("black");
     doc.text("Faculty Signature", leftMargin + 10, finalSigY);
     doc.text("HOD Signature", pageWidth - rightMargin - 160, finalSigY);
+
+    // New page for Lateral Entry Students
+    const lateralStudents = Object.values(studentMap).filter(std => std.admission_type.toLowerCase() === 'lateral');
+    if (lateralStudents.length > 0) {
+      doc.addPage();
+      doc.fontSize(14).text("Lateral Entry Students", { align: "center" });
+      doc.moveDown();
+      lateralStudents.forEach(std => {
+        doc.fontSize(10).text(std.regno, { align: "left" });
+      });
+    }
 
     doc.end();
 
@@ -4549,6 +4535,7 @@ if (template === 'attendance') {
     }
   });
 });
+
 
 
 
