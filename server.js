@@ -3934,7 +3934,7 @@ app.get("/api/fetch-courses-sections", (req, res) => {
   });
 });
 
-// download section wise attendance with joining_date-based percentage + lateral list
+// download section wise attendance with joining_date-based percentage + Lateral list at end
 app.get("/api/download-all-subjects-attendance", (req, res) => {
   const { year, course, section, semester, from_date, to_date } = req.query;
   if (!year || !course || !section || !from_date || !to_date || !semester) {
@@ -3973,6 +3973,7 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
       const attended = parseInt(r.attended || 0, 10);
       const total_classes = parseInt(r.total_classes || 0, 10);
       const joinDate = r.joining_date ? new Date(r.joining_date) : null;
+      const admissionType = r.admission_type || "regular";
 
       if (!studentMap[reg]) {
         studentMap[reg] = {
@@ -3981,7 +3982,7 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
           total_attended: 0,
           subjectTotals: {},
           joining_date: joinDate,
-          admission_type: r.admission_type || 'regular'
+          admission_type: admissionType
         };
       }
       studentMap[reg].subjects[r.subject] = attended;
@@ -4053,27 +4054,39 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
       });
       y += 20;
 
-      doc.y = y;
+      x = leftMargin;
+      doc.fontSize(cellFontSize).font("Helvetica-Bold").fillColor("black");
+      doc.rect(x, y, regColWidth, 20).stroke();
+      doc.text("Total Classes", x + 3, y + 4, { width: regColWidth - 6, align: "center" });
+      x += regColWidth;
+      allSubjects.forEach(() => {
+        doc.rect(x, y, colWidth, 20).stroke();
+        doc.text("-", x + 3, y + 4, { width: colWidth - 6, align: "center" });
+        x += colWidth;
+      });
+      doc.rect(x, y, colWidth, 20).stroke();
+      doc.text("-", x + 3, y + 4, { width: colWidth - 6, align: "center" });
+      x += colWidth;
+      doc.rect(x, y, colWidth, 20).stroke();
+      doc.text("-", x + 3, y + 4, { width: colWidth - 6, align: "center" });
+      doc.moveTo(leftMargin, y + 20).lineTo(pageWidth - rightMargin, y + 20).stroke();
+      doc.y = y + 26;
     }
 
+    // Main table
     renderPageHeader();
-
     doc.fontSize(cellFontSize).font("Helvetica");
     const regs = Object.values(studentMap);
     let y = doc.y;
-
     regs.forEach(std => {
-      // joining date based total classes
       let possibleClasses = 0;
-      const joinCutoff = std.joining_date && std.joining_date > new Date(from_date) ? std.joining_date : new Date(from_date);
       allSubjects.forEach(sub => {
         const totalForSubject = std.subjectTotals[sub] || 0;
         possibleClasses += totalForSubject;
       });
       const percent = possibleClasses > 0 ? ((std.total_attended / possibleClasses) * 100).toFixed(2) : "0.00";
-
       const attendedCells = allSubjects.map(sub => (std.subjects[sub] != null ? String(std.subjects[sub]) : "-"));
-      const rowCells = [std.regno, ...attendedCells, String(possibleClasses), percent];
+      const rowCells = [std.regno, ...attendedCells, String(std.total_attended), percent];
 
       const bottomLimit = pageHeight - doc.page.margins.bottom - signatureHeight;
       if (y + 20 > bottomLimit) {
@@ -4081,7 +4094,6 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
         renderPageHeader();
         y = doc.y;
       }
-
       let x = leftMargin;
       rowCells.forEach((cell, i) => {
         const w = (i === 0) ? regColWidth : colWidth;
@@ -4099,25 +4111,54 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
       doc.y = y;
     });
 
-    // Signatures
     const finalSigY = pageHeight - doc.page.margins.bottom - (signatureHeight - 30);
     doc.fontSize(10).fillColor("black");
     doc.text("Faculty Signature", leftMargin + 10, finalSigY);
     doc.text("HOD Signature", pageWidth - rightMargin - 160, finalSigY);
 
-    // New page for Lateral Entry Students
-    const lateralStudents = Object.values(studentMap).filter(std => std.admission_type.toLowerCase() === 'lateral');
-    if (lateralStudents.length > 0) {
+    // Lateral students page
+    const laterals = regs.filter(std => std.admission_type.toLowerCase() === 'lateral');
+    if (laterals.length > 0) {
       doc.addPage();
-      doc.fontSize(14).text("Lateral Entry Students", { align: "center" });
-      doc.moveDown();
-      lateralStudents.forEach(std => {
-        doc.fontSize(10).text(std.regno, { align: "left" });
+      doc.fontSize(12).font("Helvetica-Bold").text("Lateral Entry Students", { align: "center" });
+      doc.moveDown(0.5);
+      renderPageHeader();
+      let y2 = doc.y;
+      laterals.forEach(std => {
+        let possibleClasses = 0;
+        allSubjects.forEach(sub => {
+          const totalForSubject = std.subjectTotals[sub] || 0;
+          possibleClasses += totalForSubject;
+        });
+        const percent = possibleClasses > 0 ? ((std.total_attended / possibleClasses) * 100).toFixed(2) : "0.00";
+        const attendedCells = allSubjects.map(sub => (std.subjects[sub] != null ? String(std.subjects[sub]) : "-"));
+        const rowCells = [std.regno, ...attendedCells, String(std.total_attended), percent];
+
+        const bottomLimit = pageHeight - doc.page.margins.bottom - signatureHeight;
+        if (y2 + 20 > bottomLimit) {
+          doc.addPage();
+          renderPageHeader();
+          y2 = doc.y;
+        }
+        let x = leftMargin;
+        rowCells.forEach((cell, i) => {
+          const w = (i === 0) ? regColWidth : colWidth;
+          if (i === rowCells.length - 1) {
+            const p = parseFloat(cell) || 0;
+            doc.fillColor(p < 75 ? "red" : "black");
+          } else {
+            doc.fillColor("black");
+          }
+          doc.rect(x, y2, w, 20).stroke();
+          doc.text(String(cell), x + 3, y2 + 4, { width: w - 6, align: "center" });
+          x += w;
+        });
+        y2 += 20;
+        doc.y = y2;
       });
     }
 
     doc.end();
-
     writeStream.on("finish", () => {
       res.download(filePath, fileName, err => {
         if (err) {
@@ -4127,13 +4168,13 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
         fs.unlink(filePath, () => {});
       });
     });
-
     writeStream.on("error", err => {
       console.error("PDF write error:", err);
       return res.status(500).json({ error: "PDF write error" });
     });
   });
 });
+
 
 
 // 1) Get courses & sections for dept + year
@@ -4534,6 +4575,7 @@ if (template === 'attendance') {
     }
   });
 });
+
 
 
 
