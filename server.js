@@ -146,6 +146,9 @@ app.get("/editattendance", requireAdminSession, (req, res) => {
 app.get("/adminpanel", requireAdminSession, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "adminpanel.html"));
 });
+app.get("/sendsms", requireAdminSession, (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "sendsms.html"));
+});
 
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads"))); // for previews
@@ -4733,6 +4736,7 @@ app.post("/api/send-sms", async (req, res) => {
 });
 
 module.exports = app;
+
 
 
 
