@@ -4477,15 +4477,13 @@ app.post('/api/send-sms', (req, res) => {
     const studentsData = rows.map(s => {
       const cleanMobile = (s.father_mobile || '').replace(/\D/g, '').slice(-10);
 
-     if (template === 'attendance') {
+if (template === 'attendance') {
   return {
     mobile: cleanMobile,
-    message: `ప్రియమైన తల్లిదండ్రులకు, మీ కుమారుడు/కుమార్తె ${s.name} (Reg.No: ${s.reg_no}) యొక్క ${s.semester} సెమిస్టర్ హాజరు శాతం: ${s.percentage}% దయచేసి మీ పిల్లల నిరంతర హాజరును ఖచ్చితంగా నిర్ధారించండి. SIR RAMALINGA REDDY COLLEGE`
-      .replace(/[\r\n]+/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim()
+    message: `ప్రియమైన తల్లిదండ్రులకు, మీ కుమారుడు/కుమార్తె ${s.name} (Reg.No: ${s.reg_no}) యొక్క ${s.semester} సెమిస్టర్ హాజరు శాతం: ${s.percentage}%\nదయచేసి మీ పిల్లల నిరంతర హాజరును ఖచ్చితంగా నిర్ధారించండి.\nSIR RAMALINGA REDDY COLLEGE`
   };
-} else if (template === 'midmarks') {
+}
+ else if (template === 'midmarks') {
   return {
     mobile: cleanMobile,
     message: `Dear Parent, Mid marks of Your Ward ${s.name} bearing regno ${s.reg_no} for sem ${s.semester} midmarks: ${s.total_marks} SIR RAMALINGA REDDY COLLEGE`
@@ -4547,4 +4545,5 @@ app.post('/api/send-sms', (req, res) => {
     }
   });
 });
+
 
