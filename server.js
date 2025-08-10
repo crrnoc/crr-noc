@@ -4487,11 +4487,15 @@ const TEMPLATE_ID_MAP = {
 const TEMPLATE_TEXT = {
   attendance: `ప్రియమైన తల్లిదండ్రులకు, మీ కుమారుడు/కుమార్తె {#var#} (Reg.No: {#var#}) యొక్క {#var#} సెమిస్టర్ హాజరు శాతం: {#var#}%
 దయచేసి మీ పిల్లల నిరంతర హాజరును ఖచ్చితంగా నిర్ధారించండి.
-SIR RAMALINGA REDDY COLLEGE
-`,
-  midmarks: `Dear Parent, Mid marks of Your Ward {#var#} bearing regno {#var#} for sem {#var#} midmarks: {#var#}\nSIR RAMALINGA REDDY COLLEGE`,
-  university_eng: `Dear Parent, Your Ward {#var#} bearing regno:{#var#} has Results of Semester {#var#} of Year {#var#}.\nSubjects & Grades: {#var#} SGPA: {#var#}\nSIR RAMALINGA REDDY COLLEGE`,
-  university_telugu: `ప్రియమైన తల్లిదండ్రులకు, మీ కుమారుడు/కుమార్తె {#var#} (Reg.No: {#var#}) కు {#var#} సంవత్సరం {#var#} సెమిస్టర్ ఫలితాలు విడుదలయ్యాయి.\nవిషయాలు & గ్రేడ్‌లు: {#var#} SGPA: {#var#}\nSIR RAMALINGA REDDY COLLEGE`
+SIR RAMALINGA REDDY COLLEGE`,
+  midmarks: `Dear Parent, Mid marks of Your Ward {#var#} bearing regno {#var#} for sem {#var#} midmarks: {#var#}
+SIR RAMALINGA REDDY COLLEGE`,
+  university_eng: `Dear Parent, Your Ward {#var#} bearing regno:{#var#} has Results of Semester {#var#} of Year {#var#}.
+Subjects & Grades: {#var#} SGPA: {#var#}
+SIR RAMALINGA REDDY COLLEGE`,
+  university_telugu: `ప్రియమైన తల్లిదండ్రులకు, మీ కుమారుడు/కుమార్తె {#var#} (Reg.No: {#var#}) కు {#var#} సంవత్సరం {#var#} సెమిస్టర్ ఫలితాలు విడుదలయ్యాయి.
+విషయాలు & గ్రేడ్‌లు: {#var#} SGPA: {#var#}
+SIR RAMALINGA REDDY COLLEGE`
 };
 
 function formatMessage(templateKey, data) {
@@ -4508,9 +4512,10 @@ function formatMessage(templateKey, data) {
     replacements.push(data.name, data.reg_no, data.year, data.semester, data.subjects_grades, data.sgpa);
   }
 
-  for (const rep of replacements) {
+  replacements.forEach(rep => {
     msg = msg.replace('{#var#}', rep);
-  }
+  });
+
   return msg;
 }
 
@@ -4564,50 +4569,25 @@ app.post('/api/send-sms', async (req, res) => {
       return res.status(404).json({ success: false, message: 'No data found for selected students' });
     }
 
-    const studentsData = rows.map(s => {
-      const cleanMobile = (s.father_mobile || '').replace(/\D/g, '').slice(-10);
-      let dataObj;
-
-      if (template === 'attendance') {
-        dataObj = { name: s.name, reg_no: s.reg_no, semester: s.semester, percentage: s.percentage };
-      } else if (template === 'midmarks') {
-        dataObj = { name: s.name, reg_no: s.reg_no, semester: s.semester, total_marks: s.total_marks };
-      } else if (template === 'university_eng') {
-        dataObj = {
-          name: s.name,
-          reg_no: s.reg_no,
-          semester: s.semester,
-          year: s.year,
-          subjects_grades: s.subjects_grades,
-          sgpa: s.sgpa
-        };
-      } else {
-        dataObj = {
-          name: s.name,
-          reg_no: s.reg_no,
-          year: s.year,
-          semester: s.semester,
-          subjects_grades: s.subjects_grades,
-          sgpa: s.sgpa
-        };
-      }
-
-      return {
-        mobile: cleanMobile,
-        message: formatMessage(template, dataObj)
-      };
-    });
-
-    // XML build
     const xml = xmlbuilder.create('xmlapi', { encoding: 'UTF-8' });
     const auth = xml.ele('auth');
     auth.ele('username', SMS_USERNAME);
     auth.ele('apikey', SMS_APIKEY);
 
-    studentsData.forEach(s => {
+    rows.forEach(s => {
+      const cleanMobile = (s.father_mobile || '').replace(/\D/g, '').slice(-10);
+
+      const dataObj = template === 'attendance'
+        ? { name: s.name, reg_no: s.reg_no, semester: s.semester, percentage: s.percentage }
+        : template === 'midmarks'
+          ? { name: s.name, reg_no: s.reg_no, semester: s.semester, total_marks: s.total_marks }
+          : template === 'university_eng'
+            ? { name: s.name, reg_no: s.reg_no, semester: s.semester, year: s.year, subjects_grades: s.subjects_grades, sgpa: s.sgpa }
+            : { name: s.name, reg_no: s.reg_no, year: s.year, semester: s.semester, subjects_grades: s.subjects_grades, sgpa: s.sgpa };
+
       const sms = xml.ele('sendSMS');
-      sms.ele('mobile', s.mobile);
-      sms.ele('message', s.message);
+      sms.ele('mobile', cleanMobile);
+      sms.ele('message', formatMessage(template, dataObj));
       sms.ele('templateid', TEMPLATE_ID_MAP[template]);
     });
 
@@ -4617,16 +4597,18 @@ app.post('/api/send-sms', async (req, res) => {
     const xmlString = xml.end({ pretty: true });
     console.log('XML Sent to Provider:\n', xmlString);
 
-    const url = `https://smslogin.co/v3/xmlapi.php?data=${encodeURIComponent(xmlString)}`;
-    const apiResp = await axios.get(url, { timeout: 15000 });
+    const apiResp = await axios.post('https://smslogin.co/v3/xmlapi.php', xmlString, {
+      headers: { 'Content-Type': 'application/xml' },
+      timeout: 15000
+    });
 
     console.log('Provider Response:', apiResp.data);
-    return res.json({ success: true, message: 'SMS sent', providerResponse: apiResp.data });
+    res.json({ success: true, message: 'SMS sent', providerResponse: apiResp.data });
 
   } catch (err) {
     console.error('Error in /api/send-sms:', err);
-    return res.status(500).json({ success: false, message: 'Internal server error', error: err.message });
+    res.status(500).json({ success: false, message: 'Internal server error', error: err.message });
   }
 });
 
-
+module.exports = app;
