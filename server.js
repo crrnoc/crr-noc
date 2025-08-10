@@ -4064,14 +4064,27 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
         doc.text("-", x + 3, y + 4, { width: colWidth - 6, align: "center" });
         x += colWidth;
       });
-      doc.rect(x, y, colWidth, 20).stroke();
-      doc.text("-", x + 3, y + 4, { width: colWidth - 6, align: "center" });
-      x += colWidth;
-      doc.rect(x, y, colWidth, 20).stroke();
-      doc.text("-", x + 3, y + 4, { width: colWidth - 6, align: "center" });
-      doc.moveTo(leftMargin, y + 20).lineTo(pageWidth - rightMargin, y + 20).stroke();
-      doc.y = y + 26;
-    }
+     doc.rect(x, y, regColWidth, 20).stroke();
+doc.text("Total Classes", x + 3, y + 4, { width: regColWidth - 6, align: "center" });
+x += regColWidth;
+
+const firstStudent = Object.values(studentMap)[0]; // just get one student for totals
+allSubjects.forEach(sub => {
+  const totalForSubject = firstStudent ? firstStudent.subjectTotals[sub] || 0 : 0;
+  doc.rect(x, y, colWidth, 20).stroke();
+  doc.text(String(totalForSubject), x + 3, y + 4, { width: colWidth - 6, align: "center" });
+  x += colWidth;
+});
+
+const totalPossible = firstStudent
+  ? Object.values(firstStudent.subjectTotals).reduce((sum, v) => sum + (v || 0), 0)
+  : 0;
+doc.rect(x, y, colWidth, 20).stroke();
+doc.text(String(totalPossible), x + 3, y + 4, { width: colWidth - 6, align: "center" });
+x += colWidth;
+doc.rect(x, y, colWidth, 20).stroke();
+doc.text("-", x + 3, y + 4, { width: colWidth - 6, align: "center" }); // percent cell for totals row
+
 
     // Main table
     renderPageHeader();
@@ -4575,6 +4588,7 @@ if (template === 'attendance') {
     }
   });
 });
+
 
 
 
