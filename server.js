@@ -4544,21 +4544,26 @@ app.post("/api/send-sms", async (req, res) => {
          FROM students s
          JOIN railway.mid_internal_marks m ON m.hallticket = s.reg_no
          WHERE s.reg_no IN (?)`;
+} else if (template === "university_eng" || template === "university_telugu") {
+  sql = `SELECT 
+           ANY_VALUE(s.name) AS name,
+           s.reg_no,
+           ANY_VALUE(s.year) AS year,
+           r.semester,
+           GROUP_CONCAT(CONCAT(r.subname, ' - ', r.grade) SEPARATOR ', ') AS subjects_grades,
+           ANY_VALUE(r.sgpa) AS sgpa,
+           ANY_VALUE(s.father_mobile) AS father_mobile
+         FROM students s
+         LEFT JOIN (
+           SELECT regno, semester, subname, grade, sgpa FROM autonomous_results
+           UNION ALL
+           SELECT regno, semester, subname, grade, sgpa FROM results
+         ) r ON r.regno = s.reg_no
+         WHERE s.reg_no IN (?)
+         GROUP BY s.reg_no, r.semester`;
 }
- else if (template === "university_eng" || template === "university_telugu") {
-      sql = `SELECT s.name, s.reg_no, s.year, r.semester,
-                    GROUP_CONCAT(CONCAT(r.subname, ' - ', r.grade) SEPARATOR ', ') AS subjects_grades,
-                    r.sgpa, s.father_mobile
-             FROM students s
-             LEFT JOIN (
-               SELECT regno, semester, subname, grade, sgpa FROM autonomous_results
-               UNION ALL
-               SELECT regno, semester, subname, grade, sgpa FROM results
-             ) r ON r.regno = s.reg_no
-             WHERE s.reg_no IN (?)
-             GROUP BY s.reg_no, r.semester, s.year, r.sgpa`;
-    }
 
+    
     const rows = await new Promise((resolve, reject) => {
       connection.query(sql, [reg_nos], (err, results) => {
         if (err) return reject(err);
@@ -4605,4 +4610,5 @@ app.post("/api/send-sms", async (req, res) => {
 });
 
 module.exports = app;
+
 
