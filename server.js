@@ -4474,14 +4474,14 @@ app.post('/api/get-students-for-sms', (req, res) => {
 });
 
 //send sms
-const SMS_USERNAME = process.env.SMS_PROVIDER_USERNAME || 'CRREDDYCLGT';
-const SMS_APIKEY = process.env.SMS_PROVIDER_APIKEY || '5144744cfabbae397e8c';
+const SMS_USERNAME = process.env.SMS_PROVIDER_USERNAME || "CRREDDYCLGT";
+const SMS_APIKEY = process.env.SMS_PROVIDER_APIKEY || "5144744cfabbae397e8c";
 
 const TEMPLATE_ID_MAP = {
-  attendance: '1207175447438252519',
-  midmarks: '1207175447366458267',
-  university_eng: '1207175447825658891',
-  university_telugu: '1207175447660496054'
+  attendance: "1207175447438252519",
+  midmarks: "1207175447366458267",
+  university_eng: "1207175447825658891",
+  university_telugu: "1207175447660496054"
 };
 
 const TEMPLATE_TEXT = {
@@ -4502,41 +4502,41 @@ function formatMessage(templateKey, data) {
   let msg = TEMPLATE_TEXT[templateKey];
   const replacements = [];
 
-  if (templateKey === 'attendance') {
+  if (templateKey === "attendance") {
     replacements.push(data.name, data.reg_no, data.semester, data.percentage);
-  } else if (templateKey === 'midmarks') {
+  } else if (templateKey === "midmarks") {
     replacements.push(data.name, data.reg_no, data.semester, data.total_marks);
-  } else if (templateKey === 'university_eng') {
+  } else if (templateKey === "university_eng") {
     replacements.push(data.name, data.reg_no, data.semester, data.year, data.subjects_grades, data.sgpa);
-  } else if (templateKey === 'university_telugu') {
+  } else if (templateKey === "university_telugu") {
     replacements.push(data.name, data.reg_no, data.year, data.semester, data.subjects_grades, data.sgpa);
   }
 
   replacements.forEach(rep => {
-    msg = msg.replace('{#var#}', rep);
+    msg = msg.replace("{#var#}", rep ?? "");
   });
 
   return msg;
 }
 
-app.post('/api/send-sms', async (req, res) => {
+app.post("/api/send-sms", async (req, res) => {
   try {
     const { reg_nos, senderId, template } = req.body;
 
     if (!reg_nos?.length) {
-      return res.status(400).json({ success: false, message: 'No students selected' });
+      return res.status(400).json({ success: false, message: "No students selected" });
     }
     if (!TEMPLATE_ID_MAP[template]) {
-      return res.status(400).json({ success: false, message: 'Invalid template type' });
+      return res.status(400).json({ success: false, message: "Invalid template type" });
     }
 
     let sql;
-    if (template === 'attendance') {
+    if (template === "attendance") {
       sql = `SELECT s.name, s.reg_no, a.semester, a.percentage, s.father_mobile
              FROM students s
              JOIN attendance a ON a.regno = s.reg_no
              WHERE s.reg_no IN (?)`;
-    } else if (template === 'midmarks') {
+    } else if (template === "midmarks") {
       sql = `SELECT s.name, s.reg_no, m.semester,
                 (CAST(m.mid1 AS DECIMAL) + CAST(m.a1 AS DECIMAL) + CAST(m.q1 AS DECIMAL) +
                  CAST(m.mid2 AS DECIMAL) + CAST(m.a2 AS DECIMAL) + CAST(m.q2 AS DECIMAL)) AS total_marks,
@@ -4544,7 +4544,7 @@ app.post('/api/send-sms', async (req, res) => {
              FROM students s
              JOIN midmarks m ON m.hallticket = s.reg_no
              WHERE s.reg_no IN (?)`;
-    } else if (template === 'university_eng' || template === 'university_telugu') {
+    } else if (template === "university_eng" || template === "university_telugu") {
       sql = `SELECT s.name, s.reg_no, s.year, r.semester,
                     GROUP_CONCAT(CONCAT(r.subname, ' - ', r.grade) SEPARATOR ', ') AS subjects_grades,
                     r.sgpa, s.father_mobile
@@ -4566,48 +4566,55 @@ app.post('/api/send-sms', async (req, res) => {
     });
 
     if (!rows.length) {
-      return res.status(404).json({ success: false, message: 'No data found for selected students' });
+      return res.status(404).json({ success: false, message: "No data found for selected students" });
     }
 
-    const xml = xmlbuilder.create('xmlapi', { encoding: 'UTF-8' });
-    const auth = xml.ele('auth');
-    auth.ele('username', SMS_USERNAME);
-    auth.ele('apikey', SMS_APIKEY);
+    // Build XML
+    const xml = xmlbuilder.create("xmlapi", { encoding: "UTF-8" });
+    const auth = xml.ele("auth");
+    auth.ele("username", SMS_USERNAME);
+    auth.ele("apikey", SMS_APIKEY);
 
     rows.forEach(s => {
-      const cleanMobile = (s.father_mobile || '').replace(/\D/g, '').slice(-10);
+      const cleanMobile = (s.father_mobile || "").replace(/\D/g, "").slice(-10);
+      if (!cleanMobile) return;
 
-      const dataObj = template === 'attendance'
-        ? { name: s.name, reg_no: s.reg_no, semester: s.semester, percentage: s.percentage }
-        : template === 'midmarks'
+      const dataObj =
+        template === "attendance"
+          ? { name: s.name, reg_no: s.reg_no, semester: s.semester, percentage: s.percentage }
+          : template === "midmarks"
           ? { name: s.name, reg_no: s.reg_no, semester: s.semester, total_marks: s.total_marks }
-          : template === 'university_eng'
-            ? { name: s.name, reg_no: s.reg_no, semester: s.semester, year: s.year, subjects_grades: s.subjects_grades, sgpa: s.sgpa }
-            : { name: s.name, reg_no: s.reg_no, year: s.year, semester: s.semester, subjects_grades: s.subjects_grades, sgpa: s.sgpa };
+          : template === "university_eng"
+          ? { name: s.name, reg_no: s.reg_no, semester: s.semester, year: s.year, subjects_grades: s.subjects_grades, sgpa: s.sgpa }
+          : { name: s.name, reg_no: s.reg_no, year: s.year, semester: s.semester, subjects_grades: s.subjects_grades, sgpa: s.sgpa };
 
-      const sms = xml.ele('sendSMS');
-      sms.ele('mobile', cleanMobile);
-      sms.ele('message', formatMessage(template, dataObj));
-      sms.ele('templateid', TEMPLATE_ID_MAP[template]);
+      const sms = xml.ele("sendSMS");
+      sms.ele("mobile", cleanMobile);
+      sms.ele("message", formatMessage(template, dataObj));
+      sms.ele("templateid", TEMPLATE_ID_MAP[template]);
     });
 
-    const options = xml.ele('options');
-    options.ele('senderid', senderId);
+    const options = xml.ele("options");
+    options.ele("senderid", senderId);
 
     const xmlString = xml.end({ pretty: true });
-    console.log('XML Sent to Provider:\n', xmlString);
+    console.log("XML Sent:\n", xmlString);
 
-    const apiResp = await axios.post('https://smslogin.co/v3/xmlapi.php', xmlString, {
-      headers: { 'Content-Type': 'application/xml' },
-      timeout: 15000
-    });
+    // Send as URL-encoded "data" parameter
+    const apiResp = await axios.post(
+      "https://smslogin.co/v3/xmlapi.php",
+      `data=${encodeURIComponent(xmlString)}`,
+      {
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        timeout: 20000
+      }
+    );
 
-    console.log('Provider Response:', apiResp.data);
-    res.json({ success: true, message: 'SMS sent', providerResponse: apiResp.data });
-
+    console.log("Provider Response:", apiResp.data);
+    res.json({ success: true, message: "SMS request sent", providerResponse: apiResp.data });
   } catch (err) {
-    console.error('Error in /api/send-sms:', err);
-    res.status(500).json({ success: false, message: 'Internal server error', error: err.message });
+    console.error("Error in /api/send-sms:", err);
+    res.status(500).json({ success: false, message: "Internal server error", error: err.message });
   }
 });
 
