@@ -74,7 +74,9 @@ let students = [];
 async function fetchCoursesAndSections() {
   const dept_code = document.getElementById('dept_code').value.trim();
   const year = document.getElementById('year').value.trim();
-  if (!dept_code || !year) return;
+  if (!dept_code || !year) {
+    return; // Prevent unnecessary call
+  }
 
   try {
     const res = await fetch(`/api/fetch-courses-sections?dept_code=${encodeURIComponent(dept_code)}&year=${encodeURIComponent(year)}`);
@@ -85,7 +87,7 @@ async function fetchCoursesAndSections() {
     courseSelect.innerHTML = '<option value="">Select...</option>';
     sectionSelect.innerHTML = '<option value="">Select...</option>';
 
-    if (!Array.isArray(data)) return;
+    if (!Array.isArray(data) || !data.length) return;
 
     const courses = [...new Set(data.map(row => row.course))];
     courses.forEach(c => {
@@ -111,6 +113,10 @@ document.getElementById('year').addEventListener('change', fetchCoursesAndSectio
 function renderStudents() {
   const list = document.getElementById('studentsList');
   list.innerHTML = '';
+  if (!students.length) {
+    list.innerHTML = '<em>No students loaded</em>';
+    return;
+  }
   students.forEach((s, i) => {
     const div = document.createElement('div');
     div.className = 'student-item';
@@ -134,6 +140,11 @@ document.getElementById('fetchStudents').onclick = async () => {
     reg_from: document.getElementById('reg_from').value,
     reg_to: document.getElementById('reg_to').value
   };
+
+  if (!body.dept_code && !body.year && !body.reg_from && !body.reg_to) {
+    return alert('Please select Dept/Year or enter Reg No range.');
+  }
+
   const res = await fetch('/api/get-students-for-sms', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
@@ -157,23 +168,37 @@ document.getElementById('sendBtn').onclick = async () => {
   const selected = students.filter(s => s.checked).map(s => s.reg_no);
   if (!selected.length) return alert('No students selected');
 
+  if (!confirm(`You are about to send SMS to ${selected.length} students. Continue?`)) return;
+
   const payload = {
     reg_nos: selected,
     senderId: document.getElementById('senderId').value,
     template: document.getElementById('templateType').value
   };
 
+  const btn = document.getElementById('sendBtn');
+  btn.disabled = true;
+  document.getElementById('progress').style.color = 'blue';
   document.getElementById('progress').innerText = 'Sending...';
-  const res = await fetch('/api/send-sms', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify(payload)
-  });
-  const json = await res.json();
-  console.log('Provider Response (frontend):', json.providerResponse);
-  document.getElementById('progress').innerText = json.message;
+
+  try {
+    const res = await fetch('/api/send-sms', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(payload)
+    });
+    const json = await res.json();
+    console.log('Provider Response (frontend):', json.providerResponse);
+
+    document.getElementById('progress').style.color = json.success ? 'green' : 'red';
+    document.getElementById('progress').innerText = json.message || (json.success ? 'Sent successfully' : 'Failed to send');
+  } catch (err) {
+    document.getElementById('progress').style.color = 'red';
+    document.getElementById('progress').innerText = 'Error sending SMS';
+  } finally {
+    btn.disabled = false;
+  }
 };
 </script>
-
 </body>
 </html>
