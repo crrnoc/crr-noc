@@ -4480,9 +4480,13 @@ app.post('/api/send-sms', (req, res) => {
 if (template === 'attendance') {
   return {
     mobile: cleanMobile,
-    message: `ప్రియమైన తల్లిదండ్రులకు, మీ కుమారుడు/కుమార్తె ${s.name} (Reg.No: ${s.reg_no}) యొక్క ${s.semester} సెమిస్టర్ హాజరు శాతం: ${s.percentage}%\nదయచేసి మీ పిల్లల నిరంతర హాజరును ఖచ్చితంగా నిర్ధారించండి.\nSIR RAMALINGA REDDY COLLEGE`
+    message:
+      `ప్రియమైన తల్లిదండ్రులకు, మీ కుమారుడు/కుమార్తె ${s.name} (Reg.No: ${s.reg_no}) యొక్క ${s.semester} సెమిస్టర్ హాజరు శాతం: ${Math.round(s.percentage)}%\n` +
+      `దయచేసి మీ పిల్లల నిరంతర హాజరును ఖచ్చితంగా నిర్ధారించండి.\n` +
+      `SIR RAMALINGA REDDY COLLEGE`
   };
 }
+
  else if (template === 'midmarks') {
   return {
     mobile: cleanMobile,
@@ -4545,5 +4549,6 @@ if (template === 'attendance') {
     }
   });
 });
+
 
 
