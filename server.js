@@ -4475,7 +4475,7 @@ const TEMPLATE_ID_MAP = {
 
 // DLT templates exactly as registered (with {#var#})
 const TEMPLATE_TEXT = {
-  attendance: `ప్రియమైన తల్లిదండ్రులకు, మీ కుమారుడు/కుమార్తె {#var#} (Reg.No: {#var#}) యొక్క {#var#} సెమిస్టర్ హాజరు శాతం: {#var#}%&#10;దయచేసి మీ పిల్లల నిరంతర హాజరును ఖచ్చితంగా నిర్ధారించండి.&#10;SIR RAMALINGA REDDY COLLEGE`,
+  attendance: `ప్రియమైన తల్లిదండ్రులకు, మీ కుమారుడు/కుమార్తె {#var#} (Reg.No: {#var#}) యొక్క {#var#} సెమిస్టర్ హాజరు శాతం: {#var#}%\nదయచేసి మీ పిల్లల నిరంతర హాజరును ఖచ్చితంగా నిర్ధారించండి.\nSIR RAMALINGA REDDY COLLEGE`,
   midmarks: `Dear Parent, Mid marks of Your Ward {#var#} bearing regno {#var#} for sem {#var#} midmarks: {#var#} &#10;SIR RAMALINGA REDDY COLLEGE`,
   university_eng: `Dear Parent, Your Ward {#var#} bearing regno:{#var#}  has Results of Semester {#var#} of Year {#var#}.  &#10;Subjects & Grades: {#var#} SGPA: {#var#}&#10;SIR RAMALINGA REDDY COLLEGE`,
   university_telugu: `ప్రియమైన తల్లిదండ్రులకు, మీ కుమారుడు/కుమార్తె {#var#} (Reg.No: {#var#}) కు {#var#} సంవత్సరం {#var#} సెమిస్టర్ ఫలితాలు విడుదలయ్యాయి.&#10;విషయాలు & గ్రేడ్‌లు: {#var#} SGPA: {#var#}&#10;SIR RAMALINGA REDDY COLLEGE`
@@ -4587,5 +4587,6 @@ app.post('/api/send-sms', (req, res) => {
     }
   });
 });
+
 
 
