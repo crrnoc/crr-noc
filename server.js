@@ -4437,16 +4437,6 @@ app.post('/api/get-students-for-sms', (req, res) => {
 });
 
 //send sms
-const SMS_USERNAME = process.env.SMS_PROVIDER_USERNAME || 'CRREDDYCLGT';
-const SMS_APIKEY = process.env.SMS_PROVIDER_APIKEY || '5144744cfabbae397e8c';
-
-const TEMPLATE_ID_MAP = {
-  attendance: '1207175447438252519',
-  midmarks: '1207175447366458267',
-  university_eng: '1207175447825658891',
-  university_telugu: '1207175447660496054'
-};
-
 app.post('/api/send-sms', (req, res) => {
   const { reg_nos, senderId, template } = req.body;
   if (!reg_nos?.length) {
@@ -4557,3 +4547,4 @@ app.post('/api/send-sms', (req, res) => {
     }
   });
 });
+
