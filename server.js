@@ -4485,7 +4485,7 @@ const TEMPLATE_ID_MAP = {
 };
 
 const TEMPLATE_TEXT = {
-  attendance: `ప్రియమైన తల్లిదండ్రులకు, మీ కుమారుడు/కుమార్తె {#var1#} (Reg.No: {#var2#}) యొక్క 1-1 సెమిస్టర్ హాజరు శాతం: {#var3#}
+  attendance: `ప్రియమైన తల్లిదండ్రులకు, మీ కుమారుడు/కుమార్తె {#var#} (Reg.No: {#var#}) యొక్క {#var#} సెమిస్టర్ హాజరు శాతం: {#var#}%
 దయచేసి మీ పిల్లల నిరంతర హాజరును ఖచ్చితంగా నిర్ధారించండి.
 SIR RAMALINGA REDDY COLLEGE
 `,
@@ -4628,4 +4628,5 @@ app.post('/api/send-sms', async (req, res) => {
     return res.status(500).json({ success: false, message: 'Internal server error', error: err.message });
   }
 });
+
 
