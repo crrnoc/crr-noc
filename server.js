@@ -3964,9 +3964,10 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
     }
     if (!results.length) return res.status(404).json({ error: "No data found" });
 
-    const allSubjects = Array.from(new Set(results.map(r => r.subject)));
+    // Sorted unique subjects for consistent column order
+    const allSubjects = Array.from(new Set(results.map(r => r.subject))).sort();
 
-    // build student map
+    // Build student map
     const studentMap = {};
     results.forEach(r => {
       const reg = r.reg_no;
@@ -4008,7 +4009,7 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
     const signatureHeight = 70;
     const cellFontSize = 8;
     let regColWidth = 80;
-    const otherColsCount = allSubjects.length + 2;
+    const otherColsCount = allSubjects.length + 2; // subjects + TOTAL + PERCENT
     const minColWidth = 45;
     let remainingWidth = usableWidth - regColWidth;
     let colWidth = Math.floor(remainingWidth / otherColsCount);
@@ -4016,12 +4017,12 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
       colWidth = minColWidth;
       const totalNeeded = regColWidth + (colWidth * otherColsCount);
       if (totalNeeded > usableWidth) {
-        const newReg = Math.max(50, regColWidth - (totalNeeded - usableWidth));
-        regColWidth = newReg;
+        regColWidth = Math.max(50, regColWidth - (totalNeeded - usableWidth));
       }
     }
 
-    function renderPageHeader() {
+    // Improved renderPageHeader returning current y position and accepts custom header text
+    function renderPageHeader(headerText = "STATEMENT OF ATTENDANCE REPORT") {
       const logoPath = path.join(__dirname, "public", "crrengglogo.png");
       const topY = doc.page.margins.top;
       try {
@@ -4032,7 +4033,7 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
       doc.fontSize(14).font("Helvetica-Bold").text("SIR C.R.REDDY COLLEGE OF ENGINEERING (Autonomous)", titleX, topY - 2, { width: titleW, align: "center" });
       doc.moveDown(0.2);
       doc.fontSize(10).font("Helvetica").text(`B.Tech Year - ${year}   Sem - ${semester}   Branch - ${course}   Section - ${section}`, { align: "center" });
-      doc.fontSize(10).text("STATEMENT OF ATTENDANCE REPORT", { align: "center" });
+      doc.fontSize(10).text(headerText, { align: "center" });
       doc.fontSize(8).text("Vatluru, Eluru - 534007, Eluru Dist. A.P.", { align: "center" });
       doc.fontSize(8).text(`From: ${from_date}  To: ${to_date}`, { align: "center" });
       doc.moveDown(0.5);
@@ -4059,43 +4060,46 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
       doc.rect(x, y, regColWidth, 20).stroke();
       doc.text("Total Classes", x + 3, y + 4, { width: regColWidth - 6, align: "center" });
       x += regColWidth;
+
       allSubjects.forEach(() => {
         doc.rect(x, y, colWidth, 20).stroke();
         doc.text("-", x + 3, y + 4, { width: colWidth - 6, align: "center" });
         x += colWidth;
       });
-     doc.rect(x, y, regColWidth, 20).stroke();
-doc.text("Total Classes", x + 3, y + 4, { width: regColWidth - 6, align: "center" });
-x += regColWidth;
 
-const firstStudent = Object.values(studentMap)[0]; // just get one student for totals
-allSubjects.forEach(sub => {
-  const totalForSubject = firstStudent ? firstStudent.subjectTotals[sub] || 0 : 0;
-  doc.rect(x, y, colWidth, 20).stroke();
-  doc.text(String(totalForSubject), x + 3, y + 4, { width: colWidth - 6, align: "center" });
-  x += colWidth;
-});
+      doc.rect(x, y, regColWidth, 20).stroke();
+      doc.text("Total Classes", x + 3, y + 4, { width: regColWidth - 6, align: "center" });
+      x += regColWidth;
 
-const totalPossible = firstStudent
-  ? Object.values(firstStudent.subjectTotals).reduce((sum, v) => sum + (v || 0), 0)
-  : 0;
-doc.rect(x, y, colWidth, 20).stroke();
-doc.text(String(totalPossible), x + 3, y + 4, { width: colWidth - 6, align: "center" });
-x += colWidth;
-doc.rect(x, y, colWidth, 20).stroke();
-doc.text("-", x + 3, y + 4, { width: colWidth - 6, align: "center" }); // percent cell for totals row
+      const firstStudent = Object.values(studentMap)[0]; // get one student for totals
+      allSubjects.forEach(sub => {
+        const totalForSubject = firstStudent ? firstStudent.subjectTotals[sub] || 0 : 0;
+        doc.rect(x, y, colWidth, 20).stroke();
+        doc.text(String(totalForSubject), x + 3, y + 4, { width: colWidth - 6, align: "center" });
+        x += colWidth;
+      });
 
+      const totalPossible = firstStudent
+        ? Object.values(firstStudent.subjectTotals).reduce((sum, v) => sum + (v || 0), 0)
+        : 0;
+      doc.rect(x, y, colWidth, 20).stroke();
+      doc.text(String(totalPossible), x + 3, y + 4, { width: colWidth - 6, align: "center" });
+      x += colWidth;
 
-    // Main table
-    renderPageHeader();
-    doc.fontSize(cellFontSize).font("Helvetica");
+      doc.rect(x, y, colWidth, 20).stroke();
+      doc.text("-", x + 3, y + 4, { width: colWidth - 6, align: "center" }); // percent cell for totals row
+
+      return y + 20;
+    }
+
+    // Main table start
+    let y = renderPageHeader();
+
     const regs = Object.values(studentMap);
-    let y = doc.y;
     regs.forEach(std => {
       let possibleClasses = 0;
       allSubjects.forEach(sub => {
-        const totalForSubject = std.subjectTotals[sub] || 0;
-        possibleClasses += totalForSubject;
+        possibleClasses += std.subjectTotals[sub] || 0;
       });
       const percent = possibleClasses > 0 ? ((std.total_attended / possibleClasses) * 100).toFixed(2) : "0.00";
       const attendedCells = allSubjects.map(sub => (std.subjects[sub] != null ? String(std.subjects[sub]) : "-"));
@@ -4104,8 +4108,7 @@ doc.text("-", x + 3, y + 4, { width: colWidth - 6, align: "center" }); // percen
       const bottomLimit = pageHeight - doc.page.margins.bottom - signatureHeight;
       if (y + 20 > bottomLimit) {
         doc.addPage();
-        renderPageHeader();
-        y = doc.y;
+        y = renderPageHeader();
       }
       let x = leftMargin;
       rowCells.forEach((cell, i) => {
@@ -4135,13 +4138,12 @@ doc.text("-", x + 3, y + 4, { width: colWidth - 6, align: "center" }); // percen
       doc.addPage();
       doc.fontSize(12).font("Helvetica-Bold").text("Lateral Entry Students", { align: "center" });
       doc.moveDown(0.5);
-      renderPageHeader();
-      let y2 = doc.y;
+      let y2 = renderPageHeader("Lateral Entry Students");
+
       laterals.forEach(std => {
         let possibleClasses = 0;
         allSubjects.forEach(sub => {
-          const totalForSubject = std.subjectTotals[sub] || 0;
-          possibleClasses += totalForSubject;
+          possibleClasses += std.subjectTotals[sub] || 0;
         });
         const percent = possibleClasses > 0 ? ((std.total_attended / possibleClasses) * 100).toFixed(2) : "0.00";
         const attendedCells = allSubjects.map(sub => (std.subjects[sub] != null ? String(std.subjects[sub]) : "-"));
@@ -4150,8 +4152,7 @@ doc.text("-", x + 3, y + 4, { width: colWidth - 6, align: "center" }); // percen
         const bottomLimit = pageHeight - doc.page.margins.bottom - signatureHeight;
         if (y2 + 20 > bottomLimit) {
           doc.addPage();
-          renderPageHeader();
-          y2 = doc.y;
+          y2 = renderPageHeader("Lateral Entry Students");
         }
         let x = leftMargin;
         rowCells.forEach((cell, i) => {
@@ -4172,6 +4173,7 @@ doc.text("-", x + 3, y + 4, { width: colWidth - 6, align: "center" }); // percen
     }
 
     doc.end();
+
     writeStream.on("finish", () => {
       res.download(filePath, fileName, err => {
         if (err) {
@@ -4181,6 +4183,7 @@ doc.text("-", x + 3, y + 4, { width: colWidth - 6, align: "center" }); // percen
         fs.unlink(filePath, () => {});
       });
     });
+
     writeStream.on("error", err => {
       console.error("PDF write error:", err);
       return res.status(500).json({ error: "PDF write error" });
@@ -4590,6 +4593,7 @@ if (template === 'attendance') {
     }
   });
 });
+
 
 
 
