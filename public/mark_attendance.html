@@ -116,9 +116,20 @@
   <button type="submit">✅ Submit Attendance</button>
 </div>
       </form>
-      <div style="margin-top:20px;">
-        <button id="downloadPdfBtn">📄 Download Attendance PDF</button>
-      </div>
+<!-- 📅 Date range for PDF -->
+<div class="form-row">
+  <label>From Date:</label>
+  <input type="date" id="fromDate" required />
+</div>
+<div class="form-row">
+  <label>To Date:</label>
+  <input type="date" id="toDate" required />
+</div>
+
+<div style="margin-top:20px;">
+  <button id="downloadPdfBtn">📄 Download Attendance PDF</button>
+</div>
+
     </div>
   </div>
 </div>
@@ -387,20 +398,24 @@ function fetchStudents() {
     });
 }
 
-  document.getElementById("downloadPdfBtn").addEventListener("click", () => {
-    const course = courseSelect.value;
-    const section = sectionSelect.value;
-    const year = yearSelect.value;
-    const semester = semesterSelect.value;
-    const subjects = Array.from(document.querySelectorAll('input[name="periodSelection"]:checked')).map(cb => cb.value);
+document.getElementById("downloadPdfBtn").addEventListener("click", () => {
+  const course = courseSelect.value;
+  const section = sectionSelect.value;
+  const year = yearSelect.value;
+  const semester = semesterSelect.value;
+  const subjects = Array.from(document.querySelectorAll('input[name="periodSelection"]:checked')).map(cb => cb.value);
 
-    if (!course || !section || !year || !semester || !subjects.length) {
-      Swal.fire("⚠️ Please select all fields before downloading PDF");
-      return;
-    }
+  const fromDate = document.getElementById("fromDate").value;
+  const toDate = document.getElementById("toDate").value;
 
-    window.open(`/api/download-attendance-pdf?year=${year}&semester=${semester}&course=${course}&section=${section}&subject=${encodeURIComponent(subjects.join(","))}`, '_blank');
-  });
+  if (!course || !section || !year || !semester || !subjects.length || !fromDate || !toDate) {
+    Swal.fire("⚠️ Please select all fields and date range before downloading PDF");
+    return;
+  }
+
+  const url = `/api/download-attendance-pdf?year=${year}&semester=${semester}&course=${course}&section=${section}&subject=${encodeURIComponent(subjects.join(","))}&from_date=${fromDate}&to_date=${toDate}`;
+  window.open(url, '_blank');
+});
 
   document.getElementById("daySelect").addEventListener("change", () => {
     const selectedDay = daySelect.value;
