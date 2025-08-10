@@ -16,12 +16,13 @@ button { cursor: pointer; }
 
 <h2>Send SMS</h2>
 
+<!-- FILTER SECTION -->
 <section>
   <label>Dept Code</label>
-  <input id="dept_code">
+  <input id="dept_code" placeholder="E.g. CSE">
 
   <label>Year</label>
-  <input id="year">
+  <input id="year" placeholder="E.g. 3">
 
   <label>Course</label>
   <select id="courseSelect"><option value="">Select...</option></select>
@@ -46,6 +47,7 @@ button { cursor: pointer; }
 
 <hr>
 
+<!-- SMS SEND SECTION -->
 <section>
   <label>Sender ID</label>
   <select id="senderId">
@@ -61,13 +63,51 @@ button { cursor: pointer; }
     <option value="university_telugu">University Results (Telugu)</option>
   </select>
 
-  <button id="sendBtn">Send SMS</button>
+  <button id="sendBtn" style="margin-top:15px;">Send SMS</button>
   <div id="progress" style="margin-top:10px; color:green;"></div>
 </section>
 
 <script>
 let students = [];
 
+// Fetch courses and sections
+async function fetchCoursesAndSections() {
+  const dept_code = document.getElementById('dept_code').value.trim();
+  const year = document.getElementById('year').value.trim();
+  if (!dept_code || !year) return;
+
+  try {
+    const res = await fetch(`/api/fetch-courses-sections?dept_code=${encodeURIComponent(dept_code)}&year=${encodeURIComponent(year)}`);
+    const data = await res.json();
+
+    const courseSelect = document.getElementById('courseSelect');
+    const sectionSelect = document.getElementById('sectionSelect');
+    courseSelect.innerHTML = '<option value="">Select...</option>';
+    sectionSelect.innerHTML = '<option value="">Select...</option>';
+
+    if (!Array.isArray(data)) return;
+
+    const courses = [...new Set(data.map(row => row.course))];
+    courses.forEach(c => {
+      courseSelect.innerHTML += `<option value="${c}">${c}</option>`;
+    });
+
+    courseSelect.onchange = () => {
+      sectionSelect.innerHTML = '<option value="">Select...</option>';
+      data.filter(r => r.course === courseSelect.value)
+          .forEach(r => {
+            sectionSelect.innerHTML += `<option value="${r.section}">${r.section}</option>`;
+          });
+    };
+  } catch (err) {
+    console.error('Error fetching courses/sections:', err);
+  }
+}
+
+document.getElementById('dept_code').addEventListener('change', fetchCoursesAndSections);
+document.getElementById('year').addEventListener('change', fetchCoursesAndSections);
+
+// Render students list
 function renderStudents() {
   const list = document.getElementById('studentsList');
   list.innerHTML = '';
@@ -84,6 +124,7 @@ function renderStudents() {
   });
 }
 
+// Fetch students from backend
 document.getElementById('fetchStudents').onclick = async () => {
   const body = {
     dept_code: document.getElementById('dept_code').value,
@@ -107,9 +148,11 @@ document.getElementById('fetchStudents').onclick = async () => {
   }
 };
 
+// Select/Clear All
 document.getElementById('selectAll').onclick = () => { students.forEach(s => s.checked = true); renderStudents(); };
 document.getElementById('clearAll').onclick = () => { students.forEach(s => s.checked = false); renderStudents(); };
 
+// Send SMS
 document.getElementById('sendBtn').onclick = async () => {
   const selected = students.filter(s => s.checked).map(s => s.reg_no);
   if (!selected.length) return alert('No students selected');
