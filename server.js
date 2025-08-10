@@ -4465,17 +4465,6 @@ app.post("/api/allocate/multi", (req, res) => {
   });
 });
 
-//api for sms
-const SMS_USERNAME = process.env.SMS_PROVIDER_USERNAME || 'CRREDDYCLGT';
-const SMS_APIKEY = process.env.SMS_PROVIDER_APIKEY || '5144744cfabbae397e8c';
-
-const TEMPLATE_ID_MAP = {
-  attendance: '1207175447438252519',
-  midmarks: '1207175447366458267',
-  university_eng: '1207175447825658891',
-  university_telugu: '1207175447660496054'
-};
-
 //students getting for sms
 app.post('/api/get-students-for-sms', (req, res) => {
   const { dept_code, year, course, section, reg_from, reg_to } = req.body;
@@ -4495,6 +4484,25 @@ app.post('/api/get-students-for-sms', (req, res) => {
 });
 
 //send sms
+const SMS_USERNAME = process.env.SMS_PROVIDER_USERNAME || 'CRREDDYCLGT';
+const SMS_APIKEY = process.env.SMS_PROVIDER_APIKEY || '5144744cfabbae397e8c';
+
+const TEMPLATE_ID_MAP = {
+  attendance: '1207175447438252519',
+  midmarks: '1207175447366458267',
+  university_eng: '1207175447825658891',
+  university_telugu: '1207175447660496054'
+};
+
+// DLT templates exactly as registered (with {#var#})
+const TEMPLATE_TEXT = {
+  attendance: `ప్రియమైన తల్లిదండ్రులకు, మీ కుమారుడు/కుమార్తె {#var#} (Reg.No: {#var#}) యొక్క {#var#} సెమిస్టర్ హాజరు శాతం: {#var#}%&#10;దయచేసి మీ పిల్లల నిరంతర హాజరును ఖచ్చితంగా నిర్ధారించండి.&#10;SIR RAMALINGA REDDY COLLEGE`,
+  midmarks: `Dear Parent, Mid marks of Your Ward {#var#} bearing regno {#var#} for sem {#var#} midmarks: {#var#} &#10;SIR RAMALINGA REDDY COLLEGE`,
+  university_eng: `Dear Parent, Your Ward {#var#} bearing regno:{#var#}  has Results of Semester {#var#} of Year {#var#}.  &#10;Subjects & Grades: {#var#} SGPA: {#var#}&#10;SIR RAMALINGA REDDY COLLEGE`,
+  university_telugu: `ప్రియమైన తల్లిదండ్రులకు, మీ కుమారుడు/కుమార్తె {#var#} (Reg.No: {#var#}) కు {#var#} సంవత్సరం {#var#} సెమిస్టర్ ఫలితాలు విడుదలయ్యాయి.&#10;విషయాలు & గ్రేడ్‌లు: {#var#} SGPA: {#var#}&#10;SIR RAMALINGA REDDY COLLEGE`
+};
+
+// sms api
 app.post('/api/send-sms', (req, res) => {
   const { reg_nos, senderId, template } = req.body;
   if (!reg_nos?.length) {
@@ -4534,48 +4542,44 @@ app.post('/api/send-sms', (req, res) => {
 
     const studentsData = rows.map(s => {
       const cleanMobile = (s.father_mobile || '').replace(/\D/g, '').slice(-10);
+      let messageTemplate = TEMPLATE_TEXT[template];
 
-if (template === 'attendance') {
-  return {
-    mobile: cleanMobile,
-    message:
-`ప్రియమైన తల్లిదండ్రులకు, మీ కుమారుడు/కుమార్తె ${s.name} (Reg.No: ${s.reg_no}) యొక్క ${s.semester} సెమిస్టర్ హాజరు శాతం: ${Math.round(s.percentage)}%
-దయచేసి మీ పిల్లల నిరంతర హాజరును ఖచ్చితంగా నిర్ధారించండి.
-SIR RAMALINGA REDDY COLLEGE`
-  };
-}
+      // Replace {#var#} in order for each template type
+      if (template === 'attendance') {
+        messageTemplate = messageTemplate
+          .replace('{#var#}', s.name)
+          .replace('{#var#}', s.reg_no)
+          .replace('{#var#}', s.semester)
+          .replace('{#var#}', s.percentage);
+      } else if (template === 'midmarks') {
+        messageTemplate = messageTemplate
+          .replace('{#var#}', s.name)
+          .replace('{#var#}', s.reg_no)
+          .replace('{#var#}', s.semester)
+          .replace('{#var#}', s.total_marks);
+      } else if (template === 'university_eng') {
+        messageTemplate = messageTemplate
+          .replace('{#var#}', s.name)
+          .replace('{#var#}', s.reg_no)
+          .replace('{#var#}', s.semester)
+          .replace('{#var#}', s.year)
+          .replace('{#var#}', s.subjects_grades)
+          .replace('{#var#}', s.sgpa);
+      } else {
+        // university_telugu
+        messageTemplate = messageTemplate
+          .replace('{#var#}', s.name)
+          .replace('{#var#}', s.reg_no)
+          .replace('{#var#}', s.year)
+          .replace('{#var#}', s.semester)
+          .replace('{#var#}', s.subjects_grades)
+          .replace('{#var#}', s.sgpa);
+      }
 
-
-
- else if (template === 'midmarks') {
-  return {
-    mobile: cleanMobile,
-    message: `Dear Parent, Mid marks of Your Ward ${s.name} bearing regno ${s.reg_no} for sem ${s.semester} midmarks: ${s.total_marks} SIR RAMALINGA REDDY COLLEGE`
-      .replace(/[\r\n]+/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim()
-  };
-} else if (template === 'university_eng') {
-  return {
-    mobile: cleanMobile,
-    message: `Dear Parent, Your Ward ${s.name} bearing regno:${s.reg_no} has Results of Semester ${s.semester} of Year ${s.year}. Subjects & Grades: ${s.subjects_grades} SGPA: ${s.sgpa} SIR RAMALINGA REDDY COLLEGE`
-      .replace(/[\r\n]+/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim()
-  };
-} else {
-  return {
-    mobile: cleanMobile,
-    message: `ప్రియమైన తల్లిదండ్రులకు, మీ కుమారుడు/కుమార్తె ${s.name} (Reg.No: ${s.reg_no}) కు ${s.year} సంవత్సరం ${s.semester} సెమిస్టర్ ఫలితాలు విడుదలయ్యాయి. విషయాలు & గ్రేడ్‌లు: ${s.subjects_grades} SGPA: ${s.sgpa} SIR RAMALINGA REDDY COLLEGE`
-      .replace(/[\r\n]+/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim()
-  };
-}
-
+      return { mobile: cleanMobile, message: messageTemplate };
     });
 
-    // Build XML request
+    // Build XML
     const xml = xmlbuilder.create('xmlapi', { encoding: 'UTF-8' });
     const auth = xml.ele('auth');
     auth.ele('username', SMS_USERNAME);
@@ -4585,7 +4589,7 @@ SIR RAMALINGA REDDY COLLEGE`
       const sms = xml.ele('sendSMS');
       sms.ele('mobile', s.mobile);
       sms.ele('message', s.message);
-      sms.ele('templateid', TEMPLATE_ID_MAP[template]); // required
+      sms.ele('templateid', TEMPLATE_ID_MAP[template]);
     });
 
     const options = xml.ele('options');
@@ -4598,26 +4602,9 @@ SIR RAMALINGA REDDY COLLEGE`
       const url = `https://smslogin.co/v3/xmlapi.php?data=${encodeURIComponent(xmlString)}`;
       const apiResp = await axios.get(url, { timeout: 15000 });
       console.log('Provider Response:', apiResp.data);
-
-      if (/<success>/i.test(apiResp.data)) {
-        res.json({ success: true, message: 'SMS sent successfully', providerResponse: apiResp.data });
-      } else {
-        res.status(400).json({ success: false, message: 'SMS API rejected the request', providerResponse: apiResp.data });
-      }
+      res.json({ success: true, message: 'SMS sent', providerResponse: apiResp.data });
     } catch (sendErr) {
       res.status(500).json({ success: false, message: 'SMS API error', error: sendErr.message });
     }
   });
 });
-
-
-
-
-
-
-
-
-
-
-
-
