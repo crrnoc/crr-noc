@@ -4569,15 +4569,11 @@ app.post("/api/send-sms", async (req, res) => {
       return res.status(404).json({ success: false, message: "No data found for selected students" });
     }
 
-    // Build XML
-    const xml = xmlbuilder.create("xmlapi", { encoding: "UTF-8" });
-    const auth = xml.ele("auth");
-    auth.ele("username", SMS_USERNAME);
-    auth.ele("apikey", SMS_APIKEY);
-
-    rows.forEach(s => {
+    // Send SMS for each student
+    const sendResults = [];
+    for (const s of rows) {
       const cleanMobile = (s.father_mobile || "").replace(/\D/g, "").slice(-10);
-      if (!cleanMobile) return;
+      if (!cleanMobile) continue;
 
       const dataObj =
         template === "attendance"
@@ -4588,30 +4584,19 @@ app.post("/api/send-sms", async (req, res) => {
           ? { name: s.name, reg_no: s.reg_no, semester: s.semester, year: s.year, subjects_grades: s.subjects_grades, sgpa: s.sgpa }
           : { name: s.name, reg_no: s.reg_no, year: s.year, semester: s.semester, subjects_grades: s.subjects_grades, sgpa: s.sgpa };
 
-      const sms = xml.ele("sendSMS");
-      sms.ele("mobile", cleanMobile);
-      sms.ele("message", formatMessage(template, dataObj));
-      sms.ele("templateid", TEMPLATE_ID_MAP[template]);
-    });
+      const message = encodeURIComponent(formatMessage(template, dataObj));
 
-    const options = xml.ele("options");
-    options.ele("senderid", senderId);
+      const url = `https://smslogin.co/v3/api.php?username=${SMS_USERNAME}&apikey=${SMS_APIKEY}&senderid=${senderId}&mobile=${cleanMobile}&message=${message}&templateid=${TEMPLATE_ID_MAP[template]}`;
 
-    const xmlString = xml.end({ pretty: true });
-    console.log("XML Sent:\n", xmlString);
-
-    // Send as URL-encoded "data" parameter
-    const apiResp = await axios.post(
-      "https://smslogin.co/v3/xmlapi.php",
-      `data=${encodeURIComponent(xmlString)}`,
-      {
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        timeout: 20000
+      try {
+        const apiResp = await axios.get(url, { timeout: 20000 });
+        sendResults.push({ reg_no: s.reg_no, mobile: cleanMobile, status: apiResp.data });
+      } catch (error) {
+        sendResults.push({ reg_no: s.reg_no, mobile: cleanMobile, error: error.message });
       }
-    );
+    }
 
-    console.log("Provider Response:", apiResp.data);
-    res.json({ success: true, message: "SMS request sent", providerResponse: apiResp.data });
+    res.json({ success: true, results: sendResults });
   } catch (err) {
     console.error("Error in /api/send-sms:", err);
     res.status(500).json({ success: false, message: "Internal server error", error: err.message });
@@ -4619,4 +4604,3 @@ app.post("/api/send-sms", async (req, res) => {
 });
 
 module.exports = app;
-
