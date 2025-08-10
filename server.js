@@ -3793,123 +3793,246 @@ app.get('/api/staff/semesters/:staffId', (req, res) => {
     res.json({ semesters });
   });
 });
-// download attendance pdf
+// 📄 Download selected-subject attendance PDF (with lateral separation & styled like all-subject report)
 app.get("/api/download-attendance-pdf", (req, res) => {
-  const { year, semester, course, section, subject } = req.query;
+  const { year, semester, course, section, subject, from_date, to_date } = req.query;
 
-  if (!year || !semester || !course || !section || !subject) {
+  if (!year || !semester || !course || !section || !subject || !from_date || !to_date) {
     return res.status(400).send("Missing required query parameters.");
   }
 
+  // Subjects can come as: "period1:Math,period3:Physics"
+  const subjects = subject.split(",").map(s => s.split(":")[1]); // Extract only subject names
+  const placeholders = subjects.map(() => "?").join(",");
+
   const query = `
     SELECT 
-      a.reg_no AS regno,
+      a.reg_no,
+      a.subject,
       COUNT(*) AS total_classes,
-      SUM(CASE WHEN a.status = 'Present' THEN 1 ELSE 0 END) AS attended_classes,
-      ROUND(SUM(CASE WHEN a.status = 'Present' THEN 1 ELSE 0 END) / COUNT(*) * 100, 2) AS percentage
+      SUM(CASE WHEN a.status = 'Present' THEN 1 ELSE 0 END) AS attended,
+      s.joining_date,
+      s.admission_type
     FROM daily_attendance a
-    WHERE a.year = ? AND a.semester = ? AND a.course = ? AND a.section = ? AND a.subject = ?
-    GROUP BY a.reg_no
-    ORDER BY a.reg_no;
+    JOIN students s ON a.reg_no = s.reg_no
+    WHERE a.year = ? AND a.semester = ? AND a.course = ? AND a.section = ?
+      AND a.subject IN (${placeholders})
+      AND a.date BETWEEN ? AND ?
+    GROUP BY a.reg_no, a.subject, s.joining_date, s.admission_type
+    ORDER BY a.reg_no, a.subject
   `;
 
-  connection.query(query, [year, semester, course, section, subject], (err, rows) => {
-    if (err) {
-      console.error("❌ DB error:", err);
-      return res.status(500).send("Database error.");
-    }
-
-    if (!rows.length) {
-      return res.status(404).send("No attendance records found.");
-    }
-
-    const doc = new PDFDocument({ size: "A4", margin: 50 });
-    const filename = `Attendance_${subject}_Y${year}_S${semester}.pdf`;
-
-    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
-    res.setHeader("Content-Type", "application/pdf");
-    doc.pipe(res);
-
-    // ✅ Logo
-    const logoPath = path.join(__dirname, "public", "crrengglogo.png");
-    if (fs.existsSync(logoPath)) {
-      doc.image(logoPath, 50, 40, { width: 60 });
-    }
-
-    // ✅ Title block shifted right (to avoid overlap)
-    const textStartX = 130;
-    doc
-      .font("Helvetica-Bold")
-      .fontSize(16)
-      .text("SIR C.R.REDDY COLLEGE OF ENGINEERING", textStartX, 45, { align: "left" })
-      .font("Helvetica-Bold")
-      .fontSize(11)
-      .text("(AUTONOMOUS)", textStartX, doc.y + 2)
-      .font("Helvetica")
-      .fontSize(10)
-      .text("Vatluru, Eluru-534007, Eluru Dist. A.P.", textStartX, doc.y + 2);
-
-    // ✅ Report Title
-    doc.moveDown(1);
-    doc
-      .font("Helvetica-Bold")
-      .fontSize(14)
-      .text("STATEMENT OF ATTENDANCE REPORT", { align: "center" });
-
-    // ✅ Report Info
-    doc.moveDown(1);
-    doc
-      .font("Helvetica")
-      .fontSize(12)
-      .text(`B.Tech Year - ${year}   Sem - ${semester}   Branch - ${course}   Section - ${section}`, { align: "center" })
-      .text(`Subject: ${subject}`, { align: "center" });
-
-    doc.moveDown(1);
-
-    // ✅ Table Header
-    const startY = doc.y + 10;
-    const colX = [50, 180, 280, 380, 470];
-
-    doc
-      .font("Helvetica-Bold")
-      .fontSize(12)
-      .text("Sno", colX[0], startY)
-      .text("Regd.No", colX[1], startY)
-      .text("Total", colX[2], startY)
-      .text("Attended", colX[3], startY)
-      .text("Percent", colX[4], startY);
-
-    doc.moveTo(50, startY + 15).lineTo(550, startY + 15).stroke();
-
-    // ✅ Table Rows
-    doc.font("Helvetica").fontSize(11);
-    let y = startY + 25;
-
-    rows.forEach((row, idx) => {
-      doc.rect(48, y - 3, 500, 18).stroke(); // Box outline
-
-      doc.text((idx + 1).toString(), colX[0], y);
-      doc.text(row.regno, colX[1], y);
-      doc.text(row.total_classes.toString(), colX[2], y);
-      doc.text(row.attended_classes.toString(), colX[3], y);
-      doc.text(`${row.percentage}%`, colX[4], y);
-
-      y += 20;
-      if (y > 720) {
-        doc.addPage();
-        y = 50;
+  connection.query(
+    query,
+    [year, semester, course, section, ...subjects, from_date, to_date],
+    (err, results) => {
+      if (err) {
+        console.error("❌ DB error:", err);
+        return res.status(500).send("Database error.");
       }
-    });
+      if (!results.length) {
+        return res.status(404).send("No attendance records found.");
+      }
 
-    // ✅ Footer with signatures
-    doc.moveDown(4);
-    doc.fontSize(11);
-    doc.text("Faculty Signature", 70, doc.y + 50);
-    doc.text("HOD Signature", 400, doc.y - 15);
+      const allSubjects = Array.from(new Set(results.map(r => r.subject))).sort();
+      const studentMap = {};
 
-    doc.end();
-  });
+      results.forEach(r => {
+        const reg = r.reg_no;
+        const attended = parseInt(r.attended || 0, 10);
+        const total_classes = parseInt(r.total_classes || 0, 10);
+        const joinDate = r.joining_date ? new Date(r.joining_date) : null;
+        const admissionType = r.admission_type || "regular";
+
+        if (!studentMap[reg]) {
+          studentMap[reg] = {
+            regno: reg,
+            subjects: {},
+            total_attended: 0,
+            subjectTotals: {},
+            joining_date: joinDate,
+            admission_type: admissionType
+          };
+        }
+        studentMap[reg].subjects[r.subject] = attended;
+        studentMap[reg].total_attended += attended;
+        studentMap[reg].subjectTotals[r.subject] = total_classes;
+      });
+
+      const PDFDocument = require("pdfkit");
+      const fs = require("fs");
+      const path = require("path");
+
+      const doc = new PDFDocument({ margin: 40, size: "A4", layout: "landscape" });
+      const fileName = `AttendanceReport-${Date.now()}.pdf`;
+
+      res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
+      res.setHeader("Content-Type", "application/pdf");
+      doc.pipe(res);
+
+      const pageWidth = doc.page.width;
+      const pageHeight = doc.page.height;
+      const leftMargin = doc.page.margins.left;
+      const rightMargin = doc.page.margins.right;
+      const usableWidth = pageWidth - leftMargin - rightMargin;
+      const signatureHeight = 70;
+      const cellFontSize = 8;
+      let regColWidth = 80;
+      const otherColsCount = allSubjects.length + 2; // subjects + TOTAL + PERCENT
+      const minColWidth = 45;
+      let remainingWidth = usableWidth - regColWidth;
+      let colWidth = Math.floor(remainingWidth / otherColsCount);
+      if (colWidth < minColWidth) {
+        colWidth = minColWidth;
+        const totalNeeded = regColWidth + (colWidth * otherColsCount);
+        if (totalNeeded > usableWidth) {
+          regColWidth = Math.max(50, regColWidth - (totalNeeded - usableWidth));
+        }
+      }
+
+      function renderPageHeader(headerText = "STATEMENT OF ATTENDANCE REPORT") {
+        const logoPath = path.join(__dirname, "public", "crrengglogo.png");
+        try {
+          if (fs.existsSync(logoPath)) doc.image(logoPath, leftMargin, doc.page.margins.top, { width: 50 });
+        } catch (e) {}
+        const titleX = leftMargin + 60;
+        const titleW = usableWidth - 60;
+        doc.fontSize(14).font("Helvetica-Bold")
+          .text("SIR C.R.REDDY COLLEGE OF ENGINEERING (Autonomous)", titleX, doc.page.margins.top - 2, { width: titleW, align: "center" });
+        doc.fontSize(10).font("Helvetica")
+          .text(`B.Tech Year - ${year}   Sem - ${semester}   Branch - ${course}   Section - ${section}`, { align: "center" });
+        doc.fontSize(10).text(headerText, { align: "center" });
+        doc.fontSize(8).text("Vatluru, Eluru - 534007, Eluru Dist. A.P.", { align: "center" });
+        doc.fontSize(8).text(`From: ${from_date}  To: ${to_date}`, { align: "center" });
+        doc.moveDown(0.5);
+
+        let y = doc.y + 6;
+        doc.moveTo(leftMargin, y).lineTo(pageWidth - rightMargin, y).stroke();
+        y += 6;
+
+        const headers = ["Regd.No", ...allSubjects, "TOTAL", "PERCENT"];
+        let x = leftMargin;
+        doc.fontSize(cellFontSize).font("Helvetica-Bold");
+        headers.forEach((h, i) => {
+          const w = (i === 0) ? regColWidth : colWidth;
+          doc.save();
+          doc.rect(x, y, w, 20).fillAndStroke("#007acc", "black");
+          doc.fillColor("white").text(h.length > 18 ? h.substring(0, 18) + "..." : h, x + 3, y + 4, { width: w - 6, align: "center" });
+          doc.restore();
+          x += w;
+        });
+        y += 20;
+
+        x = leftMargin;
+        doc.fontSize(cellFontSize).font("Helvetica-Bold").fillColor("black");
+        doc.rect(x, y, regColWidth, 20).stroke();
+        doc.text("Total Classes", x + 3, y + 4, { width: regColWidth - 6, align: "center" });
+        x += regColWidth;
+
+        const firstStudent = Object.values(studentMap)[0];
+        allSubjects.forEach(sub => {
+          const totalForSubject = firstStudent ? firstStudent.subjectTotals[sub] || 0 : 0;
+          doc.rect(x, y, colWidth, 20).stroke();
+          doc.text(String(totalForSubject), x + 3, y + 4, { width: colWidth - 6, align: "center" });
+          x += colWidth;
+        });
+
+        doc.rect(x, y, colWidth, 20).stroke();
+        x += colWidth;
+        doc.rect(x, y, colWidth, 20).stroke();
+        x += colWidth;
+
+        y += 20;
+        return y;
+      }
+
+      let y = renderPageHeader();
+      const regs = Object.values(studentMap).filter(std => std.admission_type.toLowerCase() !== "lateral");
+
+      regs.forEach(std => {
+        let possibleClasses = 0;
+        allSubjects.forEach(sub => {
+          possibleClasses += std.subjectTotals[sub] || 0;
+        });
+        const percent = possibleClasses > 0 ? ((std.total_attended / possibleClasses) * 100).toFixed(2) : "0.00";
+        const attendedCells = allSubjects.map(sub => (std.subjects[sub] != null ? String(std.subjects[sub]) : "-"));
+        const rowCells = [std.regno, ...attendedCells, String(std.total_attended), percent];
+
+        const bottomLimit = pageHeight - doc.page.margins.bottom - signatureHeight;
+        if (y + 20 > bottomLimit) {
+          doc.addPage();
+          y = renderPageHeader();
+        }
+
+        let x = leftMargin;
+        rowCells.forEach((cell, i) => {
+          const w = (i === 0) ? regColWidth : colWidth;
+          if (i === rowCells.length - 1) {
+            const p = parseFloat(cell) || 0;
+            doc.fillColor(p < 75 ? "red" : "black");
+          } else {
+            doc.fillColor("black");
+          }
+          doc.rect(x, y, w, 20).stroke();
+          doc.text(String(cell), x + 3, y + 4, { width: w - 6, align: "center" });
+          x += w;
+        });
+        y += 20;
+      });
+
+      const laterals = Object.values(studentMap).filter(std => std.admission_type.toLowerCase() === 'lateral');
+      if (laterals.length > 0) {
+        doc.addPage();
+        y = renderPageHeader("Lateral Entry Students");
+        laterals.forEach(std => {
+          let possibleClasses = 0;
+          allSubjects.forEach(sub => {
+            possibleClasses += std.subjectTotals[sub] || 0;
+          });
+          const percent = possibleClasses > 0 ? ((std.total_attended / possibleClasses) * 100).toFixed(2) : "0.00";
+          const attendedCells = allSubjects.map(sub => (std.subjects[sub] != null ? String(std.subjects[sub]) : "-"));
+          const rowCells = [std.regno, ...attendedCells, String(std.total_attended), percent];
+
+          const bottomLimit = pageHeight - doc.page.margins.bottom - signatureHeight;
+          if (y + 20 > bottomLimit) {
+            doc.addPage();
+            y = renderPageHeader("Lateral Entry Students");
+          }
+
+          let x = leftMargin;
+          rowCells.forEach((cell, i) => {
+            const w = (i === 0) ? regColWidth : colWidth;
+            if (i === rowCells.length - 1) {
+              const p = parseFloat(cell) || 0;
+              doc.fillColor(p < 75 ? "red" : "black");
+            } else {
+              doc.fillColor("black");
+            }
+            doc.rect(x, y, w, 20).stroke();
+            doc.text(String(cell), x + 3, y + 4, { width: w - 6, align: "center" });
+            x += w;
+          });
+          y += 20;
+        });
+      }
+
+      let lastY = doc.y || doc.page.margins.top;
+      const minSpaceBelow = 80;
+      const spaceBelow = pageHeight - doc.page.margins.bottom - lastY;
+      if (spaceBelow < minSpaceBelow) {
+        doc.addPage();
+        lastY = doc.page.margins.top;
+      }
+      const signatureY = lastY + 40;
+      doc.fontSize(10).fillColor("black");
+      doc.text("Faculty Signature", leftMargin + 10, signatureY);
+      doc.text("HOD Signature", pageWidth - rightMargin - 160, signatureY);
+
+      doc.end();
+    }
+  );
 });
+
 //fetch course and section by dept_code
 app.get("/api/fetch-courses-sections", (req, res) => {
   const { dept_code, year } = req.query;
@@ -4610,5 +4733,6 @@ app.post("/api/send-sms", async (req, res) => {
 });
 
 module.exports = app;
+
 
 
