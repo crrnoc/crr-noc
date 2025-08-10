@@ -4503,35 +4503,20 @@ SIR RAMALINGA REDDY COLLEGE`
 
 function formatMessage(templateKey, data) {
   let msg = TEMPLATE_TEXT[templateKey];
+  const replacements = [];
 
   if (templateKey === 'attendance') {
-    msg = msg
-      .replace('{#var#}', data.name)
-      .replace('{#var#}', data.reg_no)
-      .replace('{#var#}', data.semester)
-      .replace('{#var#}', data.percentage);
+    replacements.push(data.name, data.reg_no, data.semester, data.percentage);
   } else if (templateKey === 'midmarks') {
-    msg = msg
-      .replace('{#var#}', data.name)
-      .replace('{#var#}', data.reg_no)
-      .replace('{#var#}', data.semester)
-      .replace('{#var#}', data.total_marks);
+    replacements.push(data.name, data.reg_no, data.semester, data.total_marks);
   } else if (templateKey === 'university_eng') {
-    msg = msg
-      .replace('{#var#}', data.name)
-      .replace('{#var#}', data.reg_no)
-      .replace('{#var#}', data.semester)
-      .replace('{#var#}', data.year)
-      .replace('{#var#}', data.subjects_grades)
-      .replace('{#var#}', data.sgpa);
+    replacements.push(data.name, data.reg_no, data.semester, data.year, data.subjects_grades, data.sgpa);
   } else if (templateKey === 'university_telugu') {
-    msg = msg
-      .replace('{#var#}', data.name)
-      .replace('{#var#}', data.reg_no)
-      .replace('{#var#}', data.year)
-      .replace('{#var#}', data.semester)
-      .replace('{#var#}', data.subjects_grades)
-      .replace('{#var#}', data.sgpa);
+    replacements.push(data.name, data.reg_no, data.year, data.semester, data.subjects_grades, data.sgpa);
+  }
+
+  for (const rep of replacements) {
+    msg = msg.replace('{#var#}', rep);
   }
 
   return msg;
@@ -4578,11 +4563,11 @@ app.post('/api/send-sms', async (req, res) => {
              GROUP BY s.reg_no, r.semester, s.year, r.sgpa`;
     }
 
-    // Wrap the DB query in a Promise for async/await
+    // Run the SQL query with a promise to use async/await
     const rows = await new Promise((resolve, reject) => {
       connection.query(sql, [reg_nos], (err, results) => {
-        if (err) reject(err);
-        else resolve(results);
+        if (err) return reject(err);
+        resolve(results);
       });
     });
 
@@ -4625,8 +4610,8 @@ app.post('/api/send-sms', async (req, res) => {
       };
     });
 
-    // Build XML
-    const xml = xmlbuilder.create('xmlapi', { encoding: 'UTF-8' });
+    // Build XML for SMS provider
+    const xml = require('xmlbuilder').create('xmlapi', { encoding: 'UTF-8' });
     const auth = xml.ele('auth');
     auth.ele('username', SMS_USERNAME);
     auth.ele('apikey', SMS_APIKEY);
@@ -4645,18 +4630,17 @@ app.post('/api/send-sms', async (req, res) => {
 
     console.log('XML Sent to Provider:\n', xmlString);
 
+    const axios = require('axios');
     const url = `https://smslogin.co/v3/xmlapi.php?data=${encodeURIComponent(xmlString)}`;
     const apiResp = await axios.get(url, { timeout: 15000 });
 
     console.log('Provider Response:', apiResp.data);
 
-    res.json({ success: true, message: 'SMS sent', providerResponse: apiResp.data });
+    return res.json({ success: true, message: 'SMS sent', providerResponse: apiResp.data });
+
   } catch (err) {
     console.error('Error in /api/send-sms:', err);
-    res.status(500).json({ success: false, message: 'Internal server error', error: err.message });
+    return res.status(500).json({ success: false, message: 'Internal server error', error: err.message });
   }
 });
-
-
-
 
