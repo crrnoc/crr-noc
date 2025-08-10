@@ -4536,15 +4536,16 @@ app.post("/api/send-sms", async (req, res) => {
              FROM students s
              JOIN attendance a ON a.regno = s.reg_no
              WHERE s.reg_no IN (?)`;
-    } else if (template === "midmarks") {
-      sql = `SELECT s.name, s.reg_no, m.semester,
-                (CAST(m.mid1 AS DECIMAL) + CAST(m.a1 AS DECIMAL) + CAST(m.q1 AS DECIMAL) +
-                 CAST(m.mid2 AS DECIMAL) + CAST(m.a2 AS DECIMAL) + CAST(m.q2 AS DECIMAL)) AS total_marks,
-                s.father_mobile
-             FROM students s
-             JOIN midmarks m ON m.hallticket = s.reg_no
-             WHERE s.reg_no IN (?)`;
-    } else if (template === "university_eng" || template === "university_telugu") {
+   } else if (template === "midmarks") {
+  sql = `SELECT s.name, s.reg_no, m.semester,
+            (CAST(m.mid1 AS DECIMAL) + CAST(m.a1 AS DECIMAL) + CAST(m.q1 AS DECIMAL) +
+             CAST(m.mid2 AS DECIMAL) + CAST(m.a2 AS DECIMAL) + CAST(m.q2 AS DECIMAL)) AS total_marks,
+            s.father_mobile
+         FROM students s
+         JOIN railway.mid_internal_marks m ON m.hallticket = s.reg_no
+         WHERE s.reg_no IN (?)`;
+}
+ else if (template === "university_eng" || template === "university_telugu") {
       sql = `SELECT s.name, s.reg_no, s.year, r.semester,
                     GROUP_CONCAT(CONCAT(r.subname, ' - ', r.grade) SEPARATOR ', ') AS subjects_grades,
                     r.sgpa, s.father_mobile
@@ -4604,3 +4605,4 @@ app.post("/api/send-sms", async (req, res) => {
 });
 
 module.exports = app;
+
