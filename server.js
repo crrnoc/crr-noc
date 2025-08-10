@@ -3964,10 +3964,8 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
     }
     if (!results.length) return res.status(404).json({ error: "No data found" });
 
-    // Sorted unique subjects for consistent column order
     const allSubjects = Array.from(new Set(results.map(r => r.subject))).sort();
 
-    // Build student map
     const studentMap = {};
     results.forEach(r => {
       const reg = r.reg_no;
@@ -4021,7 +4019,6 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
       }
     }
 
-    // Render page header, returns y position after header + column titles
     function renderPageHeader(headerText = "STATEMENT OF ATTENDANCE REPORT") {
       const logoPath = path.join(__dirname, "public", "crrengglogo.png");
       const topY = doc.page.margins.top;
@@ -4038,7 +4035,6 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
       doc.fontSize(8).text(`From: ${from_date}  To: ${to_date}`, { align: "center" });
       doc.moveDown(0.5);
 
-      // Draw table headers
       let y = doc.y + 6;
       doc.moveTo(leftMargin, y).lineTo(pageWidth - rightMargin, y).stroke();
       y += 6;
@@ -4058,7 +4054,6 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
       return y;
     }
 
-    // Renders the "Total Classes" row at given y, returns new y
     function renderTotalClassesRow(y, studentRef) {
       let x = leftMargin;
       doc.fontSize(cellFontSize).font("Helvetica-Bold").fillColor("black");
@@ -4074,7 +4069,6 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
         x += colWidth;
       });
 
-      // Empty cells for TOTAL and PERCENT columns
       doc.rect(x, y, colWidth, 20).stroke(); // TOTAL empty
       x += colWidth;
       doc.rect(x, y, colWidth, 20).stroke(); // PERCENT empty
@@ -4123,17 +4117,10 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
       doc.y = y;
     });
 
-    const finalSigY = pageHeight - doc.page.margins.bottom - (signatureHeight - 30);
-    doc.fontSize(10).fillColor("black");
-    doc.text("Faculty Signature", leftMargin + 10, finalSigY);
-    doc.text("HOD Signature", pageWidth - rightMargin - 160, finalSigY);
-
     // Lateral students page
     const laterals = regs.filter(std => std.admission_type.toLowerCase() === 'lateral');
     if (laterals.length > 0) {
       doc.addPage();
-      doc.fontSize(12).font("Helvetica-Bold").text("Lateral Entry Students", { align: "center" });
-      doc.moveDown(0.5);
 
       const lateralFirstStudent = laterals[0];
       let y2 = renderPageHeader("Lateral Entry Students");
@@ -4172,6 +4159,13 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
       });
     }
 
+    // Add final signature page
+    doc.addPage();
+    const finalSigY = doc.page.height - doc.page.margins.bottom - (signatureHeight - 30);
+    doc.fontSize(10).fillColor("black");
+    doc.text("Faculty Signature", leftMargin + 10, finalSigY);
+    doc.text("HOD Signature", pageWidth - rightMargin - 160, finalSigY);
+
     doc.end();
 
     writeStream.on("finish", () => {
@@ -4190,6 +4184,7 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
     });
   });
 });
+
 
 
 // 1) Get courses & sections for dept + year
@@ -4592,4 +4587,5 @@ app.post('/api/send-sms', (req, res) => {
     }
   });
 });
+
 
