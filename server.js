@@ -4485,20 +4485,10 @@ const TEMPLATE_ID_MAP = {
 };
 
 const TEMPLATE_TEXT = {
-  attendance: `ప్రియమైన తల్లిదండ్రులకు, మీ కుమారుడు/కుమార్తె {#var#} (Reg.No: {#var#}) యొక్క {#var#} సెమిస్టర్ హాజరు శాతం: {#var#}%
-దయచేసి మీ పిల్లల నిరంతర హాజరును ఖచ్చితంగా నిర్ధారించండి.
-SIR RAMALINGA REDDY COLLEGE`,
-
-  midmarks: `Dear Parent, Mid marks of Your Ward {#var#} bearing regno {#var#} for sem {#var#} midmarks: {#var#}
-SIR RAMALINGA REDDY COLLEGE`,
-
-  university_eng: `Dear Parent, Your Ward {#var#} bearing regno:{#var#} has Results of Semester {#var#} of Year {#var#}.
-Subjects & Grades: {#var#} SGPA: {#var#}
-SIR RAMALINGA REDDY COLLEGE`,
-
-  university_telugu: `ప్రియమైన తల్లిదండ్రులకు, మీ కుమారుడు/కుమార్తె {#var#} (Reg.No: {#var#}) కు {#var#} సంవత్సరం {#var#} సెమిస్టర్ ఫలితాలు విడుదలయ్యాయి.
-విషయాలు & గ్రేడ్‌లు: {#var#} SGPA: {#var#}
-SIR RAMALINGA REDDY COLLEGE`
+  attendance: `ప్రియమైన తల్లిదండ్రులకు, మీ కుమారుడు/కుమార్తె {#var#} (Reg.No: {#var#}) యొక్క {#var#} సెమిస్టర్ హాజరు శాతం: {#var#}%\nదయచేసి మీ పిల్లల నిరంతర హాజరును ఖచ్చితంగా నిర్ధారించండి.\nSIR RAMALINGA REDDY COLLEGE`,
+  midmarks: `Dear Parent, Mid marks of Your Ward {#var#} bearing regno {#var#} for sem {#var#} midmarks: {#var#}\nSIR RAMALINGA REDDY COLLEGE`,
+  university_eng: `Dear Parent, Your Ward {#var#} bearing regno:{#var#} has Results of Semester {#var#} of Year {#var#}.\nSubjects & Grades: {#var#} SGPA: {#var#}\nSIR RAMALINGA REDDY COLLEGE`,
+  university_telugu: `ప్రియమైన తల్లిదండ్రులకు, మీ కుమారుడు/కుమార్తె {#var#} (Reg.No: {#var#}) కు {#var#} సంవత్సరం {#var#} సెమిస్టర్ ఫలితాలు విడుదలయ్యాయి.\nవిషయాలు & గ్రేడ్‌లు: {#var#} SGPA: {#var#}\nSIR RAMALINGA REDDY COLLEGE`
 };
 
 function formatMessage(templateKey, data) {
@@ -4518,10 +4508,8 @@ function formatMessage(templateKey, data) {
   for (const rep of replacements) {
     msg = msg.replace('{#var#}', rep);
   }
-
   return msg;
 }
-
 
 app.post('/api/send-sms', async (req, res) => {
   try {
@@ -4535,7 +4523,6 @@ app.post('/api/send-sms', async (req, res) => {
     }
 
     let sql;
-
     if (template === 'attendance') {
       sql = `SELECT s.name, s.reg_no, a.semester, a.percentage, s.father_mobile
              FROM students s
@@ -4563,7 +4550,6 @@ app.post('/api/send-sms', async (req, res) => {
              GROUP BY s.reg_no, r.semester, s.year, r.sgpa`;
     }
 
-    // Run the SQL query with a promise to use async/await
     const rows = await new Promise((resolve, reject) => {
       connection.query(sql, [reg_nos], (err, results) => {
         if (err) return reject(err);
@@ -4577,8 +4563,8 @@ app.post('/api/send-sms', async (req, res) => {
 
     const studentsData = rows.map(s => {
       const cleanMobile = (s.father_mobile || '').replace(/\D/g, '').slice(-10);
-
       let dataObj;
+
       if (template === 'attendance') {
         dataObj = { name: s.name, reg_no: s.reg_no, semester: s.semester, percentage: s.percentage };
       } else if (template === 'midmarks') {
@@ -4593,7 +4579,6 @@ app.post('/api/send-sms', async (req, res) => {
           sgpa: s.sgpa
         };
       } else {
-        // university_telugu
         dataObj = {
           name: s.name,
           reg_no: s.reg_no,
@@ -4610,8 +4595,8 @@ app.post('/api/send-sms', async (req, res) => {
       };
     });
 
-    // Build XML for SMS provider
-    const xml = require('xmlbuilder').create('xmlapi', { encoding: 'UTF-8' });
+    // XML build
+    const xml = xmlbuilder.create('xmlapi', { encoding: 'UTF-8' });
     const auth = xml.ele('auth');
     auth.ele('username', SMS_USERNAME);
     auth.ele('apikey', SMS_APIKEY);
@@ -4627,15 +4612,12 @@ app.post('/api/send-sms', async (req, res) => {
     options.ele('senderid', senderId);
 
     const xmlString = xml.end({ pretty: true });
-
     console.log('XML Sent to Provider:\n', xmlString);
 
-    const axios = require('axios');
     const url = `https://smslogin.co/v3/xmlapi.php?data=${encodeURIComponent(xmlString)}`;
     const apiResp = await axios.get(url, { timeout: 15000 });
 
     console.log('Provider Response:', apiResp.data);
-
     return res.json({ success: true, message: 'SMS sent', providerResponse: apiResp.data });
 
   } catch (err) {
@@ -4643,6 +4625,3 @@ app.post('/api/send-sms', async (req, res) => {
     return res.status(500).json({ success: false, message: 'Internal server error', error: err.message });
   }
 });
-
-
-
