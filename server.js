@@ -4537,47 +4537,54 @@ function formatMessage(templateKey, data) {
   return msg;
 }
 
-app.post('/api/send-sms', (req, res) => {
-  const { reg_nos, senderId, template } = req.body;
 
-  if (!reg_nos?.length) {
-    return res.status(400).json({ success: false, message: 'No students selected' });
-  }
-  if (!TEMPLATE_ID_MAP[template]) {
-    return res.status(400).json({ success: false, message: 'Invalid template type' });
-  }
+app.post('/api/send-sms', async (req, res) => {
+  try {
+    const { reg_nos, senderId, template } = req.body;
 
-  let sql;
+    if (!reg_nos?.length) {
+      return res.status(400).json({ success: false, message: 'No students selected' });
+    }
+    if (!TEMPLATE_ID_MAP[template]) {
+      return res.status(400).json({ success: false, message: 'Invalid template type' });
+    }
 
-  if (template === 'attendance') {
-    sql = `SELECT s.name, s.reg_no, a.semester, a.percentage, s.father_mobile
-           FROM students s
-           JOIN attendance a ON a.regno = s.reg_no
-           WHERE s.reg_no IN (?)`;
-  } else if (template === 'midmarks') {
-    sql = `SELECT s.name, s.reg_no, m.semester,
-              (CAST(m.mid1 AS DECIMAL) + CAST(m.a1 AS DECIMAL) + CAST(m.q1 AS DECIMAL) +
-               CAST(m.mid2 AS DECIMAL) + CAST(m.a2 AS DECIMAL) + CAST(m.q2 AS DECIMAL)) AS total_marks,
-              s.father_mobile
-           FROM students s
-           JOIN midmarks m ON m.hallticket = s.reg_no
-           WHERE s.reg_no IN (?)`;
-  } else if (template === 'university_eng' || template === 'university_telugu') {
-    sql = `SELECT s.name, s.reg_no, s.year, r.semester,
-                  GROUP_CONCAT(CONCAT(r.subname, ' - ', r.grade) SEPARATOR ', ') AS subjects_grades,
-                  r.sgpa, s.father_mobile
-           FROM students s
-           LEFT JOIN (
-             SELECT regno, semester, subname, grade, sgpa FROM autonomous_results
-             UNION ALL
-             SELECT regno, semester, subname, grade, sgpa FROM results
-           ) r ON r.regno = s.reg_no
-           WHERE s.reg_no IN (?)
-           GROUP BY s.reg_no, r.semester, s.year, r.sgpa`;
-  }
+    let sql;
 
-  connection.query(sql, [reg_nos], async (err, rows) => {
-    if (err) return res.status(500).json({ success: false, message: 'DB error', error: err.message });
+    if (template === 'attendance') {
+      sql = `SELECT s.name, s.reg_no, a.semester, a.percentage, s.father_mobile
+             FROM students s
+             JOIN attendance a ON a.regno = s.reg_no
+             WHERE s.reg_no IN (?)`;
+    } else if (template === 'midmarks') {
+      sql = `SELECT s.name, s.reg_no, m.semester,
+                (CAST(m.mid1 AS DECIMAL) + CAST(m.a1 AS DECIMAL) + CAST(m.q1 AS DECIMAL) +
+                 CAST(m.mid2 AS DECIMAL) + CAST(m.a2 AS DECIMAL) + CAST(m.q2 AS DECIMAL)) AS total_marks,
+                s.father_mobile
+             FROM students s
+             JOIN midmarks m ON m.hallticket = s.reg_no
+             WHERE s.reg_no IN (?)`;
+    } else if (template === 'university_eng' || template === 'university_telugu') {
+      sql = `SELECT s.name, s.reg_no, s.year, r.semester,
+                    GROUP_CONCAT(CONCAT(r.subname, ' - ', r.grade) SEPARATOR ', ') AS subjects_grades,
+                    r.sgpa, s.father_mobile
+             FROM students s
+             LEFT JOIN (
+               SELECT regno, semester, subname, grade, sgpa FROM autonomous_results
+               UNION ALL
+               SELECT regno, semester, subname, grade, sgpa FROM results
+             ) r ON r.regno = s.reg_no
+             WHERE s.reg_no IN (?)
+             GROUP BY s.reg_no, r.semester, s.year, r.sgpa`;
+    }
+
+    // Wrap the DB query in a Promise for async/await
+    const rows = await new Promise((resolve, reject) => {
+      connection.query(sql, [reg_nos], (err, results) => {
+        if (err) reject(err);
+        else resolve(results);
+      });
+    });
 
     if (!rows.length) {
       return res.status(404).json({ success: false, message: 'No data found for selected students' });
@@ -4612,9 +4619,10 @@ app.post('/api/send-sms', (req, res) => {
         };
       }
 
-      const messageTemplate = formatMessage(template, dataObj);
-
-      return { mobile: cleanMobile, message: messageTemplate };
+      return {
+        mobile: cleanMobile,
+        message: formatMessage(template, dataObj)
+      };
     });
 
     // Build XML
@@ -4635,19 +4643,20 @@ app.post('/api/send-sms', (req, res) => {
 
     const xmlString = xml.end({ pretty: true });
 
-    try {
-      console.log('XML Sent to Provider:\n', xmlString);
+    console.log('XML Sent to Provider:\n', xmlString);
 
-      const url = `https://smslogin.co/v3/xmlapi.php?data=${encodeURIComponent(xmlString)}`;
-      const apiResp = await axios.get(url, { timeout: 15000 });
+    const url = `https://smslogin.co/v3/xmlapi.php?data=${encodeURIComponent(xmlString)}`;
+    const apiResp = await axios.get(url, { timeout: 15000 });
 
-      console.log('Provider Response:', apiResp.data);
+    console.log('Provider Response:', apiResp.data);
 
-      return res.json({ success: true, message: 'SMS sent', providerResponse: apiResp.data });
-    } catch (sendErr) {
-      return res.status(500).json({ success: false, message: 'SMS API error', error: sendErr.message });
-    }
-  });
+    res.json({ success: true, message: 'SMS sent', providerResponse: apiResp.data });
+  } catch (err) {
+    console.error('Error in /api/send-sms:', err);
+    res.status(500).json({ success: false, message: 'Internal server error', error: err.message });
+  }
 });
+
+
 
 
