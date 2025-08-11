@@ -4078,8 +4078,15 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
       s.admission_type
     FROM daily_attendance a
     JOIN students s ON a.reg_no = s.reg_no
-    WHERE a.year = ? AND a.course = ? AND a.section = ? AND a.semester = ?
+    WHERE a.year = ? 
+      AND a.course = ? 
+      AND a.section = ? 
+      AND a.semester = ?
       AND a.date BETWEEN ? AND ?
+      AND (
+        s.admission_type != 'lateral' 
+        OR a.date >= s.joining_date
+      )
     GROUP BY a.reg_no, a.subject, s.joining_date, s.admission_type
     ORDER BY a.reg_no, a.subject
   `;
@@ -4091,10 +4098,8 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
     }
     if (!results.length) return res.status(404).json({ error: "No data found" });
 
-    // Sorted unique subjects for consistent column order
     const allSubjects = Array.from(new Set(results.map(r => r.subject))).sort();
 
-    // Build student map
     const studentMap = {};
     results.forEach(r => {
       const reg = r.reg_no;
@@ -4133,7 +4138,7 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
     const leftMargin = doc.page.margins.left;
     const rightMargin = doc.page.margins.right;
     const usableWidth = pageWidth - leftMargin - rightMargin;
-    const signatureHeight = 70; // Height reserved for signatures if needed
+    const signatureHeight = 70;
     const cellFontSize = 8;
     let regColWidth = 80;
     const otherColsCount = allSubjects.length + 2; // subjects + TOTAL + PERCENT
@@ -4148,8 +4153,7 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
       }
     }
 
-    // renderPageHeader returns current y position after header & columns
-    function renderPageHeader(headerText = "STATEMENT OF ATTENDANCE REPORT") {
+    function renderPageHeader(headerText = "STATEMENT OF ATTENDANCE REPORT", totalsSourceStudent = null) {
       const logoPath = path.join(__dirname, "public", "crrengglogo.png");
       const topY = doc.page.margins.top;
       try {
@@ -4165,13 +4169,10 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
       doc.fontSize(8).text(`From: ${from_date}  To: ${to_date}`, { align: "center" });
       doc.moveDown(0.5);
 
-      let y = doc.y + 6; // position after header text
-
-      // Draw header line
+      let y = doc.y + 6;
       doc.moveTo(leftMargin, y).lineTo(pageWidth - rightMargin, y).stroke();
       y += 6;
 
-      // Draw column headers
       const headers = ["Regd.No", ...allSubjects, "TOTAL", "PERCENT"];
       let x = leftMargin;
       doc.fontSize(cellFontSize).font("Helvetica-Bold");
@@ -4185,39 +4186,41 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
       });
       y += 20;
 
-      // Draw total classes row (once below header)
+      // Total Classes Row
       x = leftMargin;
       doc.fontSize(cellFontSize).font("Helvetica-Bold").fillColor("black");
       doc.rect(x, y, regColWidth, 20).stroke();
       doc.text("Total Classes", x + 3, y + 4, { width: regColWidth - 6, align: "center" });
       x += regColWidth;
 
-      // Use first student for totals as all have same subject totals
-      const firstStudent = Object.values(studentMap)[0];
+      let totalClassesSum = 0;
       allSubjects.forEach(sub => {
-        const totalForSubject = firstStudent ? firstStudent.subjectTotals[sub] || 0 : 0;
+        const totalForSubject = totalsSourceStudent ? (totalsSourceStudent.subjectTotals[sub] || 0) : 0;
+        totalClassesSum += totalForSubject;
         doc.rect(x, y, colWidth, 20).stroke();
         doc.text(String(totalForSubject), x + 3, y + 4, { width: colWidth - 6, align: "center" });
         x += colWidth;
       });
 
-      // Empty cells for TOTAL and PERCENT columns in total classes row
-      doc.rect(x, y, colWidth, 20).stroke(); // TOTAL empty cell
-      x += colWidth;
-      doc.rect(x, y, colWidth, 20).stroke(); // PERCENT empty cell
+      // Fill TOTAL column
+      doc.rect(x, y, colWidth, 20).stroke();
+      doc.text(String(totalClassesSum), x + 3, y + 4, { width: colWidth - 6, align: "center" });
       x += colWidth;
 
-      y += 20; // Move y after total classes row
+      // PERCENT column empty
+      doc.rect(x, y, colWidth, 20).stroke();
+      x += colWidth;
 
+      y += 20;
       return y;
     }
 
-    // Draw main report pages (regular students)
-    let y = renderPageHeader();
+    const regulars = Object.values(studentMap).filter(std => std.admission_type.toLowerCase() !== "lateral");
+    const laterals = Object.values(studentMap).filter(std => std.admission_type.toLowerCase() === "lateral");
 
-    const regs = Object.values(studentMap).filter(std => std.admission_type.toLowerCase() !== "lateral");
-
-    regs.forEach(std => {
+    // REGULAR STUDENTS PAGE
+    let y = renderPageHeader("STATEMENT OF ATTENDANCE REPORT", regulars[0] || null);
+    regulars.forEach(std => {
       let possibleClasses = 0;
       allSubjects.forEach(sub => {
         possibleClasses += std.subjectTotals[sub] || 0;
@@ -4229,7 +4232,7 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
       const bottomLimit = pageHeight - doc.page.margins.bottom - signatureHeight;
       if (y + 20 > bottomLimit) {
         doc.addPage();
-        y = renderPageHeader();
+        y = renderPageHeader("STATEMENT OF ATTENDANCE REPORT", regulars[0] || null);
       }
 
       let x = leftMargin;
@@ -4246,14 +4249,12 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
         x += w;
       });
       y += 20;
-      doc.y = y;
     });
 
-    // Draw lateral students on a new page if any
-    const laterals = Object.values(studentMap).filter(std => std.admission_type.toLowerCase() === 'lateral');
+    // LATERAL STUDENTS PAGE
     if (laterals.length > 0) {
       doc.addPage();
-      y = renderPageHeader("Lateral Entry Students");
+      y = renderPageHeader("Lateral Entry Students", laterals[0] || null);
 
       laterals.forEach(std => {
         let possibleClasses = 0;
@@ -4267,7 +4268,7 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
         const bottomLimit = pageHeight - doc.page.margins.bottom - signatureHeight;
         if (y + 20 > bottomLimit) {
           doc.addPage();
-          y = renderPageHeader("Lateral Entry Students");
+          y = renderPageHeader("Lateral Entry Students", laterals[0] || null);
         }
 
         let x = leftMargin;
@@ -4284,20 +4285,17 @@ app.get("/api/download-all-subjects-attendance", (req, res) => {
           x += w;
         });
         y += 20;
-        doc.y = y;
       });
     }
 
-    // Now add signatures at bottom of the last page (no new page)
+    // SIGNATURES
     let lastY = doc.y || doc.page.margins.top;
     const minSpaceBelow = 80;
     const spaceBelow = pageHeight - doc.page.margins.bottom - lastY;
-
     if (spaceBelow < minSpaceBelow) {
       doc.addPage();
       lastY = doc.page.margins.top;
     }
-
     const signatureY = lastY + 40;
     doc.fontSize(10).fillColor("black");
     doc.text("Faculty Signature", leftMargin + 10, signatureY);
@@ -4736,6 +4734,7 @@ app.post("/api/send-sms", async (req, res) => {
 });
 
 module.exports = app;
+
 
 
 
