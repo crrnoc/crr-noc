@@ -3796,7 +3796,7 @@ app.get('/api/staff/semesters/:staffId', (req, res) => {
     res.json({ semesters });
   });
 });
-// 📄 Download selected-subject attendance PDF (with lateral separation & styled like all-subject report)
+// 📄 Download selected-subject attendance PDF (with lateral separation & TOTAL classes filled)
 app.get("/api/download-attendance-pdf", (req, res) => {
   const { year, semester, course, section, subject, from_date, to_date } = req.query;
 
@@ -3804,8 +3804,7 @@ app.get("/api/download-attendance-pdf", (req, res) => {
     return res.status(400).send("Missing required query parameters.");
   }
 
-  // Subjects can come as: "period1:Math,period3:Physics"
-  const subjects = subject.split(",").map(s => s.split(":")[1]); // Extract only subject names
+  const subjects = subject.split(",").map(s => s.split(":")[1]);
   const placeholders = subjects.map(() => "?").join(",");
 
   const query = `
@@ -3893,7 +3892,7 @@ app.get("/api/download-attendance-pdf", (req, res) => {
         }
       }
 
-      function renderPageHeader(headerText = "STATEMENT OF ATTENDANCE REPORT") {
+      function renderPageHeader(headerText = "STATEMENT OF ATTENDANCE REPORT", totalsRowSource = null) {
         const logoPath = path.join(__dirname, "public", "crrengglogo.png");
         try {
           if (fs.existsSync(logoPath)) doc.image(logoPath, leftMargin, doc.page.margins.top, { width: 50 });
@@ -3932,16 +3931,22 @@ app.get("/api/download-attendance-pdf", (req, res) => {
         doc.text("Total Classes", x + 3, y + 4, { width: regColWidth - 6, align: "center" });
         x += regColWidth;
 
-        const firstStudent = Object.values(studentMap)[0];
         allSubjects.forEach(sub => {
-          const totalForSubject = firstStudent ? firstStudent.subjectTotals[sub] || 0 : 0;
+          const totalForSubject = totalsRowSource ? totalsRowSource.subjectTotals[sub] || 0 : 0;
           doc.rect(x, y, colWidth, 20).stroke();
           doc.text(String(totalForSubject), x + 3, y + 4, { width: colWidth - 6, align: "center" });
           x += colWidth;
         });
 
+        // TOTAL column
+        const totalClassesSum = totalsRowSource
+          ? allSubjects.reduce((sum, sub) => sum + (totalsRowSource.subjectTotals[sub] || 0), 0)
+          : 0;
         doc.rect(x, y, colWidth, 20).stroke();
+        doc.text(String(totalClassesSum), x + 3, y + 4, { width: colWidth - 6, align: "center" });
         x += colWidth;
+
+        // PERCENT column (leave empty)
         doc.rect(x, y, colWidth, 20).stroke();
         x += colWidth;
 
@@ -3949,14 +3954,11 @@ app.get("/api/download-attendance-pdf", (req, res) => {
         return y;
       }
 
-      let y = renderPageHeader();
+      // Regular students
       const regs = Object.values(studentMap).filter(std => std.admission_type.toLowerCase() !== "lateral");
-
+      let y = renderPageHeader("STATEMENT OF ATTENDANCE REPORT", regs[0]);
       regs.forEach(std => {
-        let possibleClasses = 0;
-        allSubjects.forEach(sub => {
-          possibleClasses += std.subjectTotals[sub] || 0;
-        });
+        let possibleClasses = allSubjects.reduce((sum, sub) => sum + (std.subjectTotals[sub] || 0), 0);
         const percent = possibleClasses > 0 ? ((std.total_attended / possibleClasses) * 100).toFixed(2) : "0.00";
         const attendedCells = allSubjects.map(sub => (std.subjects[sub] != null ? String(std.subjects[sub]) : "-"));
         const rowCells = [std.regno, ...attendedCells, String(std.total_attended), percent];
@@ -3964,15 +3966,14 @@ app.get("/api/download-attendance-pdf", (req, res) => {
         const bottomLimit = pageHeight - doc.page.margins.bottom - signatureHeight;
         if (y + 20 > bottomLimit) {
           doc.addPage();
-          y = renderPageHeader();
+          y = renderPageHeader("STATEMENT OF ATTENDANCE REPORT", regs[0]);
         }
 
         let x = leftMargin;
         rowCells.forEach((cell, i) => {
           const w = (i === 0) ? regColWidth : colWidth;
           if (i === rowCells.length - 1) {
-            const p = parseFloat(cell) || 0;
-            doc.fillColor(p < 75 ? "red" : "black");
+            doc.fillColor(parseFloat(cell) < 75 ? "red" : "black");
           } else {
             doc.fillColor("black");
           }
@@ -3983,15 +3984,13 @@ app.get("/api/download-attendance-pdf", (req, res) => {
         y += 20;
       });
 
-      const laterals = Object.values(studentMap).filter(std => std.admission_type.toLowerCase() === 'lateral');
+      // Lateral students
+      const laterals = Object.values(studentMap).filter(std => std.admission_type.toLowerCase() === "lateral");
       if (laterals.length > 0) {
         doc.addPage();
-        y = renderPageHeader("Lateral Entry Students");
+        y = renderPageHeader("Lateral Entry Students", laterals[0]);
         laterals.forEach(std => {
-          let possibleClasses = 0;
-          allSubjects.forEach(sub => {
-            possibleClasses += std.subjectTotals[sub] || 0;
-          });
+          let possibleClasses = allSubjects.reduce((sum, sub) => sum + (std.subjectTotals[sub] || 0), 0);
           const percent = possibleClasses > 0 ? ((std.total_attended / possibleClasses) * 100).toFixed(2) : "0.00";
           const attendedCells = allSubjects.map(sub => (std.subjects[sub] != null ? String(std.subjects[sub]) : "-"));
           const rowCells = [std.regno, ...attendedCells, String(std.total_attended), percent];
@@ -3999,15 +3998,14 @@ app.get("/api/download-attendance-pdf", (req, res) => {
           const bottomLimit = pageHeight - doc.page.margins.bottom - signatureHeight;
           if (y + 20 > bottomLimit) {
             doc.addPage();
-            y = renderPageHeader("Lateral Entry Students");
+            y = renderPageHeader("Lateral Entry Students", laterals[0]);
           }
 
           let x = leftMargin;
           rowCells.forEach((cell, i) => {
             const w = (i === 0) ? regColWidth : colWidth;
             if (i === rowCells.length - 1) {
-              const p = parseFloat(cell) || 0;
-              doc.fillColor(p < 75 ? "red" : "black");
+              doc.fillColor(parseFloat(cell) < 75 ? "red" : "black");
             } else {
               doc.fillColor("black");
             }
@@ -4020,21 +4018,19 @@ app.get("/api/download-attendance-pdf", (req, res) => {
       }
 
       let lastY = doc.y || doc.page.margins.top;
-      const minSpaceBelow = 80;
-      const spaceBelow = pageHeight - doc.page.margins.bottom - lastY;
-      if (spaceBelow < minSpaceBelow) {
+      if ((pageHeight - doc.page.margins.bottom - lastY) < 80) {
         doc.addPage();
         lastY = doc.page.margins.top;
       }
-      const signatureY = lastY + 40;
       doc.fontSize(10).fillColor("black");
-      doc.text("Faculty Signature", leftMargin + 10, signatureY);
-      doc.text("HOD Signature", pageWidth - rightMargin - 160, signatureY);
+      doc.text("Faculty Signature", leftMargin + 10, lastY + 40);
+      doc.text("HOD Signature", pageWidth - rightMargin - 160, lastY + 40);
 
       doc.end();
     }
   );
 });
+
 
 //fetch course and section by dept_code
 app.get("/api/fetch-courses-sections", (req, res) => {
@@ -4734,6 +4730,7 @@ app.post("/api/send-sms", async (req, res) => {
 });
 
 module.exports = app;
+
 
 
 
