@@ -4627,9 +4627,9 @@ function formatMessage(templateKey, data) {
   } else if (templateKey === "midmarks") {
     replacements.push(data.name, data.reg_no, data.semester, data.total_marks);
   } else if (templateKey === "university_eng") {
-    replacements.push(data.name, data.reg_no, data.semester, data.year, data.subjects_grades, data.sgpa);
+    replacements.push(data.name, data.reg_no, data.semester, data.year, data.result_link);
   } else if (templateKey === "university_telugu") {
-    replacements.push(data.name, data.reg_no, data.year, data.semester, data.subjects_grades, data.sgpa);
+    replacements.push(data.name, data.reg_no, data.year, data.semester, data.result_link);
   }
 
   replacements.forEach(rep => {
@@ -4707,8 +4707,8 @@ app.post("/api/send-sms", async (req, res) => {
           : template === "midmarks"
           ? { name: s.name, reg_no: s.reg_no, semester: s.semester, total_marks: s.total_marks }
           : template === "university_eng"
-          ? { name: s.name, reg_no: s.reg_no, semester: s.semester, year: s.year, subjects_grades: s.subjects_grades, sgpa: s.sgpa }
-          : { name: s.name, reg_no: s.reg_no, year: s.year, semester: s.semester, subjects_grades: s.subjects_grades, sgpa: s.sgpa };
+          ? { name: s.name, reg_no: s.reg_no, semester: s.semester, year: s.year, result_link: `https://crr-noc.onrender.com/verifyresult.html?regno=${s.reg_no}&sem=${s.semester}`, sgpa: s.sgpa }
+          : { name: s.name, reg_no: s.reg_no, year: s.year, semester: s.semester, result_link: `https://crr-noc.onrender.com/verifyresult.html?regno=${s.reg_no}&sem=${s.semester}`, sgpa: s.sgpa };
 
       const message = encodeURIComponent(formatMessage(template, dataObj));
 
@@ -4730,6 +4730,7 @@ app.post("/api/send-sms", async (req, res) => {
 });
 
 module.exports = app;
+
 
 
 
