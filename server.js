@@ -4627,9 +4627,9 @@ function formatMessage(templateKey, data) {
   } else if (templateKey === "midmarks") {
     replacements.push(data.name, data.reg_no, data.semester, data.total_marks);
   } else if (templateKey === "university_eng") {
-    replacements.push(data.name, data.reg_no, data.semester, data.year, data.result_link);
+   replacements.push(data.name, data.reg_no, data.semester, data.year, data.result_link, data.sgpa);
   } else if (templateKey === "university_telugu") {
-    replacements.push(data.name, data.reg_no, data.year, data.semester, data.result_link);
+    replacements.push(data.name, data.reg_no, data.year, data.semester, data.result_link, data.sgpa);
   }
 
   replacements.forEach(rep => {
@@ -4730,6 +4730,7 @@ app.post("/api/send-sms", async (req, res) => {
 });
 
 module.exports = app;
+
 
 
 
