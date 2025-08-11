@@ -357,6 +357,7 @@ document.getElementById("course").addEventListener("change", async function () {
   } catch (err) { console.error("Error loading sections", err); }
 });
 
+// Updated submit handler with conflict check
 document.getElementById("allocationForm").addEventListener("submit", async function (e) {
   e.preventDefault();
 
@@ -381,9 +382,9 @@ document.getElementById("allocationForm").addEventListener("submit", async funct
   }
 
   const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-  const fullPayload = [];
+  let anySubmitted = false;
 
-  days.forEach(day => {
+  for (const day of days) {
     const d = day.toLowerCase();
     const payload = {
       ...baseData,
@@ -397,33 +398,37 @@ document.getElementById("allocationForm").addEventListener("submit", async funct
       period7: formData.get(`${d}_p7`) || ""
     };
 
-    if (Object.values(payload).some(v => v.trim() !== "" && v !== day)) {
-      fullPayload.push(payload);
-    }
-  });
+    const hasPeriods = [payload.period1, payload.period2, payload.period3, payload.period4, payload.period5, payload.period6, payload.period7]
+      .some(p => p.trim() !== "");
 
-  if (fullPayload.length === 0) {
+    if (!hasPeriods) continue;
+
+    try {
+      const res = await fetch(`${baseUrl}/api/allocate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await res.json();
+      if (!result.success) {
+        Swal.fire("❌ Conflict", result.error || `Already allocated for this staff in the same day and period`, "error");
+        return; // stop further submission if conflict found
+      }
+      anySubmitted = true;
+    } catch (err) {
+      Swal.fire("❌ Error", "Server/Network error", "error");
+      return;
+    }
+  }
+
+  if (!anySubmitted) {
     Swal.fire("⚠️ Warning", "Please fill at least one period to submit.", "warning");
     return;
   }
 
-  try {
-    const res = await fetch(`${baseUrl}/api/allocate/multi`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ allocations: fullPayload })
-    });
-
-    const result = await res.json();
-    if (result.success) {
-      Swal.fire("✅ Success", result.message, "success");
-      this.reset();
-    } else {
-      Swal.fire("❌ Failed", result.error || "Allocation failed", "error");
-    }
-  } catch (err) {
-    Swal.fire("❌ Error", "Server/Network error", "error");
-  }
+  Swal.fire("✅ Success", "All periods saved successfully!", "success");
+  this.reset();
 });
 </script>
 
