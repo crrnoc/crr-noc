@@ -1915,7 +1915,7 @@ app.get('/admin/noc-status', (req, res) => {
   });
 });
 
-// ✅ Year-wise full fee breakdown (structure + paid + fines)
+// ✅ Year-wise full fee breakdown (structure + paid + fines) - Combined Updated Version
 app.get('/yearwise-fee/:userId', (req, res) => {
   const { userId } = req.params;
 
@@ -1948,7 +1948,7 @@ app.get('/yearwise-fee/:userId', (req, res) => {
             return new Promise(resolve => {
               const year = fee.academic_year;
 
-              // Get paid amounts for each fee type
+              // ✅ Get paid amounts for each fee type (only verified payments)
               connection.query(
                 `SELECT fee_type, SUM(amount_paid) AS paid 
                  FROM student_fee_payments 
@@ -1957,13 +1957,13 @@ app.get('/yearwise-fee/:userId', (req, res) => {
                 [userId, year],
                 (err3, paidRows) => {
                   const paidMap = {};
-                  if (!err3 && paidRows) {
+                  if (!err3 && paidRows?.length) {
                     paidRows.forEach(row => {
                       paidMap[row.fee_type] = parseFloat(row.paid) || 0;
                     });
                   }
 
-                  // Get total fines for that year
+                  // ✅ Get total fines for that year
                   connection.query(
                     `SELECT SUM(amount) AS fine 
                      FROM fines 
@@ -1977,9 +1977,9 @@ app.get('/yearwise-fee/:userId', (req, res) => {
 
                       resolve({
                         year,
-                        structure: fee,
-                        paid: paidMap,
-                        fines: fineAmount
+                        structure: fee,  // full fee structure row for that year
+                        paid: paidMap,   // paid amounts by fee_type
+                        fines: fineAmount // separate fine total
                       });
                     }
                   );
@@ -1996,6 +1996,7 @@ app.get('/yearwise-fee/:userId', (req, res) => {
     }
   );
 });
+
 
 // view backlogs 
 app.get("/total-backlogs", (req, res) => {
@@ -4757,6 +4758,7 @@ app.post("/api/send-sms", async (req, res) => {
 });
 
 module.exports = app;
+
 
 
 
