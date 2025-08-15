@@ -227,7 +227,7 @@ app.post('/login', (req, res) => {
         else if (role === "staff") redirectTo = `/staff/${userId}`;
         else if (role === "admin") redirectTo = `/adminpanel`;
         else if (role === "hod") redirectTo = `/hodpanel.html`;
-        else if (role === "exam") redirectTo = `/examcell`;   // ✅ FIXED
+        else if (role === "exam") redirectTo = `/examcell`;   
         else if (role === "accounts") redirectTo = `/accounts.html`;
 
         res.status(200).json({
@@ -4759,6 +4759,7 @@ app.post("/api/send-sms", async (req, res) => {
 });
 
 module.exports = app;
+
 
 
 
