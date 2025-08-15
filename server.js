@@ -1951,12 +1951,15 @@ app.get('/yearwise-fee/:userId', (req, res) => {
             return new Promise(resolve => {
               const year = fee.academic_year;
 
-              // Get paid amounts for each fee type
+              // Get paid amounts (joined with SBI uploaded references to ensure amount is correct)
               connection.query(
-                `SELECT fee_type, SUM(amount_paid) AS paid 
-                 FROM student_fee_payments 
-                 WHERE userId = ? AND matched = 1 AND academic_year = ?
-                 GROUP BY fee_type`,
+                `SELECT p.fee_type, 
+                        COALESCE(p.amount_paid, s.amount, 0) AS paid
+                 FROM student_fee_payments p
+                 LEFT JOIN sbi_uploaded_references s 
+                        ON p.sbi_ref_no = s.sbi_ref_no
+                 WHERE p.userId = ? AND p.matched = 1 AND p.academic_year = ?
+                 GROUP BY p.fee_type`,
                 [userId, year],
                 (err3, paidRows) => {
                   const paidMap = {};
@@ -4761,6 +4764,7 @@ app.post("/api/send-sms", async (req, res) => {
 });
 
 module.exports = app;
+
 
 
 
