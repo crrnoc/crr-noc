@@ -2,7 +2,7 @@
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
-const xlsx = require('xlsx');
+const ExcelJS = require("exceljs");
 const fs = require('fs');
 const pdfParse = require('pdf-parse');
 const mammoth = require('mammoth');
@@ -143,3 +143,4 @@ router.post("/login", async (req, res) => {
 
 
 module.exports = router;
+
