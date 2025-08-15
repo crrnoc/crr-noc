@@ -4623,8 +4623,8 @@ app.post('/api/get-students-for-sms', (req, res) => {
 });
 
 //send sms
-const SMS_USERNAME = process.env.SMS_PROVIDER_USERNAME || "CRREDDYCLGT";
-const SMS_APIKEY = process.env.SMS_PROVIDER_APIKEY || "5144744cfabbae397e8c";
+const SMS_USERNAME = process.env.SMS_PROVIDER_USERNAME;
+const SMS_APIKEY = process.env.SMS_PROVIDER_APIKEY;
 
 const TEMPLATE_ID_MAP = {
   attendance: "1207175447438252519",
@@ -4759,6 +4759,7 @@ app.post("/api/send-sms", async (req, res) => {
 });
 
 module.exports = app;
+
 
 
 
