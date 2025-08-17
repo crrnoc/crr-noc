@@ -386,37 +386,38 @@
 
       container.innerHTML = `<h2>📘 Year-wise Fee Details</h2>`;
 
-      data.forEach(({ year, structure, paid, fines }, index) => {
-        const items = [
-          { label: "Tuition Fee", key: "tuition" },
-          { label: "Hostel Fee", key: "hostel" },
-          { label: "Bus Fee", key: "bus" },
-          { label: "University Fee", key: "university" },
-          { label: "Semester Fee", key: "semester" },
-          { label: "Library Dues", key: "library" },
-          { label: "Fines", key: "fines" }
-        ];
+data.forEach(({ year, structure, paidDetails, fines }, index) => {
+  const items = [
+    { label: "Tuition Fee", key: "tuition" },
+    { label: "Hostel Fee", key: "hostel" },
+    { label: "Bus Fee", key: "bus" },
+    { label: "University Fee", key: "university" },
+    { label: "Semester Fee", key: "semester" },
+    { label: "Library Dues", key: "library" },
+    { label: "Fines", key: "fines" }
+  ];
 
-        let paidTotal = 0, remainingTotal = 0, actualTotal = 0;
-        let rowsHTML = "";
+  let paidTotal = 0, remainingTotal = 0, actualTotal = 0;
+  let rowsHTML = "";
 
-        items.forEach(({ label, key }) => {
-          const total = key === "fines" ? fines : parseFloat(structure[key]) || 0;
-          const paidAmt = parseFloat(paid[key]) || 0;
-          const remain = Math.max(0, total - paidAmt);
+  items.forEach(({ label, key }) => {
+    const total = key === "fines" ? fines : parseFloat(structure[key]) || 0;
+    const paidAmt = parseFloat(paidDetails[key]) || 0;   // ✅ FIXED LINE
+    const remain = Math.max(0, total - paidAmt);
 
-          paidTotal += paidAmt;
-          remainingTotal += remain;
-          actualTotal += total;
+    paidTotal += paidAmt;
+    remainingTotal += remain;
+    actualTotal += total;
 
-          rowsHTML += `
-            <tr>
-              <td>${label}</td>
-              <td>₹${paidAmt.toFixed(2)}</td>
-              <td>₹${remain.toFixed(2)}</td>
-              <td>₹${total.toFixed(2)}</td>
-            </tr>`;
-        });
+    rowsHTML += `
+      <tr>
+        <td>${label}</td>
+        <td>₹${paidAmt.toFixed(2)}</td>
+        <td>₹${remain.toFixed(2)}</td>
+        <td>₹${total.toFixed(2)}</td>
+      </tr>`;
+  });
+
 
         container.innerHTML += `
           <div class="accordion-card" style="margin-top: 20px;">
@@ -491,3 +492,4 @@
 
 </body>
 </html>
+
