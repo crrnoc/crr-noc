@@ -1922,88 +1922,57 @@ app.get('/admin/noc-status', (req, res) => {
 app.get('/yearwise-fee/:userId', (req, res) => {
   const { userId } = req.params;
 
-  // Step 1: Get reg_no and unique_id for the given userId
-  connection.query(
-    'SELECT reg_no, unique_id FROM students WHERE userId = ?',
-    [userId],
-    (err1, regRes) => {
-      if (err1 || regRes.length === 0) {
-        return res.status(500).json({ success: false, message: "Student not found" });
-      }
+  connection.query('SELECT reg_no FROM students WHERE userId = ?', [userId], (err1, regRes) => {
+    if (err1 || regRes.length === 0) return res.status(500).json({ success: false });
 
-      const reg_no = regRes[0].reg_no;
-      const unique_id = regRes[0].unique_id;
+    const reg_no = regRes[0].reg_no;
 
-      // Step 2: Get fee structure for that reg_no
-      connection.query(
-        `SELECT * FROM student_fee_structure WHERE reg_no = ? ORDER BY academic_year ASC`,
-        [reg_no],
-        (err2, feeRows) => {
-          if (err2) {
-            return res.status(500).json({ success: false, message: "Fee structure fetch error" });
-          }
+    connection.query(
+      `SELECT * FROM student_fee_structure WHERE reg_no = ? ORDER BY academic_year ASC`,
+      [reg_no],
+      (err2, feeRows) => {
+        if (err2) return res.status(500).json({ success: false });
 
-          if (feeRows.length === 0) {
-            return res.status(404).json({ success: false, message: "No fee data found" });
-          }
+        if (feeRows.length === 0) return res.status(404).json({ success: false, message: "No fee data" });
 
-          // Step 3: For each academic year, get paid details + fines
-          const promises = feeRows.map(fee => {
-            return new Promise(resolve => {
-              const year = fee.academic_year;
+        const promises = feeRows.map(fee => {
+          return new Promise(resolve => {
+            const year = fee.academic_year;
 
-              // ✅ Get paid amounts by unique_id
-              connection.query(
-                `SELECT p.fee_type, 
-                        COALESCE(p.amount_paid, s.amount, 0) AS paid
-                 FROM student_fee_payments p
-                 LEFT JOIN sbi_uploaded_references s 
-                        ON p.sbi_ref_no = s.sbi_ref_no
-                 WHERE p.unique_id = ? AND p.matched = 1 AND p.academic_year = ?
-                 GROUP BY p.fee_type`,
-                [unique_id, year],
-                (err3, paidRows) => {
-                  const paidMap = {};
-                  if (!err3 && paidRows) {
-                    paidRows.forEach(row => {
-                      paidMap[row.fee_type] = parseFloat(row.paid) || 0;
+            connection.query(
+              `SELECT fee_type, SUM(amount_paid) AS paid 
+               FROM student_fee_payments 
+               WHERE userId = ? AND matched = 1 AND academic_year = ?
+               GROUP BY fee_type`,
+              [userId, year],
+              (err3, paidRows) => {
+                const paidMap = {};
+                paidRows?.forEach(row => paidMap[row.fee_type] = parseFloat(row.paid));
+
+                connection.query(
+                  `SELECT SUM(amount) AS fine FROM fines WHERE userId = ? AND academic_year = ?`,
+                  [userId, year],
+                  (err4, fineRes) => {
+                    const fineAmount = parseFloat(fineRes[0]?.fine || 0);
+
+                    resolve({
+                      year,
+                      structure: fee,
+                      paid: paidMap,
+                      fines: fineAmount
                     });
                   }
-
-                  // ✅ Get total fines for that year (still use userId if fines table is mapped to userId)
-                  connection.query(
-                    `SELECT SUM(amount) AS fine 
-                     FROM fines 
-                     WHERE userId = ? AND academic_year = ?`,
-                    [userId, year],
-                    (err4, fineRes) => {
-                      const fineAmount = parseFloat(fineRes?.[0]?.fine || 0);
-
-                      // Add fines into map
-                      paidMap["fines"] = fineAmount;
-
-                      resolve({
-                        year,
-                        structure: fee,
-                        paid: paidMap,
-                        fines: fineAmount
-                      });
-                    }
-                  );
-                }
-              );
-            });
+                );
+              }
+            );
           });
+        });
 
-          Promise.all(promises)
-            .then(data => res.json({ success: true, data }))
-            .catch(() => res.status(500).json({ success: false, message: "Data processing error" }));
-        }
-      );
-    }
-  );
+        Promise.all(promises).then(data => res.json({ success: true, data }));
+      }
+    );
+  });
 });
-
 
 // view backlogs 
 app.get("/total-backlogs", (req, res) => {
@@ -4765,6 +4734,7 @@ app.post("/api/send-sms", async (req, res) => {
 });
 
 module.exports = app;
+
 
 
 
