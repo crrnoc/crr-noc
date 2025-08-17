@@ -1917,7 +1917,6 @@ app.get('/admin/noc-status', (req, res) => {
   });
 });
 
-
 // ✅ Year-wise full fee breakdown (structure + paid + fines)
 app.get('/yearwise-fee/:userId', (req, res) => {
   const { userId } = req.params;
@@ -1945,7 +1944,7 @@ app.get('/yearwise-fee/:userId', (req, res) => {
 
         // 3. Process each academic year
         const promises = feeRows.map(fee => {
-          return new Promise(resolve => {
+          return new Promise((resolve) => {
             const year = fee.academic_year;
 
             // Get verified payments (matched = 1)
@@ -1985,27 +1984,31 @@ app.get('/yearwise-fee/:userId', (req, res) => {
                     // Remaining = Total Fee - Total Paid
                     const remaining = totalFee - totalPaid;
 
+                    // ✅ Properly resolve here
                     resolve({
                       year,
                       structure: fee,
-                      paid: paidMap,      // ✅ changed here
-                      remaining: remaining,
+                      paid: paidMap,      
+                      remaining,
                       fines: fineAmount
                     });
                   }
-                ); // end fines query
+                ); // fines query close
               }
-            ); // end payments query
-          }); // end Promise
-        });
+            ); // payments query close
+          }); // promise close
+        }); // map close
 
         Promise.all(promises)
           .then(data => res.json({ success: true, data }))
-          .catch(err => res.status(500).json({ success: false, message: "Processing error", error: err }));
+          .catch(err => {
+            console.error("Processing error:", err);
+            res.status(500).json({ success: false, message: "Processing error", error: err });
+          });
       }
-    ); // end fee structure query
-  }); // end reg_no query
-}); // end route
+    ); // fee structure query close
+  }); // reg_no query close
+}); // route close
 
 
 // view backlogs 
@@ -4768,6 +4771,7 @@ app.post("/api/send-sms", async (req, res) => {
 });
 
 module.exports = app;
+
 
 
 
