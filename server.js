@@ -1969,9 +1969,7 @@ app.get('/yearwise-fee/:userId', (req, res) => {
 
                 // Get fines
                 connection.query(
-                  `SELECT SUM(amount) AS fine 
-                   FROM fines 
-                   WHERE userId = ? AND academic_year = ?`,
+                  `SELECT SUM(amount) AS fine FROM fines WHERE userId = ? AND academic_year = ?`,
                   [userId, year],
                   (err4, fineRes) => {
                     const fineAmount = parseFloat(fineRes?.[0]?.fine || 0);
@@ -1990,7 +1988,7 @@ app.get('/yearwise-fee/:userId', (req, res) => {
                     resolve({
                       year,
                       structure: fee,
-                      paid: paidMap,       // ✅ object for frontend
+                      paid: paidMap,      // ✅ changed here
                       remaining: remaining,
                       fines: fineAmount
                     });
@@ -2005,10 +2003,9 @@ app.get('/yearwise-fee/:userId', (req, res) => {
           .then(data => res.json({ success: true, data }))
           .catch(err => res.status(500).json({ success: false, message: "Processing error", error: err }));
       }
-    );
-  });
-});
-
+    ); // end fee structure query
+  }); // end reg_no query
+}); // end route
 
 
 // view backlogs 
@@ -4771,6 +4768,7 @@ app.post("/api/send-sms", async (req, res) => {
 });
 
 module.exports = app;
+
 
 
 
