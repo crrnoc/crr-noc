@@ -1922,9 +1922,9 @@ app.get('/admin/noc-status', (req, res) => {
 app.get('/yearwise-fee/:userId', (req, res) => {
   const { userId } = req.params;
 
-  // Step 1: Get reg_no for the given userId
+  // Step 1: Get reg_no and unique_id for the given userId
   connection.query(
-    'SELECT reg_no FROM students WHERE userId = ?',
+    'SELECT reg_no, unique_id FROM students WHERE userId = ?',
     [userId],
     (err1, regRes) => {
       if (err1 || regRes.length === 0) {
@@ -1932,6 +1932,7 @@ app.get('/yearwise-fee/:userId', (req, res) => {
       }
 
       const reg_no = regRes[0].reg_no;
+      const unique_id = regRes[0].unique_id;
 
       // Step 2: Get fee structure for that reg_no
       connection.query(
@@ -1951,16 +1952,16 @@ app.get('/yearwise-fee/:userId', (req, res) => {
             return new Promise(resolve => {
               const year = fee.academic_year;
 
-              // Get paid amounts (joined with SBI uploaded references to ensure amount is correct)
+              // ✅ Get paid amounts by unique_id
               connection.query(
                 `SELECT p.fee_type, 
                         COALESCE(p.amount_paid, s.amount, 0) AS paid
                  FROM student_fee_payments p
                  LEFT JOIN sbi_uploaded_references s 
                         ON p.sbi_ref_no = s.sbi_ref_no
-                 WHERE p.userId = ? AND p.matched = 1 AND p.academic_year = ?
+                 WHERE p.unique_id = ? AND p.matched = 1 AND p.academic_year = ?
                  GROUP BY p.fee_type`,
-                [userId, year],
+                [unique_id, year],
                 (err3, paidRows) => {
                   const paidMap = {};
                   if (!err3 && paidRows) {
@@ -1969,7 +1970,7 @@ app.get('/yearwise-fee/:userId', (req, res) => {
                     });
                   }
 
-                  // Get total fines for that year
+                  // ✅ Get total fines for that year (still use userId if fines table is mapped to userId)
                   connection.query(
                     `SELECT SUM(amount) AS fine 
                      FROM fines 
@@ -1978,7 +1979,7 @@ app.get('/yearwise-fee/:userId', (req, res) => {
                     (err4, fineRes) => {
                       const fineAmount = parseFloat(fineRes?.[0]?.fine || 0);
 
-                      // ✅ Add fines to paid map so frontend calculates correctly
+                      // Add fines into map
                       paidMap["fines"] = fineAmount;
 
                       resolve({
@@ -4764,6 +4765,7 @@ app.post("/api/send-sms", async (req, res) => {
 });
 
 module.exports = app;
+
 
 
 
