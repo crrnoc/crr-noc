@@ -2010,13 +2010,6 @@ app.get('/yearwise-fee/:userId', (req, res) => {
 });
 
 
-        Promise.all(promises)
-          .then(data => res.json({ success: true, data }))
-          .catch(err => res.status(500).json({ success: false, message: "Processing error", error: err }));
-      }
-    );
-  });
-});
 
 // view backlogs 
 app.get("/total-backlogs", (req, res) => {
@@ -4778,6 +4771,7 @@ app.post("/api/send-sms", async (req, res) => {
 });
 
 module.exports = app;
+
 
 
 
