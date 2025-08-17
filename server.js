@@ -1969,7 +1969,9 @@ app.get('/yearwise-fee/:userId', (req, res) => {
 
                 // Get fines
                 connection.query(
-                  `SELECT SUM(amount) AS fine FROM fines WHERE userId = ? AND academic_year = ?`,
+                  `SELECT SUM(amount) AS fine 
+                   FROM fines 
+                   WHERE userId = ? AND academic_year = ?`,
                   [userId, year],
                   (err4, fineRes) => {
                     const fineAmount = parseFloat(fineRes?.[0]?.fine || 0);
@@ -1985,19 +1987,28 @@ app.get('/yearwise-fee/:userId', (req, res) => {
                     // Remaining = Total Fee - Total Paid
                     const remaining = totalFee - totalPaid;
 
-resolve({
-  year,
-  structure: fee,
-  paid: paidMap,      // ✅ send paid as object
-  remaining: remaining,
-  fines: fineAmount
+                    resolve({
+                      year,
+                      structure: fee,
+                      paid: paidMap,       // ✅ object for frontend
+                      remaining: remaining,
+                      fines: fineAmount
+                    });
+                  }
+                ); // end fines query
+              }
+            ); // end payments query
+          }); // end Promise
+        });
+
+        Promise.all(promises)
+          .then(data => res.json({ success: true, data }))
+          .catch(err => res.status(500).json({ success: false, message: "Processing error", error: err }));
+      }
+    );
+  });
 });
 
-                );
-              }
-            );
-          });
-        });
 
         Promise.all(promises)
           .then(data => res.json({ success: true, data }))
@@ -4767,6 +4778,7 @@ app.post("/api/send-sms", async (req, res) => {
 });
 
 module.exports = app;
+
 
 
 
