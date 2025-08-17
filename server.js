@@ -1985,15 +1985,14 @@ app.get('/yearwise-fee/:userId', (req, res) => {
                     // Remaining = Total Fee - Total Paid
                     const remaining = totalFee - totalPaid;
 
-                    resolve({
-                      year,
-                      structure: fee,
-                      paid: totalPaid,
-                      remaining: remaining,
-                      fines: fineAmount,
-                      paidDetails: paidMap
-                    });
-                  }
+resolve({
+  year,
+  structure: fee,
+  paid: paidMap,      // ✅ send paid as object
+  remaining: remaining,
+  fines: fineAmount
+});
+
                 );
               }
             );
@@ -4768,6 +4767,7 @@ app.post("/api/send-sms", async (req, res) => {
 });
 
 module.exports = app;
+
 
 
 
