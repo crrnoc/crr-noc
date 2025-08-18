@@ -1916,13 +1916,13 @@ app.get('/admin/noc-status', (req, res) => {
     Promise.all(checks).then(data => res.json(data));
   });
 });
-
-app.get("/yearwise-fee/:userId", (req, res) => {
+//year wise fee details
+app.get('/yearwise-fee/:userId', (req, res) => {
   const { userId } = req.params;
   console.log("➡️ Yearwise fee API called for:", userId);
 
   connection.query(
-    "SELECT reg_no FROM students WHERE userId = ?",
+    'SELECT reg_no FROM students WHERE userId = ?',
     [userId],
     (err1, regRes) => {
       if (err1) {
@@ -1930,7 +1930,7 @@ app.get("/yearwise-fee/:userId", (req, res) => {
         return res.status(500).json({ success: false, message: "DB error fetching student" });
       }
       if (regRes.length === 0) {
-        return res.json({ success: false, message: "Student not found" });
+        return res.status(404).json({ success: false, message: "Student not found" });
       }
 
       const reg_no = regRes[0].reg_no;
@@ -1948,7 +1948,7 @@ app.get("/yearwise-fee/:userId", (req, res) => {
           }
 
           if (feeRows.length === 0) {
-            return res.json({ success: false, message: "No fee data" });
+            return res.status(404).json({ success: false, message: "No fee data" });
           }
 
           const promises = feeRows.map(fee => {
@@ -1975,13 +1975,13 @@ app.get("/yearwise-fee/:userId", (req, res) => {
                      WHERE userId = ? AND academic_year = ?`,
                     [userId, year],
                     (err4, fineRes) => {
-                      const fines = parseFloat(fineRes?.[0]?.fine || 0);
+                      const fineAmount = parseFloat(fineRes?.[0]?.fine || 0);
 
                       resolve({
                         year,
                         structure: fee,
                         paidDetails,
-                        fines
+                        fines: fineAmount
                       });
                     }
                   );
@@ -2001,8 +2001,6 @@ app.get("/yearwise-fee/:userId", (req, res) => {
     }
   );
 });
-
-
 
 // view backlogs 
 app.get("/total-backlogs", (req, res) => {
@@ -4764,6 +4762,7 @@ app.post("/api/send-sms", async (req, res) => {
 });
 
 module.exports = app;
+
 
 
 
