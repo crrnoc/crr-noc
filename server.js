@@ -1087,41 +1087,33 @@ app.get('/admin/noc-status', (req, res) => {
 app.get("/fee-status/:userId", (req, res) => {
   const { userId } = req.params;
 
+  // Map DB fee_type → frontend keys
+  const typeMap = {
+    "tuition fee": "tuition",
+    "hostel fee": "hostel",
+    "bus fee": "bus",
+    "university fee": "university",
+    "semester fee": "semester",
+    "library dues": "library"
+  };
+
   // Step 1: Get reg_no from students table
-  const getRegNoQuery = `
-    SELECT reg_no FROM students
-    WHERE userId = ?
-  `;
+  const getRegNoQuery = `SELECT reg_no FROM students WHERE userId = ?`;
 
   connection.query(getRegNoQuery, [userId], (err, studentRows) => {
-    if (err) {
-      console.error("❌ DB error fetching reg_no:", err);
-      return res.status(500).json({ success: false, message: "DB error (reg_no)" });
-    }
-
-    if (studentRows.length === 0) {
-      return res.status(404).json({ success: false, message: "Student not found" });
-    }
+    if (err) return res.status(500).json({ success: false, message: "DB error (reg_no)" });
+    if (studentRows.length === 0) return res.status(404).json({ success: false, message: "Student not found" });
 
     const reg_no = studentRows[0].reg_no;
 
-    // Step 2: Get fee structure for this student
-    const feeStructureQuery = `
-      SELECT * FROM student_fee_structure
-      WHERE reg_no = ?
-    `;
+    // Step 2: Get fee structure
+    const feeStructureQuery = `SELECT * FROM student_fee_structure WHERE reg_no = ?`;
 
     connection.query(feeStructureQuery, [reg_no], (err2, feeRows) => {
-      if (err2) {
-        console.error("❌ DB error fetching fee structure:", err2);
-        return res.status(500).json({ success: false, message: "DB error (structure)" });
-      }
+      if (err2) return res.status(500).json({ success: false, message: "DB error (structure)" });
+      if (feeRows.length === 0) return res.status(404).json({ success: false, message: "No fee structure found" });
 
-      if (feeRows.length === 0) {
-        return res.status(404).json({ success: false, message: "No fee structure found" });
-      }
-
-      // Step 3: Get total paid amounts grouped by year and fee_type
+      // Step 3: Get payments
       const paymentsQuery = `
         SELECT academic_year, fee_type, SUM(amount_paid) AS paid
         FROM student_fee_payments
@@ -1130,20 +1122,17 @@ app.get("/fee-status/:userId", (req, res) => {
       `;
 
       connection.query(paymentsQuery, [userId], (err3, paidRows) => {
-        if (err3) {
-          console.error("❌ DB error fetching paid data:", err3);
-          return res.status(500).json({ success: false, message: "DB error (payments)" });
-        }
+        if (err3) return res.status(500).json({ success: false, message: "DB error (payments)" });
 
         const paidMap = {};
         paidRows.forEach(row => {
           const year = row.academic_year;
-          const type = row.fee_type.toLowerCase();
+          const normalized = typeMap[row.fee_type.toLowerCase()];
           if (!paidMap[year]) paidMap[year] = {};
-          paidMap[year][type] = parseFloat(row.paid);
+          if (normalized) paidMap[year][normalized] = parseFloat(row.paid);
         });
 
-        // Step 4: Build fee summary for each academic year
+        // Step 4: Build yearly summary
         const years = {};
         feeRows.forEach(row => {
           const year = row.academic_year;
@@ -1159,23 +1148,15 @@ app.get("/fee-status/:userId", (req, res) => {
 
           const paid = paidMap[year] || {};
 
-          years[year] = {
-            expected,
-            paid
-          };
+          years[year] = { expected, paid };
         });
 
-        console.log(`✅ Fee details for ${reg_no}:`, years);
-
-        return res.json({
-          success: true,
-          reg_no,
-          years
-        });
+        return res.json({ success: true, reg_no, years });
       });
     });
   });
 });
+
 
 app.post("/add-student", async (req, res) => {
   const {
@@ -4742,6 +4723,7 @@ app.post("/api/send-sms", async (req, res) => {
 });
 
 module.exports = app;
+
 
 
 
