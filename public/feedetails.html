@@ -23,10 +23,37 @@
     }
 
     .container {
-      display: flex;
       min-height: 100vh;
+      display: flex;
     }
+.photo-container {
+  display: flex;
+  justify-content: center;
+  position: relative;
+  margin-bottom: 20px;
+}
 
+
+.home-icon {
+  margin-top: 35px;
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  background-color: #fff;
+  border-radius: 50%;
+  font-size: 22px;
+  padding: 6px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  text-decoration: none;
+  color: #000;
+  transition: transform 0.2s ease;
+}
+
+.home-icon:hover {
+  transform: scale(1.1);
+  background-color: #f09000;
+  color: white;
+}
     .sidebar {
       width: 270px;
       background-color: rgb(247, 201, 155);
@@ -34,6 +61,25 @@
       flex-direction: column;
       padding: 20px;
       box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      overflow-y: auto;
+      transition: top 0.3s ease-in-out;
+      z-index: 999;
+    }
+
+    .content {
+      margin-left: 270px;
+      flex-grow: 1;
+      padding: 30px;
+      min-height: 100vh;
+      background-color: white;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      overflow-y: auto;
     }
 
     .sidebar h2 {
@@ -42,7 +88,15 @@
       font-size: 18px;
       font-weight: bold;
     }
-
+    .sidebar-photo {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 50%;
+  margin: 0 auto 10px;
+  border: 3px solid #333;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
     .menu {
       list-style-type: none;
       padding: 0;
@@ -97,49 +151,32 @@
       background-color: #d07900;
     }
 
-    .content {
-      flex-grow: 1;
-      background-color: white;
-      padding: 40px;
-    }
-
-    .fee-wrapper {
-      max-height: 600px;
-      overflow-y: auto;
-      padding: 30px;
+    .fee-details {
       background: #ffffff;
+      color: #333;
+      padding: 35px 40px;
       border-radius: 20px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-      border: 1px solid #ddd;
+      width: 90%;
+      max-width: 1000px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+      border: 1px solid #e0e0e0;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      overflow-x: auto;
     }
 
-    .main-heading {
+    .fee-details:hover {
+      transform: scale(1.01);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
+    }
+
+    .fee-details h2 {
       text-align: center;
-      font-size: 22px;
-      margin-bottom: 30px;
-      background: #e3f2ff;
-      padding: 15px;
+      margin-bottom: 25px;
+      font-size: 24px;
+      color: #1f75cb;
+      background: rgba(31, 117, 203, 0.1);
+      padding: 12px;
       border-radius: 10px;
-      color: #0b5394;
-      font-weight: bold;
-    }
-
-    .fee-card {
-      margin-bottom: 30px;
-      border: 1px solid #ddd;
-      border-radius: 12px;
-      padding: 25px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-      background: #f9fcff;
-    }
-
-    .fee-card h3 {
-      text-align: center;
-      background: #d8ecff;
-      color: #1f4e8c;
-      padding: 10px;
-      border-radius: 8px;
-      margin-bottom: 20px;
     }
 
     table {
@@ -174,24 +211,113 @@
       border-top: 2px solid #d0e3ff;
     }
 
+    .accordion-toggle {
+      background: #1f75cb;
+      color: white;
+      padding: 12px 20px;
+      width: 100%;
+      text-align: left;
+      border: none;
+      border-radius: 10px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .accordion-toggle:hover {
+      background: #135aa3;
+    }
+
+    .accordion-content {
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      padding: 20px;
+      margin-top: 10px;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .mobile-toggle {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #1f75cb;
+      color: white;
+      font-size: 24px;
+      padding: 12px 18px;
+      border-radius: 50px;
+      z-index: 9999;
+      cursor: pointer;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+
     @media (max-width: 768px) {
       .container {
         flex-direction: column;
       }
 
       .sidebar {
+        top: -100%;
+        left: 0;
         width: 100%;
-        padding: 15px;
+        max-height: 90vh;
+        overflow-y: auto;
+        background-color: rgb(247, 201, 155);
+      }
+
+      .sidebar.open {
+        top: 0;
+      }
+
+      .mobile-toggle {
+        display: block;
       }
 
       .content {
-        padding: 15px;
-      }
-
-      .fee-wrapper {
-        max-height: 400px;
+        margin-left: 0;
         padding: 20px;
       }
+
+      .fee-details {
+        width: 100%;
+        max-width: 100%;
+        padding: 16px 10px;
+        margin: 10px auto;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        font-size: 15px;
+        overflow-x: auto;
+        background: white;
+      }
+
+      .fee-details table {
+        font-size: 15px;
+        min-width: 600px;
+        width: 100%;
+      }
+
+      .fee-details h2 {
+        font-size: 20px;
+        padding: 8px;
+      }
+      .accordion-content {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.accordion-content table {
+  width: 100%;
+  min-width: 600px;
+}
+
     }
   </style>
 </head>
@@ -199,32 +325,52 @@
   <div class="container">
     <!-- Sidebar -->
     <div class="sidebar">
-      <h2><strong>ID:</strong> <span id="userId">Loading...</span></h2>
+     <div class="photo-container">
+  <div class="photo-wrapper">
+    <a href="studentwelcome.html" class="home-icon" title="Home">🏠</a>
+    <img id="sidebarPhoto" class="sidebar-photo" style="display: none;" />
+  </div>
+</div>
+
+<h2>ID: <span id="userId">Loading...</span></h2>
       <ul class="menu">
         <li><a href="studentdetails.html"><span>📄</span> Student details</a></li>
-        <li><a href="editprofile.html"><span>✏️</span> Edit profile</a></li>
         <li class="active"><a href="#"><span>🎓</span> Fee details</a></li>
         <li><a href="updaterefno.html"><span>🔄</span> Update fee payment</a></li>
+        <li><a href="attendence.html"><span>📅</span> View Attendance</a></li>
+        <li><a href="studentresults.html"><span>📊</span> Student Results</a></li>
         <li><a href="generatenoc.html"><span>➕</span> Generate NOC</a></li>
         <li><a href="settings.html"><span>⚙️</span> Settings</a></li>
-        <li><a href="notifications.html"><span>🔔</span> Notifications</a></li>
-        <li><a href="privacypolicy.html"><span>📜</span> Privacy policy</a></li>
       </ul>
       <button class="logout" onclick="logout()">Logout</button>
     </div>
 
     <!-- Content -->
     <div class="content">
-      <div class="fee-wrapper">
-        <h2 class="main-heading">📘 Year-wise Fee Details</h2>
-        <div id="feeCardsContainer"></div>
+      <div class="fee-details">
+        <!-- Filled by JS -->
       </div>
     </div>
   </div>
-
+<div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
 <script>
+  if (!localStorage.getItem("userId")) {
+    alert("Please login first.");
+    window.location.href = "index.html";
+  }
+
   const userId = localStorage.getItem("userId");
   document.getElementById("userId").textContent = userId || "Unknown";
+
+  fetch(`https://crr-noc.onrender.com/student/${userId}`)
+    .then(r => r.json())
+    .then(data => {
+      const photo = document.getElementById("sidebarPhoto");
+      if (photo && data.photo_url) {
+        photo.src = data.photo_url;
+        photo.style.display = "block";
+      }
+    });
 
   fetch(`https://crr-noc.onrender.com/yearwise-fee/${userId}`)
     .then(res => res.json())
@@ -232,10 +378,15 @@
       if (!res.success) throw new Error("Fee data not found.");
 
       const data = res.data;
-      const container = document.getElementById("feeCardsContainer");
-      container.innerHTML = "";
+      const container = document.querySelector(".fee-details");
+      if (data.length === 0) {
+        container.innerHTML = "<h2>No fee records found for this student.</h2>";
+        return;
+      }
 
-      data.forEach(({ year, structure, paid, fines }) => {
+      container.innerHTML = `<h2>📘 Year-wise Fee Details</h2>`;
+
+      data.forEach(({ year, structure, paid, fines }, index) => {
         const items = [
           { label: "Tuition Fee", key: "tuition" },
           { label: "Hostel Fee", key: "hostel" },
@@ -251,7 +402,7 @@
 
         items.forEach(({ label, key }) => {
           const total = key === "fines" ? fines : parseFloat(structure[key]) || 0;
-          const paidAmt = parseFloat(paid[key]) || 0;
+          const paidAmt = parseFloat(paid?.[key] || 0);  // ✅ use paid instead of paidDetails
           const remain = Math.max(0, total - paidAmt);
 
           paidTotal += paidAmt;
@@ -268,34 +419,62 @@
         });
 
         container.innerHTML += `
-          <div class="fee-card">
-            <h3>📅 Academic Year ${year}</h3>
-            <table>
-              <thead>
-                <tr>
-                  <th>Fee Type</th>
-                  <th>Paid (₹)</th>
-                  <th>Remaining (₹)</th>
-                  <th>Total (₹)</th>
-                </tr>
-              </thead>
-              <tbody>${rowsHTML}</tbody>
-              <tfoot>
-                <tr>
-                  <td><strong>Total</strong></td>
-                  <td><strong>₹${paidTotal.toFixed(2)}</strong></td>
-                  <td><strong>₹${remainingTotal.toFixed(2)}</strong></td>
-                  <td><strong>₹${actualTotal.toFixed(2)}</strong></td>
-                </tr>
-              </tfoot>
-            </table>
+          <div class="accordion-card" style="margin-top: 20px;">
+            <button class="accordion-toggle" data-index="${index}">📅 Academic Year ${year}</button>
+            <div class="accordion-content" style="display: none;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Fee Type</th>
+                    <th>Paid (₹)</th>
+                    <th>Remaining (₹)</th>
+                    <th>Total (₹)</th>
+                  </tr>
+                </thead>
+                <tbody>${rowsHTML}</tbody>
+                <tfoot>
+                  <tr>
+                    <td><strong>Total</strong></td>
+                    <td><strong>₹${paidTotal.toFixed(2)}</strong></td>
+                    <td><strong>₹${remainingTotal.toFixed(2)}</strong></td>
+                    <td><strong>₹${actualTotal.toFixed(2)}</strong></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
           </div>`;
+      });
+
+      const toggles = document.querySelectorAll(".accordion-toggle");
+      const contents = document.querySelectorAll(".accordion-content");
+
+      toggles.forEach((btn, i) => {
+        btn.addEventListener("click", () => {
+          contents.forEach((content, j) => {
+            content.style.display = i === j
+              ? content.style.display === "block" ? "none" : "block"
+              : "none";
+          });
+        });
       });
     })
     .catch(err => {
       console.error("❌ Error loading fee data:", err);
       alert("Failed to load year-wise fee details.");
     });
+
+  function toggleMobileMenu() {
+    const sidebar = document.querySelector('.sidebar');
+    sidebar.classList.toggle('open');
+  }
+
+  document.querySelectorAll(".menu li a").forEach(link => {
+    link.addEventListener("click", () => {
+      if (window.innerWidth <= 768) {
+        document.querySelector('.sidebar').classList.remove('open');
+      }
+    });
+  });
 
   function logout() {
     localStorage.removeItem("userId");
@@ -304,6 +483,11 @@
     }
     window.location.replace("index.html");
   }
+
+  // Block back button access
+  window.history.pushState(null, "", window.location.href);
+  window.onpopstate = () => window.history.pushState(null, "", window.location.href);
 </script>
+
 </body>
 </html>
