@@ -1929,12 +1929,15 @@ app.get('/yearwise-fee/:userId', (req, res) => {
 
     const reg_no = regRes[0].reg_no;
 
-    // 2. Get student fee structure
+    // 2. Get all fee structures
     connection.query(
-      `SELECT * FROM student_fee_structure WHERE reg_no = ? ORDER BY academic_year ASC`,
+      `SELECT academic_year, tuition, hostel, bus, university, semester, library, fines
+       FROM student_fee_structure 
+       WHERE reg_no = ? ORDER BY academic_year ASC`,
       [reg_no],
       (err2, feeRows) => {
         if (err2) {
+          console.error("❌ Fee structure fetch error:", err2);
           return res.status(500).json({ success: false, message: "Fee structure fetch error" });
         }
 
@@ -1942,12 +1945,12 @@ app.get('/yearwise-fee/:userId', (req, res) => {
           return res.status(404).json({ success: false, message: "No fee data" });
         }
 
-        // 3. Process each academic year
+        // 3. Build promises per academic year
         const promises = feeRows.map(fee => {
           return new Promise((resolve) => {
             const year = fee.academic_year;
 
-            // Get verified payments (matched = 1)
+            // Payments
             connection.query(
               `SELECT fee_type, SUM(amount_paid) AS paid 
                FROM student_fee_payments 
@@ -1956,60 +1959,45 @@ app.get('/yearwise-fee/:userId', (req, res) => {
               [userId, year],
               (err3, paidRows) => {
                 const paidMap = {};
-                let totalPaid = 0;
-
                 if (!err3 && paidRows) {
                   paidRows.forEach(row => {
-                    const amt = parseFloat(row.paid) || 0;
-                    paidMap[row.fee_type] = amt;
-                    totalPaid += amt;
+                    paidMap[row.fee_type] = parseFloat(row.paid) || 0;
                   });
                 }
 
-                // Get fines
+                // Fines
                 connection.query(
-                  `SELECT SUM(amount) AS fine FROM fines WHERE userId = ? AND academic_year = ?`,
+                  `SELECT SUM(amount) AS fine 
+                   FROM fines 
+                   WHERE userId = ? AND academic_year = ?`,
                   [userId, year],
                   (err4, fineRes) => {
                     const fineAmount = parseFloat(fineRes?.[0]?.fine || 0);
 
-                    // Compute total fee (sum of structure values)
-                    let totalFee = 0;
-                    Object.keys(fee).forEach(key => {
-                      if (typeof fee[key] === "number") {
-                        totalFee += fee[key];
-                      }
-                    });
-
-                    // Remaining = Total Fee - Total Paid
-                    const remaining = totalFee - totalPaid;
-
-                    // ✅ Properly resolve here
+                    // ✅ Shape exactly like frontend expects
                     resolve({
                       year,
-                      structure: fee,
-                      paid: paidMap,      
-                      remaining,
+                      structure: fee,   // includes tuition, hostel, bus, etc.
+                      paid: paidMap,
                       fines: fineAmount
                     });
                   }
-                ); // fines query close
+                );
               }
-            ); // payments query close
-          }); // promise close
-        }); // map close
+            );
+          });
+        });
 
         Promise.all(promises)
           .then(data => res.json({ success: true, data }))
           .catch(err => {
-            console.error("Processing error:", err);
-            res.status(500).json({ success: false, message: "Processing error", error: err });
+            console.error("❌ Processing error:", err);
+            res.status(500).json({ success: false, message: "Processing error" });
           });
       }
-    ); // fee structure query close
-  }); // reg_no query close
-}); // route close
-
+    );
+  });
+});
 
 // view backlogs 
 app.get("/total-backlogs", (req, res) => {
