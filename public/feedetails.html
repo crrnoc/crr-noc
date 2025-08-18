@@ -354,47 +354,19 @@
   </div>
 <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
 <script>
-  if (!localStorage.getItem("userId")) {
-    alert("Please login first.");
-    window.location.href = "index.html";
-  }
-
   const userId = localStorage.getItem("userId");
   document.getElementById("userId").textContent = userId || "Unknown";
 
-  // Load profile photo
-  fetch(`https://crr-noc.onrender.com/student/${userId}`)
-    .then(r => r.json())
-    .then(data => {
-      const photo = document.getElementById("sidebarPhoto");
-      if (photo && data.photo_url) {
-        photo.src = data.photo_url;
-        photo.style.display = "block";
-      }
-    });
-
-  // Format numbers to ₹xx.xx
-  const formatCurrency = (val) => `₹${(parseFloat(val) || 0).toFixed(2)}`;
-
-  // Fetch Yearwise Fee Details
-  fetch(`https://crr-noc.onrender.com/yearwise-fee/${userId}`)
+  fetch(`http://localhost:3000/yearwise-fee/${userId}`)
     .then(res => res.json())
     .then(res => {
-      if (!res.success || !Array.isArray(res.data)) {
-        throw new Error("No fee data found.");
-      }
+      if (!res.success) throw new Error("Fee data not found.");
 
       const data = res.data;
-      const container = document.querySelector(".fee-details");
+      const container = document.getElementById("feeCardsContainer");
+      container.innerHTML = "";
 
-      if (data.length === 0) {
-        container.innerHTML = "<h2>No fee records found for this student.</h2>";
-        return;
-      }
-
-      container.innerHTML = `<h2>📘 Year-wise Fee Details</h2>`;
-
-      data.forEach(({ year, structure, paid, fines }, index) => {
+      data.forEach(({ year, structure, paid, fines }) => {
         const items = [
           { label: "Tuition Fee", key: "tuition" },
           { label: "Hostel Fee", key: "hostel" },
@@ -409,9 +381,9 @@
         let rowsHTML = "";
 
         items.forEach(({ label, key }) => {
-          const total = key === "fines" ? (parseFloat(fines) || 0) : (parseFloat(structure?.[key]) || 0);
-          const paidAmt = parseFloat(paid?.[key] || 0);
-          const remain = Math.max(0, total - paidAmt); // Remaining = total - verified paid
+          const total = key === "fines" ? fines : parseFloat(structure[key]) || 0;
+          const paidAmt = parseFloat(paid[key]) || 0;
+          const remain = Math.max(0, total - paidAmt);
 
           paidTotal += paidAmt;
           remainingTotal += remain;
@@ -420,80 +392,52 @@
           rowsHTML += `
             <tr>
               <td>${label}</td>
-              <td>${formatCurrency(paidAmt)}</td>
-              <td>${formatCurrency(remain)}</td>
-              <td>${formatCurrency(total)}</td>
+              <td>₹${paidAmt.toFixed(2)}</td>
+              <td>₹${remain.toFixed(2)}</td>
+              <td>₹${total.toFixed(2)}</td>
             </tr>`;
         });
 
         container.innerHTML += `
-          <div class="accordion-card" style="margin-top: 20px;">
-            <button class="accordion-toggle" data-index="${index}">📅 Academic Year ${year}</button>
-            <div class="accordion-content" style="display: none;">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Fee Type</th>
-                    <th>Paid (₹)</th>
-                    <th>Remaining (₹)</th>
-                    <th>Total (₹)</th>
-                  </tr>
-                </thead>
-                <tbody>${rowsHTML}</tbody>
-                <tfoot>
-                  <tr>
-                    <td><strong>Total</strong></td>
-                    <td><strong>${formatCurrency(paidTotal)}</strong></td>
-                    <td><strong>${formatCurrency(remainingTotal)}</strong></td>
-                    <td><strong>${formatCurrency(actualTotal)}</strong></td>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
+          <div class="fee-card">
+            <h3>📅 Academic Year ${year}</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Fee Type</th>
+                  <th>Paid (₹)</th>
+                  <th>Remaining (₹)</th>
+                  <th>Total (₹)</th>
+                </tr>
+              </thead>
+              <tbody>${rowsHTML}</tbody>
+              <tfoot>
+                <tr>
+                  <td><strong>Total</strong></td>
+                  <td><strong>₹${paidTotal.toFixed(2)}</strong></td>
+                  <td><strong>₹${remainingTotal.toFixed(2)}</strong></td>
+                  <td><strong>₹${actualTotal.toFixed(2)}</strong></td>
+                </tr>
+              </tfoot>
+            </table>
           </div>`;
-      });
-
-      // Accordion Toggle
-      document.querySelectorAll(".accordion-toggle").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const content = btn.nextElementSibling;
-          content.style.display = content.style.display === "block" ? "none" : "block";
-        });
       });
     })
     .catch(err => {
       console.error("❌ Error loading fee data:", err);
-      document.querySelector(".fee-details").innerHTML =
-        "<h2 style='color:red;'>Failed to load year-wise fee details.</h2>";
+      alert("Failed to load year-wise fee details.");
     });
-
-  function toggleMobileMenu() {
-    document.querySelector('.sidebar').classList.toggle('open');
-  }
-
-  document.querySelectorAll(".menu li a").forEach(link => {
-    link.addEventListener("click", () => {
-      if (window.innerWidth <= 768) {
-        document.querySelector('.sidebar').classList.remove('open');
-      }
-    });
-  });
 
   function logout() {
     localStorage.removeItem("userId");
     if ("caches" in window) {
-      caches.keys().then(names => names.forEach(name => caches.delete(name)));
+      caches.keys().then((names) => names.forEach((name) => caches.delete(name)));
     }
     window.location.replace("index.html");
   }
-
-  // Block back button
-  window.history.pushState(null, "", window.location.href);
-  window.onpopstate = () => window.history.pushState(null, "", window.location.href);
 </script>
-
-
 </body>
 </html>
+
 
 
