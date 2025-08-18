@@ -1930,9 +1930,9 @@ app.get('/yearwise-fee/:userId', (req, res) => {
 
       const reg_no = regRes[0].reg_no;
 
-      // 1. Fetch fee structure
+      // Fetch fee structure per year
       connection.query(
-        `SELECT academic_year, tuition, hostel, bus, university, semester, library, fines
+        `SELECT academic_year, tuition, hostel, bus, university, semester, library
          FROM student_fee_structure 
          WHERE reg_no = ? ORDER BY academic_year ASC`,
         [reg_no],
@@ -1944,16 +1944,22 @@ app.get('/yearwise-fee/:userId', (req, res) => {
             return new Promise(resolve => {
               const year = fee.academic_year;
 
-              // 2. Get total paid (for that academic year)
+              // Get paid breakdown
               connection.query(
-                `SELECT SUM(amount_paid) AS totalPaid
+                `SELECT fee_type, SUM(amount_paid) AS paid
                  FROM student_fee_payments 
-                 WHERE userId = ? AND academic_year = ? AND matched = 1`,
+                 WHERE userId = ? AND academic_year = ? AND matched = 1
+                 GROUP BY fee_type`,
                 [userId, year],
                 (err3, payRes) => {
-                  const totalPaid = parseFloat(payRes?.[0]?.totalPaid || 0);
+                  const paidMap = {};
+                  if (payRes) {
+                    payRes.forEach(row => {
+                      paidMap[row.fee_type.toLowerCase()] = parseFloat(row.paid || 0);
+                    });
+                  }
 
-                  // 3. Get fines
+                  // Fines
                   connection.query(
                     `SELECT SUM(amount) AS fine 
                      FROM fines WHERE userId = ? AND academic_year = ?`,
@@ -1961,24 +1967,31 @@ app.get('/yearwise-fee/:userId', (req, res) => {
                     (err4, fineRes) => {
                       const fineAmount = parseFloat(fineRes?.[0]?.fine || 0);
 
-                      // 4. Calculate total fee
-                      const totalFee = 
-                        (parseFloat(fee.tuition) || 0) +
-                        (parseFloat(fee.hostel) || 0) +
-                        (parseFloat(fee.bus) || 0) +
-                        (parseFloat(fee.university) || 0) +
-                        (parseFloat(fee.semester) || 0) +
-                        (parseFloat(fee.library) || 0) +
-                        fineAmount;
+                      // Build breakdown row-wise
+                      const feeBreakdown = [
+                        { type: "Tuition Fee", total: fee.tuition || 0, paid: paidMap["tuition"] || 0 },
+                        { type: "Hostel Fee", total: fee.hostel || 0, paid: paidMap["hostel"] || 0 },
+                        { type: "Bus Fee", total: fee.bus || 0, paid: paidMap["bus"] || 0 },
+                        { type: "University Fee", total: fee.university || 0, paid: paidMap["university"] || 0 },
+                        { type: "Semester Fee", total: fee.semester || 0, paid: paidMap["semester"] || 0 },
+                        { type: "Library Dues", total: fee.library || 0, paid: paidMap["library"] || 0 },
+                        { type: "Fines", total: fineAmount, paid: paidMap["fines"] || 0 }
+                      ].map(row => ({
+                        ...row,
+                        remaining: Math.max(0, row.total - row.paid)
+                      }));
 
-                      const remaining = Math.max(0, totalFee - totalPaid);
+                      // Totals
+                      const totalPaid = feeBreakdown.reduce((sum, f) => sum + f.paid, 0);
+                      const totalFee = feeBreakdown.reduce((sum, f) => sum + f.total, 0);
+                      const totalRemaining = totalFee - totalPaid;
 
                       resolve({
                         year,
-                        structure: fee,
-                        paid: totalPaid,
-                        remaining,
-                        total: totalFee
+                        breakdown: feeBreakdown,
+                        totalPaid,
+                        totalRemaining,
+                        totalFee
                       });
                     }
                   );
@@ -4754,6 +4767,7 @@ app.post("/api/send-sms", async (req, res) => {
 });
 
 module.exports = app;
+
 
 
 
