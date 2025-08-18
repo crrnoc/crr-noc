@@ -411,7 +411,7 @@
         items.forEach(({ label, key }) => {
           const total = key === "fines" ? (parseFloat(fines) || 0) : (parseFloat(structure?.[key]) || 0);
           const paidAmt = parseFloat(paid?.[key] || 0);
-          const remain = Math.max(0, total - paidAmt);
+          const remain = Math.max(0, total - paidAmt); // Remaining = total - verified paid
 
           paidTotal += paidAmt;
           remainingTotal += remain;
@@ -492,6 +492,8 @@
   window.onpopstate = () => window.history.pushState(null, "", window.location.href);
 </script>
 
+
 </body>
 </html>
+
 
