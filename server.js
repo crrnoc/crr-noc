@@ -1930,41 +1930,51 @@ app.get('/yearwise-fee/:userId', (req, res) => {
       [reg_no],
       (err2, feeRows) => {
         if (err2) return res.status(500).json({ success: false });
-
         if (feeRows.length === 0) return res.status(404).json({ success: false, message: "No fee data" });
 
-        const promises = feeRows.map(fee => {
-          return new Promise(resolve => {
-            const year = fee.academic_year;
+        const promises = feeRows.map(fee => new Promise(resolve => {
+          const year = fee.academic_year;
 
-            connection.query(
-              `SELECT fee_type, SUM(amount_paid) AS paid 
-               FROM student_fee_payments 
-               WHERE userId = ? AND matched = 1 AND academic_year = ?
-               GROUP BY fee_type`,
-              [userId, year],
-              (err3, paidRows) => {
-                const paidMap = {};
-                paidRows?.forEach(row => paidMap[row.fee_type] = parseFloat(row.paid));
+          connection.query(
+            `SELECT fee_type, SUM(amount_paid) AS paid 
+             FROM student_fee_payments 
+             WHERE userId = ? AND matched = 1 AND academic_year = ?
+             GROUP BY fee_type`,
+            [userId, year],
+            (err3, paidRows) => {
+              const paidMap = {};
 
-                connection.query(
-                  `SELECT SUM(amount) AS fine FROM fines WHERE userId = ? AND academic_year = ?`,
-                  [userId, year],
-                  (err4, fineRes) => {
-                    const fineAmount = parseFloat(fineRes[0]?.fine || 0);
+              // Map DB fee_type to backend keys
+              const typeMap = {
+                "Tuition Fee": "tuition",
+                "Hostel Fee": "hostel",
+                "Bus Fee": "bus",
+                "University Fee": "university",
+                "Semester Fee": "semester",
+                "Library Dues": "library"
+              };
 
-                    resolve({
-                      year,
-                      structure: fee,
-                      paid: paidMap,
-                      fines: fineAmount
-                    });
-                  }
-                );
-              }
-            );
-          });
-        });
+              paidRows?.forEach(row => {
+                const key = typeMap[row.fee_type];
+                if (key) paidMap[key] = parseFloat(row.paid);
+              });
+
+              connection.query(
+                `SELECT SUM(amount) AS fine FROM fines WHERE userId = ? AND academic_year = ?`,
+                [userId, year],
+                (err4, fineRes) => {
+                  const fineAmount = parseFloat(fineRes[0]?.fine || 0);
+                  resolve({
+                    year,
+                    structure: fee,
+                    paid: paidMap,
+                    fines: fineAmount
+                  });
+                }
+              );
+            }
+          );
+        }));
 
         Promise.all(promises).then(data => res.json({ success: true, data }));
       }
@@ -4732,6 +4742,7 @@ app.post("/api/send-sms", async (req, res) => {
 });
 
 module.exports = app;
+
 
 
 
