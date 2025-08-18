@@ -1917,61 +1917,71 @@ app.get('/admin/noc-status', (req, res) => {
   });
 });
 //year wise fee details
-app.get("/yearwise-fee/:userId", (req, res) => {
+app.get('/yearwise-fee/:userId', (req, res) => {
   const { userId } = req.params;
 
   connection.query(
-    "SELECT reg_no FROM students WHERE userId = ?",
+    'SELECT reg_no FROM students WHERE userId = ?',
     [userId],
     (err1, regRes) => {
       if (err1 || regRes.length === 0) {
-        return res.json({ success: false, message: "Student not found" });
+        return res.status(500).json({ success: false, message: "Student not found" });
       }
 
       const reg_no = regRes[0].reg_no;
 
-      // 1. Get fee structure
+      // 1. Fetch fee structure
       connection.query(
         `SELECT academic_year, tuition, hostel, bus, university, semester, library, fines
-         FROM student_fee_structure
-         WHERE TRIM(LOWER(reg_no)) = TRIM(LOWER(?))
-         ORDER BY academic_year ASC`,
+         FROM student_fee_structure 
+         WHERE reg_no = ? ORDER BY academic_year ASC`,
         [reg_no],
         (err2, feeRows) => {
-          if (err2 || feeRows.length === 0) {
-            return res.json({ success: false, message: "No fee data" });
-          }
+          if (err2) return res.status(500).json({ success: false, message: "DB error" });
+          if (feeRows.length === 0) return res.status(404).json({ success: false, message: "No fee data" });
 
           const promises = feeRows.map(fee => {
             return new Promise(resolve => {
               const year = fee.academic_year;
 
-              // 2. Get total paid (no grouping by fee_type → SUM all payments in that year)
+              // 2. Get total paid (for that academic year)
               connection.query(
-                `SELECT SUM(amount_paid) AS totalPaid 
+                `SELECT SUM(amount_paid) AS totalPaid
                  FROM student_fee_payments 
                  WHERE userId = ? AND academic_year = ? AND matched = 1`,
                 [userId, year],
                 (err3, payRes) => {
                   const totalPaid = parseFloat(payRes?.[0]?.totalPaid || 0);
 
-                  // 3. Calculate total fee for the year
-                  const totalFee = Object.keys(fee).reduce((sum, key) => {
-                    if (key !== "academic_year") {
-                      sum += parseFloat(fee[key]) || 0;
+                  // 3. Get fines
+                  connection.query(
+                    `SELECT SUM(amount) AS fine 
+                     FROM fines WHERE userId = ? AND academic_year = ?`,
+                    [userId, year],
+                    (err4, fineRes) => {
+                      const fineAmount = parseFloat(fineRes?.[0]?.fine || 0);
+
+                      // 4. Calculate total fee
+                      const totalFee = 
+                        (parseFloat(fee.tuition) || 0) +
+                        (parseFloat(fee.hostel) || 0) +
+                        (parseFloat(fee.bus) || 0) +
+                        (parseFloat(fee.university) || 0) +
+                        (parseFloat(fee.semester) || 0) +
+                        (parseFloat(fee.library) || 0) +
+                        fineAmount;
+
+                      const remaining = Math.max(0, totalFee - totalPaid);
+
+                      resolve({
+                        year,
+                        structure: fee,
+                        paid: totalPaid,
+                        remaining,
+                        total: totalFee
+                      });
                     }
-                    return sum;
-                  }, 0);
-
-                  const remaining = Math.max(0, totalFee - totalPaid);
-
-                  resolve({
-                    year,
-                    structure: fee,
-                    paid: totalPaid,
-                    remaining,
-                    total: totalFee
-                  });
+                  );
                 }
               );
             });
@@ -4744,6 +4754,7 @@ app.post("/api/send-sms", async (req, res) => {
 });
 
 module.exports = app;
+
 
 
 
