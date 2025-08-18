@@ -1917,12 +1917,10 @@ app.get('/admin/noc-status', (req, res) => {
   });
 });
 
-// 📘 Year-wise Fee Details API
 app.get("/yearwise-fee/:userId", (req, res) => {
   const { userId } = req.params;
   console.log("➡️ Yearwise fee API called for:", userId);
 
-  // 1️⃣ Get reg_no for this student
   connection.query(
     "SELECT reg_no FROM students WHERE userId = ?",
     [userId],
@@ -1936,11 +1934,9 @@ app.get("/yearwise-fee/:userId", (req, res) => {
       }
 
       const reg_no = regRes[0].reg_no;
-      console.log("✅ Found reg_no:", reg_no);
 
-      // 2️⃣ Get fee structure for reg_no (ignore case/extra spaces)
       connection.query(
-        `SELECT academic_year, tuition, hostel, bus, university, semester, library, fines
+        `SELECT academic_year, tuition, hostel, bus, university, semester, \`library\`, fines
          FROM student_fee_structure
          WHERE TRIM(LOWER(reg_no)) = TRIM(LOWER(?))
          ORDER BY academic_year ASC`,
@@ -1952,18 +1948,13 @@ app.get("/yearwise-fee/:userId", (req, res) => {
           }
 
           if (feeRows.length === 0) {
-            console.warn("⚠️ No fee structure found for", reg_no);
             return res.json({ success: false, message: "No fee data" });
           }
 
-          console.log("✅ Fee rows found:", feeRows.length);
-
-          // 3️⃣ For each academic year → add paid + fines
           const promises = feeRows.map(fee => {
             return new Promise(resolve => {
               const year = fee.academic_year;
 
-              // Payments
               connection.query(
                 `SELECT fee_type, SUM(amount_paid) AS paid 
                  FROM student_fee_payments 
@@ -1978,7 +1969,6 @@ app.get("/yearwise-fee/:userId", (req, res) => {
                     });
                   }
 
-                  // Fines
                   connection.query(
                     `SELECT SUM(amount) AS fine 
                      FROM fines 
@@ -1989,9 +1979,9 @@ app.get("/yearwise-fee/:userId", (req, res) => {
 
                       resolve({
                         year,
-                        structure: fee,     // tuition, hostel, bus, etc.
-                        paidDetails,        // paid amounts
-                        fines               // fine amount
+                        structure: fee,
+                        paidDetails,
+                        fines
                       });
                     }
                   );
@@ -4774,6 +4764,7 @@ app.post("/api/send-sms", async (req, res) => {
 });
 
 module.exports = app;
+
 
 
 
