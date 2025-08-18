@@ -363,7 +363,7 @@
       if (!res.success) throw new Error("Fee data not found.");
 
       const data = res.data;
-      const container = document.getElementById("feeCardsContainer");
+      const container = document.querySelector(".fee-details");
       container.innerHTML = "";
 
       data.forEach(({ year, structure, paid, fines }) => {
@@ -438,6 +438,7 @@
 </script>
 </body>
 </html>
+
 
 
 
