@@ -1922,7 +1922,7 @@ app.get("/yearwise-fee/:userId", (req, res) => {
   const { userId } = req.params;
   console.log("➡️ Yearwise fee API called for:", userId);
 
-  // Step 1: Get reg_no for this student
+  // 1️⃣ Get reg_no for this student
   connection.query(
     "SELECT reg_no FROM students WHERE userId = ?",
     [userId],
@@ -1936,12 +1936,13 @@ app.get("/yearwise-fee/:userId", (req, res) => {
       }
 
       const reg_no = regRes[0].reg_no;
+      console.log("✅ Found reg_no:", reg_no);
 
-      // Step 2: Get fee structure for reg_no
+      // 2️⃣ Get fee structure for reg_no (ignore case/extra spaces)
       connection.query(
         `SELECT academic_year, tuition, hostel, bus, university, semester, library, fines
          FROM student_fee_structure
-         WHERE reg_no = ?
+         WHERE TRIM(LOWER(reg_no)) = TRIM(LOWER(?))
          ORDER BY academic_year ASC`,
         [reg_no],
         (err2, feeRows) => {
@@ -1951,10 +1952,13 @@ app.get("/yearwise-fee/:userId", (req, res) => {
           }
 
           if (feeRows.length === 0) {
-            return res.json({ success: false, message: "No fee structure found" });
+            console.warn("⚠️ No fee structure found for", reg_no);
+            return res.json({ success: false, message: "No fee data" });
           }
 
-          // Step 3: For each academic year → add paid + fines
+          console.log("✅ Fee rows found:", feeRows.length);
+
+          // 3️⃣ For each academic year → add paid + fines
           const promises = feeRows.map(fee => {
             return new Promise(resolve => {
               const year = fee.academic_year;
@@ -4770,6 +4774,7 @@ app.post("/api/send-sms", async (req, res) => {
 });
 
 module.exports = app;
+
 
 
 
