@@ -1917,74 +1917,79 @@ app.get('/admin/noc-status', (req, res) => {
   });
 });
 
-// ✅ Year-wise full fee breakdown (structure + paid + fines)
+// 📘 Year-wise full fee breakdown (structure + paidDetails + fines)
 app.get('/yearwise-fee/:userId', (req, res) => {
   const { userId } = req.params;
 
-  // 1. Get student reg_no
-  connection.query('SELECT reg_no FROM students WHERE userId = ?', [userId], (err1, regRes) => {
-    if (err1 || regRes.length === 0) {
-      return res.status(500).json({ success: false, message: "Student not found" });
-    }
+  // 1️⃣ Get reg_no from students
+  connection.query(
+    'SELECT reg_no FROM students WHERE userId = ?',
+    [userId],
+    (err1, regRes) => {
+      if (err1 || regRes.length === 0) {
+        return res.status(404).json({ success: false, message: "Student not found" });
+      }
 
-    const reg_no = regRes[0].reg_no;
+      const reg_no = regRes[0].reg_no;
 
-    // 2. Get all fee structures
-    connection.query(
-      `SELECT academic_year, tuition, hostel, bus, university, semester, library, fines
-       FROM student_fee_structure 
-       WHERE reg_no = ? ORDER BY academic_year ASC`,
-      [reg_no],
-      (err2, feeRows) => {
+      // 2️⃣ Fetch fee structures (year-wise)
+      const feeSql = `
+        SELECT academic_year, tuition, hostel, bus, university, semester, library, fines
+        FROM student_fee_structure
+        WHERE reg_no = ?
+        ORDER BY academic_year ASC
+      `;
+
+      connection.query(feeSql, [reg_no], (err2, feeRows) => {
         if (err2) {
           console.error("❌ Fee structure fetch error:", err2);
           return res.status(500).json({ success: false, message: "Fee structure fetch error" });
         }
 
         if (feeRows.length === 0) {
-          return res.status(404).json({ success: false, message: "No fee data" });
+          return res.json({ success: false, message: "No fee data found" });
         }
 
-        // 3. Build promises per academic year
+        // 3️⃣ Build promises for each academic year
         const promises = feeRows.map(fee => {
           return new Promise((resolve) => {
             const year = fee.academic_year;
 
-            // Payments
-            connection.query(
-              `SELECT fee_type, SUM(amount_paid) AS paid 
-               FROM student_fee_payments 
-               WHERE userId = ? AND matched = 1 AND academic_year = ?
-               GROUP BY fee_type`,
-              [userId, year],
-              (err3, paidRows) => {
-                const paidMap = {};
-                if (!err3 && paidRows) {
-                  paidRows.forEach(row => {
-                    paidMap[row.fee_type] = parseFloat(row.paid) || 0;
-                  });
-                }
+            // Fetch paid amounts (only verified, matched=1)
+            const paidSql = `
+              SELECT fee_type, SUM(amount_paid) AS paid
+              FROM student_fee_payments
+              WHERE userId = ? AND academic_year = ? AND matched = 1
+              GROUP BY fee_type
+            `;
 
-                // Fines
-                connection.query(
-                  `SELECT SUM(amount) AS fine 
-                   FROM fines 
-                   WHERE userId = ? AND academic_year = ?`,
-                  [userId, year],
-                  (err4, fineRes) => {
-                    const fineAmount = parseFloat(fineRes?.[0]?.fine || 0);
-
-                    // ✅ Shape exactly like frontend expects
-                    resolve({
-                      year,
-                      structure: fee,   // includes tuition, hostel, bus, etc.
-                      paid: paidMap,
-                      fines: fineAmount
-                    });
-                  }
-                );
+            connection.query(paidSql, [userId, year], (err3, paidRows) => {
+              const paidDetails = {};
+              if (!err3 && paidRows) {
+                paidRows.forEach(row => {
+                  paidDetails[row.fee_type] = parseFloat(row.paid) || 0;
+                });
               }
-            );
+
+              // Fetch fines for that year
+              const fineSql = `
+                SELECT SUM(amount) AS fine
+                FROM fines
+                WHERE userId = ? AND academic_year = ?
+              `;
+
+              connection.query(fineSql, [userId, year], (err4, fineRes) => {
+                const fines = parseFloat(fineRes?.[0]?.fine || 0);
+
+                // ✅ Shape exactly like frontend expects
+                resolve({
+                  year,
+                  structure: fee,    // contains tuition, hostel, bus, etc.
+                  paidDetails,       // paid per fee_type
+                  fines              // total fines
+                });
+              });
+            });
           });
         });
 
@@ -1994,9 +1999,9 @@ app.get('/yearwise-fee/:userId', (req, res) => {
             console.error("❌ Processing error:", err);
             res.status(500).json({ success: false, message: "Processing error" });
           });
-      }
-    );
-  });
+      });
+    }
+  );
 });
 
 // view backlogs 
@@ -4759,6 +4764,7 @@ app.post("/api/send-sms", async (req, res) => {
 });
 
 module.exports = app;
+
 
 
 
