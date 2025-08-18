@@ -362,6 +362,7 @@
   const userId = localStorage.getItem("userId");
   document.getElementById("userId").textContent = userId || "Unknown";
 
+  // Load profile photo
   fetch(`https://crr-noc.onrender.com/student/${userId}`)
     .then(r => r.json())
     .then(data => {
@@ -372,13 +373,20 @@
       }
     });
 
+  // Format numbers to ₹xx.xx
+  const formatCurrency = (val) => `₹${(parseFloat(val) || 0).toFixed(2)}`;
+
+  // Fetch Yearwise Fee Details
   fetch(`https://crr-noc.onrender.com/yearwise-fee/${userId}`)
     .then(res => res.json())
     .then(res => {
-      if (!res.success) throw new Error("Fee data not found.");
+      if (!res.success || !Array.isArray(res.data)) {
+        throw new Error("No fee data found.");
+      }
 
       const data = res.data;
       const container = document.querySelector(".fee-details");
+
       if (data.length === 0) {
         container.innerHTML = "<h2>No fee records found for this student.</h2>";
         return;
@@ -401,8 +409,8 @@
         let rowsHTML = "";
 
         items.forEach(({ label, key }) => {
-          const total = key === "fines" ? fines : parseFloat(structure[key]) || 0;
-          const paidAmt = parseFloat(paid?.[key] || 0);  // ✅ use paid instead of paidDetails
+          const total = key === "fines" ? (parseFloat(fines) || 0) : (parseFloat(structure?.[key]) || 0);
+          const paidAmt = parseFloat(paid?.[key] || 0);
           const remain = Math.max(0, total - paidAmt);
 
           paidTotal += paidAmt;
@@ -412,9 +420,9 @@
           rowsHTML += `
             <tr>
               <td>${label}</td>
-              <td>₹${paidAmt.toFixed(2)}</td>
-              <td>₹${remain.toFixed(2)}</td>
-              <td>₹${total.toFixed(2)}</td>
+              <td>${formatCurrency(paidAmt)}</td>
+              <td>${formatCurrency(remain)}</td>
+              <td>${formatCurrency(total)}</td>
             </tr>`;
         });
 
@@ -435,9 +443,9 @@
                 <tfoot>
                   <tr>
                     <td><strong>Total</strong></td>
-                    <td><strong>₹${paidTotal.toFixed(2)}</strong></td>
-                    <td><strong>₹${remainingTotal.toFixed(2)}</strong></td>
-                    <td><strong>₹${actualTotal.toFixed(2)}</strong></td>
+                    <td><strong>${formatCurrency(paidTotal)}</strong></td>
+                    <td><strong>${formatCurrency(remainingTotal)}</strong></td>
+                    <td><strong>${formatCurrency(actualTotal)}</strong></td>
                   </tr>
                 </tfoot>
               </table>
@@ -445,27 +453,22 @@
           </div>`;
       });
 
-      const toggles = document.querySelectorAll(".accordion-toggle");
-      const contents = document.querySelectorAll(".accordion-content");
-
-      toggles.forEach((btn, i) => {
+      // Accordion Toggle
+      document.querySelectorAll(".accordion-toggle").forEach(btn => {
         btn.addEventListener("click", () => {
-          contents.forEach((content, j) => {
-            content.style.display = i === j
-              ? content.style.display === "block" ? "none" : "block"
-              : "none";
-          });
+          const content = btn.nextElementSibling;
+          content.style.display = content.style.display === "block" ? "none" : "block";
         });
       });
     })
     .catch(err => {
       console.error("❌ Error loading fee data:", err);
-      alert("Failed to load year-wise fee details.");
+      document.querySelector(".fee-details").innerHTML =
+        "<h2 style='color:red;'>Failed to load year-wise fee details.</h2>";
     });
 
   function toggleMobileMenu() {
-    const sidebar = document.querySelector('.sidebar');
-    sidebar.classList.toggle('open');
+    document.querySelector('.sidebar').classList.toggle('open');
   }
 
   document.querySelectorAll(".menu li a").forEach(link => {
@@ -479,15 +482,16 @@
   function logout() {
     localStorage.removeItem("userId");
     if ("caches" in window) {
-      caches.keys().then((names) => names.forEach((name) => caches.delete(name)));
+      caches.keys().then(names => names.forEach(name => caches.delete(name)));
     }
     window.location.replace("index.html");
   }
 
-  // Block back button access
+  // Block back button
   window.history.pushState(null, "", window.location.href);
   window.onpopstate = () => window.history.pushState(null, "", window.location.href);
 </script>
 
 </body>
 </html>
+
