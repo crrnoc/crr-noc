@@ -1920,87 +1920,56 @@ app.get('/admin/noc-status', (req, res) => {
 app.get('/yearwise-fee/:userId', (req, res) => {
   const { userId } = req.params;
 
-  // Since userId and reg_no are the same, no need for extra mapping
-  const reg_no = userId;
+  connection.query('SELECT reg_no FROM students WHERE userId = ?', [userId], (err1, regRes) => {
+    if (err1 || regRes.length === 0) return res.status(500).json({ success: false });
 
-  // 1. Fetch fee structure
-  connection.query(
-    `SELECT academic_year, tuition, hostel, bus, university, semester, library
-     FROM student_fee_structure 
-     WHERE reg_no = ? ORDER BY academic_year ASC`,
-    [reg_no],
-    (err2, feeRows) => {
-      if (err2) {
-        console.error("❌ DB error:", err2);
-        return res.status(500).json({ success: false, message: "DB error" });
-      }
-      if (feeRows.length === 0) {
-        return res.status(404).json({ success: false, message: "No fee data" });
-      }
+    const reg_no = regRes[0].reg_no;
 
-      const promises = feeRows.map(fee => {
-        return new Promise(resolve => {
-          const year = fee.academic_year;
+    connection.query(
+      `SELECT * FROM student_fee_structure WHERE reg_no = ? ORDER BY academic_year ASC`,
+      [reg_no],
+      (err2, feeRows) => {
+        if (err2) return res.status(500).json({ success: false });
 
-          // 2. Get paid breakdown
-          connection.query(
-            `SELECT fee_type, SUM(amount_paid) AS paid
-             FROM student_fee_payments 
-             WHERE userId = ? AND academic_year = ? AND matched = 1
-             GROUP BY fee_type`,
-            [userId, year],
-            (err3, paidRows) => {
-              const paidMap = {};
-              if (paidRows) {
-                paidRows.forEach(row => {
-                  paidMap[row.fee_type.toLowerCase()] = parseFloat(row.paid || 0);
-                });
+        if (feeRows.length === 0) return res.status(404).json({ success: false, message: "No fee data" });
+
+        const promises = feeRows.map(fee => {
+          return new Promise(resolve => {
+            const year = fee.academic_year;
+
+            connection.query(
+              `SELECT fee_type, SUM(amount_paid) AS paid 
+               FROM student_fee_payments 
+               WHERE userId = ? AND matched = 1 AND academic_year = ?
+               GROUP BY fee_type`,
+              [userId, year],
+              (err3, paidRows) => {
+                const paidMap = {};
+                paidRows?.forEach(row => paidMap[row.fee_type] = parseFloat(row.paid));
+
+                connection.query(
+                  `SELECT SUM(amount) AS fine FROM fines WHERE userId = ? AND academic_year = ?`,
+                  [userId, year],
+                  (err4, fineRes) => {
+                    const fineAmount = parseFloat(fineRes[0]?.fine || 0);
+
+                    resolve({
+                      year,
+                      structure: fee,
+                      paid: paidMap,
+                      fines: fineAmount
+                    });
+                  }
+                );
               }
-
-              // 3. Get fines
-              connection.query(
-                `SELECT SUM(amount) AS fine 
-                 FROM fines WHERE userId = ? AND academic_year = ?`,
-                [userId, year],
-                (err4, fineRes) => {
-                  const fineAmount = parseFloat(fineRes?.[0]?.fine || 0);
-
-                  // 4. Build breakdown row-wise
-                  const feeBreakdown = [
-                    { type: "Tuition Fee", total: fee.tuition || 0, paid: paidMap["tuition"] || 0 },
-                    { type: "Hostel Fee", total: fee.hostel || 0, paid: paidMap["hostel"] || 0 },
-                    { type: "Bus Fee", total: fee.bus || 0, paid: paidMap["bus"] || 0 },
-                    { type: "University Fee", total: fee.university || 0, paid: paidMap["university"] || 0 },
-                    { type: "Semester Fee", total: fee.semester || 0, paid: paidMap["semester"] || 0 },
-                    { type: "Library Dues", total: fee.library || 0, paid: paidMap["library"] || 0 },
-                    { type: "Fines", total: fineAmount, paid: paidMap["fines"] || 0 }
-                  ].map(row => ({
-                    ...row,
-                    remaining: Math.max(0, row.total - row.paid)
-                  }));
-
-                  // 5. Totals
-                  const totalPaid = feeBreakdown.reduce((sum, f) => sum + f.paid, 0);
-                  const totalFee = feeBreakdown.reduce((sum, f) => sum + f.total, 0);
-                  const totalRemaining = totalFee - totalPaid;
-
-                  resolve({
-                    year,
-                    breakdown: feeBreakdown,
-                    totalPaid,
-                    totalRemaining,
-                    totalFee
-                  });
-                }
-              );
-            }
-          );
+            );
+          });
         });
-      });
 
-      Promise.all(promises).then(data => res.json({ success: true, data }));
-    }
-  );
+        Promise.all(promises).then(data => res.json({ success: true, data }));
+      }
+    );
+  });
 });
 
 // view backlogs 
@@ -4763,6 +4732,7 @@ app.post("/api/send-sms", async (req, res) => {
 });
 
 module.exports = app;
+
 
 
 
