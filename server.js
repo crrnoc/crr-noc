@@ -1917,97 +1917,97 @@ app.get('/admin/noc-status', (req, res) => {
   });
 });
 
-app.get('/yearwise-fee/:userId', (req, res) => {
+// 📘 Year-wise Fee Details API
+app.get("/yearwise-fee/:userId", (req, res) => {
   const { userId } = req.params;
-  console.log("🔍 API Called: /yearwise-fee/", userId);
+  console.log("➡️ Yearwise fee API called for:", userId);
 
-  // 1️⃣ Get reg_no
-  connection.query('SELECT reg_no FROM students WHERE userId = ?', [userId], (err1, regRes) => {
-    if (err1) {
-      console.error("❌ Error fetching reg_no:", err1);
-      return res.status(500).json({ success: false, message: "DB error while fetching student" });
-    }
-    if (regRes.length === 0) {
-      console.warn("⚠️ No student found for", userId);
-      return res.status(404).json({ success: false, message: "Student not found" });
-    }
+  // Step 1: Get reg_no for this student
+  connection.query(
+    "SELECT reg_no FROM students WHERE userId = ?",
+    [userId],
+    (err1, regRes) => {
+      if (err1) {
+        console.error("❌ Error fetching student:", err1);
+        return res.status(500).json({ success: false, message: "DB error fetching student" });
+      }
+      if (regRes.length === 0) {
+        return res.json({ success: false, message: "Student not found" });
+      }
 
-    const reg_no = regRes[0].reg_no;
-    console.log("✅ Found reg_no:", reg_no);
+      const reg_no = regRes[0].reg_no;
 
-    // 2️⃣ Get fee structure
-    connection.query(
-      `SELECT academic_year, tuition, hostel, bus, university, semester, library, fines
-       FROM student_fee_structure WHERE reg_no = ? ORDER BY academic_year ASC`,
-      [reg_no],
-      (err2, feeRows) => {
-        if (err2) {
-          console.error("❌ Fee structure fetch error:", err2);
-          return res.status(500).json({ success: false, message: "Fee structure fetch error" });
-        }
-        if (feeRows.length === 0) {
-          console.warn("⚠️ No fee structure for", reg_no);
-          return res.status(404).json({ success: false, message: "No fee data" });
-        }
+      // Step 2: Get fee structure for reg_no
+      connection.query(
+        `SELECT academic_year, tuition, hostel, bus, university, semester, library, fines
+         FROM student_fee_structure
+         WHERE reg_no = ?
+         ORDER BY academic_year ASC`,
+        [reg_no],
+        (err2, feeRows) => {
+          if (err2) {
+            console.error("❌ Fee structure fetch error:", err2);
+            return res.status(500).json({ success: false, message: "DB error fetching fee structure" });
+          }
 
-        console.log("✅ Fee rows found:", feeRows);
+          if (feeRows.length === 0) {
+            return res.json({ success: false, message: "No fee structure found" });
+          }
 
-        // 3️⃣ Build promises per year
-        const promises = feeRows.map(fee => {
-          return new Promise((resolve) => {
-            const year = fee.academic_year;
-            console.log(`➡️ Processing year ${year} for ${reg_no}`);
+          // Step 3: For each academic year → add paid + fines
+          const promises = feeRows.map(fee => {
+            return new Promise(resolve => {
+              const year = fee.academic_year;
 
-            // Payments
-            connection.query(
-              `SELECT fee_type, SUM(amount_paid) AS paid 
-               FROM student_fee_payments 
-               WHERE userId = ? AND matched = 1 AND academic_year = ?
-               GROUP BY fee_type`,
-              [userId, year],
-              (err3, paidRows) => {
-                const paidDetails = {};
-                if (!err3 && paidRows) {
-                  paidRows.forEach(row => {
-                    paidDetails[row.fee_type] = parseFloat(row.paid) || 0;
-                  });
-                }
-                console.log("💰 Paid details for", year, ":", paidDetails);
-
-                // Fines
-                connection.query(
-                  `SELECT SUM(amount) AS fine FROM fines WHERE userId = ? AND academic_year = ?`,
-                  [userId, year],
-                  (err4, fineRes) => {
-                    const fines = parseFloat(fineRes?.[0]?.fine || 0);
-                    console.log("⚡ Fines for", year, ":", fines);
-
-                    resolve({
-                      year,
-                      structure: fee,
-                      paidDetails,
-                      fines
+              // Payments
+              connection.query(
+                `SELECT fee_type, SUM(amount_paid) AS paid 
+                 FROM student_fee_payments 
+                 WHERE userId = ? AND academic_year = ? AND matched = 1
+                 GROUP BY fee_type`,
+                [userId, year],
+                (err3, paidRows) => {
+                  const paidDetails = {};
+                  if (!err3 && paidRows) {
+                    paidRows.forEach(row => {
+                      paidDetails[row.fee_type] = parseFloat(row.paid) || 0;
                     });
                   }
-                );
-              }
-            );
-          });
-        });
 
-        Promise.all(promises)
-          .then(data => {
-            console.log("✅ Final Yearwise Data:", data);
-            res.json({ success: true, data });
-          })
-          .catch(err => {
-            console.error("❌ Processing error:", err);
-            res.status(500).json({ success: false, message: "Processing error", error: err });
+                  // Fines
+                  connection.query(
+                    `SELECT SUM(amount) AS fine 
+                     FROM fines 
+                     WHERE userId = ? AND academic_year = ?`,
+                    [userId, year],
+                    (err4, fineRes) => {
+                      const fines = parseFloat(fineRes?.[0]?.fine || 0);
+
+                      resolve({
+                        year,
+                        structure: fee,     // tuition, hostel, bus, etc.
+                        paidDetails,        // paid amounts
+                        fines               // fine amount
+                      });
+                    }
+                  );
+                }
+              );
+            });
           });
-      }
-    );
-  });
+
+          Promise.all(promises)
+            .then(data => res.json({ success: true, data }))
+            .catch(err => {
+              console.error("❌ Processing error:", err);
+              res.status(500).json({ success: false, message: "Processing error" });
+            });
+        }
+      );
+    }
+  );
 });
+
 
 
 // view backlogs 
@@ -4770,6 +4770,7 @@ app.post("/api/send-sms", async (req, res) => {
 });
 
 module.exports = app;
+
 
 
 
