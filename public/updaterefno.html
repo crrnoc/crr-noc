@@ -350,39 +350,37 @@
     </div>
   </div>
     <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-// ✅ Load User Info
-const userId = localStorage.getItem("userId");
-
-if (userId) {
-  document.getElementById("userId").textContent = userId;
-
-  // ✅ Load photo
-  fetch(`https://crr-noc.onrender.com/student/${userId}`)
-    .then(res => res.json())
-    .then(data => {
-      const photo = document.getElementById("sidebarPhoto");
-      if (photo && data.photo_url) {
-        photo.src = data.photo_url;
-        photo.style.display = "block";
-      } else {
-        console.warn("⚠️ No photo_url in response");
-      }
-    })
-    .catch(err => {
-      console.warn("⚠️ Failed to load sidebar photo:", err.message);
+  // 🔐 Unauthorized login check
+  const userId = localStorage.getItem("userId");
+  if (!userId) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Login Required',
+      text: 'Please login to access this page.'
+    }).then(() => {
+      window.location.href = "index.html";
     });
+  } else {
+    // ✅ Show UserID in sidebar
+    document.getElementById("userId").textContent = userId || "Unknown";
 
-} else {
-  // If no login → redirect
-  Swal.fire({
-    icon: "warning",
-    title: "Login Required",
-    text: "Please login first."
-  }).then(() => {
-    window.location.replace("index.html");
-  });
-}
+    // ✅ Load sidebar photo
+    fetch(`https://crr-noc.onrender.com/student/${userId}`)
+      .then(res => res.json())
+      .then(data => {
+        console.log("Student API Response:", data); // Debug
+        const photo = document.getElementById("sidebarPhoto");
+        if (photo && (data.photo_url || data.photo || data.image_url)) {
+          photo.src = data.photo_url || data.photo || data.image_url;
+          photo.style.display = "block";
+        }
+      })
+      .catch(err => {
+        console.warn("⚠️ Failed to load photo:", err.message);
+      });
+  }
 
   // ✅ Submit DU Numbers
   document.querySelector(".update").addEventListener("click", () => {
@@ -425,54 +423,53 @@ if (userId) {
       </div>
     `;
 
-  Swal.fire({
-  title: "Verify Fee Details",
-  html,
-  icon: "info",
-  showCancelButton: true,
-  confirmButtonText: "Proceed",
-  cancelButtonText: "Cancel",
-  confirmButtonColor: "#28a745"
-}).then(result => {
-  if (!result.isConfirmed) return;
+    Swal.fire({
+      title: "Verify Fee Details",
+      html,
+      icon: "info",
+      showCancelButton: true,
+      confirmButtonText: "Proceed",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#28a745"
+    }).then(result => {
+      if (!result.isConfirmed) return;
 
-  // ✅ Proceed with fetch
-  fetch("https://crr-noc.onrender.com/submit-du", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ userId, payments: paymentData, academic_year: academicYear })
-  })
-    .then(res => res.json())
-    .then(data => {
-      if (!data.success) {
-        // ❌ Duplicate DU number / invalid case
-        Swal.fire({
-          icon: "error",
-          title: "Duplicate Reference",
-          text: data.message || "This DU number already exists."
+      // ✅ Proceed with fetch
+      fetch("https://crr-noc.onrender.com/submit-du", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, payments: paymentData, academic_year: academicYear })
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (!data.success) {
+            Swal.fire({
+              icon: "error",
+              title: "Duplicate Reference",
+              text: data.message || "This DU number already exists."
+            });
+          } else {
+            Swal.fire({
+              icon: "success",
+              title: "Success",
+              text: data.message || "DU numbers submitted successfully."
+            }).then(() => {
+              // 🔄 Clear inputs after success
+              document.querySelectorAll(".form input").forEach(inp => inp.value = "");
+              document.getElementById("academicYear").value = "";
+            });
+          }
+        })
+        .catch(err => {
+          console.error("Error submitting DU numbers:", err);
+          Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: "Something went wrong while submitting DU numbers."
+          });
         });
-      } else {
-        // ✅ Success
-        Swal.fire({
-          icon: "success",
-          title: "Success",
-          text: data.message || "DU numbers submitted successfully."
-        }).then(() => {
-          // 🔄 Optional: clear inputs after success
-          document.querySelectorAll(".form input").forEach(inp => inp.value = "");
-          document.getElementById("academicYear").value = "";
-        });
-      }
-    })
-    .catch(err => {
-      console.error("Error submitting DU numbers:", err);
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "Something went wrong while submitting DU numbers."
-      });
     });
-});  // 🔒 Swal.then close ikada
+  });
 
   // ✅ DU Numbers: auto-uppercase + only A-Z and 0-9
   document.querySelectorAll('.form input[type="text"]').forEach(input => {
@@ -499,43 +496,36 @@ if (userId) {
     });
   });
 
-  // ✅ Toggle sidebar for mobile
-  function toggleMobileMenu() {
-    document.querySelector('.sidebar').classList.toggle('open');
-  }
-
-  document.querySelectorAll(".menu li a").forEach(link => {
-    link.addEventListener("click", () => {
-      if (window.innerWidth <= 768) {
-        document.querySelector('.sidebar').classList.remove('open');
+  // ✅ SweetAlert2 Logout
+  function logout() {
+    Swal.fire({
+      title: 'Logout?',
+      text: "Are you sure you want to logout?",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, Logout'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        localStorage.removeItem("userId");
+        if ("caches" in window) {
+          caches.keys().then((names) => names.forEach((name) => caches.delete(name)));
+        }
+        window.location.replace("index.html");
       }
     });
-  });
-
-  // ✅ Logout
-  function logout() {
-    localStorage.removeItem("userId");
-    if ("caches" in window) {
-      caches.keys().then((names) => names.forEach((name) => caches.delete(name)));
-    }
-    window.location.replace("index.html");
   }
 
-  // ✅ Ensure login on page load
-  window.addEventListener("pageshow", function () {
-    const userId = localStorage.getItem("userId");
-    if (!userId) {
-      Swal.fire({
-        icon: "warning",
-        title: "Login Required",
-        text: "Please login first."
-      }).then(() => {
-        window.location.replace("index.html");
-      });
-    }
-  });
+  // ✅ Toggle sidebar for mobile
+  function toggleMobileMenu() {
+    const sidebar = document.querySelector('.sidebar');
+    sidebar.classList.toggle('open');
+  }
 </script>
+
 </body>
 </html>
+
 
 
