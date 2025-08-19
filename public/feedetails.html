@@ -230,14 +230,6 @@
     }
 
     .accordion-content {
-      background: #fff;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      padding: 20px;
-      margin-top: 10px;
-      animation: fadeIn 0.3s ease-in-out;
-    }
-      .accordion-content {
   max-height: 0;
   overflow: hidden;
   transition: max-height 0.4s ease, padding 0.3s ease;
@@ -369,8 +361,7 @@
   </div>
 <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
 
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
   // 🔐 Unauthorized login check
   const userId = localStorage.getItem("userId");
@@ -385,7 +376,7 @@
   } else {
     document.getElementById("userId").textContent = userId || "Unknown";
 
-    // ✅ Load sidebar photo (same as in settings page)
+    // ✅ Load sidebar photo
     fetch(`https://crr-noc.onrender.com/student/${userId}`)
       .then(res => res.json())
       .then(data => {
@@ -399,7 +390,7 @@
         console.warn("⚠️ Failed to load photo:", err.message);
       });
 
-    // 🔽 Your fee details fetching & accordion code stays here
+    // ✅ Fetch yearwise fee
     fetch(`https://crr-noc.onrender.com/yearwise-fee/${userId}`)
       .then(res => res.json())
       .then(res => {
@@ -443,9 +434,9 @@
           container.innerHTML += `
             <div class="accordion-item">
               <button class="accordion-toggle" data-index="${index}">
-                📅 Academic Year ${year}
+                📅 Academic Year ${year} <span class="arrow">▼</span>
               </button>
-              <div class="accordion-content" style="display: none;">
+              <div class="accordion-content">
                 <table>
                   <thead>
                     <tr>
@@ -469,19 +460,23 @@
             </div>`;
         });
 
-        // Accordion toggle
-        document.querySelectorAll(".accordion-toggle").forEach(btn => {
-          btn.addEventListener("click", () => {
-            const index = btn.dataset.index;
-            document.querySelectorAll(".accordion-content").forEach((content, i) => {
-              if (i == index) {
-                content.style.display = (content.style.display === "block") ? "none" : "block";
-              } else {
-                content.style.display = "none";
-              }
-            });
-          });
-        });
+// Accordion toggle with smooth animation
+document.querySelectorAll(".accordion-toggle").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const index = btn.dataset.index;
+    document.querySelectorAll(".accordion-content").forEach((content, i) => {
+      const arrow = document.querySelectorAll(".accordion-toggle .arrow")[i];
+      if (i == index) {
+        content.classList.toggle("open");
+        arrow.textContent = content.classList.contains("open") ? "▲" : "▼";
+      } else {
+        content.classList.remove("open");
+        arrow.textContent = "▼";
+      }
+    });
+  });
+});
+
       })
       .catch(err => {
         console.error("❌ Error loading fee data:", err);
@@ -489,40 +484,26 @@
       });
   }
 
- // Accordion toggle with smooth animation
-document.querySelectorAll(".accordion-toggle").forEach(btn => {
-  btn.addEventListener("click", () => {
-    const index = btn.dataset.index;
-    document.querySelectorAll(".accordion-content").forEach((content, i) => {
-      if (i == index) {
-        content.classList.toggle("open");
-      } else {
-        content.classList.remove("open");
+  // SweetAlert2 logout
+  function logout() {
+    Swal.fire({
+      title: 'Logout?',
+      text: "Are you sure you want to logout?",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, Logout'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        localStorage.removeItem("userId");
+        if ("caches" in window) {
+          caches.keys().then((names) => names.forEach((name) => caches.delete(name)));
+        }
+        window.location.replace("index.html");
       }
     });
-  });
-});
-
-// SweetAlert2 logout
-function logout() {
-  Swal.fire({
-    title: 'Logout?',
-    text: "Are you sure you want to logout?",
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#d33',
-    cancelButtonColor: '#3085d6',
-    confirmButtonText: 'Yes, Logout'
-  }).then((result) => {
-    if (result.isConfirmed) {
-      localStorage.removeItem("userId");
-      if ("caches" in window) {
-        caches.keys().then((names) => names.forEach((name) => caches.delete(name)));
-      }
-      window.location.replace("index.html");
-    }
-  });
-}
+  }
 
   function toggleMobileMenu() {
     const sidebar = document.querySelector('.sidebar');
@@ -532,3 +513,4 @@ function logout() {
 
 </body>
 </html>
+
