@@ -411,41 +411,54 @@
       </div>
     `;
 
-    Swal.fire({
-      title: "Verify Fee Details",
-      html,
-      icon: "info",
-      showCancelButton: true,
-      confirmButtonText: "Proceed",
-      cancelButtonText: "Cancel",
-      confirmButtonColor: "#28a745"
-    }).then(result => {
-      if (!result.isConfirmed) return;
+  Swal.fire({
+  title: "Verify Fee Details",
+  html,
+  icon: "info",
+  showCancelButton: true,
+  confirmButtonText: "Proceed",
+  cancelButtonText: "Cancel",
+  confirmButtonColor: "#28a745"
+}).then(result => {
+  if (!result.isConfirmed) return;
 
-      // ✅ Proceed with fetch
-      fetch("https://crr-noc.onrender.com/submit-du", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, payments: paymentData, academic_year: academicYear })
-      })
-        .then(res => res.json())
-        .then(data => {
-          Swal.fire({
-            icon: "success",
-            title: "Success",
-            text: data.message || "DU numbers submitted successfully."
-          });
-        })
-        .catch(err => {
-          console.error("Error submitting DU numbers:", err);
-          Swal.fire({
-            icon: "error",
-            title: "Error",
-            text: "Something went wrong."
-          });
+  // ✅ Proceed with fetch
+  fetch("https://crr-noc.onrender.com/submit-du", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId, payments: paymentData, academic_year: academicYear })
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (!data.success) {
+        // ❌ Duplicate DU number / invalid case
+        Swal.fire({
+          icon: "error",
+          title: "Duplicate Reference",
+          text: data.message || "This DU number already exists."
         });
+      } else {
+        // ✅ Success
+        Swal.fire({
+          icon: "success",
+          title: "Success",
+          text: data.message || "DU numbers submitted successfully."
+        }).then(() => {
+          // 🔄 Optional: clear inputs after success
+          document.querySelectorAll(".form input").forEach(inp => inp.value = "");
+          document.getElementById("academicYear").value = "";
+        });
+      }
+    })
+    .catch(err => {
+      console.error("Error submitting DU numbers:", err);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Something went wrong while submitting DU numbers."
+      });
     });
-  });
+});  // 🔒 Swal.then close ikada
 
   // ✅ DU Numbers: auto-uppercase + only A-Z and 0-9
   document.querySelectorAll('.form input[type="text"]').forEach(input => {
@@ -510,3 +523,4 @@
 </script>
 </body>
 </html>
+
