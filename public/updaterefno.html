@@ -351,24 +351,38 @@
   </div>
     <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
 <script>
-  const userId = localStorage.getItem("userId");
+// ✅ Load User Info
+const userId = localStorage.getItem("userId");
+
+if (userId) {
   document.getElementById("userId").textContent = userId;
 
   // ✅ Load photo
-  if (userId) {
-    fetch(`https://crr-noc.onrender.com/student/${userId}`)
-      .then(res => res.json())
-      .then(data => {
-        const photo = document.getElementById("sidebarPhoto");
-        if (photo && data.photo_url) {
-          photo.src = data.photo_url;
-          photo.style.display = "block";
-        }
-      })
-      .catch(err => {
-        console.warn("⚠️ Failed to load sidebar photo:", err.message);
-      });
-  }
+  fetch(`https://crr-noc.onrender.com/student/${userId}`)
+    .then(res => res.json())
+    .then(data => {
+      const photo = document.getElementById("sidebarPhoto");
+      if (photo && data.photo_url) {
+        photo.src = data.photo_url;
+        photo.style.display = "block";
+      } else {
+        console.warn("⚠️ No photo_url in response");
+      }
+    })
+    .catch(err => {
+      console.warn("⚠️ Failed to load sidebar photo:", err.message);
+    });
+
+} else {
+  // If no login → redirect
+  Swal.fire({
+    icon: "warning",
+    title: "Login Required",
+    text: "Please login first."
+  }).then(() => {
+    window.location.replace("index.html");
+  });
+}
 
   // ✅ Submit DU Numbers
   document.querySelector(".update").addEventListener("click", () => {
@@ -523,4 +537,5 @@
 </script>
 </body>
 </html>
+
 
