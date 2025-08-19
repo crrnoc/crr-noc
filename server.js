@@ -701,6 +701,7 @@ app.post("/submit-du", (req, res) => {
       const unique_id = results[0].uniqueId;
       const values = [];
       const checkMatches = [];
+      const duChecks = [];
 
       // 📦 Loop through payments
       for (const p of payments) {
@@ -726,44 +727,75 @@ app.post("/submit-du", (req, res) => {
             );
           })
         );
+
+        // 🧠 Check if DU already exists anywhere in student_fee_payments
+        duChecks.push(
+          new Promise((resolve, reject) => {
+            connection.query(
+              `SELECT userId, unique_id, academic_year, fee_type 
+               FROM student_fee_payments 
+               WHERE sbi_ref_no = ?`,
+              [du],
+              (err, results) => {
+                if (err) return reject(err);
+                if (results.length > 0) {
+                  return reject({
+                    message: `❌ Reference Number ${du} already exists for User: ${results[0].userId}, UniqueId: ${results[0].unique_id}, Year: ${results[0].academic_year}, Fee: ${results[0].fee_type}`
+                  });
+                }
+                resolve();
+              }
+            );
+          })
+        );
       }
 
-      // 🔁 After all checks
-      Promise.all(checkMatches).then(matchResults => {
-        const matchMap = Object.fromEntries(matchResults);
+      // 🔁 First check duplicates
+      Promise.all(duChecks)
+        .then(() => {
+          // 🔁 After all matches
+          Promise.all(checkMatches).then(matchResults => {
+            const matchMap = Object.fromEntries(matchResults);
 
-        // 🔄 Build final values with matched = 1 or 0
-        const finalValues = values.map(([userId, unique_id, type, du, amt, year, matched]) => {
-          const isMatched = matchMap[du] ? 1 : 0;
-          return [userId, unique_id, type, du, amt, year, isMatched];
-        });
+            // 🔄 Build final values with matched = 1 or 0
+            const finalValues = values.map(([userId, unique_id, type, du, amt, year, matched]) => {
+              const isMatched = matchMap[du] ? 1 : 0;
+              return [userId, unique_id, type, du, amt, year, isMatched];
+            });
 
-        const sql = `
-          INSERT INTO student_fee_payments (
-            userId, unique_id, fee_type, sbi_ref_no, amount_paid, academic_year, matched
-          )
-          VALUES ?
-          ON DUPLICATE KEY UPDATE
-            sbi_ref_no = VALUES(sbi_ref_no),
-            amount_paid = VALUES(amount_paid),
-            matched = VALUES(matched),
-            academic_year = VALUES(academic_year),
-            unique_id = VALUES(unique_id),
-            matched_on = IF(matched = 0 AND VALUES(matched) = 1, NOW(), matched_on)
-        `;
+            const sql = `
+              INSERT INTO student_fee_payments (
+                userId, unique_id, fee_type, sbi_ref_no, amount_paid, academic_year, matched
+              )
+              VALUES ?
+              ON DUPLICATE KEY UPDATE
+                sbi_ref_no = VALUES(sbi_ref_no),
+                amount_paid = VALUES(amount_paid),
+                matched = VALUES(matched),
+                academic_year = VALUES(academic_year),
+                unique_id = VALUES(unique_id),
+                matched_on = IF(matched = 0 AND VALUES(matched) = 1, NOW(), matched_on)
+            `;
 
-        connection.query(sql, [finalValues], (err2) => {
-          if (err2) {
-            console.error("❌ Insert error:", err2);
-            return res.status(500).json({ success: false, message: "DB error" });
-          }
+            connection.query(sql, [finalValues], (err2) => {
+              if (err2) {
+                console.error("❌ Insert error:", err2);
+                return res.status(500).json({ success: false, message: "DB error" });
+              }
 
-          res.json({
-            success: true,
-            message: "✅ DU entries submitted and matched successfully."
+              res.json({
+                success: true,
+                message: "✅ DU entries submitted and matched successfully."
+              });
+            });
+          });
+        })
+        .catch(err => {
+          return res.status(400).json({
+            success: false,
+            message: err.message || "❌ Duplicate Reference Number found."
           });
         });
-      });
     }
   );
 });
@@ -4723,6 +4755,7 @@ app.post("/api/send-sms", async (req, res) => {
 });
 
 module.exports = app;
+
 
 
 
