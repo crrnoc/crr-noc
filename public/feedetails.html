@@ -366,7 +366,7 @@
       const container = document.querySelector(".fee-details");
       container.innerHTML = "";
 
-      data.forEach(({ year, structure, paid, fines }) => {
+      data.forEach(({ year, structure, paid, fines }, index) => {
         const items = [
           { label: "Tuition Fee", key: "tuition" },
           { label: "Hostel Fee", key: "hostel" },
@@ -377,50 +377,68 @@
           { label: "Fines", key: "fines" }
         ];
 
-        let paidTotal = 0, remainingTotal = 0, actualTotal = 0;
+        let paidTotal = 0, dueTotal = 0, actualTotal = 0;
         let rowsHTML = "";
 
         items.forEach(({ label, key }) => {
           const total = key === "fines" ? fines : parseFloat(structure[key]) || 0;
           const paidAmt = parseFloat(paid[key]) || 0;
-          const remain = Math.max(0, total - paidAmt);
+          const due = Math.max(0, total - paidAmt);
 
           paidTotal += paidAmt;
-          remainingTotal += remain;
+          dueTotal += due;
           actualTotal += total;
 
           rowsHTML += `
             <tr>
               <td>${label}</td>
               <td>₹${paidAmt.toFixed(2)}</td>
-              <td>₹${remain.toFixed(2)}</td>
+              <td>₹${due.toFixed(2)}</td>
               <td>₹${total.toFixed(2)}</td>
             </tr>`;
         });
 
         container.innerHTML += `
-          <div class="fee-card">
-            <h3>📅 Academic Year ${year}</h3>
-            <table>
-              <thead>
-                <tr>
-                  <th>Fee Type</th>
-                  <th>Paid (₹)</th>
-                  <th>Due (₹)</th>
-                  <th>Total Fee (₹)</th>
-                </tr>
-              </thead>
-              <tbody>${rowsHTML}</tbody>
-              <tfoot>
-                <tr>
-                  <td><strong>Total</strong></td>
-                  <td><strong>₹${paidTotal.toFixed(2)}</strong></td>
-                  <td><strong>₹${remainingTotal.toFixed(2)}</strong></td>
-                  <td><strong>₹${actualTotal.toFixed(2)}</strong></td>
-                </tr>
-              </tfoot>
-            </table>
+          <div class="accordion-item">
+            <button class="accordion-toggle" data-index="${index}">
+              📅 Academic Year ${year}
+            </button>
+            <div class="accordion-content" style="display: none;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Fee Type</th>
+                    <th>Paid (₹)</th>
+                    <th>Due (₹)</th>
+                    <th>Total Fee (₹)</th>
+                  </tr>
+                </thead>
+                <tbody>${rowsHTML}</tbody>
+                <tfoot>
+                  <tr>
+                    <td><strong>Total</strong></td>
+                    <td><strong>₹${paidTotal.toFixed(2)}</strong></td>
+                    <td><strong>₹${dueTotal.toFixed(2)}</strong></td>
+                    <td><strong>₹${actualTotal.toFixed(2)}</strong></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
           </div>`;
+      });
+
+      // accordion functionality
+      document.querySelectorAll(".accordion-toggle").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const index = btn.dataset.index;
+          document.querySelectorAll(".accordion-content").forEach((content, i) => {
+            if (i == index) {
+              content.style.display = (content.style.display === "block") ? "none" : "block";
+            } else {
+              content.style.display = "none";
+            }
+          });
+        });
       });
     })
     .catch(err => {
@@ -438,6 +456,7 @@
 </script>
 </body>
 </html>
+
 
 
 
