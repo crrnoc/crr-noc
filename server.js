@@ -2409,8 +2409,9 @@ app.get("/student-attendance/:regno", (req, res) => {
   );
 });
 
-// Fetch student results by regno and semester
-// Fetch student results by regno and semester (with autonomous support)
+// --------------------
+// 1) Fetch student results (semester + autonomous support)
+// --------------------
 app.get('/student/results/:regno', async (req, res) => {
   const { regno } = req.params;
   const semester = req.query.semester;
@@ -2418,7 +2419,6 @@ app.get('/student/results/:regno', async (req, res) => {
   console.log("📥 Incoming Request:", { regno, semester });
 
   try {
-    // Wrap queries in promises
     const queryAsync = (sql, values) =>
       new Promise((resolve, reject) => {
         connection.query(sql, values, (err, result) => {
@@ -2427,65 +2427,56 @@ app.get('/student/results/:regno', async (req, res) => {
         });
       });
 
-    // 1. Fetch semester-wise results (regular)
+    // Regular results for that semester
     const semResults = await queryAsync(
-      "SELECT * FROM results WHERE regno = ? AND semester = ?",
+      "SELECT subcode, subname, grade, credits FROM results WHERE regno = ? AND semester = ?",
       [regno, semester]
     );
 
-    // 2. Fetch semester-wise autonomous results
+    // Autonomous results for that semester
     const autoSemResults = await queryAsync(
-      "SELECT * FROM autonomous_results WHERE regno = ? AND semester = ?",
+      "SELECT subcode, subname, grade, sgpa FROM autonomous_results WHERE regno = ? AND semester = ?",
       [regno, semester]
     );
 
-    // 3. Fetch all results for CGPA (regular)
-    const allResults = await queryAsync(
-      "SELECT * FROM results WHERE regno = ?",
-      [regno]
-    );
+    // All results (for CGPA calc)
+    const allResults = await queryAsync("SELECT grade, credits FROM results WHERE regno = ?", [regno]);
+    const allAutoResults = await queryAsync("SELECT sgpa FROM autonomous_results WHERE regno = ?", [regno]);
 
-    // 4. Fetch all autonomous results
-    const allAutoResults = await queryAsync(
-      "SELECT * FROM autonomous_results WHERE regno = ?",
-      [regno]
-    );
+    // Grade points
+    const gradePoints = { S: 10, A: 9, B: 8, C: 7, D: 6, E: 5, F: 0, Ab: 0, Completed: 10 };
 
-    const gradePoints = {
-      S: 10, A: 9, B: 8, C: 7, D: 6, E: 5, F: 0, Ab: 0,
-      Completed: 10, Absent: 0
-    };
-
+    // GPA calculator (for regular results only)
     function calculateGPA(results) {
-      let totalCredits = 0;
-      let weightedSum = 0;
-
+      let totalCredits = 0, weightedSum = 0;
       for (const r of results) {
-        const point = gradePoints[r.grade];
-        if (point === undefined || r.credits == null) continue;
-
-        weightedSum += point * r.credits;
+        const gp = gradePoints[r.grade];
+        if (gp === undefined || !r.credits) continue;
+        weightedSum += gp * r.credits;
         totalCredits += r.credits;
       }
-
-      const gpa = totalCredits > 0 ? weightedSum / totalCredits : 0;
-      return { gpa: gpa.toFixed(2), totalCredits };
+      return totalCredits > 0 ? (weightedSum / totalCredits).toFixed(2) : "0.00";
     }
 
-    // Regular GPA
-    const { gpa: sgpaRegular } = calculateGPA(semResults);
-    const { gpa: cgpaRegular } = calculateGPA(allResults);
+    // SGPA (semester)
+    const sgpaRegular = calculateGPA(semResults);
+    const sgpaAuto = autoSemResults.length ? (autoSemResults[0].sgpa || 0).toFixed(2) : "0.00";
 
-    // Autonomous GPA (comes directly from table if provided)
-    const sgpaAuto = autoSemResults.length > 0 ? autoSemResults[0].sgpa?.toFixed(2) : "0.00";
+    // CGPA (overall)
+    const cgpaRegular = calculateGPA(allResults);
 
-    // For CGPA: just average reg+auto for now
+    let cgpaAuto = "0.00";
+    if (allAutoResults.length) {
+      const sum = allAutoResults.reduce((a, r) => a + (r.sgpa || 0), 0);
+      cgpaAuto = (sum / allAutoResults.length).toFixed(2);
+    }
+
     const cgpaCombined = (
-      (parseFloat(cgpaRegular || 0) + (allAutoResults[0]?.sgpa || 0)) / 
-      ((cgpaRegular > 0 ? 1 : 0) + (allAutoResults.length > 0 ? 1 : 0) || 1)
+      (parseFloat(cgpaRegular) + parseFloat(cgpaAuto)) /
+      ((cgpaRegular > 0 ? 1 : 0) + (cgpaAuto > 0 ? 1 : 0) || 1)
     ).toFixed(2);
 
-    const percentage = ((parseFloat(cgpaCombined) - 0.5) * 10).toFixed(2);
+    const percentage = (cgpaCombined * 9.5).toFixed(2);
 
     res.json({
       regno,
@@ -2495,6 +2486,7 @@ app.get('/student/results/:regno', async (req, res) => {
       sgpaRegular,
       sgpaAuto,
       cgpaRegular,
+      cgpaAuto,
       cgpaCombined,
       percentage,
     });
@@ -2506,65 +2498,68 @@ app.get('/student/results/:regno', async (req, res) => {
 });
 
 
+// --------------------
+// 2) Overall Results (CGPA + percentage)
+// --------------------
 app.get("/student/overallResults/:regno", async (req, res) => {
   const { regno } = req.params;
 
   try {
-    // 1. Fetch regular results
+    // Regular results
     const [rows] = await connection.promise().query(
       "SELECT grade, credits FROM results WHERE regno = ?",
       [regno]
     );
 
-    // 2. Fetch autonomous results
+    // Autonomous results
     const [autoRows] = await connection.promise().query(
-      "SELECT grade, sgpa FROM autonomous_results WHERE regno = ?",
+      "SELECT sgpa FROM autonomous_results WHERE regno = ?",
       [regno]
     );
 
-    // --- Regular GPA calculation ---
-    let totalGradePoints = 0;
-    let totalCredits = 0;
+    const gradePoints = { S: 10, A: 9, B: 8, C: 7, D: 6, E: 5, F: 0, Ab: 0, Completed: 10 };
 
+    // Regular CGPA
+    let totalGP = 0, totalCredits = 0;
     rows.forEach(({ grade, credits }) => {
-      const gradePoint = GRADE_POINTS[grade] || 0;
-      totalGradePoints += gradePoint * credits;
+      const gp = gradePoints[grade] || 0;
+      totalGP += gp * credits;
       totalCredits += credits;
     });
+    const cgpaRegular = totalCredits > 0 ? (totalGP / totalCredits).toFixed(2) : "0.00";
 
-    const cgpaRegular =
-      totalCredits > 0 ? (totalGradePoints / totalCredits).toFixed(2) : "0.00";
-
-    // --- Autonomous GPA calculation (average SGPA) ---
+    // Autonomous CGPA
     let cgpaAuto = "0.00";
-    if (autoRows.length > 0) {
-      const sum = autoRows.reduce((acc, r) => acc + (r.sgpa || 0), 0);
+    if (autoRows.length) {
+      const sum = autoRows.reduce((a, r) => a + (r.sgpa || 0), 0);
       cgpaAuto = (sum / autoRows.length).toFixed(2);
     }
 
-    // --- Combined CGPA ---
+    // Combined CGPA
     const cgpaCombined = (
       (parseFloat(cgpaRegular) + parseFloat(cgpaAuto)) /
       ((cgpaRegular > 0 ? 1 : 0) + (cgpaAuto > 0 ? 1 : 0) || 1)
     ).toFixed(2);
 
-    // Convert to percentage
     const percentage = (cgpaCombined * 9.5).toFixed(2);
 
-    res.json({
-      cgpaRegular,
-      cgpaAuto,
-      cgpaCombined,
-      percentage,
-    });
+    res.json({ cgpaRegular, cgpaAuto, cgpaCombined, percentage });
+
   } catch (err) {
     console.error("❌ Failed to fetch overall results:", err);
-    res.status(500).json({ cgpaRegular: "0.00", cgpaAuto: "0.00", cgpaCombined: "0.00", percentage: "0.00" });
+    res.status(500).json({
+      cgpaRegular: "0.00",
+      cgpaAuto: "0.00",
+      cgpaCombined: "0.00",
+      percentage: "0.00"
+    });
   }
 });
 
-// result verification
-// verify result (with autonomous support)
+
+// --------------------
+// 3) Result Verification
+// --------------------
 app.get("/api/verify-result", async (req, res) => {
   const { regno, sem } = req.query;
   if (!regno || !sem) return res.status(400).json({ error: "Missing regno or sem" });
@@ -2578,26 +2573,24 @@ app.get("/api/verify-result", async (req, res) => {
     });
 
   try {
-    // Regular results
+    // Regular + Autonomous results
     const results = await queryAsync(
       "SELECT subcode, subname, grade, credits FROM results WHERE regno = ? AND semester = ?",
       [regno, sem]
     );
-
-    // Autonomous results
     const autoResults = await queryAsync(
       "SELECT subcode, subname, grade, sgpa FROM autonomous_results WHERE regno = ? AND semester = ?",
       [regno, sem]
     );
 
-    // Student info
+    // Student Info
     const studentRows = await queryAsync(
       "SELECT name, reg_no, course, photo_url FROM students WHERE reg_no = ?",
       [regno]
     );
     const student = studentRows[0] || {};
 
-    // GPA Calculation (for regular results only)
+    // Regular SGPA
     const gradeMap = { S: 10, A: 9, B: 8, C: 7, D: 6, E: 5, F: 0, Ab: 0 };
     let totalCredits = 0, totalPoints = 0;
     results.forEach(r => {
@@ -2605,9 +2598,10 @@ app.get("/api/verify-result", async (req, res) => {
       totalCredits += r.credits;
       totalPoints += gp * r.credits;
     });
-
     const sgpaRegular = totalCredits ? (totalPoints / totalCredits).toFixed(2) : "N/A";
-    const sgpaAuto = autoResults.length ? autoResults[0].sgpa?.toFixed(2) : "N/A";
+
+    // Autonomous SGPA
+    const sgpaAuto = autoResults.length ? (autoResults[0].sgpa || 0).toFixed(2) : "N/A";
 
     res.json({
       name: student.name || "N/A",
@@ -4808,6 +4802,7 @@ app.post("/api/send-sms", async (req, res) => {
 });
 
 module.exports = app;
+
 
 
 
