@@ -237,6 +237,21 @@
       margin-top: 10px;
       animation: fadeIn 0.3s ease-in-out;
     }
+      .accordion-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease, padding 0.3s ease;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  margin-top: 10px;
+  padding: 0 20px; /* collapsed padding */
+}
+
+.accordion-content.open {
+  max-height: 600px; /* enough height for table */
+  padding: 20px;
+}
 
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(-10px); }
@@ -353,114 +368,165 @@
     </div>
   </div>
 <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+  // 🔐 Unauthorized login check
   const userId = localStorage.getItem("userId");
-  document.getElementById("userId").textContent = userId || "Unknown";
+  if (!userId) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Login Required',
+      text: 'Please login to access this page.'
+    }).then(() => {
+      window.location.href = "index.html";
+    });
+  } else {
+    document.getElementById("userId").textContent = userId || "Unknown";
 
-  fetch(`https://crr-noc.onrender.com/yearwise-fee/${userId}`)
-    .then(res => res.json())
-    .then(res => {
-      if (!res.success) throw new Error("Fee data not found.");
-
-      const data = res.data;
-      const container = document.querySelector(".fee-details");
-      container.innerHTML = "";
-
-      data.forEach(({ year, structure, paid, fines }, index) => {
-        const items = [
-          { label: "Tuition Fee", key: "tuition" },
-          { label: "Hostel Fee", key: "hostel" },
-          { label: "Bus Fee", key: "bus" },
-          { label: "University Fee", key: "university" },
-          { label: "Semester Fee", key: "semester" },
-          { label: "Library Dues", key: "library" },
-          { label: "Fines", key: "fines" }
-        ];
-
-        let paidTotal = 0, dueTotal = 0, actualTotal = 0;
-        let rowsHTML = "";
-
-        items.forEach(({ label, key }) => {
-          const total = key === "fines" ? fines : parseFloat(structure[key]) || 0;
-          const paidAmt = parseFloat(paid[key]) || 0;
-          const due = Math.max(0, total - paidAmt);
-
-          paidTotal += paidAmt;
-          dueTotal += due;
-          actualTotal += total;
-
-          rowsHTML += `
-            <tr>
-              <td>${label}</td>
-              <td>₹${paidAmt.toFixed(2)}</td>
-              <td>₹${due.toFixed(2)}</td>
-              <td>₹${total.toFixed(2)}</td>
-            </tr>`;
-        });
-
-        container.innerHTML += `
-          <div class="accordion-item">
-            <button class="accordion-toggle" data-index="${index}">
-              📅 Academic Year ${year}
-            </button>
-            <div class="accordion-content" style="display: none;">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Fee Type</th>
-                    <th>Paid (₹)</th>
-                    <th>Due (₹)</th>
-                    <th>Total Fee (₹)</th>
-                  </tr>
-                </thead>
-                <tbody>${rowsHTML}</tbody>
-                <tfoot>
-                  <tr>
-                    <td><strong>Total</strong></td>
-                    <td><strong>₹${paidTotal.toFixed(2)}</strong></td>
-                    <td><strong>₹${dueTotal.toFixed(2)}</strong></td>
-                    <td><strong>₹${actualTotal.toFixed(2)}</strong></td>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
-          </div>`;
+    // ✅ Load sidebar photo (same as in settings page)
+    fetch(`https://crr-noc.onrender.com/student/${userId}`)
+      .then(res => res.json())
+      .then(data => {
+        const photo = document.getElementById("sidebarPhoto");
+        if (photo && data.photo_url) {
+          photo.src = data.photo_url;
+          photo.style.display = "block";
+        }
+      })
+      .catch(err => {
+        console.warn("⚠️ Failed to load photo:", err.message);
       });
 
-      // accordion functionality
-      document.querySelectorAll(".accordion-toggle").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const index = btn.dataset.index;
-          document.querySelectorAll(".accordion-content").forEach((content, i) => {
-            if (i == index) {
-              content.style.display = (content.style.display === "block") ? "none" : "block";
-            } else {
-              content.style.display = "none";
-            }
+    // 🔽 Your fee details fetching & accordion code stays here
+    fetch(`https://crr-noc.onrender.com/yearwise-fee/${userId}`)
+      .then(res => res.json())
+      .then(res => {
+        if (!res.success) throw new Error("Fee data not found.");
+        const data = res.data;
+        const container = document.querySelector(".fee-details");
+        container.innerHTML = "";
+
+        data.forEach(({ year, structure, paid, fines }, index) => {
+          const items = [
+            { label: "Tuition Fee", key: "tuition" },
+            { label: "Hostel Fee", key: "hostel" },
+            { label: "Bus Fee", key: "bus" },
+            { label: "University Fee", key: "university" },
+            { label: "Semester Fee", key: "semester" },
+            { label: "Library Dues", key: "library" },
+            { label: "Fines", key: "fines" }
+          ];
+
+          let paidTotal = 0, dueTotal = 0, actualTotal = 0;
+          let rowsHTML = "";
+
+          items.forEach(({ label, key }) => {
+            const total = key === "fines" ? fines : parseFloat(structure[key]) || 0;
+            const paidAmt = parseFloat(paid[key]) || 0;
+            const due = Math.max(0, total - paidAmt);
+
+            paidTotal += paidAmt;
+            dueTotal += due;
+            actualTotal += total;
+
+            rowsHTML += `
+              <tr>
+                <td>${label}</td>
+                <td>₹${paidAmt.toFixed(2)}</td>
+                <td>₹${due.toFixed(2)}</td>
+                <td>₹${total.toFixed(2)}</td>
+              </tr>`;
+          });
+
+          container.innerHTML += `
+            <div class="accordion-item">
+              <button class="accordion-toggle" data-index="${index}">
+                📅 Academic Year ${year}
+              </button>
+              <div class="accordion-content" style="display: none;">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Fee Type</th>
+                      <th>Paid (₹)</th>
+                      <th>Due (₹)</th>
+                      <th>Total Fee (₹)</th>
+                    </tr>
+                  </thead>
+                  <tbody>${rowsHTML}</tbody>
+                  <tfoot>
+                    <tr>
+                      <td><strong>Total</strong></td>
+                      <td><strong>₹${paidTotal.toFixed(2)}</strong></td>
+                      <td><strong>₹${dueTotal.toFixed(2)}</strong></td>
+                      <td><strong>₹${actualTotal.toFixed(2)}</strong></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>`;
+        });
+
+        // Accordion toggle
+        document.querySelectorAll(".accordion-toggle").forEach(btn => {
+          btn.addEventListener("click", () => {
+            const index = btn.dataset.index;
+            document.querySelectorAll(".accordion-content").forEach((content, i) => {
+              if (i == index) {
+                content.style.display = (content.style.display === "block") ? "none" : "block";
+              } else {
+                content.style.display = "none";
+              }
+            });
           });
         });
+      })
+      .catch(err => {
+        console.error("❌ Error loading fee data:", err);
+        alert("Failed to load year-wise fee details.");
       });
-    })
-    .catch(err => {
-      console.error("❌ Error loading fee data:", err);
-      alert("Failed to load year-wise fee details.");
-    });
+  }
 
-  function logout() {
-    localStorage.removeItem("userId");
-    if ("caches" in window) {
-      caches.keys().then((names) => names.forEach((name) => caches.delete(name)));
+ // Accordion toggle with smooth animation
+document.querySelectorAll(".accordion-toggle").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const index = btn.dataset.index;
+    document.querySelectorAll(".accordion-content").forEach((content, i) => {
+      if (i == index) {
+        content.classList.toggle("open");
+      } else {
+        content.classList.remove("open");
+      }
+    });
+  });
+});
+
+// SweetAlert2 logout
+function logout() {
+  Swal.fire({
+    title: 'Logout?',
+    text: "Are you sure you want to logout?",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6',
+    confirmButtonText: 'Yes, Logout'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      localStorage.removeItem("userId");
+      if ("caches" in window) {
+        caches.keys().then((names) => names.forEach((name) => caches.delete(name)));
+      }
+      window.location.replace("index.html");
     }
-    window.location.replace("index.html");
+  });
+}
+
+  function toggleMobileMenu() {
+    const sidebar = document.querySelector('.sidebar');
+    sidebar.classList.toggle('open');
   }
 </script>
+
 </body>
 </html>
-
-
-
-
-
-
-
-
