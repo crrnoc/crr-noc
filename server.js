@@ -4838,9 +4838,19 @@ app.post("/api/send-sms", async (req, res) => {
 module.exports = app;
 
 app.post("/api/adjust-period", (req, res) => {
-  const { from_staff_id, to_staff_id, course, year, section, semester, day, date, period_no } = req.body;
+  const {
+    from_staff_id,
+    to_staff_id,
+    course,
+    year,
+    section,
+    semester,
+    day,
+    date,
+    period_no,
+  } = req.body;
 
-  // Step 1: Fetch subject from Staff B allocation (to_staff_id)
+  // 🟢 Step 1: Fetch Staff B subject for that slot
   const subjectSql = `
     SELECT 
       CASE ? 
@@ -4853,12 +4863,12 @@ app.post("/api/adjust-period", (req, res) => {
         WHEN 7 THEN period7 
       END AS subject
     FROM staff_period_allocation
-    WHERE TRIM(staff_id)=TRIM(?) 
-      AND TRIM(course)=TRIM(?) 
-      AND year=? 
-      AND TRIM(section)=TRIM(?) 
-      AND TRIM(semester)=TRIM(?) 
-      AND TRIM(day)=TRIM(?) 
+    WHERE TRIM(staff_id) = TRIM(?) 
+      AND TRIM(course) = TRIM(?) 
+      AND TRIM(year) = TRIM(?) 
+      AND TRIM(section) = TRIM(?) 
+      AND TRIM(semester) = TRIM(?) 
+      AND TRIM(day) = TRIM(?)
     LIMIT 1
   `;
 
@@ -4868,33 +4878,60 @@ app.post("/api/adjust-period", (req, res) => {
     (err, rows) => {
       if (err) {
         console.error("❌ Error fetching Staff B subject:", err);
-        return res.status(500).json({ error: "Database error" });
+        return res.status(500).json({ error: "Database error while checking Staff B allocation" });
       }
 
       if (!rows.length || !rows[0].subject) {
         return res.status(400).json({
-          error: "Staff B does not have a subject in this slot. Adjustment not possible.",
+          error: "⚠️ Staff B does not have any subject in this slot. Adjustment not possible.",
         });
       }
 
-      const subject = rows[0].subject;
+      const subject = rows[0].subject.trim();
 
-      // Step 2: Insert into adjustments with Staff B subject
-      const insertSql = `
-        INSERT INTO staff_period_adjustments
-        (from_staff_id, to_staff_id, course, year, section, semester, day, date, period_no, subject)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      // 🟢 Step 2: Check duplicate adjustment (avoid multiple entries for same period)
+      const checkSql = `
+        SELECT * FROM staff_period_adjustments 
+        WHERE from_staff_id=? AND to_staff_id=? 
+          AND course=? AND year=? AND section=? AND semester=? 
+          AND day=? AND date=? AND period_no=?
       `;
 
       connection.query(
-        insertSql,
-        [from_staff_id, to_staff_id, course, year, section, semester, day, date, period_no, subject],
-        (insertErr) => {
-          if (insertErr) {
-            console.error("❌ Error inserting adjustment:", insertErr);
-            return res.status(500).json({ error: "Insert failed" });
+        checkSql,
+        [from_staff_id, to_staff_id, course, year, section, semester, day, date, period_no],
+        (checkErr, existing) => {
+          if (checkErr) {
+            console.error("❌ Error checking existing adjustment:", checkErr);
+            return res.status(500).json({ error: "Database error while verifying duplicate adjustment" });
           }
-          res.json({ success: true, subject });
+
+          if (existing.length > 0) {
+            return res.status(400).json({ error: "⚠️ Adjustment already exists for this period." });
+          }
+
+          // 🟢 Step 3: Insert adjustment with Staff B subject
+          const insertSql = `
+            INSERT INTO staff_period_adjustments
+            (from_staff_id, to_staff_id, course, year, section, semester, day, date, period_no, subject)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `;
+
+          connection.query(
+            insertSql,
+            [from_staff_id, to_staff_id, course, year, section, semester, day, date, period_no, subject],
+            (insertErr) => {
+              if (insertErr) {
+                console.error("❌ Error inserting adjustment:", insertErr);
+                return res.status(500).json({ error: "Insert failed" });
+              }
+              res.json({
+                success: true,
+                message: "✅ Period adjustment saved successfully!",
+                subject,
+              });
+            }
+          );
         }
       );
     }
@@ -4916,5 +4953,6 @@ app.get("/api/staff-in-section", (req, res) => {
     res.json(rows);
   });
 });
+
 
 
