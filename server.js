@@ -2631,7 +2631,7 @@ app.get("/api/verify-result", async (req, res) => {
   }
 });
 
-//generate results certificate
+// generate results certificate (supports results + autonomous_results)
 app.get("/generate-certificate/:userId", async (req, res) => {
   const { userId } = req.params;
   const semester = req.query.semester;
@@ -2656,30 +2656,45 @@ app.get("/generate-certificate/:userId", async (req, res) => {
   };
 
   try {
+    // 🟢 Fetch results from BOTH tables
     const results = await queryAsync(
-      "SELECT regno, subcode, subname, grade, credits FROM results WHERE regno = ? AND semester = ?",
-      [userId, semester]
+      `
+      SELECT regno, subcode, subname, grade, credits 
+      FROM results 
+      WHERE regno = ? AND semester = ?
+
+      UNION ALL
+
+      SELECT regno, subcode, subname, grade, NULL as credits 
+      FROM autonomous_results 
+      WHERE regno = ? AND semester = ?
+      `,
+      [userId, semester, userId, semester]
     );
+
     if (!results.length) {
       doc.fontSize(14).text("❌ No results found", 100, 100);
       doc.end();
       return;
     }
 
+    // 🟢 Fetch student info
     const studentRows = await queryAsync(
       "SELECT name, reg_no, course, father_name, photo_url FROM students WHERE userId = ?",
       [userId]
     );
     const student = studentRows[0] || {};
     const reg = student.reg_no || "";
+
+    // 🟢 Decide JNTUK vs Autonomous header
     const isJNTUK = /^([0-1][0-9]|23)B8/.test(reg);
+    const isAutonomous = /^24B8/.test(reg);
 
     if (isJNTUK) {
       const logoPath = path.join(__dirname, "public", "jntuk_logo.png");
       if (fs.existsSync(logoPath)) {
         doc.image(logoPath, 40, 40, { width: 60 });
       }
-
       doc
         .font("Helvetica-Bold")
         .fillColor("#7A0C0C")
@@ -2688,13 +2703,14 @@ app.get("/generate-certificate/:userId", async (req, res) => {
         .text("KAKINADA - 533003, ANDHRA PRADESH, INDIA", 110, 65);
 
       doc.moveTo(40, 100).lineTo(555, 100).stroke("#000");
-    } else {
-      const headerPath = path.join(__dirname, "public", "noc_header.jpg");
+    } else if (isAutonomous) {
+      const headerPath = path.join(__dirname, "public", "logo.png"); // autonomous logo/header
       if (fs.existsSync(headerPath)) {
         doc.image(headerPath, { fit: [520, 120], align: "center" });
       }
     }
 
+    // 🟢 Student Info
     doc.moveDown(2);
     const startY = doc.y;
     let lineY = startY;
@@ -2713,34 +2729,32 @@ app.get("/generate-certificate/:userId", async (req, res) => {
     doc.text("YEAR - SEMESTER :", labelX, lineY);
     doc.text(semester.toUpperCase(), valueX, lineY);
 
-    // Cloudinary photo fix with headers
+    // 🟢 Student Photo
     const photo_url = student.photo_url;
     if (photo_url) {
       try {
         const photoRes = await axios.get(photo_url, {
           responseType: "arraybuffer",
-          headers: {
-            "User-Agent": "Mozilla/5.0", // needed for Render + Cloudinary
-            "Accept": "image/avif,image/webp,image/apng,image/*,*/*;q=0.8"
-          }
+          headers: { "User-Agent": "Mozilla/5.0" }
         });
         doc.image(photoRes.data, 400, startY, { fit: [100, 120] });
-      } catch (err) {
-        console.error("⚠️ Photo fetch failed:", err.message);
+      } catch {
         doc.rect(400, startY, 100, 120).stroke();
       }
     } else {
       doc.rect(400, startY, 100, 120).stroke();
     }
 
+    // 🟢 Results Table
     doc.y = lineY + 60;
     const tableTop = doc.y;
     const rowHeight = 30;
     const colX = [40, 80, 180, 400, 460];
     const colWidths = [40, 100, 220, 60, 60];
 
+    // watermark
     const watermarkPath = path.join(__dirname, "public", "jntuk_logo.png");
-    if (fs.existsSync(watermarkPath)) {
+    if (isJNTUK && fs.existsSync(watermarkPath)) {
       doc.opacity(0.1).image(watermarkPath, 160, tableTop + 60, { width: 250 });
       doc.opacity(1);
     }
@@ -2756,11 +2770,14 @@ app.get("/generate-certificate/:userId", async (req, res) => {
     results.forEach((row, i) => {
       const y = tableTop + rowHeight * (i + 1);
       const gradePoint = gradePointMap[row.grade?.toUpperCase()?.trim()] ?? 0;
-      const credits = parseFloat(row.credits || 0);
+
+      // ✅ Autonomous subjects have NULL credits → assume 3
+      const credits = row.credits !== null ? parseFloat(row.credits) : 3;
+
       weightedSum += gradePoint * credits;
       totalCredits += credits;
 
-      const data = [i + 1, row.subcode, row.subname, row.grade, row.credits];
+      const data = [i + 1, row.subcode, row.subname, row.grade, credits];
       data.forEach((text, j) => {
         doc.rect(colX[j], y, colWidths[j], rowHeight).stroke();
         doc.text(String(text), colX[j] + 2, y + 8, {
@@ -2778,14 +2795,17 @@ app.get("/generate-certificate/:userId", async (req, res) => {
       align: "center"
     });
 
+    // footer legend
     doc.font("Helvetica").fontSize(8).fillColor("black");
     doc.text("CP: COMPLETED   NCP: NOT-COMPLETED   MP: Malpractice   WH: Withheld   P: Pass   F: Fail   AB: Absent", 40, finalTableY + 50);
 
+    // QR
     const qrText = `https://crr-noc.onrender.com/verifyresult.html?regno=${userId}&sem=${semester}`;
     const qrDataURL = await QRCode.toDataURL(qrText);
     const qrBuffer = Buffer.from(qrDataURL.split(",")[1], "base64");
     doc.image(qrBuffer, 440, 670, { width: 80 });
 
+    // signatures
     doc.font("Helvetica").fontSize(10);
     doc.text("Controller of Examinations", 40, 740);
     doc.text("Principal", 320, 740);
@@ -4812,6 +4832,7 @@ app.post("/api/send-sms", async (req, res) => {
 });
 
 module.exports = app;
+
 
 
 
