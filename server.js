@@ -4841,25 +4841,19 @@ module.exports = app;
 app.post("/api/adjust-period", (req, res) => {
   const { from_staff_id, to_staff_id, course, year, section, semester, day, date, period_no } = req.body;
 
-  // First get the subject from original allocation
+  // ✅ Dynamically pick correct column based on period_no
+  const periodColumn = `period${period_no}`;
+
+  // ✅ Fetch subject from original allocation
   const subjectSql = `
-    SELECT 
-      CASE ? 
-        WHEN 1 THEN period1 
-        WHEN 2 THEN period2 
-        WHEN 3 THEN period3 
-        WHEN 4 THEN period4 
-        WHEN 5 THEN period5 
-        WHEN 6 THEN period6 
-        WHEN 7 THEN period7 
-      END AS subject
+    SELECT ${periodColumn} AS subject
     FROM staff_period_allocation
-    WHERE TRIM(staff_id)=TRIM(?) 
-      AND course=? AND year=? AND section=? AND semester=? AND day=? 
+    WHERE TRIM(staff_id) = TRIM(?) 
+      AND course = ? AND year = ? AND section = ? AND semester = ? AND day = ?
     LIMIT 1
   `;
 
-  connection.query(subjectSql, [period_no, from_staff_id, course, year, section, semester, day], (err, rows) => {
+  connection.query(subjectSql, [from_staff_id, course, year, section, semester, day], (err, rows) => {
     if (err) {
       console.error("❌ Error fetching subject:", err);
       return res.status(500).json({ error: "Database error" });
@@ -4871,14 +4865,16 @@ app.post("/api/adjust-period", (req, res) => {
 
     const subject = rows[0].subject;
 
-    // Now insert into adjustments with correct subject
+    // ✅ Insert adjustment with correct subject
     const insertSql = `
       INSERT INTO staff_period_adjustments
       (from_staff_id, to_staff_id, course, year, section, semester, day, date, period_no, subject)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
-    connection.query(insertSql, [from_staff_id, to_staff_id, course, year, section, semester, day, date, period_no, subject],
+    connection.query(
+      insertSql,
+      [from_staff_id, to_staff_id, course, year, section, semester, day, date, period_no, subject],
       (insertErr) => {
         if (insertErr) {
           console.error("❌ Error inserting adjustment:", insertErr);
@@ -4889,7 +4885,6 @@ app.post("/api/adjust-period", (req, res) => {
     );
   });
 });
-
 
 // 🔹 Get Staff List in Section
 app.get("/api/staff-in-section", (req, res) => {
@@ -4905,3 +4900,4 @@ app.get("/api/staff-in-section", (req, res) => {
     res.json(rows);
   });
 });
+
