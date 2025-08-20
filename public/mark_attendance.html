@@ -165,6 +165,33 @@
     return allocation.commence_regular || "2023-01-01";
   }
 
+  // ✅ Utility: Load staff allocations for a given date
+  function loadStaffAllocation(selectedDate) {
+    fetch(`/api/staff-allocation?staff_id=${staff_id}&date=${selectedDate}`)
+      .then(res => res.json())
+      .then(data => {
+        if (!data.length) {
+          Swal.fire("❌ No Allocation Found", "Contact admin.", "info");
+          return;
+        }
+
+        staffAllocData = data;
+        courseSelect.innerHTML = [...new Set(data.map(r => r.course.trim()))].map(c => `<option value="${c}">${c}</option>`).join('');
+        yearSelect.innerHTML = [...new Set(data.map(r => r.year))].map(y => `<option value="${y}">${y}</option>`).join('');
+        semesterSelect.innerHTML = [...new Set(data.map(r => r.semester.trim()))].map(s => `<option value="${s}">${s}</option>`).join('');
+        sectionSelect.innerHTML = [...new Set(data.map(r => r.section.trim()))].map(s => `<option value="${s}">${s}</option>`).join('');
+        daySelect.innerHTML = `<option value="">Select</option>` + [...new Set(data.map(r => r.day.trim()))].map(d => `<option value="${d}">${d}</option>`).join('');
+
+        [courseSelect, yearSelect, semesterSelect, sectionSelect, daySelect].forEach(el => {
+          el.addEventListener("change", updatePeriodOptions);
+        });
+      })
+      .catch(err => {
+        console.error("❌ Failed to fetch staff allocation:", err);
+        Swal.fire("Error fetching data", err.message, "error");
+      });
+  }
+
   window.onload = () => {
     const userId = localStorage.getItem("userId");
     staff_id = localStorage.getItem("staff_id");
@@ -184,29 +211,17 @@
       localStorage.setItem("staff_id", staff_id);
     }
 
-    fetch(`/api/staff-allocation?staff_id=${staff_id}`)
-      .then(res => res.json())
-      .then(data => {
-        if (!data.length) {
-          Swal.fire("❌ No Allocation Found", "Contact admin.", "info");
-          return;
-        }
+    // ✅ First load with today’s date
+    const today = document.getElementById("attendanceDate").value;
+    loadStaffAllocation(today);
 
-        staffAllocData = data;
-        courseSelect.innerHTML = [...new Set(data.map(r => r.course))].map(c => `<option value="${c}">${c}</option>`).join('');
-        yearSelect.innerHTML = [...new Set(data.map(r => r.year))].map(y => `<option value="${y}">${y}</option>`).join('');
-        semesterSelect.innerHTML = [...new Set(data.map(r => r.semester))].map(s => `<option value="${s}">${s}</option>`).join('');
-        sectionSelect.innerHTML = [...new Set(data.map(r => r.section))].map(s => `<option value="${s}">${s}</option>`).join('');
-        daySelect.innerHTML = `<option value="">Select</option>` + [...new Set(data.map(r => r.day))].map(d => `<option value="${d}">${d}</option>`).join('');
-
-        [courseSelect, yearSelect, semesterSelect, sectionSelect, daySelect].forEach(el => {
-          el.addEventListener("change", updatePeriodOptions);
-        });
-      })
-      .catch(err => {
-        console.error("❌ Failed to fetch staff allocation:", err);
-        Swal.fire("Error fetching data", err.message, "error");
-      });
+    // ✅ Reload allocations if date changes
+    document.getElementById("attendanceDate").addEventListener("change", (e) => {
+      const selectedDate = e.target.value;
+      if (selectedDate) {
+        loadStaffAllocation(selectedDate);
+      }
+    });
   };
 
   form.onsubmit = async (e) => {
@@ -295,22 +310,22 @@
   };
 
   function updatePeriodOptions() {
-    const course = courseSelect.value;
+    const course = courseSelect.value.trim();
     const year = parseInt(yearSelect.value);
-    const semester = semesterSelect.value;
-    const section = sectionSelect.value;
-    const day = daySelect.value;
+    const semester = semesterSelect.value.trim();
+    const section = sectionSelect.value.trim();
+    const day = daySelect.value.trim();
     const periodOptions = document.getElementById("periodOptions");
     periodOptions.innerHTML = "";
 
     if (!course || !year || !semester || !section || !day) return;
 
     const matches = staffAllocData.filter(row =>
-      row.course === course &&
+      row.course.trim() === course &&
       parseInt(row.year) === year &&
-      row.semester.toString() === semester.toString() &&
-      row.section === section &&
-      row.day === day
+      row.semester.toString().trim() === semester.toString().trim() &&
+      row.section.trim() === section &&
+      row.day.trim() === day
     );
 
     const addedPeriods = new Set();
@@ -345,84 +360,84 @@
     }
   }
 
-function fetchStudents() {
-  const course = courseSelect.value;
-  const section = sectionSelect.value;
-  const year = yearSelect.value;
-  const semester = semesterSelect.value;
-  const selectedDate = document.getElementById("attendanceDate").value;
+  function fetchStudents() {
+    const course = courseSelect.value;
+    const section = sectionSelect.value;
+    const year = yearSelect.value;
+    const semester = semesterSelect.value;
+    const selectedDate = document.getElementById("attendanceDate").value;
 
-  if (!course || !section || !year || !semester || !selectedDate) {
-    Swal.fire("⚠️ Please select all fields and date");
-    return;
-  }
+    if (!course || !section || !year || !semester || !selectedDate) {
+      Swal.fire("⚠️ Please select all fields and date");
+      return;
+    }
 
-  const allocation = staffAllocData.find(row =>
-    row.course === course &&
-    row.year.toString() === year.toString() &&
-    row.section === section &&
-    row.semester.toString() === semester.toString()
-  );
+    const allocation = staffAllocData.find(row =>
+      row.course.trim() === course &&
+      row.year.toString() === year.toString() &&
+      row.section.trim() === section &&
+      row.semester.toString().trim() === semester.toString()
+    );
 
-  const minDate = getCommencementDate(allocation, year);
+    const minDate = getCommencementDate(allocation, year);
 
-  if (new Date(selectedDate) < new Date(minDate)) {
-    Swal.fire(`❌ Attendance cannot be marked before ${minDate}`);
-    return;
-  }
+    if (new Date(selectedDate) < new Date(minDate)) {
+      Swal.fire(`❌ Attendance cannot be marked before ${minDate}`);
+      return;
+    }
 
-  fetch(`/api/students-by-course-section?year=${year}&semester=${semester}&course=${course}&section=${section}`)
-    .then(res => res.json())
-    .then(students => {
-      if (!students.length) {
-        studentsTable.innerHTML = `<tr><td colspan="3">No students found</td></tr>`;
-        return;
-      }
+    fetch(`/api/students-by-course-section?year=${year}&semester=${semester}&course=${course}&section=${section}`)
+      .then(res => res.json())
+      .then(students => {
+        if (!students.length) {
+          studentsTable.innerHTML = `<tr><td colspan="3">No students found</td></tr>`;
+          return;
+        }
 
-      // ✅ New filtering based on joining_date
-      const filtered = students.filter(s => {
-        if (!s.joining_date) return true; // No joining date → always show
-        const joinDate = new Date(s.joining_date);
-        const selDate = new Date(selectedDate);
-        return selDate >= joinDate; // Show if same day or after joining date
+        // ✅ New filtering based on joining_date
+        const filtered = students.filter(s => {
+          if (!s.joining_date) return true;
+          const joinDate = new Date(s.joining_date);
+          const selDate = new Date(selectedDate);
+          return selDate >= joinDate;
+        });
+
+        if (filtered.length < students.length) {
+          Swal.fire(`ℹ️ ${students.length - filtered.length} student(s) not shown — joined after ${selectedDate}`);
+        }
+
+        if (!filtered.length) {
+          studentsTable.innerHTML = `<tr><td colspan="3">No students eligible for this date</td></tr>`;
+          return;
+        }
+
+        studentsTable.innerHTML = filtered.map(s => `
+          <tr>
+            <td>${s.reg_no}</td>
+            <td>${s.name}</td>
+            <td><input type="checkbox" name="attendance" value="${s.reg_no}" checked></td>
+          </tr>`).join('');
       });
-
-      if (filtered.length < students.length) {
-        Swal.fire(`ℹ️ ${students.length - filtered.length} student(s) not shown — joined after ${selectedDate}`);
-      }
-
-      if (!filtered.length) {
-        studentsTable.innerHTML = `<tr><td colspan="3">No students eligible for this date</td></tr>`;
-        return;
-      }
-
-      studentsTable.innerHTML = filtered.map(s => `
-        <tr>
-          <td>${s.reg_no}</td>
-          <td>${s.name}</td>
-          <td><input type="checkbox" name="attendance" value="${s.reg_no}" checked></td>
-        </tr>`).join('');
-    });
-}
-
-document.getElementById("downloadPdfBtn").addEventListener("click", () => {
-  const course = courseSelect.value;
-  const section = sectionSelect.value;
-  const year = yearSelect.value;
-  const semester = semesterSelect.value;
-  const subjects = Array.from(document.querySelectorAll('input[name="periodSelection"]:checked')).map(cb => cb.value);
-
-  const fromDate = document.getElementById("fromDate").value;
-  const toDate = document.getElementById("toDate").value;
-
-  if (!course || !section || !year || !semester || !subjects.length || !fromDate || !toDate) {
-    Swal.fire("⚠️ Please select all fields and date range before downloading PDF");
-    return;
   }
 
-  const url = `/api/download-attendance-pdf?year=${year}&semester=${semester}&course=${course}&section=${section}&subject=${encodeURIComponent(subjects.join(","))}&from_date=${fromDate}&to_date=${toDate}`;
-  window.open(url, '_blank');
-});
+  document.getElementById("downloadPdfBtn").addEventListener("click", () => {
+    const course = courseSelect.value;
+    const section = sectionSelect.value;
+    const year = yearSelect.value;
+    const semester = semesterSelect.value;
+    const subjects = Array.from(document.querySelectorAll('input[name="periodSelection"]:checked')).map(cb => cb.value);
+
+    const fromDate = document.getElementById("fromDate").value;
+    const toDate = document.getElementById("toDate").value;
+
+    if (!course || !section || !year || !semester || !subjects.length || !fromDate || !toDate) {
+      Swal.fire("⚠️ Please select all fields and date range before downloading PDF");
+      return;
+    }
+
+    const url = `/api/download-attendance-pdf?year=${year}&semester=${semester}&course=${course}&section=${section}&subject=${encodeURIComponent(subjects.join(","))}&from_date=${fromDate}&to_date=${toDate}`;
+    window.open(url, '_blank');
+  });
 
   document.getElementById("daySelect").addEventListener("change", () => {
     const selectedDay = daySelect.value;
@@ -435,13 +450,12 @@ document.getElementById("downloadPdfBtn").addEventListener("click", () => {
     const semester = semesterSelect.value;
 
     const match = staffAllocData.find(row =>
-      row.course === course &&
+      row.course.trim() === course &&
       row.year.toString() === year.toString() &&
-      row.section === section &&
-      row.semester.toString() === semester.toString()
+      row.section.trim() === section &&
+      row.semester.toString().trim() === semester.toString()
     );
 
-    // 📅 Find earliest joining_date or allocation min date
     fetch(`/api/students-by-course-section?year=${year}&semester=${semester}&course=${course}&section=${section}`)
       .then(res => res.json())
       .then(students => {
@@ -486,6 +500,7 @@ document.getElementById("downloadPdfBtn").addEventListener("click", () => {
     document.querySelector('.sidebar').classList.toggle('open');
   }
 </script>
+
 
 </body>
 </html>
