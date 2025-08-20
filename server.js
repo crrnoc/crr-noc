@@ -3714,7 +3714,7 @@ app.post("/api/allocate", (req, res) => {
 });
 
 //Get Allocated Periods by Staff ID
-// Get Allocated Periods by Staff ID (including adjustments)
+// Get Allocated Periods by Staff ID (original + adjustments)
 app.get("/api/staff-allocation", (req, res) => {
   const { staff_id } = req.query;
 
@@ -3732,13 +3732,13 @@ app.get("/api/staff-allocation", (req, res) => {
     UNION
     (
       SELECT year, course, semester, section, NULL AS dept_code, day,
-        CASE period_no WHEN 1 THEN subject END AS period1,
-        CASE period_no WHEN 2 THEN subject END AS period2,
-        CASE period_no WHEN 3 THEN subject END AS period3,
-        CASE period_no WHEN 4 THEN subject END AS period4,
-        CASE period_no WHEN 5 THEN subject END AS period5,
-        CASE period_no WHEN 6 THEN subject END AS period6,
-        CASE period_no WHEN 7 THEN subject END AS period7
+        CASE period_no WHEN 1 THEN subject END,
+        CASE period_no WHEN 2 THEN subject END,
+        CASE period_no WHEN 3 THEN subject END,
+        CASE period_no WHEN 4 THEN subject END,
+        CASE period_no WHEN 5 THEN subject END,
+        CASE period_no WHEN 6 THEN subject END,
+        CASE period_no WHEN 7 THEN subject END
       FROM staff_period_adjustments
       WHERE TRIM(to_staff_id) = TRIM(?) AND date = CURDATE()
     )
@@ -4874,5 +4874,6 @@ app.get("/api/staff-in-section", (req, res) => {
     res.json(rows);
   });
 });
+
 
 
