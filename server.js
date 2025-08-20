@@ -4838,19 +4838,9 @@ app.post("/api/send-sms", async (req, res) => {
 module.exports = app;
 
 app.post("/api/adjust-period", (req, res) => {
-  const {
-    from_staff_id,
-    to_staff_id,
-    course,
-    year,
-    section,
-    semester,
-    day,
-    date,
-    period_no,
-  } = req.body;
+  const { from_staff_id, to_staff_id, course, year, section, semester, day, date, period_no } = req.body;
 
-  // 🟢 Step 1: Fetch Staff B subject for that slot
+  // Step 1: Check Staff B subject in that slot
   const subjectSql = `
     SELECT 
       CASE ? 
@@ -4863,12 +4853,12 @@ app.post("/api/adjust-period", (req, res) => {
         WHEN 7 THEN period7 
       END AS subject
     FROM staff_period_allocation
-    WHERE TRIM(staff_id) = TRIM(?) 
-      AND TRIM(course) = TRIM(?) 
-      AND TRIM(year) = TRIM(?) 
-      AND TRIM(section) = TRIM(?) 
-      AND TRIM(semester) = TRIM(?) 
-      AND TRIM(day) = TRIM(?)
+    WHERE TRIM(staff_id)=TRIM(?) 
+      AND TRIM(course)=TRIM(?) 
+      AND year=? 
+      AND TRIM(section)=TRIM(?) 
+      AND TRIM(semester)=TRIM(?) 
+      AND TRIM(day)=TRIM(?) 
     LIMIT 1
   `;
 
@@ -4878,60 +4868,32 @@ app.post("/api/adjust-period", (req, res) => {
     (err, rows) => {
       if (err) {
         console.error("❌ Error fetching Staff B subject:", err);
-        return res.status(500).json({ error: "Database error while checking Staff B allocation" });
+        return res.status(500).json({ error: "Database error" });
       }
 
-      if (!rows.length || !rows[0].subject) {
+      // 🔄 NEW LOGIC: Staff B already has subject -> NOT allowed
+      if (rows.length && rows[0].subject) {
         return res.status(400).json({
-          error: "⚠️ Staff B does not have any subject in this slot. Adjustment not possible.",
+          error: "❌ Staff B already has a subject in this slot. Adjustment not possible.",
         });
       }
 
-      const subject = rows[0].subject.trim();
-
-      // 🟢 Step 2: Check duplicate adjustment (avoid multiple entries for same period)
-      const checkSql = `
-        SELECT * FROM staff_period_adjustments 
-        WHERE from_staff_id=? AND to_staff_id=? 
-          AND course=? AND year=? AND section=? AND semester=? 
-          AND day=? AND date=? AND period_no=?
+      // Staff B is free → Adjustment possible
+      const insertSql = `
+        INSERT INTO staff_period_adjustments
+        (from_staff_id, to_staff_id, course, year, section, semester, day, date, period_no)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
 
       connection.query(
-        checkSql,
+        insertSql,
         [from_staff_id, to_staff_id, course, year, section, semester, day, date, period_no],
-        (checkErr, existing) => {
-          if (checkErr) {
-            console.error("❌ Error checking existing adjustment:", checkErr);
-            return res.status(500).json({ error: "Database error while verifying duplicate adjustment" });
+        (insertErr) => {
+          if (insertErr) {
+            console.error("❌ Error inserting adjustment:", insertErr);
+            return res.status(500).json({ error: "Insert failed" });
           }
-
-          if (existing.length > 0) {
-            return res.status(400).json({ error: "⚠️ Adjustment already exists for this period." });
-          }
-
-          // 🟢 Step 3: Insert adjustment with Staff B subject
-          const insertSql = `
-            INSERT INTO staff_period_adjustments
-            (from_staff_id, to_staff_id, course, year, section, semester, day, date, period_no, subject)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-          `;
-
-          connection.query(
-            insertSql,
-            [from_staff_id, to_staff_id, course, year, section, semester, day, date, period_no, subject],
-            (insertErr) => {
-              if (insertErr) {
-                console.error("❌ Error inserting adjustment:", insertErr);
-                return res.status(500).json({ error: "Insert failed" });
-              }
-              res.json({
-                success: true,
-                message: "✅ Period adjustment saved successfully!",
-                subject,
-              });
-            }
-          );
+          res.json({ success: true, message: "✅ Adjustment successful. Staff B was free." });
         }
       );
     }
@@ -4953,6 +4915,7 @@ app.get("/api/staff-in-section", (req, res) => {
     res.json(rows);
   });
 });
+
 
 
 
