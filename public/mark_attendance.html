@@ -219,15 +219,25 @@
     document.getElementById("attendanceDate").addEventListener("change", (e) => {
       const selectedDate = e.target.value;
       if (selectedDate) {
+        const dayName = new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long' });
+        daySelect.value = dayName; // auto set day
         loadStaffAllocation(selectedDate);
       }
     });
   };
 
+  // ✅ Submit Attendance
   form.onsubmit = async (e) => {
     e.preventDefault();
     if (isSubmitting) return;
     isSubmitting = true;
+
+    // Block if no students loaded
+    if (!studentsTable.children.length) {
+      Swal.fire("⚠️ Please load students before submitting");
+      isSubmitting = false;
+      return;
+    }
 
     const present = Array.from(document.querySelectorAll('input[name="attendance"]:checked')).map(cb => cb.value);
     const absent = Array.from(document.querySelectorAll('input[name="attendance"]:not(:checked)')).map(cb => cb.value);
@@ -247,7 +257,6 @@
     }
 
     let proceed = true;
-
     if (absent.length > 0) {
       const absentList = absent.join(", ");
       const confirmResult = await Swal.fire({
@@ -258,7 +267,6 @@
         confirmButtonText: "✅ Submit Attendance",
         cancelButtonText: "🔙 Go Back"
       });
-
       proceed = confirmResult.isConfirmed;
     }
 
@@ -308,7 +316,7 @@
 
     isSubmitting = false;
   };
-
+  // ✅ Update Period Options
   function updatePeriodOptions() {
     const course = courseSelect.value.trim();
     const year = parseInt(yearSelect.value);
@@ -334,6 +342,7 @@
         const subject = match[`period${i}`];
         if (subject && !addedPeriods.has(`period${i}:${subject}`)) {
           addedPeriods.add(`period${i}:${subject}`);
+
           const checkbox = document.createElement("input");
           checkbox.type = "checkbox";
           checkbox.id = `period${i}`;
@@ -343,9 +352,12 @@
           const label = document.createElement("label");
           label.setAttribute("for", `period${i}`);
           label.textContent = `${i}ᵗʰ Period - ${subject}`;
-          label.style.display = "flex";
-          label.style.alignItems = "center";
-          label.style.gap = "8px";
+
+          // Highlight adjusted periods (dept_code null antey adjustment ani consider chesam)
+          if (match.dept_code === null) {  
+            label.style.color = "red";  
+            label.title = "Adjusted Period";
+          }
 
           const wrapper = document.createElement("div");
           wrapper.appendChild(checkbox);
@@ -360,6 +372,7 @@
     }
   }
 
+  // ✅ Fetch Students
   function fetchStudents() {
     const course = courseSelect.value;
     const section = sectionSelect.value;
@@ -380,7 +393,6 @@
     );
 
     const minDate = getCommencementDate(allocation, year);
-
     if (new Date(selectedDate) < new Date(minDate)) {
       Swal.fire(`❌ Attendance cannot be marked before ${minDate}`);
       return;
@@ -394,7 +406,7 @@
           return;
         }
 
-        // ✅ New filtering based on joining_date
+        // ✅ Filter based on joining_date
         const filtered = students.filter(s => {
           if (!s.joining_date) return true;
           const joinDate = new Date(s.joining_date);
@@ -420,6 +432,7 @@
       });
   }
 
+  // ✅ Download PDF
   document.getElementById("downloadPdfBtn").addEventListener("click", () => {
     const course = courseSelect.value;
     const section = sectionSelect.value;
@@ -439,10 +452,11 @@
     window.open(url, '_blank');
   });
 
+  // ✅ Date-Day Sync
   document.getElementById("daySelect").addEventListener("change", () => {
     const selectedDay = daySelect.value;
     const dateInput = document.getElementById("attendanceDate");
-    dateInput.value = "";
+    if (!selectedDay) return;
 
     const course = courseSelect.value;
     const year = yearSelect.value;
@@ -487,6 +501,7 @@
       });
   });
 
+  // ✅ Helpers
   function toggleAll(master) {
     document.querySelectorAll('input[name="attendance"]').forEach(cb => cb.checked = master.checked);
   }
@@ -500,7 +515,5 @@
     document.querySelector('.sidebar').classList.toggle('open');
   }
 </script>
-
-
 </body>
 </html>
