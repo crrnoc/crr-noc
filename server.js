@@ -3713,14 +3713,11 @@ app.post("/api/allocate", (req, res) => {
   });
 });
 
-//Get Allocated Periods by Staff ID
-// Get Allocated Periods by Staff ID (original + adjustments)
+// 🔹 Get Allocated Periods by Staff (Original + Adjustments)
 app.get("/api/staff-allocation", (req, res) => {
-  const { staff_id } = req.query;
+  const { staff_id, date } = req.query;
 
-  if (!staff_id) {
-    return res.status(400).json({ error: "Missing staff_id" });
-  }
+  if (!staff_id) return res.status(400).json({ error: "Missing staff_id" });
 
   const sql = `
     (
@@ -3732,19 +3729,19 @@ app.get("/api/staff-allocation", (req, res) => {
     UNION
     (
       SELECT year, course, semester, section, NULL AS dept_code, day,
-        CASE period_no WHEN 1 THEN subject END,
-        CASE period_no WHEN 2 THEN subject END,
-        CASE period_no WHEN 3 THEN subject END,
-        CASE period_no WHEN 4 THEN subject END,
-        CASE period_no WHEN 5 THEN subject END,
-        CASE period_no WHEN 6 THEN subject END,
-        CASE period_no WHEN 7 THEN subject END
+        CASE period_no WHEN 1 THEN subject END AS period1,
+        CASE period_no WHEN 2 THEN subject END AS period2,
+        CASE period_no WHEN 3 THEN subject END AS period3,
+        CASE period_no WHEN 4 THEN subject END AS period4,
+        CASE period_no WHEN 5 THEN subject END AS period5,
+        CASE period_no WHEN 6 THEN subject END AS period6,
+        CASE period_no WHEN 7 THEN subject END AS period7
       FROM staff_period_adjustments
-      WHERE TRIM(to_staff_id) = TRIM(?) AND date = CURDATE()
+      WHERE TRIM(to_staff_id) = TRIM(?) AND date = ?
     )
   `;
 
-  connection.query(sql, [staff_id, staff_id], (err, result) => {
+  connection.query(sql, [staff_id, staff_id, date], (err, result) => {
     if (err) {
       console.error("❌ Error fetching allocations:", err);
       return res.status(500).json({ error: "Internal server error" });
@@ -3752,7 +3749,6 @@ app.get("/api/staff-allocation", (req, res) => {
     res.json(result);
   });
 });
-
 
 // Get Students by Year, Semester, Course & Section
 app.get("/api/students-by-course-section", (req, res) => {
@@ -3778,11 +3774,7 @@ app.get("/api/students-by-course-section", (req, res) => {
   });
 });
 
-
-
-//Backend Route to Submit Attendance 
-// Backend Route to Submit Attendance (Supports Multiple Periods)
-// ✅ Submit Attendance Route
+// 🔹 Submit Attendance
 app.post('/api/submit-attendance', (req, res) => {
   const { entries } = req.body;
 
@@ -3816,7 +3808,6 @@ app.post('/api/submit-attendance', (req, res) => {
     res.json({ success: true, inserted: result.affectedRows });
   });
 });
-
 
 // ✅ Get Period Info Route
 app.get("/api/get-period-info", (req, res) => {
@@ -3866,13 +3857,13 @@ app.get("/api/get-period-info", (req, res) => {
 });
 
 
-// ✅ Get Students by Course, Section, Year, Semester
-//    Includes joining_date so frontend can filter lateral students correctly
-app.get('/api/students-by-course-section', (req, res) => {
+
+// 🔹 Get Students by Section
+app.get("/api/students-by-course-section", (req, res) => {
   const { year, semester, course, section } = req.query;
 
   if (!year || !semester || !course || !section) {
-    return res.status(400).json({ error: "Missing required parameters" });
+    return res.status(400).json({ error: "Missing year, semester, course, or section" });
   }
 
   const sql = `
@@ -3882,15 +3873,14 @@ app.get('/api/students-by-course-section', (req, res) => {
     ORDER BY reg_no
   `;
 
-  connection.query(sql, [year, semester, course, section], (err, results) => {
+  connection.query(sql, [year, semester, course, section], (err, result) => {
     if (err) {
       console.error("❌ Error fetching students:", err);
-      return res.status(500).json({ error: "Database error" });
+      return res.status(500).json({ error: "Failed to fetch students" });
     }
-    res.json(results);
+    res.json(result);
   });
 });
-
 
 app.get('/api/staff/semesters/:staffId', (req, res) => {
   const staffId = req.params.staffId;
@@ -4847,6 +4837,7 @@ app.post("/api/send-sms", async (req, res) => {
 
 module.exports = app;
 
+// Period Adjustment Save
 app.post("/api/adjust-period", (req, res) => {
   const { from_staff_id, to_staff_id, course, year, section, semester, day, date, period_no, subject } = req.body;
   const sql = `
@@ -4861,6 +4852,7 @@ app.post("/api/adjust-period", (req, res) => {
     });
 });
 
+// 🔹 Get Staff List in Section
 app.get("/api/staff-in-section", (req, res) => {
   const { course, year, semester, section } = req.query;
   const sql = `
@@ -4874,6 +4866,7 @@ app.get("/api/staff-in-section", (req, res) => {
     res.json(rows);
   });
 });
+
 
 
 
