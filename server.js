@@ -4837,54 +4837,70 @@ app.post("/api/send-sms", async (req, res) => {
 
 module.exports = app;
 
-// Period Adjustment Save
 app.post("/api/adjust-period", (req, res) => {
   const { from_staff_id, to_staff_id, course, year, section, semester, day, date, period_no } = req.body;
 
-  // ✅ Dynamically pick correct column based on period_no
-  const periodColumn = `period${period_no}`;
-
-  // ✅ Fetch subject from original allocation
+  // Step 1: Fetch subject from Staff B allocation (to_staff_id)
   const subjectSql = `
-    SELECT ${periodColumn} AS subject
+    SELECT 
+      CASE ? 
+        WHEN 1 THEN period1 
+        WHEN 2 THEN period2 
+        WHEN 3 THEN period3 
+        WHEN 4 THEN period4 
+        WHEN 5 THEN period5 
+        WHEN 6 THEN period6 
+        WHEN 7 THEN period7 
+      END AS subject
     FROM staff_period_allocation
-    WHERE TRIM(staff_id) = TRIM(?) 
-      AND course = ? AND year = ? AND section = ? AND semester = ? AND day = ?
+    WHERE TRIM(staff_id)=TRIM(?) 
+      AND TRIM(course)=TRIM(?) 
+      AND year=? 
+      AND TRIM(section)=TRIM(?) 
+      AND TRIM(semester)=TRIM(?) 
+      AND TRIM(day)=TRIM(?) 
     LIMIT 1
   `;
 
-  connection.query(subjectSql, [from_staff_id, course, year, section, semester, day], (err, rows) => {
-    if (err) {
-      console.error("❌ Error fetching subject:", err);
-      return res.status(500).json({ error: "Database error" });
-    }
-
-    if (!rows.length || !rows[0].subject) {
-      return res.status(400).json({ error: "No subject found for the selected allocation" });
-    }
-
-    const subject = rows[0].subject;
-
-    // ✅ Insert adjustment with correct subject
-    const insertSql = `
-      INSERT INTO staff_period_adjustments
-      (from_staff_id, to_staff_id, course, year, section, semester, day, date, period_no, subject)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
-
-    connection.query(
-      insertSql,
-      [from_staff_id, to_staff_id, course, year, section, semester, day, date, period_no, subject],
-      (insertErr) => {
-        if (insertErr) {
-          console.error("❌ Error inserting adjustment:", insertErr);
-          return res.status(500).json({ error: "Insert failed" });
-        }
-        res.json({ success: true, subject });
+  connection.query(
+    subjectSql,
+    [period_no, to_staff_id, course, year, section, semester, day],
+    (err, rows) => {
+      if (err) {
+        console.error("❌ Error fetching Staff B subject:", err);
+        return res.status(500).json({ error: "Database error" });
       }
-    );
-  });
+
+      if (!rows.length || !rows[0].subject) {
+        return res.status(400).json({
+          error: "Staff B does not have a subject in this slot. Adjustment not possible.",
+        });
+      }
+
+      const subject = rows[0].subject;
+
+      // Step 2: Insert into adjustments with Staff B subject
+      const insertSql = `
+        INSERT INTO staff_period_adjustments
+        (from_staff_id, to_staff_id, course, year, section, semester, day, date, period_no, subject)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `;
+
+      connection.query(
+        insertSql,
+        [from_staff_id, to_staff_id, course, year, section, semester, day, date, period_no, subject],
+        (insertErr) => {
+          if (insertErr) {
+            console.error("❌ Error inserting adjustment:", insertErr);
+            return res.status(500).json({ error: "Insert failed" });
+          }
+          res.json({ success: true, subject });
+        }
+      );
+    }
+  );
 });
+
 
 // 🔹 Get Staff List in Section
 app.get("/api/staff-in-section", (req, res) => {
@@ -4900,4 +4916,5 @@ app.get("/api/staff-in-section", (req, res) => {
     res.json(rows);
   });
 });
+
 
