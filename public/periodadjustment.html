@@ -108,15 +108,11 @@
             r.day.trim() === day.trim()
           );
 
-          console.log("Selected:", course, year, semester, section, day);
-          console.log("From DB:", data.map(r => [r.course, r.year, r.semester, r.section, r.day]));
-          console.log("Matches:", matches);
-
           let options = "";
           matches.forEach(m => {
             for (let i=1; i<=7; i++) {
               const sub = m[`period${i}`];
-              if (sub) options += `<option value="${i}:${sub}">${i}ᵗʰ Period - ${sub}</option>`;
+              if (sub) options += `<option value="${i}">${i}ᵗʰ Period - ${sub}</option>`;
             }
           });
           document.getElementById("periodSelect").innerHTML = options || `<option>No Periods</option>`;
@@ -151,7 +147,7 @@
   document.getElementById("adjustForm").onsubmit = async (e) => {
     e.preventDefault();
 
-    const [period_no, subject] = document.getElementById("periodSelect").value.split(":");
+    const period_no = document.getElementById("periodSelect").value;
     const payload = {
       from_staff_id: staff_id,
       to_staff_id: document.getElementById("staffSelect").value,
@@ -161,8 +157,7 @@
       semester: semesterSelect.value,
       day: daySelect.value,
       date: document.getElementById("adjustDate").value,
-      period_no,
-      subject
+      period_no
     };
 
     const res = await fetch("/api/adjust-period", {
