@@ -144,36 +144,38 @@
   }
 
   // 🔹 Submit adjustment
-  document.getElementById("adjustForm").onsubmit = async (e) => {
-    e.preventDefault();
+// 🔹 Submit adjustment
+document.getElementById("adjustForm").onsubmit = async (e) => {
+  e.preventDefault();
 
-    const period_no = document.getElementById("periodSelect").value;
-    const payload = {
-      from_staff_id: staff_id,
-      to_staff_id: document.getElementById("staffSelect").value,
-      course: courseSelect.value,
-      year: yearSelect.value,
-      section: sectionSelect.value,
-      semester: semesterSelect.value,
-      day: daySelect.value,
-      date: document.getElementById("adjustDate").value,
-      period_no
-    };
-
-    const res = await fetch("/api/adjust-period", {
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify(payload)
-    });
-
-    const result = await res.json();
-    if (res.ok) {
-      Swal.fire("✅ Success", "Period adjustment saved successfully!", "success");
-      document.getElementById("adjustForm").reset();
-    } else {
-      Swal.fire("❌ Failed", result.error || "Unknown error", "error");
-    }
+  const period_no = document.getElementById("periodSelect").value;
+  const payload = {
+    from_staff_id: staff_id,
+    to_staff_id: document.getElementById("staffSelect").value,
+    course: courseSelect.value,
+    year: yearSelect.value,
+    section: sectionSelect.value,
+    semester: semesterSelect.value,
+    day: daySelect.value,
+    date: document.getElementById("adjustDate").value,
+    period_no
   };
+
+  const res = await fetch("/api/adjust-period", {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify(payload)
+  });
+
+  const result = await res.json();
+  if (res.ok) {
+    Swal.fire("✅ Success", result.message || "Period adjustment saved successfully!", "success");
+    document.getElementById("adjustForm").reset();
+  } else {
+    Swal.fire("❌ Failed", result.error || "Unknown error", "error");
+  }
+};
+
 </script>
 </body>
 </html>
