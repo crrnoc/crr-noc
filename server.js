@@ -3714,8 +3714,7 @@ app.post("/api/allocate", (req, res) => {
 });
 
 //Get Allocated Periods by Staff ID
-// Route to get staff's period allocations
-// Get Allocated Periods by Staff ID
+// Get Allocated Periods by Staff ID (including adjustments)
 app.get("/api/staff-allocation", (req, res) => {
   const { staff_id } = req.query;
 
@@ -3724,13 +3723,28 @@ app.get("/api/staff-allocation", (req, res) => {
   }
 
   const sql = `
-    SELECT year, course, semester, section, dept_code, day,
-      period1, period2, period3, period4, period5, period6, period7
-    FROM staff_period_allocation
-    WHERE TRIM(staff_id) = TRIM(?)
+    (
+      SELECT year, course, semester, section, dept_code, day,
+        period1, period2, period3, period4, period5, period6, period7
+      FROM staff_period_allocation
+      WHERE TRIM(staff_id) = TRIM(?)
+    )
+    UNION
+    (
+      SELECT year, course, semester, section, NULL AS dept_code, day,
+        CASE period_no WHEN 1 THEN subject END AS period1,
+        CASE period_no WHEN 2 THEN subject END AS period2,
+        CASE period_no WHEN 3 THEN subject END AS period3,
+        CASE period_no WHEN 4 THEN subject END AS period4,
+        CASE period_no WHEN 5 THEN subject END AS period5,
+        CASE period_no WHEN 6 THEN subject END AS period6,
+        CASE period_no WHEN 7 THEN subject END AS period7
+      FROM staff_period_adjustments
+      WHERE TRIM(to_staff_id) = TRIM(?) AND date = CURDATE()
+    )
   `;
 
-  connection.query(sql, [staff_id], (err, result) => {
+  connection.query(sql, [staff_id, staff_id], (err, result) => {
     if (err) {
       console.error("❌ Error fetching allocations:", err);
       return res.status(500).json({ error: "Internal server error" });
@@ -4860,4 +4874,5 @@ app.get("/api/staff-in-section", (req, res) => {
     res.json(rows);
   });
 });
+
 
