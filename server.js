@@ -3902,6 +3902,7 @@ app.get('/api/staff/semesters/:staffId', (req, res) => {
     res.json({ semesters });
   });
 });
+
 // 📄 Download selected-subject attendance PDF (with lateral separation & TOTAL classes filled)
 app.get("/api/download-attendance-pdf", (req, res) => {
   const { year, semester, course, section, subject, from_date, to_date } = req.query;
@@ -4838,10 +4839,13 @@ app.post("/api/send-sms", async (req, res) => {
 module.exports = app;
 
 app.post("/api/adjust-period", (req, res) => {
-  const { from_staff_id, to_staff_id, course, year, section, semester, day, date, period_no } = req.body;
+  const {
+    from_staff_id, to_staff_id, course, year,
+    section, semester, day, date, period_no, subject
+  } = req.body;
 
-  // Step 1: Check Staff B subject in that slot
-  const subjectSql = `
+  // 1️⃣ Check if Staff B is free at that time
+  const checkSql = `
     SELECT 
       CASE ? 
         WHEN 1 THEN period1 
@@ -4853,47 +4857,36 @@ app.post("/api/adjust-period", (req, res) => {
         WHEN 7 THEN period7 
       END AS subject
     FROM staff_period_allocation
-    WHERE TRIM(staff_id)=TRIM(?) 
-      AND TRIM(course)=TRIM(?) 
-      AND year=? 
-      AND TRIM(section)=TRIM(?) 
-      AND TRIM(semester)=TRIM(?) 
-      AND TRIM(day)=TRIM(?) 
+    WHERE staff_id=? AND day=? AND course=? AND year=? AND semester=? AND section=?
     LIMIT 1
   `;
 
   connection.query(
-    subjectSql,
-    [period_no, to_staff_id, course, year, section, semester, day],
-    (err, rows) => {
-      if (err) {
-        console.error("❌ Error fetching Staff B subject:", err);
-        return res.status(500).json({ error: "Database error" });
-      }
+    checkSql,
+    [period_no, to_staff_id, day, course, year, semester, section],
+    (err, result) => {
+      if (err) return res.status(500).json({ error: "DB error" });
 
-      // 🔄 NEW LOGIC: Staff B already has subject -> NOT allowed
-      if (rows.length && rows[0].subject) {
+      // Staff B is busy → Reject adjustment
+      if (result.length && result[0].subject) {
         return res.status(400).json({
-          error: "❌ Staff B already has a subject in this slot. Adjustment not possible.",
+          error: "❌ Staff already has a class in this period."
         });
       }
 
-      // Staff B is free → Adjustment possible
+      // 2️⃣ Insert adjustment record
       const insertSql = `
         INSERT INTO staff_period_adjustments
-        (from_staff_id, to_staff_id, course, year, section, semester, day, date, period_no)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (from_staff_id, to_staff_id, course, year, section, semester, day, date, period_no, subject)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
 
       connection.query(
         insertSql,
-        [from_staff_id, to_staff_id, course, year, section, semester, day, date, period_no],
+        [from_staff_id, to_staff_id, course, year, section, semester, day, date, period_no, subject],
         (insertErr) => {
-          if (insertErr) {
-            console.error("❌ Error inserting adjustment:", insertErr);
-            return res.status(500).json({ error: "Insert failed" });
-          }
-          res.json({ success: true, message: "✅ Adjustment successful. Staff B was free." });
+          if (insertErr) return res.status(500).json({ error: "Insert failed" });
+          res.json({ success: true, message: "✅ Adjustment successful." });
         }
       );
     }
@@ -4916,6 +4909,57 @@ app.get("/api/staff-in-section", (req, res) => {
   });
 });
 
+app.get("/api/staff-subjects", (req, res) => {
+  const { staff_id, course, year, semester, section } = req.query;
 
+  if (!staff_id || !course || !year || !semester || !section) {
+    return res.status(400).json({ error: "Missing parameters" });
+  }
+
+  const sql = `
+    SELECT DISTINCT 
+      period1 AS subject FROM staff_period_allocation 
+      WHERE staff_id=? AND course=? AND year=? AND semester=? AND section=? AND period1 IS NOT NULL
+    UNION
+    SELECT DISTINCT 
+      period2 FROM staff_period_allocation 
+      WHERE staff_id=? AND course=? AND year=? AND semester=? AND section=? AND period2 IS NOT NULL
+    UNION
+    SELECT DISTINCT 
+      period3 FROM staff_period_allocation 
+      WHERE staff_id=? AND course=? AND year=? AND semester=? AND section=? AND period3 IS NOT NULL
+    UNION
+    SELECT DISTINCT 
+      period4 FROM staff_period_allocation 
+      WHERE staff_id=? AND course=? AND year=? AND semester=? AND section=? AND period4 IS NOT NULL
+    UNION
+    SELECT DISTINCT 
+      period5 FROM staff_period_allocation 
+      WHERE staff_id=? AND course=? AND year=? AND semester=? AND section=? AND period5 IS NOT NULL
+    UNION
+    SELECT DISTINCT 
+      period6 FROM staff_period_allocation 
+      WHERE staff_id=? AND course=? AND year=? AND semester=? AND section=? AND period6 IS NOT NULL
+    UNION
+    SELECT DISTINCT 
+      period7 FROM staff_period_allocation 
+      WHERE staff_id=? AND course=? AND year=? AND semester=? AND section=? AND period7 IS NOT NULL
+  `;
+
+  const params = [
+    staff_id, course, year, semester, section,
+    staff_id, course, year, semester, section,
+    staff_id, course, year, semester, section,
+    staff_id, course, year, semester, section,
+    staff_id, course, year, semester, section,
+    staff_id, course, year, semester, section,
+    staff_id, course, year, semester, section
+  ];
+
+  connection.query(sql, params, (err, rows) => {
+    if (err) return res.status(500).json({ error: "DB error" });
+    res.json(rows);
+  });
+});
 
 
