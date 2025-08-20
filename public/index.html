@@ -59,7 +59,7 @@
 
     /* 🔹 Darker overlay to reduce brightness */
     .overlay {
-      background: rgba(0, 0, 0, 0.6); /* was 0.4 */
+      background: rgba(0, 0, 0, 0.6);
       width: 100%;
       height: 100%;
       position: absolute;
@@ -74,7 +74,7 @@
       justify-content: flex-start;
       align-items: center;
       min-height: 100vh;
-      padding-top: 20px;   /* reduced */
+      padding-top: 20px;
       padding-bottom: 20px;
       box-sizing: border-box;
     }
@@ -83,6 +83,7 @@
       text-align: center;
       color: white;
       animation: popIn 1.2s ease forwards;
+      margin-top: 40px;  /* 🔹 moved logo + heading down */
     }
 
     .branding .brand-row {
@@ -127,7 +128,7 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* 🔹 New heading for Student Management System */
+    /* 🔹 Student Management System heading */
     .system-heading {
       font-size: 24px;
       font-weight: 700;
@@ -143,13 +144,13 @@
       justify-content: center;
       flex-wrap: wrap;
       gap: 18px;
-      margin: 15px 0;   /* reduced */
+      margin: 15px 0;
     }
 
-    /* 🔹 Increased button size */
+    /* 🔹 Bigger role buttons */
     .role-button {
-      padding: 16px 32px; /* was 12px 24px */
-      font-size: 18px;   /* was 16px */
+      padding: 16px 32px;
+      font-size: 18px;
       border-radius: 14px;
       font-weight: 600;
       background: rgba(255, 255, 255, 0.08);
@@ -183,8 +184,8 @@
 
     #mission-vision {
       max-width: 700px;
-      max-height: 150px; /* reduced from 180px */
-      margin-top: 15px;  /* reduced */
+      max-height: 150px;
+      margin-top: 15px;
       text-align: center;
       color: white;
       background: rgba(255, 255, 255, 0.05);
@@ -211,16 +212,17 @@
       line-height: 1.6;
     }
 
+    /* 🔹 Smaller login container */
     .login-container {
       display: none;
       opacity: 0;
       transform: translateY(100px) scale(0.95);
       transition: opacity 1s ease-in-out, transform 1s ease-in-out;
-      max-width: 380px;
+      max-width: 320px;   /* was 380px */
       width: 90%;
       background: rgba(255, 255, 255, 0.05);
-      border-radius: 20px;
-      padding: 25px;
+      border-radius: 16px; /* was 20px */
+      padding: 18px;       /* was 25px */
       border: 1px solid rgba(255, 255, 255, 0.15);
       box-shadow: 0 0 25px rgba(0,191,255,0.2);
       margin-top: 5px;
@@ -281,9 +283,8 @@
     }
 
     @media (max-width: 480px) {
-      .login-container { margin: 20px; padding: 20px; }
+      .login-container { margin: 20px; padding: 16px; }
       .branding h1 { font-size: 20px; }
-      .branding p { font-size: 12px; }
       .role-button { font-size: 16px; padding: 14px 24px; }
     }
   </style>
@@ -306,7 +307,7 @@
       </div>
     </div>
 
-    <!-- 🔹 Added Student Management System heading -->
+    <!-- Student Management System heading -->
     <div class="system-heading">STUDENT MANAGEMENT SYSTEM</div>
 
     <!-- Role Selection -->
@@ -376,12 +377,12 @@
 
   </main>
 
-  <!-- ✅ Footer -->
+  <!-- Footer -->
   <div class="footer">
     Developed by Cyber Security (2023-2027) Batch Students | <a href="privacypolicy.html">Privacy Policy</a>
   </div>
 
-  <!-- ✅ Scripts -->
+  <!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
   const buttons = document.querySelectorAll('.role-button');
@@ -539,4 +540,3 @@
 </script>
 </body>
 </html>
-
