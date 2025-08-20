@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Period Adjustment</title>
+  <link rel="icon" href="crrengglogo.png" type="image/png" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    body {font-family: Arial, sans-serif; background:#f6f6f6; margin:0; padding:20px;}
+    .container {
+      max-width:700px; margin:auto; background:#fff; padding:25px;
+      border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1);
+    }
+    h2 {text-align:center; margin-bottom:20px; color:#0b5394;}
+    .form-row {display:flex; flex-direction:column; margin-bottom:15px;}
+    label {font-weight:600; margin-bottom:6px;}
+    select, input[type="date"] {
+      padding:8px; border:1px solid #ccc; border-radius:8px; font-size:14px;
+    }
+    button {
+      background:#1f75cb; color:white; border:none; padding:10px 16px;
+      border-radius:8px; font-weight:600; cursor:pointer; transition:0.3s;
+    }
+    button:hover {background:#15559b;}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>🔄 Period Adjustment</h2>
+    <form id="adjustForm">
+      <div class="form-row">
+        <label>Course:</label>
+        <select id="courseSelect" required></select>
+      </div>
+      <div class="form-row">
+        <label>Year:</label>
+        <select id="yearSelect" required></select>
+      </div>
+      <div class="form-row">
+        <label>Semester:</label>
+        <select id="semesterSelect" required></select>
+      </div>
+      <div class="form-row">
+        <label>Section:</label>
+        <select id="sectionSelect" required></select>
+      </div>
+      <div class="form-row">
+        <label>Day:</label>
+        <select id="daySelect" required></select>
+      </div>
+      <div class="form-row">
+        <label>Date:</label>
+        <input type="date" id="adjustDate" required>
+      </div>
+      <div class="form-row">
+        <label>Period:</label>
+        <select id="periodSelect" required></select>
+      </div>
+      <div class="form-row">
+        <label>Assign To (Staff):</label>
+        <select id="staffSelect" required></select>
+      </div>
+      <div class="form-row">
+        <button type="submit">✅ Save Adjustment</button>
+      </div>
+    </form>
+  </div>
+
+<script>
+  let staff_id = localStorage.getItem("staff_id");
+
+  // 🔹 Load allocation data of current staff
+  window.onload = () => {
+    fetch(`/api/staff-allocation?staff_id=${staff_id}`)
+      .then(res => res.json())
+      .then(data => {
+        if (!data.length) {
+          Swal.fire("❌ No Allocation Found", "Contact admin.", "info");
+          return;
+        }
+
+        // populate course, year, semester, section, day
+        document.getElementById("courseSelect").innerHTML =
+          [...new Set(data.map(r => r.course))].map(c => `<option>${c}</option>`).join('');
+        document.getElementById("yearSelect").innerHTML =
+          [...new Set(data.map(r => r.year))].map(y => `<option>${y}</option>`).join('');
+        document.getElementById("semesterSelect").innerHTML =
+          [...new Set(data.map(r => r.semester))].map(s => `<option>${s}</option>`).join('');
+        document.getElementById("sectionSelect").innerHTML =
+          [...new Set(data.map(r => r.section))].map(s => `<option>${s}</option>`).join('');
+        document.getElementById("daySelect").innerHTML =
+          [...new Set(data.map(r => r.day))].map(d => `<option>${d}</option>`).join('');
+
+        // load periods when day selected
+        document.getElementById("daySelect").addEventListener("change", () => {
+          const course = courseSelect.value;
+          const year = yearSelect.value;
+          const semester = semesterSelect.value;
+          const section = sectionSelect.value;
+          const day = daySelect.value;
+
+          const matches = data.filter(r =>
+            r.course === course && r.year.toString() === year &&
+            r.semester.toString() === semester && r.section === section && r.day === day
+          );
+
+          let options = "";
+          matches.forEach(m => {
+            for (let i=1; i<=7; i++) {
+              const sub = m[`period${i}`];
+              if (sub) options += `<option value="${i}:${sub}">${i}ᵗʰ Period - ${sub}</option>`;
+            }
+          });
+          document.getElementById("periodSelect").innerHTML = options || `<option>No Periods</option>`;
+        });
+
+        // load staff in same section
+        [courseSelect, yearSelect, semesterSelect, sectionSelect].forEach(el =>
+          el.addEventListener("change", loadStaffList)
+        );
+      });
+  };
+
+  function loadStaffList() {
+    const course = courseSelect.value;
+    const year = yearSelect.value;
+    const semester = semesterSelect.value;
+    const section = sectionSelect.value;
+
+    if (!course || !year || !semester || !section) return;
+
+    fetch(`/api/staff-in-section?course=${course}&year=${year}&semester=${semester}&section=${section}`)
+      .then(res => res.json())
+      .then(staffs => {
+        document.getElementById("staffSelect").innerHTML = staffs
+          .filter(s => s.staff_id !== staff_id) // exclude current staff
+          .map(s => `<option value="${s.staff_id}">${s.staff_name}</option>`)
+          .join('');
+      });
+  }
+
+  // 🔹 Submit adjustment
+  document.getElementById("adjustForm").onsubmit = async (e) => {
+    e.preventDefault();
+
+    const [period_no, subject] = document.getElementById("periodSelect").value.split(":");
+    const payload = {
+      from_staff_id: staff_id,
+      to_staff_id: document.getElementById("staffSelect").value,
+      course: courseSelect.value,
+      year: yearSelect.value,
+      section: sectionSelect.value,
+      semester: semesterSelect.value,
+      day: daySelect.value,
+      date: document.getElementById("adjustDate").value,
+      period_no,
+      subject
+    };
+
+    const res = await fetch("/api/adjust-period", {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    const result = await res.json();
+    if (res.ok) {
+      Swal.fire("✅ Success", "Period adjustment saved successfully!", "success");
+      document.getElementById("adjustForm").reset();
+    } else {
+      Swal.fire("❌ Failed", result.error || "Unknown error", "error");
+    }
+  };
+</script>
+</body>
+</html>
