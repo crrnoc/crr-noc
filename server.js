@@ -4834,14 +4834,30 @@ app.post("/api/send-sms", async (req, res) => {
 module.exports = app;
 
 app.post("/api/adjust-period", (req, res) => {
-  const { from_staff_id, to_staff_id, course, year, section, semester, day, period_no, subject, date } = req.body;
+  const { from_staff_id, to_staff_id, course, year, section, semester, day, date, period_no, subject } = req.body;
   const sql = `
-    INSERT INTO staff_period_adjustments 
-    (from_staff_id, to_staff_id, course, year, section, semester, day, period_no, subject, date)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO staff_period_adjustments
+    (from_staff_id, to_staff_id, course, year, section, semester, day, date, period_no, subject)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
-  connection.query(sql, [from_staff_id, to_staff_id, course, year, section, semester, day, period_no, subject, date], (err) => {
+  connection.query(sql, [from_staff_id, to_staff_id, course, year, section, semester, day, date, period_no, subject],
+    (err) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ success:true });
+    });
+});
+
+app.get("/api/staff-in-section", (req, res) => {
+  const { course, year, semester, section } = req.query;
+  const sql = `
+    SELECT DISTINCT s.staff_id, s.staff_name
+    FROM staff_period_allocation spa
+    JOIN staff s ON s.staff_id = spa.staff_id
+    WHERE spa.course=? AND spa.year=? AND spa.semester=? AND spa.section=?;
+  `;
+  connection.query(sql, [course, year, semester, section], (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
-    res.json({ success: true, message: "Adjustment saved successfully" });
+    res.json(rows);
   });
 });
+
