@@ -48,7 +48,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.get('/check-session', (req, res) => {
   if (
     req.session.userId &&
-    (req.session.role === 'admin' || req.session.role === 'exam' || req.session.role ==='accounts')
+    (req.session.role === 'admin' || req.session.role === 'exam' || req.session.role ==='accounts' || req.session.role ==='hod' || req.session.role ==='student' ||req.session.role ==='staff')
   ) {
     res.json({ success: true });
   } else {
@@ -59,7 +59,7 @@ app.get('/check-session', (req, res) => {
 function requireAdminSession(req, res, next) {
   if (
     req.session.userId &&
-    (req.session.role === 'admin' || req.session.role === 'exam' || req.session.role === 'accounts')
+    (req.session.role === 'admin' || req.session.role === 'exam' || req.session.role === 'accounts' || req.session.role ==='hod' || req.session.role ==='student' ||req.session.role ==='staff')
   ) {
     return next();
   }
@@ -76,6 +76,7 @@ const sessionStore = new MySQLStore({
   database: process.env.MYSQLDATABASE,
   port: process.env.MYSQLPORT
 }); 
+
 //sessions
 app.use(session({
   key: 'noc_sid',
@@ -84,8 +85,9 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    maxAge: 1000 * 60 * 60  // 1 hour
-  }
+    maxAge: 15 * 60 * 1000 // 15 minutes
+  },
+  rolling: true // user activity aina session reset avuthundi
 }));
 
 cloudinary.config({
@@ -4961,5 +4963,6 @@ app.get("/api/staff-subjects", (req, res) => {
     res.json(rows);
   });
 });
+
 
 
