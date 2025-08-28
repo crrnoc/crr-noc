@@ -168,14 +168,14 @@
       <li onclick="navigateTo('/editattendance')">✏️ Edit Attendance</li>
       <li onclick="navigateTo('/sendsms')">📤 Send SMS</li>
     </ul>
-    <button onclick="logout()">🚪 Logout</button>
+    <button onclick="logout()"> Logout</button>
   </div>
 
   <div class="main">
     <div class="banner">🗓 Upload Attendance PDF</div>
     <div class="card">
       <form id="attendanceForm">
-        <label for="semester">📘 Select Semester</label>
+        <label for="semester">Select Semester</label>
         <select id="semester" required>
           <option value="">-- Select Semester --</option>
           <option>1-1</option><option>1-2</option>
@@ -262,8 +262,8 @@
       const result = await response.json();
       Swal.fire({
         icon: result.total === 0 ? "warning" : "success",
-        title: result.total === 0 ? "No Records Found" : "Upload Successful ✅",
-        html: `<b>${result.message}</b><br>Total Records: <strong>${result.total}</strong><br><a href="${result.csv_file}" target="_blank">📥 Download CSV</a>`
+        title: result.total === 0 ? "No Records Found" : "Upload Successful ",
+        html: `<b>${result.message}</b><br>Total Records: <strong>${result.total}</strong><br><a href="${result.csv_file}" target="_blank"> Download CSV</a>`
       });
 
       if (result.total > 0) e.target.reset();

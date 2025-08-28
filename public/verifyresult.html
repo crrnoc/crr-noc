@@ -95,7 +95,7 @@
 <body>
   <div class="container" id="resultContainer">
     <div class="header">
-      <h1>✅ Verified Student Result</h1>
+      <h1> Verified Student Result</h1>
     </div>
 
     <img id="photo" class="photo" src="" alt="Photo" style="display:none;" />
@@ -131,7 +131,7 @@
 
     if (!regno || !sem) {
       document.getElementById("resultContainer").innerHTML =
-        "<h3 style='color:red;'>❌ Invalid or missing parameters in URL.</h3>";
+        "<h3 style='color:red;'> Invalid or missing parameters in URL.</h3>";
     } else {
       fetch(`/api/verify-result?regno=${regno}&sem=${sem}`)
         .then(res => res.json())

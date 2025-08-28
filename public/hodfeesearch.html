@@ -269,7 +269,7 @@
           }
 
           const data = res.data;
-          container.innerHTML = `<h2>📘 Fee Details of ${userId}</h2>`;
+          container.innerHTML = `<h2> Fee Details of ${userId}</h2>`;
 
           data.forEach(({ year, structure, paid, fines }, index) => {
             const items = [
@@ -304,7 +304,7 @@
             });
 
             container.innerHTML += `
-              <button class="accordion-toggle" data-index="${index}">📅 Academic Year ${year}</button>
+              <button class="accordion-toggle" data-index="${index}"> Academic Year ${year}</button>
               <div class="accordion-content">
                 <table>
                   <thead>

@@ -106,7 +106,7 @@
         <div id="allocationInfo"></div>
 
         <div class="form-row">
-          <button type="button" onclick="fetchStudents()">📥 Load Students</button>
+          <button type="button" onclick="fetchStudents()"> Load Students</button>
         </div>
 
         <table id="studentsTable">
@@ -120,7 +120,7 @@
         </table>
 
        <div class="form-row">
-  <button type="submit">✅ Submit Attendance</button>
+  <button type="submit"> Submit Attendance</button>
 </div>
       </form>
 <!-- 📅 Date range for PDF -->
@@ -134,7 +134,7 @@
 </div>
 
 <div style="margin-top:20px;">
-  <button id="downloadPdfBtn">📄 Download Attendance PDF</button>
+  <button id="downloadPdfBtn"> Download Attendance PDF</button>
 </div>
 
     </div>
@@ -264,8 +264,8 @@
         html: `<strong>Absent Count:</strong> ${absent.length}<br/><strong>Absent Reg Nos:</strong><br>${absentList}`,
         icon: "info",
         showCancelButton: true,
-        confirmButtonText: "✅ Submit Attendance",
-        cancelButtonText: "🔙 Go Back"
+        confirmButtonText: " Submit Attendance",
+        cancelButtonText: " Go Back"
       });
       proceed = confirmResult.isConfirmed;
     }
@@ -308,7 +308,7 @@
 
     const result = await res.json();
     if (res.ok) {
-      Swal.fire("✅ Attendance Submitted Successfully", "All attendance data saved!", "success");
+      Swal.fire(" Attendance Submitted Successfully", "All attendance data saved!", "success");
       studentsTable.innerHTML = "";
     } else {
       Swal.fire("❌ Failed", result.error || "Unknown error", "error");
@@ -368,7 +368,7 @@
     });
 
     if (!matches.length || addedPeriods.size === 0) {
-      periodOptions.innerHTML = `<span style="color:red;">⚠️ No subjects assigned for selected day</span>`;
+      periodOptions.innerHTML = `<span style="color:red;"> No subjects assigned for selected day</span>`;
     }
   }
 
@@ -381,7 +381,7 @@
     const selectedDate = document.getElementById("attendanceDate").value;
 
     if (!course || !section || !year || !semester || !selectedDate) {
-      Swal.fire("⚠️ Please select all fields and date");
+      Swal.fire(" Please select all fields and date");
       return;
     }
 
@@ -444,7 +444,7 @@
     const toDate = document.getElementById("toDate").value;
 
     if (!course || !section || !year || !semester || !subjects.length || !fromDate || !toDate) {
-      Swal.fire("⚠️ Please select all fields and date range before downloading PDF");
+      Swal.fire(" Please select all fields and date range before downloading PDF");
       return;
     }
 

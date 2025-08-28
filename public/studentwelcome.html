@@ -342,7 +342,7 @@ body {
           return;
         }
 
-        const message = data.map(n => `🔔 ${n.message}`).join(" | ");
+        const message = data.map(n => ` ${n.message}`).join(" | ");
         notifyBox.innerHTML = `
           <marquee behavior="scroll" direction="left" scrollamount="5">
             ${message}
