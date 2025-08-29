@@ -30,16 +30,13 @@
       transition: all 0.3s ease;
       z-index: 100;
     }
-
     .sidebar img { height: 50px; margin: 0 auto 15px auto; display: block; }
     .sidebar h4 { text-align: center; font-weight: bold; font-size: 16px; margin-bottom: 30px; }
-
     .sidebar a {
       color: white; text-decoration: none; display: block;
       padding: 12px; border-radius: 8px; margin: 8px 0; transition: all 0.3s ease;
     }
     .sidebar a:hover, .sidebar .active { background: rgba(255,255,255,0.2); transform: translateX(5px); }
-
     .logout {
       background-color: #E67E22; border: none; color: white; padding: 12px;
       border-radius: 20px; margin-top: auto; cursor: pointer; transition: background 0.3s ease;
@@ -68,7 +65,6 @@
       padding: 30px; border-radius: 20px; color: white; text-align: center;
       box-shadow: 0 12px 20px rgba(0, 0, 0, 0.2); max-width: 900px; margin: 0 auto;
     }
-
     .form-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
     .form-section input, .form-section select, .form-section button {
       padding: 12px; border-radius: 6px; font-size: 16px;
@@ -88,7 +84,6 @@
       margin-left: auto; margin-right: auto;
     }
     .results-summary p { margin: 6px 0; font-weight: 600; }
-
     .legend { font-size: 12px; opacity: 0.8; margin-top: 6px; }
 
     .table-wrap { max-width: 1100px; margin: 22px auto; overflow-x: auto; }
@@ -124,8 +119,6 @@
 <body>
   <!-- Overlay -->
   <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
-
-  <!-- Mobile toggle -->
   <div class="mobile-toggle" onclick="toggleSidebar()">☰ Menu</div>
 
   <!-- Sidebar -->
@@ -152,14 +145,10 @@
         <input type="text" id="regno" placeholder="Enter Registration Number" />
         <select id="semester">
           <option value="">-- Select Semester (e.g., 1-1) --</option>
-          <option value="1-1">1-1</option>
-          <option value="1-2">1-2</option>
-          <option value="2-1">2-1</option>
-          <option value="2-2">2-2</option>
-          <option value="3-1">3-1</option>
-          <option value="3-2">3-2</option>
-          <option value="4-1">4-1</option>
-          <option value="4-2">4-2</option>
+          <option value="1-1">1-1</option><option value="1-2">1-2</option>
+          <option value="2-1">2-1</option><option value="2-2">2-2</option>
+          <option value="3-1">3-1</option><option value="3-2">3-2</option>
+          <option value="4-1">4-1</option><option value="4-2">4-2</option>
         </select>
       </div>
       <div class="form-row">
@@ -205,23 +194,20 @@
       const dept = userId.replace("HOD", "");
       welcomeText.textContent = `Welcome Head of Department - ${dept}`;
     }
-
     function logout() { localStorage.clear(); window.location.href = "index.html"; }
     function toggleSidebar() {
-      const sidebar = document.getElementById("sidebar");
-      const overlay = document.getElementById("overlay");
-      const mainContent = document.getElementById("main-content");
-      sidebar.classList.toggle("open"); overlay.classList.toggle("active"); mainContent.classList.toggle("shifted");
+      document.getElementById("sidebar").classList.toggle("open");
+      document.getElementById("overlay").classList.toggle("active");
+      document.getElementById("main-content").classList.toggle("shifted");
     }
 
     // ---------- GPA helpers ----------
     const GRADE_POINTS = { S:10, A:9, B:8, C:7, D:6, E:5, F:0, Ab:0, Completed:10, Absent:0 };
-
     function computeGPA(rows) {
       let totalCredits = 0, weighted = 0;
       rows.forEach(r => {
         const gp = GRADE_POINTS[r.grade] ?? 0;
-        const cr = (r.credits !== null && r.credits !== undefined) ? Number(r.credits) : 3; // default for autonomous
+        const cr = (r.credits !== null && r.credits !== undefined) ? Number(r.credits) : 3;
         weighted += gp * cr;
         totalCredits += cr;
       });
@@ -229,24 +215,25 @@
       return { gpa: gpa.toFixed(2), totalCredits };
     }
 
+    // ---------- Render ----------
     function renderResultsTable(rows) {
       const tbody = document.getElementById("resultsTableBody");
       const wrap = document.getElementById("resultsTableWrap");
       tbody.innerHTML = "";
+      if (!rows || rows.length === 0) { wrap.style.display = "none"; return; }
 
-      if (!rows || rows.length === 0) {
-        wrap.style.display = "none";
-        return;
-      }
-
+      let lastSem = "";
       rows.forEach(r => {
+        const sem = r.semester || (r.semester_from_request || "");
+        if (sem && sem !== lastSem) {
+          const headingRow = document.createElement("tr");
+          headingRow.innerHTML = `<td colspan="6" style="background:#f4f6f7;font-weight:bold;text-align:center;">Semester ${sem}</td>`;
+          tbody.appendChild(headingRow);
+          lastSem = sem;
+        }
         const isAuto = (r.credits === null || r.credits === undefined);
-        const creditsDisplay = isAuto ? 3 : r.credits;
-        const sourceBadge = isAuto
-          ? '<span class="badge badge-auto">Autonomous</span>'
-          : '<span class="badge badge-regular">Regular</span>';
-
-        const sem = r.semester || (r.semester_from_request || ""); // for all-results aggregation
+        const creditsDisplay = isAuto ? 0 : r.credits;
+        const sourceBadge = isAuto ? '<span class="badge badge-auto">Autonomous</span>' : '<span class="badge badge-regular">Regular</span>';
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td>${sem || "-"}</td>
@@ -258,7 +245,6 @@
         `;
         tbody.appendChild(tr);
       });
-
       wrap.style.display = "block";
     }
 
@@ -274,137 +260,49 @@
       `;
     }
 
-    // ---------- Main actions ----------
+    // ---------- Fetch ----------
     async function fetchResultsAndBacklogs() {
       const regno = document.getElementById("regno").value.trim().toUpperCase();
-      const semester = document.getElementById("semester").value; // e.g., "1-1"
-
-      if (!regno) {
-        Swal.fire("Missing RegNo", "Please enter registration number", "warning");
-        return;
-      }
-      if (!semester) {
-        Swal.fire("Missing Semester", "Please select a semester like 1-1, 2-2, etc.", "warning");
-        return;
-      }
+      const semester = document.getElementById("semester").value;
+      if (!regno) return Swal.fire("Missing RegNo", "Please enter registration number", "warning");
+      if (!semester) return Swal.fire("Missing Semester", "Please select a semester like 1-1, 2-2, etc.", "warning");
 
       try {
-        // 1) Semester results (merged regular + autonomous by your backend)
         const res = await fetch(`/student/results/${regno}?semester=${encodeURIComponent(semester)}`);
         const data = await res.json();
-
-        // 2) Overall CGPA + percentage (from your overall endpoint)
         let overall = { sgpa: "0.00", percentage: "0.00" };
-        try {
-          const o = await (await fetch(`/student/overallResults/${regno}`)).json();
-          overall = o || overall;
-        } catch {}
+        try { overall = await (await fetch(`/student/overallResults/${regno}`)).json(); } catch {}
 
-        // Prepare rows with semester column (since route doesn't include semester in each row)
         const rows = (data.results || []).map(r => ({ ...r, semester }));
-
-        // If backend SGPA came 0.00 (often due to wrong sem values), compute locally as fallback:
-        let finalSGPA = data.sgpa || "0.00";
-        let usedFallback = false;
-        if (!data.results || data.results.length === 0) {
-          // No rows -> show empty table and SGPA stays 0.00
-        } else if (!data.sgpa || Number.isNaN(Number(data.sgpa)) || Number(data.sgpa) === 0) {
-          const calc = computeGPA(rows);
-          finalSGPA = calc.gpa;
-          usedFallback = true;
+        let finalSGPA = data.sgpa || "0.00"; let usedFallback = false;
+        if ((Number(finalSGPA) === 0 || !finalSGPA) && rows.length > 0) {
+          const calc = computeGPA(rows); finalSGPA = calc.gpa; usedFallback = true;
         }
 
-        // Summary (CGPA & % prefer overall endpoint values if present)
-        const cgpa = overall.sgpa || data.cgpa || "0.00";
-        const percentage = overall.percentage || data.percentage || "0.00";
-
-        renderSummary({ regno, semester, sgpa: finalSGPA, cgpa, percentage, fallbackUsed: usedFallback });
+        renderSummary({ regno, semester, sgpa: finalSGPA, cgpa: overall.sgpa || data.cgpa || "0.00", percentage: overall.percentage || data.percentage || "0.00", fallbackUsed: usedFallback });
         renderResultsTable(rows);
-
-        // Backlogs section
         await renderBacklogs(regno);
-
-      } catch (err) {
-        console.error(err);
-        Swal.fire("Error", "Failed to fetch student data", "error");
-      }
+      } catch (err) { console.error(err); Swal.fire("Error", "Failed to fetch student data", "error"); }
     }
 
     async function fetchAllResults() {
       const regno = document.getElementById("regno").value.trim().toUpperCase();
-      if (!regno) {
-        Swal.fire("Missing RegNo", "Please enter registration number", "warning");
-        return;
-      }
+      if (!regno) return Swal.fire("Missing RegNo", "Please enter registration number", "warning");
 
       const semesters = ["1-1","1-2","2-1","2-2","3-1","3-2","4-1","4-2"];
       const allRows = [];
-
       try {
-        // Pull each semester and merge rows
         for (const sem of semesters) {
           const res = await fetch(`/student/results/${regno}?semester=${encodeURIComponent(sem)}`);
           const data = await res.json();
           const rows = (data.results || []).map(r => ({ ...r, semester: sem, semester_from_request: sem }));
           allRows.push(...rows);
         }
-
-        // Overall CGPA + %
         let overall = { sgpa: "0.00", percentage: "0.00" };
-        try {
-          const o = await (await fetch(`/student/overallResults/${regno}`)).json();
-          overall = o || overall;
-        } catch {}
-
-        // Sort rows by semester order
+        try { overall = await (await fetch(`/student/overallResults/${regno}`)).json(); } catch {}
         const order = { "1-1":1, "1-2":2, "2-1":3, "2-2":4, "3-1":5, "3-2":6, "4-1":7, "4-2":8 };
-        allRows.sort((a,b) => (order[a.semester]||99) - (order[b.semester]||99) || String(a.subcode).localeCompare(String(b.subcode)));
-
+        allRows.sort((a,b) => (order[a.semester]||99) - (order[b.semester]||99));
         renderSummary({ regno, semester: "All", sgpa: "-", cgpa: overall.sgpa || "0.00", percentage: overall.percentage || "0.00" });
         renderResultsTable(allRows);
-
         await renderBacklogs(regno);
-
-      } catch (err) {
-        console.error(err);
-        Swal.fire("Error", "Failed to fetch all results", "error");
-      }
-    }
-
-    async function renderBacklogs(regno) {
-      const cardContainer = document.getElementById("backlogCards");
-      const countDiv = document.getElementById("totalBacklogCount");
-
-      try {
-        const backlogsRes = await fetch(`/total-backlogs?regno=${encodeURIComponent(regno)}`);
-        const backlogsData = await backlogsRes.json();
-
-        cardContainer.innerHTML = "";
-        countDiv.style.display = "block";
-        countDiv.innerText = `Total Backlogs: ${backlogsData.count || 0}`;
-
-        if (!backlogsData.backlogData || backlogsData.backlogData.length === 0) {
-          cardContainer.style.display = "none";
-          return;
-        }
-
-        backlogsData.backlogData.forEach(item => {
-          const card = document.createElement("div");
-          card.className = "backlog-card";
-          card.innerHTML = `
-            <h4>Semester: ${item.semester || "N/A"}</h4>
-            <p><strong>Subject Code:</strong> ${item.subcode}</p>
-            <p><strong>Subject Name:</strong> ${item.subname || "N/A"}</p>
-            <p><strong>Grade:</strong> ${item.grade}</p>
-          `;
-          cardContainer.appendChild(card);
-        });
-        cardContainer.style.display = "flex";
-      } catch (err) {
-        console.error(err);
-        Swal.fire("Error", "Failed to fetch backlogs", "error");
-      }
-    }
-  </script>
-</body>
-</html>
+      } catch (err) { console.error(err); Swal.fire("Error", "Failed to fetch all results", "error"); }
