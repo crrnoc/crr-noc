@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>HOD Backlogs View</title>
+  <title>HOD Backlogs & Results</title>
   <link rel="icon" href="crrengglogo.png" type="image/png" />
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
@@ -70,7 +70,6 @@
       cursor: pointer;
       transition: background 0.3s ease;
     }
-
     .logout:hover { background-color: #CA6F1E; }
 
     /* Overlay behind sidebar */
@@ -127,6 +126,7 @@
     }
 
     .form-section input,
+    .form-section select,
     .form-section button {
       padding: 12px;
       margin: 10px 0;
@@ -134,9 +134,7 @@
       font-size: 16px;
       width: 80%;
     }
-
-    .form-section input { border: 1px solid #ccc; }
-
+    .form-section input, .form-section select { border: 1px solid #ccc; }
     .form-section button {
       background-color: #007bff;
       color: white;
@@ -144,7 +142,6 @@
       cursor: pointer;
       transition: background-color 0.3s, transform 0.2s ease;
     }
-
     .form-section button:hover {
       background-color: #0056b3;
       transform: scale(1.03);
@@ -159,6 +156,19 @@
       color: #E74C3C;
     }
 
+    .results-summary {
+      text-align: center;
+      margin-top: 25px;
+      padding: 15px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .results-summary p { margin: 6px 0; font-weight: 600; }
+
     .backlog-container {
       display: flex;
       flex-wrap: wrap;
@@ -166,7 +176,6 @@
       margin-top: 40px;
       justify-content: center;
     }
-
     .backlog-card {
       background-color: white;
       padding: 20px;
@@ -176,13 +185,8 @@
       transition: transform 0.3s ease;
       animation: fadeIn 0.5s ease forwards;
     }
-
     .backlog-card:hover { transform: scale(1.03); }
-
-    .backlog-card h4 {
-      margin-bottom: 10px;
-      color: #E74C3C;
-    }
+    .backlog-card h4 { margin-bottom: 10px; color: #E74C3C; }
 
     @keyframes fadeIn {
       from {opacity: 0; transform: translateY(20px);}
@@ -222,13 +226,25 @@
 
   <!-- Main Content -->
   <div class="content" id="main-content">
-    <h2> Check Student Backlogs</h2>
+    <h2> Check Student Backlogs & Results</h2>
     <div class="form-section">
       <h3>Enter Registration Number</h3>
       <input type="text" id="regno" placeholder="Enter Registration Number" />
-      <button onclick="fetchTotalBacklogs()">Check Backlogs</button>
+      <select id="semester">
+        <option value="">-- Select Semester --</option>
+        <option value="1">Semester 1</option>
+        <option value="2">Semester 2</option>
+        <option value="3">Semester 3</option>
+        <option value="4">Semester 4</option>
+        <option value="5">Semester 5</option>
+        <option value="6">Semester 6</option>
+        <option value="7">Semester 7</option>
+        <option value="8">Semester 8</option>
+      </select>
+      <button onclick="fetchResultsAndBacklogs()">Check</button>
     </div>
 
+    <div id="resultsSummary" class="results-summary" style="display:none;"></div>
     <div id="totalBacklogCount" class="count" style="display:none;"></div>
     <div id="backlogCards" class="backlog-container" style="display:none;"></div>
   </div>
@@ -259,46 +275,66 @@
       mainContent.classList.toggle("shifted");
     }
 
-    function fetchTotalBacklogs() {
+    async function fetchResultsAndBacklogs() {
       const regno = document.getElementById("regno").value.trim().toUpperCase();
+      const semester = document.getElementById("semester").value;
+
       if (!regno) {
         Swal.fire("Missing RegNo", "Please enter registration number", "warning");
         return;
       }
 
-      fetch(`/total-backlogs?regno=${regno}`)
-        .then(res => res.json())
-        .then(data => {
-          const cardContainer = document.getElementById("backlogCards");
-          const countDiv = document.getElementById("totalBacklogCount");
-          cardContainer.innerHTML = "";
+      try {
+        // 🟢 Fetch Semester Results + SGPA/CGPA
+        const resultsRes = await fetch(`/student/results/${regno}?semester=${semester}`);
+        const resultsData = await resultsRes.json();
 
-          countDiv.style.display = "block";
-          countDiv.innerText = `Total Backlogs: ${data.count || 0}`;
+        // 🟢 Fetch Backlogs
+        const backlogsRes = await fetch(`/total-backlogs?regno=${regno}`);
+        const backlogsData = await backlogsRes.json();
 
-          if (!data.backlogData || data.backlogData.length === 0) {
-            cardContainer.style.display = "none";
-            return;
-          }
+        // Show Results Summary
+        const resultsDiv = document.getElementById("resultsSummary");
+        resultsDiv.style.display = "block";
+        resultsDiv.innerHTML = `
+          <p><strong>Reg No:</strong> ${resultsData.regno}</p>
+          <p><strong>Semester:</strong> ${semester || "All"}</p>
+          <p><strong>SGPA:</strong> ${resultsData.sgpa || "0.00"}</p>
+          <p><strong>CGPA:</strong> ${resultsData.cgpa || "0.00"}</p>
+          <p><strong>Percentage:</strong> ${resultsData.percentage || "0.00"}%</p>
+        `;
 
-          data.backlogData.forEach(item => {
-            const card = document.createElement("div");
-            card.className = "backlog-card";
-            card.innerHTML = `
-              <h4>Semester: ${item.semester || "N/A"}</h4>
-              <p><strong>Subject Code:</strong> ${item.subcode}</p>
-              <p><strong>Subject Name:</strong> ${item.subname || "N/A"}</p>
-              <p><strong>Grade:</strong> ${item.grade}</p>
-            `;
-            cardContainer.appendChild(card);
-          });
+        // Show Backlogs
+        const cardContainer = document.getElementById("backlogCards");
+        const countDiv = document.getElementById("totalBacklogCount");
+        cardContainer.innerHTML = "";
 
-          cardContainer.style.display = "flex";
-        })
-        .catch(err => {
-          console.error(err);
-          Swal.fire("Error", "Failed to fetch data", "error");
+        countDiv.style.display = "block";
+        countDiv.innerText = `Total Backlogs: ${backlogsData.count || 0}`;
+
+        if (!backlogsData.backlogData || backlogsData.backlogData.length === 0) {
+          cardContainer.style.display = "none";
+          return;
+        }
+
+        backlogsData.backlogData.forEach(item => {
+          const card = document.createElement("div");
+          card.className = "backlog-card";
+          card.innerHTML = `
+            <h4>Semester: ${item.semester || "N/A"}</h4>
+            <p><strong>Subject Code:</strong> ${item.subcode}</p>
+            <p><strong>Subject Name:</strong> ${item.subname || "N/A"}</p>
+            <p><strong>Grade:</strong> ${item.grade}</p>
+          `;
+          cardContainer.appendChild(card);
         });
+
+        cardContainer.style.display = "flex";
+
+      } catch (err) {
+        console.error(err);
+        Swal.fire("Error", "Failed to fetch student data", "error");
+      }
     }
   </script>
 </body>
