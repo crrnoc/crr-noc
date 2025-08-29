@@ -2545,8 +2545,8 @@ app.get("/student/overallResults/:regno", async (req, res) => {
     rows.forEach(({ grade, credits }) => {
       const gradePoint = GRADE_POINTS[grade] || 0;
 
-      // ✅ If autonomous results have no credits, assume 3
-      const subjectCredits = credits !== null ? credits : 3;
+      // ✅ If autonomous results have no credits, assume 0
+      const subjectCredits = credits !== null ? credits : 0;
 
       totalGradePoints += gradePoint * subjectCredits;
       totalCredits += subjectCredits;
