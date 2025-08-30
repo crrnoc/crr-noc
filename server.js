@@ -33,8 +33,8 @@ const logoBase64 = fs.readFileSync('./public/crrengglogo.png', { encoding: 'base
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: 'crrenoccertificate@gmail.com',
-    pass: 'agvf bhhj auyg rzwb' // Replace with actual app password
+    user: 'sircrrcoestd@sircrrengg.ac.in',
+    pass: 'rrht evak upae jxsj'
   }
 });
 // ✅ Middlewares (used only once)
@@ -279,7 +279,7 @@ function sendOtpToEmail(userId, email, res) {
   otpMap.set(userId, otp.toString());
 
   const mailOptions = {
-    from: '"CRR NOC Team" <crrenoccertificate@gmail.com>',
+    from: '"CRR STD Team" <sircrrcoestd@sircrrengg.ac.in>',
     to: email,
     subject: "Your OTP for Password Reset",
     text: `Your OTP is ${otp}. It will expire in 10 minutes.`,
@@ -490,9 +490,9 @@ app.post('/send-bulk-notification', async (req, res) => {
         console.log("✅ Found student:", student.name, "📧", student.email);
 
         const mailOptions = {
-          from: '"CRR NOC Team" <crrenoccertificate@gmail.com>',
+          from: '"CRR STD Team" <sircrrcoestd@sircrrengg.ac.in>',
           to: student.email,
-          subject: "📢 Important Notification from CRR NOC Team",
+          subject: " Important Notification from CRR NOC Team",
           html: `
             <div style="font-family: Arial, sans-serif; padding: 20px;">
               <h2 style="color: #003366;">Sir C R Reddy College of Engineering</h2>
@@ -1736,9 +1736,9 @@ app.post('/api/submit-feedback', (req, res) => {
 
   // HTML Email for User
   const userMailOptions = {
-  from: '"CRR NOC Team" <crrenoccertificate@gmail.com>',
+  from: '"CRR STD Team" <sircrrcoestd@sircrrengg.ac.in>',
   to: email,
-  subject: "🎓 Thank You for Your Feedback",
+  subject: "Thank You for Your Feedback",
   html: `
     <div style="font-family: Arial; padding: 20px;">
       <h2 style="color:#003366; margin-top: 0;">Sir C R Reddy College of Engineering</h2>
@@ -1752,9 +1752,9 @@ app.post('/api/submit-feedback', (req, res) => {
 };
   // Email to Admin
   const adminMailOptions = {
-  from: '"CRR NOC Bot" <crrenoccertificate@gmail.com>',
+  from: '"CRR STD Bot" <sircrrcoestd@sircrrengg.ac.in>',
   to: 'crrenoccertificate@gmail.com',
-  subject: `📬 Feedback Received from ${name}`,
+  subject: `Feedback Received from ${name}`,
   html: `
     <div style="font-family: Arial; padding: 20px;">
       <h2 style="color:#003366;">Sir C R Reddy College of Engineering</h2>
