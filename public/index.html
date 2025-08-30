@@ -238,20 +238,38 @@
     }
 
     /* 🔹 Smaller login container */
-    .login-container {
-      display: none;
-      opacity: 0;
-      transform: translateY(100px) scale(0.95);
-      transition: opacity 1s ease-in-out, transform 1s ease-in-out;
-      max-width: 320px;   /* was 380px */
-      width: 90%;
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 16px; /* was 20px */
-      padding: 18px;       /* was 25px */
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      box-shadow: 0 0 25px rgba(0,191,255,0.2);
-      margin-top: 5px;
-    }
+.login-container {
+  display: none;
+  opacity: 0;
+  transform: translateY(100px) scale(0.95);
+  transition: opacity 1s ease-in-out, transform 1s ease-in-out;
+  max-width: 320px;
+  width: 90%;
+  max-height: 400px;              /* 🔹 limit height */
+  overflow-y: auto;               /* 🔹 make scrollable */
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 25px rgba(0,191,255,0.2);
+  margin-top: 5px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--main-color) transparent;
+}
+
+.login-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.login-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.login-container::-webkit-scrollbar-thumb {
+  background: var(--main-color);
+  border-radius: 6px;
+}
+
 
     .login-container.show {
       display: block !important;
@@ -312,25 +330,81 @@
       .branding h1 { font-size: 20px; }
       .role-button { font-size: 16px; padding: 14px 24px; }
     }
+    .autonomous {
+  font-size: 20px;
+  font-weight: 700;
+  color: #f19336fb; /* 🔹 bright red highlight */
+  margin-top: 6px;
+  text-align: center;
+  text-shadow: 0 0 8px rgba(255, 0, 0, 0.6);
+}
+.approvals {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 25px;
+  margin-top: 10px;
+}
+
+.approval-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  background: rgba(255,255,255,0.08);
+  padding: 8px 14px;
+  border-radius: 12px;
+  transition: 0.3s;
+}
+
+.approval-item img {
+  height: 28px;
+  width: auto;
+}
+
+.approval-item:hover {
+  background: rgba(60,182,255,0.2);
+  box-shadow: 0 0 10px var(--main-color);
+}
+
   </style>
 </head>
 <body>
   <div class="overlay"></div>
   <main class="main-wrapper" id="mainWrapper">
 
-    <!-- Branding -->
-    <div class="branding">
-      <div class="brand-row">
-        <img src="crrengglogo.png" alt="CRR Logo" />
-        <h1>Sir C.R. Reddy College of Engineering</h1>
-      </div>
-      <div class="accreditation">
-        <span>🎖️ NAAC A Grade Accredited</span> |
-        <span>🏛️ Autonomous Institution</span> |
-        <span>🎓 Affiliated to JNTU-Kakinada</span> |
-        <span>🏅Accredited by NBA</span>
-      </div>
-    </div>
+<div class="branding">
+  <div class="brand-row">
+    <img src="crrengglogo.png" alt="CRR Logo" />
+    <h1>Sir C.R. Reddy College of Engineering</h1>
+  </div>
+  <!-- 🔹 Autonomous moved below -->
+  <h2 class="autonomous">(AUTONOMOUS)</h2>
+  <div class="accreditation">
+<div class="approvals">
+  <div class="approval-item">
+    <img src="aicte-symbol.png" alt="AICTE" />
+    <span>Approved By AICTE</span>
+  </div>
+  <div class="approval-item">
+    <img src="nba-symbol.png" alt="NBA" />
+    <span>Accredited By NBA</span>
+  </div>
+  <div class="approval-item">
+    <img src="naac-symbol.png" alt="NAAC" />
+    <span>Accredited by NAAC With 'A' Grade</span>
+  </div>
+  <div class="approval-item">
+    <img src="jntuk_logo.png" alt="JNTUK" />
+    <span>Affiliated To JNTUK</span>
+  </div>
+</div>
+  </div>
+</div>
+
 
     <!-- Student Management System heading -->
     <div class="system-heading">STUDENT MANAGEMENT SYSTEM</div>
