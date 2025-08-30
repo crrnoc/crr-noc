@@ -127,7 +127,7 @@
       from { opacity: 0; transform: translateY(-10px); }
       to { opacity: 1; transform: translateY(0); }
     }
-
+    
     /* 🔹 Student Management System heading */
     .system-heading {
       font-size: 24px;
@@ -138,7 +138,32 @@
       text-align: center;
       text-shadow: 0 0 12px rgba(60,182,255,0.8);
     }
+   .suggestions {
+  background: #e8f5e9;
+  border: 1px solid #81c784;
+  color: #2e7d32;
+  padding: 5px;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 800px;
+  text-align: center;
+  font-weight: 500;
+  margin-top: 5px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+}
 
+.suggestions a {
+  color: #1b5e20;
+  font-weight: bold;
+  text-decoration: none;
+  margin-left: 5px;
+  transition: color 0.3s ease;
+}
+
+.suggestions a:hover {
+  color: #43a047;
+  text-decoration: underline;
+}
     .role-buttons {
       display: flex;
       justify-content: center;
@@ -309,7 +334,14 @@
 
     <!-- Student Management System heading -->
     <div class="system-heading">STUDENT MANAGEMENT SYSTEM</div>
-
+    <div class="suggestions">
+  <p> We value your suggestions for improvement.  
+    Please feel free to share your thoughts with us at !
+    <a href="mailto:sircrrcoestd@sircrrengg.ac.in" target="_blank">
+      👉 Click here
+    </a>
+  </p>
+</div>
     <!-- Role Selection -->
     <div class="role-buttons">
       <div class="role-button" data-role="student">👨‍🎓 Student</div>
