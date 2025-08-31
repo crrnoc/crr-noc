@@ -276,29 +276,35 @@
     }
 
     const attendanceEntries = [];
-    selectedPeriods.forEach(period => {
-      const [, subject] = period.split(":");
-      present.forEach(reg_no => {
-        attendanceEntries.push({
-          reg_no, date, staff_id,
-          course: courseSelect.value,
-          year: yearSelect.value,
-          semester: semesterSelect.value,
-          section: sectionSelect.value,
-          subject, status: "Present"
-        });
-      });
-      absent.forEach(reg_no => {
-        attendanceEntries.push({
-          reg_no, date, staff_id,
-          course: courseSelect.value,
-          year: yearSelect.value,
-          semester: semesterSelect.value,
-          section: sectionSelect.value,
-          subject, status: "Absent"
-        });
-      });
+  selectedPeriods.forEach(periodStr => {
+  const [period, subject] = periodStr.split(":"); // ✅ extract both
+
+  present.forEach(reg_no => {
+    attendanceEntries.push({
+      reg_no, date, staff_id,
+      course: courseSelect.value,
+      year: yearSelect.value,
+      semester: semesterSelect.value,
+      section: sectionSelect.value,
+      period, 
+      subject,
+      status: "Present"
     });
+  });
+
+  absent.forEach(reg_no => {
+    attendanceEntries.push({
+      reg_no, date, staff_id,
+      course: courseSelect.value,
+      year: yearSelect.value,
+      semester: semesterSelect.value,
+      section: sectionSelect.value,
+      period,  
+      subject,
+      status: "Absent"
+    });
+  });
+});
 
     const res = await fetch('/api/submit-attendance', {
       method: 'POST',
