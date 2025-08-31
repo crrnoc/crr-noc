@@ -232,7 +232,6 @@
     if (isSubmitting) return;
     isSubmitting = true;
 
-    // Block if no students loaded
     if (!studentsTable.children.length) {
       Swal.fire("⚠️ Please load students before submitting");
       isSubmitting = false;
@@ -249,7 +248,6 @@
       isSubmitting = false;
       return;
     }
-
     if (!date) {
       Swal.fire("⚠️ Please select a date for attendance.");
       isSubmitting = false;
@@ -269,42 +267,41 @@
       });
       proceed = confirmResult.isConfirmed;
     }
-
     if (!proceed) {
       isSubmitting = false;
       return;
     }
 
     const attendanceEntries = [];
-  selectedPeriods.forEach(periodStr => {
-  const [period, subject] = periodStr.split(":"); // ✅ extract both
+    selectedPeriods.forEach(periodStr => {
+      const [period, subject] = periodStr.split(":"); // now period = "1", "2", etc.
 
-  present.forEach(reg_no => {
-    attendanceEntries.push({
-      reg_no, date, staff_id,
-      course: courseSelect.value,
-      year: yearSelect.value,
-      semester: semesterSelect.value,
-      section: sectionSelect.value,
-      period, 
-      subject,
-      status: "Present"
-    });
-  });
+      present.forEach(reg_no => {
+        attendanceEntries.push({
+          reg_no, date, staff_id,
+          course: courseSelect.value,
+          year: yearSelect.value,
+          semester: semesterSelect.value,
+          section: sectionSelect.value,
+          period, 
+          subject,
+          status: "Present"
+        });
+      });
 
-  absent.forEach(reg_no => {
-    attendanceEntries.push({
-      reg_no, date, staff_id,
-      course: courseSelect.value,
-      year: yearSelect.value,
-      semester: semesterSelect.value,
-      section: sectionSelect.value,
-      period,  
-      subject,
-      status: "Absent"
+      absent.forEach(reg_no => {
+        attendanceEntries.push({
+          reg_no, date, staff_id,
+          course: courseSelect.value,
+          year: yearSelect.value,
+          semester: semesterSelect.value,
+          section: sectionSelect.value,
+          period, 
+          subject,
+          status: "Absent"
+        });
+      });
     });
-  });
-});
 
     const res = await fetch('/api/submit-attendance', {
       method: 'POST',
@@ -322,6 +319,7 @@
 
     isSubmitting = false;
   };
+
   // ✅ Update Period Options
   function updatePeriodOptions() {
     const course = courseSelect.value.trim();
@@ -346,20 +344,19 @@
     matches.forEach(match => {
       for (let i = 1; i <= 7; i++) {
         const subject = match[`period${i}`];
-        if (subject && !addedPeriods.has(`period${i}:${subject}`)) {
-          addedPeriods.add(`period${i}:${subject}`);
+        if (subject && !addedPeriods.has(`${i}:${subject}`)) {
+          addedPeriods.add(`${i}:${subject}`);
 
           const checkbox = document.createElement("input");
           checkbox.type = "checkbox";
           checkbox.id = `period${i}`;
           checkbox.name = "periodSelection";
-          checkbox.value = `period${i}:${subject}`;
+          checkbox.value = `${i}:${subject}`; // ✅ only number stored in DB
 
           const label = document.createElement("label");
           label.setAttribute("for", `period${i}`);
           label.textContent = `${i}ᵗʰ Period - ${subject}`;
 
-          // Highlight adjusted periods (dept_code null antey adjustment ani consider chesam)
           if (match.dept_code === null) {  
             label.style.color = "red";  
             label.title = "Adjusted Period";
@@ -412,7 +409,6 @@
           return;
         }
 
-        // ✅ Filter based on joining_date
         const filtered = students.filter(s => {
           if (!s.joining_date) return true;
           const joinDate = new Date(s.joining_date);
