@@ -263,7 +263,7 @@ document.getElementById("staff_id").addEventListener("blur", async function () {
   const id = this.value;
   if (!id) return;
   try {
-    const res = await fetch('/api/staff/${id}');
+    const res = await fetch(`/api/staff/${id}`);  // 🔥 fixed
     const data = await res.json();
     document.getElementById("staff_name").value = data.staff_name || "";
   } catch {
