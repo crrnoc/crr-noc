@@ -3787,6 +3787,7 @@ app.post('/api/submit-attendance', (req, res) => {
   const values = entries.map(e => [
     e.reg_no,
     e.date,
+    e.period,     
     e.staff_id,
     e.course,
     e.year,
@@ -3798,8 +3799,9 @@ app.post('/api/submit-attendance', (req, res) => {
 
   const sql = `
     INSERT INTO daily_attendance 
-    (reg_no, date, staff_id, course, year, semester, section, subject, status)
+    (reg_no, date, period, staff_id, course, year, semester, section, subject, status)
     VALUES ?
+    ON DUPLICATE KEY UPDATE status = VALUES(status)
   `;
 
   connection.query(sql, [values], (err, result) => {
