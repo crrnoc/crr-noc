@@ -369,32 +369,58 @@ body {
 .approval-item:hover {
   background: rgba(60,182,255,0.2);
   box-shadow: 0 0 10px var(--main-color);
+} .login-counts {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin: 30px auto;
+  max-width: 900px;
 }
-.login-counter {
-  margin: 20px auto;
-  padding: 15px;
-  max-width: 300px;
-  background: #f9f9f9;
-  border: 1px solid #ddd;
-  border-radius: 10px;
+
+/* Common card style */
+.login-counts {
+  display: flex;
+  justify-content: center;
+  gap: 25px;
+  margin: 25px auto;
+  max-width: 800px;
+}
+
+/* Common card style (glass effect) */
+.count-card {
+  flex: 1;
+  padding: 20px;
+  border-radius: 16px;
+  backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.08); /* 🔹 semi-transparent */
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 18px rgba(0, 191, 255, 0.25); /* 🔹 glow effect */
   text-align: center;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  color: #fff;
 }
 
-.login-counter h3 {
+/* Hover animation */
+.count-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 0 28px rgba(0, 191, 255, 0.4);
+}
+
+/* Headings */
+.count-card h3 {
   margin-bottom: 10px;
-  color: #333;
+  font-size: 19px;
+  font-weight: 600;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
 }
 
-.login-counter p {
-  margin: 5px 0;
-  font-size: 16px;
-  color: #444;
-}
-
-.login-counter span {
+/* Count value */
+.count-card p {
+  font-size: 42px;
   font-weight: bold;
-  color: #0077cc;
+  margin: 0;
+  color: #fff;
+  text-shadow: 0 0 12px rgba(255, 255, 255, 0.8);
 }
 
   </style>
@@ -505,10 +531,18 @@ body {
         <button type="submit">Login as Admin</button>
       </form>
     </div>
-<div class="login-counter">
-  <h3>Login Counts</h3>
-  <p>Students Logged In: <span id="studentCount">0</span></p>
-  <p>Staff/Admin/HOD/Exam/Accounts Logged In: <span id="staffCount">0</span></p>
+<div class="login-counts">
+  <!-- Student Count -->
+  <div class="count-card student">
+    <h3>Students Logged In</h3>
+    <p id="studentCount">0</p>
+  </div>
+
+  <!-- Staff/Admin/HOD/Exam/Accounts Count -->
+  <div class="count-card staff">
+    <h3>Staff Logged In</h3>
+    <p id="staffCount">0</p>
+  </div>
 </div>
 
   </main>
