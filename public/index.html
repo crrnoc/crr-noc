@@ -592,28 +592,22 @@ body {
   });
 
   hideAll();
-function updateLoginCount(role) {
-  let studentCount = parseInt(localStorage.getItem("studentCount") || "0");
-  let staffCount = parseInt(localStorage.getItem("staffCount") || "0");
+// Fetch login counts from backend and update UI
+async function updateLoginCounts() {
+  try {
+    const res = await fetch("/api/login-counts"); // 👈 your backend API
+    const data = await res.json();
 
-  if (role === "student") {
-    studentCount++;
-    localStorage.setItem("studentCount", studentCount);
-  } else if (["staff", "admin", "hod", "exam", "accounts"].includes(role)) {
-    staffCount++;
-    localStorage.setItem("staffCount", staffCount);
+    document.getElementById("studentCount").textContent = data.studentCount || 0;
+    document.getElementById("staffCount").textContent = data.staffCount || 0;
+  } catch (err) {
+    console.error("Error fetching login counts:", err);
   }
-
-  // Update display
-  document.getElementById("studentCount").textContent = studentCount;
-  document.getElementById("staffCount").textContent = staffCount;
 }
 
-// Load counts on page load
-document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("studentCount").textContent = localStorage.getItem("studentCount") || "0";
-  document.getElementById("staffCount").textContent = localStorage.getItem("staffCount") || "0";
-});
+// Call on page load
+document.addEventListener("DOMContentLoaded", updateLoginCounts);
+
 
   async function submitLogin(event, role) {
     event.preventDefault();
