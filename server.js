@@ -200,7 +200,6 @@ setInterval(() => {
 app.use("/admin", adminRoutes);
 
 // 🔐 Login route
-// 🔐 Login route
 app.post('/login', (req, res) => {
   const { userId, password, role } = req.body;
 
@@ -225,13 +224,24 @@ app.post('/login', (req, res) => {
         req.session.userId = userId;
         req.session.role = role;
 
+        // ✅ Increment login count for this role
+        connection.query(
+          "INSERT INTO login_counts (role, count) VALUES (?, 1) ON DUPLICATE KEY UPDATE count = count + 1",
+          [role],
+          (err3) => {
+            if (err3) {
+              console.error("⚠️ Failed to update login count:", err3);
+            }
+          }
+        );
+
         // ✅ Correct redirect paths
         let redirectTo = "";
         if (role === "student") redirectTo = `/student/${userId}`;
         else if (role === "staff") redirectTo = `/staff/${userId}`;
         else if (role === "admin") redirectTo = `/adminpanel`;
         else if (role === "hod") redirectTo = `/hodpanel.html`;
-        else if (role === "exam") redirectTo = `/examcell`;   
+        else if (role === "exam") redirectTo = `/examcell`;
         else if (role === "accounts") redirectTo = `/accounts.html`;
 
         res.status(200).json({
