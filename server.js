@@ -255,6 +255,18 @@ app.post('/login', (req, res) => {
     }
   );
 });
+// route for counts
+app.get("/api/login-counts", (req, res) => {
+  const sql = `
+    SELECT
+      (SELECT COUNT(*) FROM login_counts WHERE role='student') AS studentCount,
+      (SELECT COUNT(*) FROM login_counts WHERE role IN ('staff','admin','hod','exam','accounts')) AS staffCount
+  `;
+  connection.query(sql, (err, results) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(results[0]);
+  });
+});
 
 //email otp
 // Store OTPs temporarily in memory (for demo purpose only)
