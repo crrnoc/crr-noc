@@ -256,15 +256,33 @@ app.post('/login', (req, res) => {
   );
 });
 // route for counts
+// 📌 Route to get login counts
 app.get("/api/login-counts", (req, res) => {
-  const sql = `
-    SELECT
-      (SELECT COUNT(*) FROM login_counts WHERE role='student') AS studentCount,
-      (SELECT COUNT(*) FROM login_counts WHERE role IN ('staff','admin','hod','exam','accounts')) AS staffCount
-  `;
+  const sql = "SELECT role, `count` FROM login_counts";
+
   connection.query(sql, (err, results) => {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json(results[0]);
+    if (err) {
+      console.error("❌ Error fetching login counts:", err);
+      return res.status(500).json({ success: false, message: "DB Error" });
+    }
+
+    let studentCount = 0;
+    let staffCount = 0;
+
+    // Loop through DB results
+    results.forEach(row => {
+      if (row.role === "student") {
+        studentCount = row.count; 
+      } else if (["staff","admin","hod","exam","accounts"].includes(row.role)) {
+        staffCount += row.count; 
+      }
+    });
+
+    res.json({
+      success: true,
+      studentCount,
+      staffCount
+    });
   });
 });
 
