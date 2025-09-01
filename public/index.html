@@ -370,6 +370,32 @@ body {
   background: rgba(60,182,255,0.2);
   box-shadow: 0 0 10px var(--main-color);
 }
+.login-counter {
+  margin: 20px auto;
+  padding: 15px;
+  max-width: 300px;
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  text-align: center;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.login-counter h3 {
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.login-counter p {
+  margin: 5px 0;
+  font-size: 16px;
+  color: #444;
+}
+
+.login-counter span {
+  font-weight: bold;
+  color: #0077cc;
+}
 
   </style>
 </head>
@@ -479,6 +505,11 @@ body {
         <button type="submit">Login as Admin</button>
       </form>
     </div>
+<div class="login-counter">
+  <h3>Login Counts</h3>
+  <p>Students Logged In: <span id="studentCount">0</span></p>
+  <p>Staff/Admin/HOD/Exam/Accounts Logged In: <span id="staffCount">0</span></p>
+</div>
 
   </main>
 
@@ -561,6 +592,28 @@ body {
   });
 
   hideAll();
+function updateLoginCount(role) {
+  let studentCount = parseInt(localStorage.getItem("studentCount") || "0");
+  let staffCount = parseInt(localStorage.getItem("staffCount") || "0");
+
+  if (role === "student") {
+    studentCount++;
+    localStorage.setItem("studentCount", studentCount);
+  } else if (["staff", "admin", "hod", "exam", "accounts"].includes(role)) {
+    staffCount++;
+    localStorage.setItem("staffCount", staffCount);
+  }
+
+  // Update display
+  document.getElementById("studentCount").textContent = studentCount;
+  document.getElementById("staffCount").textContent = staffCount;
+}
+
+// Load counts on page load
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("studentCount").textContent = localStorage.getItem("studentCount") || "0";
+  document.getElementById("staffCount").textContent = localStorage.getItem("staffCount") || "0";
+});
 
   async function submitLogin(event, role) {
     event.preventDefault();
