@@ -12,25 +12,27 @@ if len(sys.argv) < 4:
 
 file_path = sys.argv[1]
 semester = sys.argv[2]
-file_ext = sys.argv[3].lower()
+file_ext = sys.argv[3].lower().replace(".", "")  # normalize like pdf/xlsx
 results = []
 
 # ✅ Output CSV path
 csv_name = os.path.splitext(os.path.basename(file_path))[0] + ".csv"
 csv_path = os.path.join("uploads", csv_name)
 
-# ✅ Percentage cleaning (only for PDF values)
+# ✅ Percentage cleaning
 def clean_percentage(value):
-    """Convert float/str percentage into '<value>%' """
-    if pd.isna(value):
+    """Always return value with % symbol as string"""
+    if pd.isna(value) or value is None:
         return "0%"
-    if isinstance(value, str):
-        value = value.strip()
-        if not value.endswith("%"):
-            value += "%"
-        return value
     try:
-        return f"{round(float(value), 2)}%"
+        val = str(value).strip()
+        if not val.endswith("%"):
+            # If number only, format with 2 decimals
+            if re.match(r"^\d+(\.\d+)?$", val):
+                return f"{round(float(val), 2)}%"
+            else:
+                return val + "%"
+        return val
     except:
         return "0%"
 
@@ -42,12 +44,12 @@ def parse_attendance_line(line):
         regno = match.group(1)
         present = int(match.group(2))
         total = int(match.group(3))
-        percent = clean_percentage(match.group(4))  # string with %
+        percent = clean_percentage(match.group(4))
         return [regno, semester, total, present, percent]
     return None
 
 # ✅ Process PDF
-if file_ext == ".pdf":
+if file_ext == "pdf":
     try:
         with pdfplumber.open(file_path) as pdf:
             for page in pdf.pages:
@@ -63,12 +65,12 @@ if file_ext == ".pdf":
         sys.exit(1)
 
 # ✅ Process Excel
-elif file_ext in [".xlsx", ".xls"]:
+elif file_ext in ["xlsx", "xls"]:
     try:
         df = pd.read_excel(
             file_path,
             skiprows=5,  # skip headings
-            engine="openpyxl" if file_ext == ".xlsx" else "xlrd"
+            engine="openpyxl" if file_ext == "xlsx" else "xlrd"
         )
 
         for _, row in df.iterrows():
@@ -76,11 +78,7 @@ elif file_ext in [".xlsx", ".xls"]:
                 regno = str(row[1]).strip()       # 2nd column = RegNo
                 total = int(row[-3])              # 3rd from last = Total
                 present = int(row[-2])            # 2nd from last = Present
-                percent = str(row[-1]).strip()    # Last col = Percentage
-
-                # Ensure %
-                if percent and not percent.endswith("%"):
-                    percent += "%"
+                percent = clean_percentage(row[-1])  # Last col = Percentage
 
                 if regno and regno.startswith("2") and len(regno) == 10:
                     results.append([regno, semester, total, present, percent])
@@ -97,6 +95,7 @@ else:
 
 # ✅ Save CSV
 try:
+    os.makedirs("uploads", exist_ok=True)
     with open(csv_path, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow(['regno', 'semester', 'total_classes', 'attended_classes', 'percentage'])
