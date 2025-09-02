@@ -1,9 +1,9 @@
 import sys
 import os
 import pdfplumber
-import csv
 import json
 import re
+import openpyxl
 
 if len(sys.argv) < 3:
     print("Usage: extract_attendance.py <pdf_path> <semester>")
@@ -13,8 +13,8 @@ pdf_path = sys.argv[1]
 semester = sys.argv[2]
 results = []
 
-csv_name = os.path.splitext(os.path.basename(pdf_path))[0] + ".csv"
-csv_path = os.path.join("uploads", csv_name)
+excel_name = os.path.splitext(os.path.basename(pdf_path))[0] + ".xlsx"
+excel_path = os.path.join("uploads", excel_name)
 
 def parse_attendance_line(line):
     # Match regno like 23B81A4501 followed by groups of attendance like 12/14 28/35 ... then total like 110/133 and percent
@@ -38,11 +38,32 @@ with pdfplumber.open(pdf_path) as pdf:
             if parsed:
                 results.append(parsed)
 
-# ✅ Save CSV
-with open(csv_path, 'w', newline='') as csvfile:
-    writer = csv.writer(csvfile)
-    writer.writerow(['regno', 'semester', 'total_classes', 'attended_classes', 'percentage'])
-    writer.writerows(results)
+# ✅ Save to Excel
+workbook = openpyxl.Workbook()
+sheet = workbook.active
+sheet.title = "Attendance"
 
-# ✅ Output JSON to Node.js
+# Header row
+headers = ['Reg No', 'Semester', 'Total Classes', 'Attended Classes', 'Percentage']
+sheet.append(headers)
+
+# Data rows
+for row in results:
+    sheet.append(row)
+
+# Auto-fit columns
+for column in sheet.columns:
+    max_length = 0
+    col = column[0].column_letter
+    for cell in column:
+        try:
+            if len(str(cell.value)) > max_length:
+                max_length = len(str(cell.value))
+        except:
+            pass
+    sheet.column_dimensions[col].width = max_length + 2
+
+workbook.save(excel_path)
+
+# ✅ Output JSON for Node.js
 print(json.dumps(results))
