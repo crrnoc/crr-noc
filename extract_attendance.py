@@ -21,15 +21,18 @@ csv_path = os.path.join("uploads", csv_name)
 
 # ✅ Percentage cleaning function (only for PDF values)
 def clean_percentage(value):
-    """Clean percentage values like '73.20%' or 73.20 into float"""
+    """Convert percentage like '73.20%' or 73.20 into string with %"""
     if pd.isna(value):
-        return 0.0
+        return "0%"
     if isinstance(value, str):
-        value = value.strip().replace("%", "")
+        value = value.strip()
+        if not value.endswith("%"):
+            value += "%"
+        return value
     try:
-        return round(float(value), 2)
+        return f"{round(float(value), 2)}%"
     except:
-        return 0.0
+        return "0%"
 
 # ✅ Regex for PDF parsing
 def parse_attendance_line(line):
@@ -39,7 +42,7 @@ def parse_attendance_line(line):
         regno = match.group(1)
         present = int(match.group(2))
         total = int(match.group(3))
-        percent = clean_percentage(match.group(4))  # PDF lo % clean cheyyali
+        percent = clean_percentage(match.group(4))  # PDF → always return string with %
         return [regno, semester, total, present, percent]
     return None
 
@@ -77,6 +80,10 @@ elif file_ext in [".xlsx", ".xls"]:
                 total = row[-3]                  # 3rd column from last = Total
                 present = row[-2]                # 2nd column from last = Attended
                 percent = str(row[-1]).strip()   # Last column = Percentage (keep as-is)
+
+                # Ensure it has %
+                if percent and not percent.endswith("%"):
+                    percent += "%"
 
                 # Validate RegNo → must start with 2 & length 10
                 if regno and regno.startswith("2") and len(regno) == 10:
