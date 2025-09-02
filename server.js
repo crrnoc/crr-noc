@@ -2485,8 +2485,8 @@ function calculateGPA(results) {
     const point = GRADE_POINTS[r.grade];
     if (point === undefined) continue;
 
-    // ✅ Default credits = 3 if null
-    const credits = r.credits !== null ? r.credits : 3;
+    // ✅ If credits missing/null/undefined → assume 3
+    const credits = r.credits ? r.credits : 3;
 
     weightedSum += point * credits;
     totalCredits += credits;
