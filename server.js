@@ -2462,7 +2462,21 @@ app.get("/student-attendance/:regno", (req, res) => {
   );
 });
 
-// Fetch student results by regno and semester
+const GRADE_POINTS = {
+  S: 10,
+  A+: 10, // ✅ Added A+ grade
+  A: 9,
+  B: 8,
+  C: 7,
+  D: 6,
+  E: 5,
+  F: 0,
+  Ab: 0,
+  Absent: 0,
+  Completed: 10
+};
+
+// ----------------- Semester-wise results -----------------
 app.get('/student/results/:regno', async (req, res) => {
   const { regno } = req.params;
   const semester = req.query.semester;
@@ -2470,7 +2484,6 @@ app.get('/student/results/:regno', async (req, res) => {
   console.log("📥 Incoming Request:", { regno, semester });
 
   try {
-    // 1. Fetch semester-wise results from BOTH tables
     connection.query(
       `
       SELECT subcode, subname, grade, credits 
@@ -2490,13 +2503,14 @@ app.get('/student/results/:regno', async (req, res) => {
           return res.status(500).json({ error: "DB error (semResults)" });
         }
 
-        // 2. Fetch all results from BOTH tables for CGPA calculation
         connection.query(
           `
           SELECT grade, credits 
           FROM results 
           WHERE regno = ?
+
           UNION ALL
+
           SELECT grade, NULL as credits 
           FROM autonomous_results 
           WHERE regno = ?
@@ -2508,20 +2522,15 @@ app.get('/student/results/:regno', async (req, res) => {
               return res.status(500).json({ error: "DB error (allResults)" });
             }
 
-            const gradePoints = {
-              S: 10, A: 9, B: 8, C: 7, D: 6, E: 5, F: 0, Ab: 0,
-              Completed: 10, Absent: 0
-            };
-
             function calculateGPA(results) {
               let totalCredits = 0;
               let weightedSum = 0;
 
               for (const r of results) {
-                const point = gradePoints[r.grade];
+                const point = GRADE_POINTS[r.grade];
                 if (point === undefined) continue;
 
-                // ✅ If credits are missing (autonomous), assume 3 by default
+                // ✅ Default credits = 3 if null
                 const credits = r.credits !== null ? r.credits : 3;
 
                 weightedSum += point * credits;
@@ -2529,20 +2538,21 @@ app.get('/student/results/:regno', async (req, res) => {
               }
 
               const gpa = totalCredits > 0 ? weightedSum / totalCredits : 0;
-              return { gpa: gpa.toFixed(2), totalCredits };
+              const percentage = totalCredits > 0 ? ((gpa - 0.5) * 10).toFixed(2) : "0.00";
+              return { gpa: gpa.toFixed(2), percentage };
             }
 
-            const { gpa: sgpa } = calculateGPA(semResults);
-            const { gpa: cgpa } = calculateGPA(allResults);
-            const percentage = ((parseFloat(cgpa) - 0.5) * 10).toFixed(2);
+            const { gpa: sgpa, percentage: semPercentage } = calculateGPA(semResults);
+            const { gpa: cgpa, percentage: overallPercentage } = calculateGPA(allResults);
 
             res.json({
               regno,
               semester,
               results: semResults,
               sgpa,
+              semPercentage,
               cgpa,
-              percentage,
+              overallPercentage
             });
           }
         );
@@ -2555,23 +2565,11 @@ app.get('/student/results/:regno', async (req, res) => {
 });
 
 
-const GRADE_POINTS = {
-  S: 10,
-  A: 9,
-  B: 8,
-  C: 7,
-  D: 6,
-  E: 5,
-  F: 0,
-  Ab: 0,
-  Completed: 10
-};
-
+// ----------------- Overall results -----------------
 app.get("/student/overallResults/:regno", async (req, res) => {
   const { regno } = req.params;
 
   try {
-    // 🟢 Fetch grades + credits from BOTH tables
     const [rows] = await connection.promise().query(
       `
       SELECT grade, credits 
@@ -2587,7 +2585,6 @@ app.get("/student/overallResults/:regno", async (req, res) => {
       [regno, regno]
     );
 
-    // 🟢 If no data found
     if (!rows.length) return res.json({ sgpa: "0.00", percentage: "0.00" });
 
     let totalGradePoints = 0;
@@ -2595,16 +2592,13 @@ app.get("/student/overallResults/:regno", async (req, res) => {
 
     rows.forEach(({ grade, credits }) => {
       const gradePoint = GRADE_POINTS[grade] || 0;
-
-      // ✅ If autonomous results have no credits, assume 0
-      const subjectCredits = credits !== null ? credits : 0;
-
+      const subjectCredits = credits !== null ? credits : 3; // ✅ Assume 3 for autonomous
       totalGradePoints += gradePoint * subjectCredits;
       totalCredits += subjectCredits;
     });
 
     const sgpa = totalCredits > 0 ? (totalGradePoints / totalCredits).toFixed(2) : "0.00";
-    const percentage = (sgpa * 9.5).toFixed(2); // approximate conversion
+    const percentage = totalCredits > 0 ? ((sgpa - 0.5) * 10).toFixed(2) : "0.00";
 
     res.json({ sgpa, percentage });
 
@@ -2613,6 +2607,7 @@ app.get("/student/overallResults/:regno", async (req, res) => {
     res.status(500).json({ sgpa: "0.00", percentage: "0.00" });
   }
 });
+
 
 // result verification
 // ✅ Verify result (includes both results + autonomous_results)
