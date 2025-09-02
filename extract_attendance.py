@@ -19,14 +19,27 @@ results = []
 csv_name = os.path.splitext(os.path.basename(file_path))[0] + ".csv"
 csv_path = os.path.join("uploads", csv_name)
 
+# ✅ Percentage cleaning function
+def clean_percentage(value):
+    """Clean percentage values like '73.20%' or 73.20 into float"""
+    if pd.isna(value):
+        return 0.0
+    if isinstance(value, str):
+        value = value.strip().replace("%", "")
+    try:
+        return round(float(value), 2)
+    except:
+        return 0.0
+
 # ✅ Regex for PDF parsing
 def parse_attendance_line(line):
+    # Matches regno + attendance values + total + attended + percentage
     match = re.match(r"^(2[0-9]B81A\d{4})\s+(?:\d+/\d+\s+){6,8}(\d+)/(\d+)\s+([\d.]+)", line)
     if match:
         regno = match.group(1)
         present = int(match.group(2))
         total = int(match.group(3))
-        percent = float(match.group(4))
+        percent = clean_percentage(match.group(4))
         return [regno, semester, total, present, percent]
     return None
 
@@ -51,20 +64,23 @@ if file_ext == ".pdf":
 elif file_ext in [".xlsx", ".xls"]:
     try:
         # Read Excel dynamically (skip first 5 rows → heading section)
-        df = pd.read_excel(file_path, skiprows=5, engine="openpyxl" if file_ext == ".xlsx" else "xlrd")
+        df = pd.read_excel(
+            file_path,
+            skiprows=5,
+            engine="openpyxl" if file_ext == ".xlsx" else "xlrd"
+        )
 
-        # Expected columns:
-        # SNo | RegNo | [9 subject columns] | Total | Attended | Percentage
+        # Expected structure: SNo | RegNo | ... | Total | Attended | %
         for _, row in df.iterrows():
             try:
-                regno = str(row[1]).strip()  # Reg No is 2nd column
-                total = row[-3]              # 3rd column from last = Total Classes Held
-                present = row[-2]            # 2nd column from last = Attended Classes
-                percent = str(row[-1]).replace("%", "").strip()  # Last column = Percentage
+                regno = str(row[1]).strip()  # 2nd column = RegNo
+                total = row[-3]              # 3rd column from last = Total
+                present = row[-2]            # 2nd column from last = Attended
+                percent = clean_percentage(row[-1])  # Last column = Percentage
 
-                # Validate RegNo → must start with 2 & have 10 chars
+                # Validate RegNo → must start with 2 & length 10
                 if regno and regno.startswith("2") and len(regno) == 10:
-                    results.append([regno, semester, int(total), int(present), float(percent)])
+                    results.append([regno, semester, int(total), int(present), percent])
             except:
                 continue
     except Exception as e:
