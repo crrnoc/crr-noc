@@ -2373,7 +2373,7 @@ app.post("/upload-attendance", upload.single("file"), (req, res) => {
     return res.status(400).json({ message: "❌ Semester or file missing." });
   }
 
-  // ✅ Validate file type before processing
+  // ✅ Validate file type
   const allowedExts = [".pdf", ".xlsx", ".xls"];
   if (!allowedExts.includes(fileExt)) {
     return res.status(400).json({ message: "❌ Invalid file type. Please upload PDF or Excel only." });
@@ -2383,14 +2383,14 @@ app.post("/upload-attendance", upload.single("file"), (req, res) => {
   console.log("📂 File Extension:", fileExt);
   console.log("🐍 Running Python attendance script...");
 
-  // ✅ Pass correct extension to Python
+  // ✅ Run Python script
   const python = spawn("python", ["extract_attendance.py", filePath, semester, fileExt]);
 
   let output = "";
   let errorOutput = "";
 
-  python.stdout.on("data", (data) => (output += data.toString()));
-  python.stderr.on("data", (data) => (errorOutput += data.toString()));
+  python.stdout.on("data", (data) => output += data.toString());
+  python.stderr.on("data", (data) => errorOutput += data.toString());
 
   python.on("close", (code) => {
     console.log("🐍 Python exited with code:", code);
@@ -2405,9 +2405,13 @@ app.post("/upload-attendance", upload.single("file"), (req, res) => {
 
     let records;
     try {
-      records = JSON.parse(output);
+      records = JSON.parse(output); // ✅ percentage preserved as string with %
     } catch (err) {
       return res.status(500).json({ message: "❌ Invalid JSON", error: err.message });
+    }
+
+    if (!records.length) {
+      return res.status(400).json({ message: "❌ No attendance records found in file." });
     }
 
     let inserted = 0;
@@ -2421,11 +2425,8 @@ app.post("/upload-attendance", upload.single("file"), (req, res) => {
            total_classes=?, attended_classes=?, percentage=?`,
           [regno, sem, total, present, percent, total, present, percent],
           (err) => {
-            if (err) {
-              console.error(`❌ DB Error for ${regno}:`, err.message);
-            } else {
-              inserted++;
-            }
+            if (err) console.error(`❌ DB Error for ${regno}:`, err.message);
+            else inserted++;
             resolve();
           }
         );
@@ -2439,6 +2440,8 @@ app.post("/upload-attendance", upload.single("file"), (req, res) => {
         total: inserted,
         excel_file: `/uploads/${excelFileName}`
       });
+    }).catch((err) => {
+      res.status(500).json({ message: "❌ DB insert failed", error: err.message });
     });
   });
 });
