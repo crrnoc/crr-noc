@@ -19,9 +19,9 @@ results = []
 csv_name = os.path.splitext(os.path.basename(file_path))[0] + ".csv"
 csv_path = os.path.join("uploads", csv_name)
 
-# ✅ Percentage cleaning function (only for PDF values)
+# ✅ Percentage cleaning (only for PDF values)
 def clean_percentage(value):
-    """Convert percentage like '73.20%' or 73.20 into string with %"""
+    """Convert float/str percentage into '<value>%' """
     if pd.isna(value):
         return "0%"
     if isinstance(value, str):
@@ -34,19 +34,19 @@ def clean_percentage(value):
     except:
         return "0%"
 
-# ✅ Regex for PDF parsing
+# ✅ PDF line parser
 def parse_attendance_line(line):
-    # Matches regno + attendance values + total + attended + percentage
+    # regno + subject data + total + present + percentage
     match = re.match(r"^(2[0-9]B81A\d{4})\s+(?:\d+/\d+\s+){6,8}(\d+)/(\d+)\s+([\d.]+)", line)
     if match:
         regno = match.group(1)
         present = int(match.group(2))
         total = int(match.group(3))
-        percent = clean_percentage(match.group(4))  # PDF → always return string with %
+        percent = clean_percentage(match.group(4))  # string with %
         return [regno, semester, total, present, percent]
     return None
 
-# ✅ Process PDF files
+# ✅ Process PDF
 if file_ext == ".pdf":
     try:
         with pdfplumber.open(file_path) as pdf:
@@ -54,8 +54,7 @@ if file_ext == ".pdf":
                 text = page.extract_text()
                 if not text:
                     continue
-                lines = text.split("\n")
-                for line in lines:
+                for line in text.split("\n"):
                     parsed = parse_attendance_line(line.strip())
                     if parsed:
                         results.append(parsed)
@@ -63,43 +62,40 @@ if file_ext == ".pdf":
         print(json.dumps({"error": f"PDF parsing failed: {str(e)}"}))
         sys.exit(1)
 
-# ✅ Process Excel files
+# ✅ Process Excel
 elif file_ext in [".xlsx", ".xls"]:
     try:
-        # Read Excel dynamically (skip first 5 rows → heading section)
         df = pd.read_excel(
             file_path,
-            skiprows=5,
+            skiprows=5,  # skip headings
             engine="openpyxl" if file_ext == ".xlsx" else "xlrd"
         )
 
-        # Expected structure: SNo | RegNo | ... | Total | Attended | %
         for _, row in df.iterrows():
             try:
                 regno = str(row[1]).strip()       # 2nd column = RegNo
-                total = row[-3]                  # 3rd column from last = Total
-                present = row[-2]                # 2nd column from last = Attended
-                percent = str(row[-1]).strip()   # Last column = Percentage (keep as-is)
+                total = int(row[-3])              # 3rd from last = Total
+                present = int(row[-2])            # 2nd from last = Present
+                percent = str(row[-1]).strip()    # Last col = Percentage
 
-                # Ensure it has %
+                # Ensure %
                 if percent and not percent.endswith("%"):
                     percent += "%"
 
-                # Validate RegNo → must start with 2 & length 10
                 if regno and regno.startswith("2") and len(regno) == 10:
-                    results.append([regno, semester, int(total), int(present), percent])
+                    results.append([regno, semester, total, present, percent])
             except:
                 continue
     except Exception as e:
         print(json.dumps({"error": f"Excel parsing failed: {str(e)}"}))
         sys.exit(1)
 
-# ❌ Unsupported format
+# ❌ Unsupported
 else:
     print(json.dumps({"error": "Unsupported file format. Please upload PDF or Excel only."}))
     sys.exit(1)
 
-# ✅ Save to CSV
+# ✅ Save CSV
 try:
     with open(csv_path, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
@@ -109,5 +105,5 @@ except Exception as e:
     print(json.dumps({"error": f"CSV writing failed: {str(e)}"}))
     sys.exit(1)
 
-# ✅ Return JSON output to Node.js
+# ✅ Return JSON
 print(json.dumps(results))
