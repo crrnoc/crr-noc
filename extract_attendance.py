@@ -19,7 +19,7 @@ results = []
 csv_name = os.path.splitext(os.path.basename(file_path))[0] + ".csv"
 csv_path = os.path.join("uploads", csv_name)
 
-# ✅ Percentage cleaning function
+# ✅ Percentage cleaning function (only for PDF values)
 def clean_percentage(value):
     """Clean percentage values like '73.20%' or 73.20 into float"""
     if pd.isna(value):
@@ -39,7 +39,7 @@ def parse_attendance_line(line):
         regno = match.group(1)
         present = int(match.group(2))
         total = int(match.group(3))
-        percent = clean_percentage(match.group(4))
+        percent = clean_percentage(match.group(4))  # PDF lo % clean cheyyali
         return [regno, semester, total, present, percent]
     return None
 
@@ -73,10 +73,10 @@ elif file_ext in [".xlsx", ".xls"]:
         # Expected structure: SNo | RegNo | ... | Total | Attended | %
         for _, row in df.iterrows():
             try:
-                regno = str(row[1]).strip()  # 2nd column = RegNo
-                total = row[-3]              # 3rd column from last = Total
-                present = row[-2]            # 2nd column from last = Attended
-                percent = clean_percentage(row[-1])  # Last column = Percentage
+                regno = str(row[1]).strip()       # 2nd column = RegNo
+                total = row[-3]                  # 3rd column from last = Total
+                present = row[-2]                # 2nd column from last = Attended
+                percent = str(row[-1]).strip()   # Last column = Percentage (keep as-is)
 
                 # Validate RegNo → must start with 2 & length 10
                 if regno and regno.startswith("2") and len(regno) == 10:
