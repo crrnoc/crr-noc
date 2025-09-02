@@ -2362,26 +2362,26 @@ app.post("/admin/upload-autonomous-result-pdf", upload.single("pdf"), async (req
   }
 });
 
-// Route: Upload attendance PDF
-// Attendance upload route
-app.post("/upload-attendance", upload.single("pdf"), (req, res) => {
+// Route: Upload attendance (PDF / Excel)
+app.post("/upload-attendance", upload.single("file"), (req, res) => {
   const semester = req.body.semester;
   const filePath = req.file?.path;
+  const fileExt = path.extname(req.file.originalname).toLowerCase();
 
   if (!semester || !filePath) {
-    return res.status(400).json({ message: "❌ Semester or PDF missing." });
+    return res.status(400).json({ message: "❌ Semester or file missing." });
   }
 
-  console.log("📄 Attendance PDF File Path:", filePath);
+  console.log("📄 Attendance File Path:", filePath);
   console.log("🐍 Running Python attendance script...");
 
-  const python = spawn("python", ["extract_attendance.py", filePath, semester]);
+  const python = spawn("python", ["extract_attendance.py", filePath, semester, fileExt]);
 
   let output = "";
   let errorOutput = "";
 
-  python.stdout.on("data", (data) => output += data.toString());
-  python.stderr.on("data", (data) => errorOutput += data.toString());
+  python.stdout.on("data", (data) => (output += data.toString()));
+  python.stderr.on("data", (data) => (errorOutput += data.toString()));
 
   python.on("close", (code) => {
     console.log("🐍 Python exited with code:", code);
@@ -2424,11 +2424,11 @@ app.post("/upload-attendance", upload.single("pdf"), (req, res) => {
     });
 
     Promise.all(insertPromises).then(() => {
-      const csvFileName = path.basename(filePath).replace(".pdf", ".csv");
+      const excelFileName = path.basename(filePath).replace(fileExt, ".xlsx");
       res.status(200).json({
-        message: "✅ Attendance extracted and stored.",
+        message: "✅ Attendance extracted and stored successfully.",
         total: inserted,
-        csv_file: `/uploads/${csvFileName}`
+        excel_file: `/uploads/${excelFileName}`
       });
     });
   });
