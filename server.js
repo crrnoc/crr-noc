@@ -2476,6 +2476,30 @@ const GRADE_POINTS = {
   Completed: 10
 };
 
+// 🟢 Common GPA + Percentage calculation
+function calculateGPA(results) {
+  let totalCredits = 0;
+  let weightedSum = 0;
+
+  for (const r of results) {
+    const point = GRADE_POINTS[r.grade];
+    if (point === undefined) continue;
+
+    // ✅ Default credits = 3 if null
+    const credits = r.credits !== null ? r.credits : 3;
+
+    weightedSum += point * credits;
+    totalCredits += credits;
+  }
+
+  const gpa = totalCredits > 0 ? weightedSum / totalCredits : 0;
+
+  // ✅ Official JNTU formula
+  const percentage = totalCredits > 0 ? ((gpa - 0.75) * 10).toFixed(2) : "0.00";
+
+  return { gpa: gpa.toFixed(2), percentage };
+}
+
 // ----------------- Semester-wise results -----------------
 app.get('/student/results/:regno', async (req, res) => {
   const { regno } = req.params;
@@ -2522,37 +2546,17 @@ app.get('/student/results/:regno', async (req, res) => {
               return res.status(500).json({ error: "DB error (allResults)" });
             }
 
-            function calculateGPA(results) {
-              let totalCredits = 0;
-              let weightedSum = 0;
-
-              for (const r of results) {
-                const point = GRADE_POINTS[r.grade];
-                if (point === undefined) continue;
-
-                // ✅ Default credits = 3 if null
-                const credits = r.credits !== null ? r.credits : 3;
-
-                weightedSum += point * credits;
-                totalCredits += credits;
-              }
-
-              const gpa = totalCredits > 0 ? weightedSum / totalCredits : 0;
-              const percentage = totalCredits > 0 ? ((gpa - 0.5) * 10).toFixed(2) : "0.00";
-              return { gpa: gpa.toFixed(2), percentage };
-            }
-
-            const { gpa: sgpa, percentage: semPercentage } = calculateGPA(semResults);
-            const { gpa: cgpa, percentage: overallPercentage } = calculateGPA(allResults);
+            const semCalc = calculateGPA(semResults);
+            const overallCalc = calculateGPA(allResults);
 
             res.json({
               regno,
               semester,
               results: semResults,
-              sgpa,
-              semPercentage,
-              cgpa,
-              overallPercentage
+              sgpa: semCalc.gpa,
+              semPercentage: semCalc.percentage,
+              cgpa: overallCalc.gpa,
+              overallPercentage: overallCalc.percentage
             });
           }
         );
@@ -2587,20 +2591,12 @@ app.get("/student/overallResults/:regno", async (req, res) => {
 
     if (!rows.length) return res.json({ sgpa: "0.00", percentage: "0.00" });
 
-    let totalGradePoints = 0;
-    let totalCredits = 0;
+    const overallCalc = calculateGPA(rows);
 
-    rows.forEach(({ grade, credits }) => {
-      const gradePoint = GRADE_POINTS[grade] || 0;
-      const subjectCredits = credits !== null ? credits : 3; // ✅ Assume 3 for autonomous
-      totalGradePoints += gradePoint * subjectCredits;
-      totalCredits += subjectCredits;
+    res.json({
+      sgpa: overallCalc.gpa,
+      percentage: overallCalc.percentage
     });
-
-    const sgpa = totalCredits > 0 ? (totalGradePoints / totalCredits).toFixed(2) : "0.00";
-    const percentage = totalCredits > 0 ? ((sgpa - 0.5) * 10).toFixed(2) : "0.00";
-
-    res.json({ sgpa, percentage });
 
   } catch (err) {
     console.error("❌ Failed to fetch overall results:", err);
