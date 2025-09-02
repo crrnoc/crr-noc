@@ -19,12 +19,15 @@ results = []
 csv_name = os.path.splitext(os.path.basename(file_path))[0] + ".csv"
 csv_path = os.path.join("uploads", csv_name)
 
-# ✅ Keep percentage exactly as in file (no conversions)
+# ✅ Keep percentage exactly as in file, append % if missing
 def keep_percentage_as_is(value):
-    """Return percentage exactly as in file"""
+    """Return percentage exactly as in file, append % if missing"""
     if value is None or pd.isna(value):
         return "0%"
-    return str(value).strip()
+    val = str(value).strip()
+    if val.endswith("%"):
+        return val
+    return val + "%"
 
 # ✅ PDF line parser
 def parse_attendance_line(line):
