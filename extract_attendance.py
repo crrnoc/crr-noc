@@ -19,22 +19,15 @@ results = []
 csv_name = os.path.splitext(os.path.basename(file_path))[0] + ".csv"
 csv_path = os.path.join("uploads", csv_name)
 
-# ✅ Percentage cleaning
+# ✅ Keep percentage exactly as in file
 def clean_percentage(value):
-    """Always return value with % symbol as string"""
+    """Return value exactly as string with % symbol"""
     if pd.isna(value) or value is None:
         return "0%"
-    try:
-        val = str(value).strip()
-        if not val.endswith("%"):
-            # If number only, format with 2 decimals
-            if re.match(r"^\d+(\.\d+)?$", val):
-                return f"{round(float(val), 2)}%"
-            else:
-                return val + "%"
-        return val
-    except:
-        return "0%"
+    val = str(value).strip()
+    if not val.endswith("%"):
+        val += "%"
+    return val
 
 # ✅ PDF line parser
 def parse_attendance_line(line):
