@@ -19,15 +19,12 @@ results = []
 csv_name = os.path.splitext(os.path.basename(file_path))[0] + ".csv"
 csv_path = os.path.join("uploads", csv_name)
 
-# ✅ Keep percentage exactly as in file
-def clean_percentage(value):
-    """Return value exactly as string with % symbol"""
-    if pd.isna(value) or value is None:
+# ✅ Keep percentage exactly as in file (no conversions)
+def keep_percentage_as_is(value):
+    """Return percentage exactly as in file"""
+    if value is None or pd.isna(value):
         return "0%"
-    val = str(value).strip()
-    if not val.endswith("%"):
-        val += "%"
-    return val
+    return str(value).strip()
 
 # ✅ PDF line parser
 def parse_attendance_line(line):
@@ -37,7 +34,7 @@ def parse_attendance_line(line):
         regno = match.group(1)
         present = int(match.group(2))
         total = int(match.group(3))
-        percent = clean_percentage(match.group(4))
+        percent = keep_percentage_as_is(match.group(4))
         return [regno, semester, total, present, percent]
     return None
 
@@ -71,7 +68,7 @@ elif file_ext in ["xlsx", "xls"]:
                 regno = str(row[1]).strip()       # 2nd column = RegNo
                 total = int(row[-3])              # 3rd from last = Total
                 present = int(row[-2])            # 2nd from last = Present
-                percent = clean_percentage(row[-1])  # Last col = Percentage
+                percent = keep_percentage_as_is(row[-1])  # Last col = Percentage
 
                 if regno and regno.startswith("2") and len(regno) == 10:
                     results.append([regno, semester, total, present, percent])
