@@ -28,8 +28,9 @@ def parse_attendance_line(line):
         return [regno, semester, total, present, percent]
     return None
 
+# ✅ Process based on file type
 if file_ext == ".pdf":
-    # ✅ Extract from PDF
+    # Extract from PDF using pdfplumber
     with pdfplumber.open(file_path) as pdf:
         for page in pdf.pages:
             text = page.extract_text()
@@ -42,13 +43,18 @@ if file_ext == ".pdf":
                     results.append(parsed)
 
 elif file_ext in [".xlsx", ".xls"]:
-    # ✅ Extract directly from Excel
+    # Extract directly from Excel
     wb = openpyxl.load_workbook(file_path)
     sheet = wb.active
     for row in sheet.iter_rows(min_row=2, values_only=True):  # Skip header
         regno, total, present, percent = row[0], row[1], row[2], row[3]
         if regno and total and present and percent is not None:
             results.append([regno, semester, int(total), int(present), float(percent)])
+
+else:
+    # Unsupported file format
+    print(json.dumps({"error": "Unsupported file format. Please upload PDF or Excel only."}))
+    sys.exit(1)
 
 # ✅ Save cleaned Excel file
 workbook = openpyxl.Workbook()
