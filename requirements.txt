@@ -1,5 +1,7 @@
-pdfplumber==0.11.0
-pdfminer.six==20231228
-Pillow==10.2.0
-pypdfium2==4.27.0
-openpyxl==3.1.2
+pdfplumber==0.11.0          # For extracting attendance data from PDFs
+pdfminer.six==20231228      # Compatible version for pdfplumber
+Pillow==10.2.0              # For image processing used by pdfplumber
+pypdfium2==4.27.0           # Backend for PDF rendering
+openpyxl==3.1.2             # For handling .xlsx Excel files
+xlrd==2.0.1                 # For handling older .xls Excel files
+pandas==2.2.2               # For flexible Excel reading & parsing
