@@ -2362,6 +2362,7 @@ app.post("/admin/upload-autonomous-result-pdf", upload.single("pdf"), async (req
   }
 });
 
+
 // Route: Upload attendance (PDF / Excel)
 app.post("/upload-attendance", upload.single("file"), (req, res) => {
   const semester = req.body.semester;
@@ -2372,9 +2373,17 @@ app.post("/upload-attendance", upload.single("file"), (req, res) => {
     return res.status(400).json({ message: "❌ Semester or file missing." });
   }
 
+  // ✅ Validate file type before processing
+  const allowedExts = [".pdf", ".xlsx", ".xls"];
+  if (!allowedExts.includes(fileExt)) {
+    return res.status(400).json({ message: "❌ Invalid file type. Please upload PDF or Excel only." });
+  }
+
   console.log("📄 Attendance File Path:", filePath);
+  console.log("📂 File Extension:", fileExt);
   console.log("🐍 Running Python attendance script...");
 
+  // ✅ Pass correct extension to Python
   const python = spawn("python", ["extract_attendance.py", filePath, semester, fileExt]);
 
   let output = "";
