@@ -2464,7 +2464,7 @@ app.get("/student-attendance/:regno", (req, res) => {
 
 const GRADE_POINTS = {
   S: 10,
-  A+: 10, // ✅ Added A+ grade
+  "A+": 10, // ✅ Added A+ grade
   A: 9,
   B: 8,
   C: 7,
