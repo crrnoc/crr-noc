@@ -2362,7 +2362,6 @@ app.post("/admin/upload-autonomous-result-pdf", upload.single("pdf"), async (req
   }
 });
 
-
 // Route: Upload attendance (PDF / Excel)
 app.post("/upload-attendance", upload.single("file"), (req, res) => {
   const semester = req.body.semester;
@@ -2405,7 +2404,7 @@ app.post("/upload-attendance", upload.single("file"), (req, res) => {
 
     let records;
     try {
-      records = JSON.parse(output); // ✅ percentage preserved as string with %
+      records = JSON.parse(output); // ✅ percentage preserved exactly as string from Python
     } catch (err) {
       return res.status(500).json({ message: "❌ Invalid JSON", error: err.message });
     }
