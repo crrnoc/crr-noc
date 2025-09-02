@@ -171,26 +171,26 @@
     <button onclick="logout()"> Logout</button>
   </div>
 
-  <div class="main">
-    <div class="banner">🗓 Upload Attendance PDF</div>
-    <div class="card">
-      <form id="attendanceForm">
-        <label for="semester">Select Semester</label>
-        <select id="semester" required>
-          <option value="">-- Select Semester --</option>
-          <option>1-1</option><option>1-2</option>
-          <option>2-1</option><option>2-2</option>
-          <option>3-1</option><option>3-2</option>
-          <option>4-1</option><option>4-2</option>
-        </select>
+<div class="main">
+  <div class="banner">🗓 Upload Attendance (PDF / Excel)</div>
+  <div class="card">
+    <form id="attendanceForm">
+      <label for="semester">Select Semester</label>
+      <select id="semester" required>
+        <option value="">-- Select Semester --</option>
+        <option>1-1</option><option>1-2</option>
+        <option>2-1</option><option>2-2</option>
+        <option>3-1</option><option>3-2</option>
+        <option>4-1</option><option>4-2</option>
+      </select>
 
-        <label for="pdf">📎 Choose Attendance PDF</label>
-        <input type="file" id="pdf" accept=".pdf" required />
+      <label for="attendanceFile">📎 Choose Attendance File</label>
+      <input type="file" id="attendanceFile" accept=".pdf,.xlsx,.xls" required />
 
-        <button type="submit" id="submitBtn">Upload PDF</button>
-      </form>
-    </div>
+      <button type="submit" id="submitBtn">Upload & Process</button>
+    </form>
   </div>
+</div>
 
 <script>
   const userId = localStorage.getItem("userId");
@@ -225,54 +225,67 @@
   window.history.pushState(null, "", window.location.href);
   window.onpopstate = () => window.history.pushState(null, "", window.location.href);
 
-  document.getElementById("attendanceForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const semester = document.getElementById("semester").value;
-    const file = document.getElementById("pdf").files[0];
+document.getElementById("attendanceForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const semester = document.getElementById("semester").value;
+  const file = document.getElementById("attendanceFile").files[0];
 
-    if (!semester || !file) {
-      Swal.fire("Missing Fields", "Please select semester and upload a file.", "warning");
-      return;
-    }
+  if (!semester || !file) {
+    Swal.fire("Missing Fields", "Please select semester and upload a file.", "warning");
+    return;
+  }
 
-    const formData = new FormData();
-    formData.append("semester", semester);
-    formData.append("pdf", file);
+  const formData = new FormData();
+  formData.append("semester", semester);
+  formData.append("file", file); // ✅ renamed from 'pdf' to 'file'
 
-    document.getElementById("submitBtn").disabled = true;
+  document.getElementById("submitBtn").disabled = true;
 
-    Swal.fire({
-      title: "Uploading...",
-      html: "Processing attendance PDF...",
-      allowOutsideClick: false,
-      didOpen: () => Swal.showLoading()
+  Swal.fire({
+    title: "Uploading...",
+    html: "Processing attendance file...",
+    allowOutsideClick: false,
+    didOpen: () => Swal.showLoading()
+  });
+
+  try {
+    const response = await fetch("/upload-attendance", {
+      method: "POST",
+      body: formData
     });
 
-    try {
-      const response = await fetch("/upload-attendance", {
-        method: "POST",
-        body: formData
-      });
-
-      const contentType = response.headers.get("content-type");
-      if (!contentType.includes("application/json")) {
-        throw new Error("Server returned non-JSON response.");
-      }
-
-      const result = await response.json();
-      Swal.fire({
-        icon: result.total === 0 ? "warning" : "success",
-        title: result.total === 0 ? "No Records Found" : "Upload Successful ",
-        html: `<b>${result.message}</b><br>Total Records: <strong>${result.total}</strong><br><a href="${result.csv_file}" target="_blank"> Download CSV</a>`
-      });
-
-      if (result.total > 0) e.target.reset();
-    } catch (err) {
-      Swal.fire("Upload Failed ❌", err.message || "Something went wrong.", "error");
-    } finally {
-      document.getElementById("submitBtn").disabled = false;
+    const contentType = response.headers.get("content-type");
+    if (!contentType.includes("application/json")) {
+      throw new Error("Server returned non-JSON response.");
     }
-  });
+
+    const result = await response.json();
+    Swal.fire({
+      icon: result.total === 0 ? "warning" : "success",
+      title: result.total === 0 ? "No Records Found" : "Upload Successful",
+      html: `
+        <b>${result.message}</b><br>
+        Total Records: <strong>${result.total}</strong><br>
+        <a href="${result.excel_file}" target="_blank" style="
+          display:inline-block;
+          margin-top:10px;
+          padding:8px 14px;
+          background:#28a745;
+          color:white;
+          border-radius:5px;
+          text-decoration:none;
+        ">⬇ Download Clean Excel</a>
+      `
+    });
+
+    if (result.total > 0) e.target.reset();
+  } catch (err) {
+    Swal.fire("Upload Failed ❌", err.message || "Something went wrong.", "error");
+  } finally {
+    document.getElementById("submitBtn").disabled = false;
+  }
+});
+  
 </script>
 
 </body>
