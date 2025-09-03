@@ -203,6 +203,9 @@ app.use("/admin", adminRoutes);
 app.post('/login', (req, res) => {
   const { userId, password, role } = req.body;
 
+  // 🔹 Log the login attempt
+  console.log(`[LOGIN ATTEMPT] ${new Date().toLocaleString()} | Role: ${role} | UserID: ${userId}`);
+
   // Step 1: Get user by ID and role
   connection.query(
     'SELECT * FROM users WHERE userId = ? AND role = ?',
@@ -255,6 +258,7 @@ app.post('/login', (req, res) => {
     }
   );
 });
+
 // route for counts
 // 📌 Route to get login counts
 app.get("/api/login-counts", (req, res) => {
