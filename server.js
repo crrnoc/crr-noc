@@ -2684,7 +2684,7 @@ app.get("/student/overallResults/:regno", async (req, res) => {
 
     if (!rows.length) return res.json({ sgpa: "0.00", percentage: "0.00" });
 
-    // ✅ Separate autonomous & normal results
+    // ✅ Fetch autonomous SGPA values
     const autonomousRows = await connection.promise().query(
       `SELECT sgpa FROM autonomous_results WHERE regno = ? AND sgpa IS NOT NULL`,
       [regno]
@@ -2695,6 +2695,7 @@ app.get("/student/overallResults/:regno", async (req, res) => {
     let totalSGPA = autoSGPAList.reduce((sum, gpa) => sum + gpa, 0);
     let count = autoSGPAList.length;
 
+    // ✅ Handle normal results GPA calculation
     const normalResults = rows.filter(r => r.credits !== null);
     if (normalResults.length > 0) {
       const normalCalc = calculateGPA(normalResults);
@@ -2702,8 +2703,12 @@ app.get("/student/overallResults/:regno", async (req, res) => {
       count += normalResults.length;
     }
 
+    // ✅ Calculate CGPA
     const cgpa = count > 0 ? (totalSGPA / count).toFixed(2) : "0.00";
-    const percentage = (cgpa * 10).toFixed(2);
+
+    // ✅ JNTUK Formula: Percentage = (CGPA − 0.75) × 10
+    const percentage =
+      cgpa > 0.75 ? ((cgpa - 0.75) * 10).toFixed(2) : "0.00";
 
     res.json({
       sgpa: cgpa,
