@@ -2809,7 +2809,7 @@ app.get("/generate-certificate/:userId", async (req, res) => {
   }
 
   const gradePointMap = {
-    S: 10, A: 9, B: 8, C: 7, D: 6, E: 5, F: 0, Ab: 0, ABSENT: 0, Completed: 0
+    "A+" :10, S: 10, A: 9, B: 8, C: 7, D: 6, E: 5, F: 0, Ab: 0, ABSENT: 0, Completed: 0
   };
 
   try {
