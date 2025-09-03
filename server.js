@@ -322,12 +322,26 @@ function sendOtpToEmail(userId, email, res) {
   const otp = Math.floor(100000 + Math.random() * 900000);
   otpMap.set(userId, otp.toString());
 
-  const mailOptions = {
-    from: '"CRR STD Team" <sircrrcoestd@sircrrengg.ac.in>',
-    to: email,
-    subject: "Your OTP for Password Reset",
-    text: `Your OTP is ${otp}. It will expire in 10 minutes.`,
-  };
+const mailOptions = {
+  from: '"CRR Student Support Team" <sircrrcoestd@sircrrengg.ac.in>',
+  to: email,
+  subject: "Password Reset - One Time Password (OTP)",
+  text: `Dear Student,
+
+We have received a request to reset your account password.  
+Please use the following One Time Password (OTP) to proceed:
+
+OTP: ${otp}
+
+This OTP is valid for 10 minutes only.  
+If you did not request this, please ignore this email.
+
+Best Regards,  
+CRR Student Support Team
+Sir C.R. Reddy College of Engineering
+`,
+};
+
 
   transporter.sendMail(mailOptions, (err) => {
     if (err) return res.json({ success: false, message: "Failed to send email." });
@@ -533,20 +547,25 @@ app.post('/send-bulk-notification', async (req, res) => {
         const student = results[0];
         console.log("✅ Found student:", student.name, "📧", student.email);
 
-        const mailOptions = {
-          from: '"CRR STD Team" <sircrrcoestd@sircrrengg.ac.in>',
-          to: student.email,
-          subject: " Important Notification from CRR NOC Team",
-          html: `
-            <div style="font-family: Arial, sans-serif; padding: 20px;">
-              <h2 style="color: #003366;">Sir C R Reddy College of Engineering</h2>
-              <p>Dear <strong>${student.name}</strong>,</p>
-              <p>${message}</p>
-              <br>
-              <p style="color: #555;">Best regards,<br><strong>CRR NOC Team</strong></p>
-            </div>
-          `
-        };
+const mailOptions = {
+  from: '"CRR Student Support Team" <sircrrcoestd@sircrrengg.ac.in>',
+  to: student.email,
+  subject: "Official Notification - Sir C.R. Reddy College of Engineering",
+  html: `
+    <div style="font-family: Arial, sans-serif; padding: 20px; line-height: 1.6; color: #333;">
+      <h2 style="color: #003366; margin-bottom: 10px;">Sir C.R. Reddy College of Engineering</h2>
+      <hr style="border: none; border-top: 2px solid #003366; margin: 10px 0 20px 0;" />
+      <p>Dear <strong>${student.name}</strong>,</p>
+      <p>${message}</p>
+      <br>
+      <p style="color: #555; margin-top: 20px;">
+        Best regards,<br>
+        <strong>CRR Student Support Team</strong><br>
+        Sir C.R. Reddy College of Engineering
+      </p>
+    </div>
+  `
+};
 
         transporter.sendMail(mailOptions, (err2) => {
           if (err2) {
@@ -1779,18 +1798,25 @@ app.post('/api/submit-feedback', (req, res) => {
   }
 
   // HTML Email for User
-  const userMailOptions = {
-  from: '"CRR STD Team" <sircrrcoestd@sircrrengg.ac.in>',
+const userMailOptions = {
+  from: '"CRR Student Support Team" <sircrrcoestd@sircrrengg.ac.in>',
   to: email,
-  subject: "Thank You for Your Feedback",
+  subject: "Acknowledgment of Your Feedback - Sir C.R. Reddy College of Engineering",
   html: `
-    <div style="font-family: Arial; padding: 20px;">
-      <h2 style="color:#003366; margin-top: 0;">Sir C R Reddy College of Engineering</h2>
-      <p>Hi <strong>${name}</strong>,</p>
-      <p>Thank you for reaching out. We have received your feedback and will review it shortly.</p>
-      <p><strong>Your message:</strong></p>
-      <blockquote style="color: #444; font-style: italic;">${message}</blockquote>
-      <p>Best regards,<br><strong>CRR NOC Support Team</strong></p>
+    <div style="font-family: Arial, sans-serif; padding: 20px; line-height: 1.6; color: #333;">
+      <h2 style="color:#003366; margin-top: 0;">Sir C.R. Reddy College of Engineering</h2>
+      <hr style="border: none; border-top: 2px solid #003366; margin: 10px 0 20px 0;" />
+      <p>Dear <strong>${name}</strong>,</p>
+      <p>Thank you for sharing your feedback with us. We truly value the time you took to provide your thoughts and suggestions. Our team will carefully review your message and take necessary actions, if required.</p>
+      <p><strong>Your submitted message:</strong></p>
+      <blockquote style="color: #555; font-style: italic; border-left: 4px solid #003366; padding-left: 10px; margin: 10px 0;">
+        ${message}
+      </blockquote>
+      <p style="margin-top: 20px; color: #555;">
+        Best regards,<br>
+        <strong>CRR Student Support Team</strong><br>
+        Sir C.R. Reddy College of Engineering
+      </p>
     </div>
   `
 };
