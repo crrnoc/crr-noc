@@ -2758,7 +2758,7 @@ app.get("/api/verify-result", async (req, res) => {
     const student = studentRows[0] || {};
 
     // 🟢 GPA Calculation
-    const gradeMap = { S: 10, A: 9, B: 8, C: 7, D: 6, E: 5, F: 0, Ab: 0 };
+    const gradeMap = { "A+": 10, S: 10, A: 9, B: 8, C: 7, D: 6, E: 5, F: 0, Ab: 0 };
     let totalCredits = 0, totalPoints = 0;
 
     results.forEach(r => {
