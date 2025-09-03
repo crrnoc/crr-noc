@@ -3688,6 +3688,51 @@ app.get("/api/midmarks/search", (req, res) => {
   });
 });
 
+// 🆕 Fetch Mid Internal Marks Semester-wise
+app.get("/student/internals/:regno", (req, res) => {
+  const regno = req.params.regno;  // hallticket / registration number
+  const semester = req.query.semester;
+
+  if (!regno || !semester) {
+    return res.status(400).json({ error: "Missing hallticket or semester" });
+  }
+
+  const query = `
+    SELECT 
+      sub_code AS subcode,
+      mid1,
+      mid2,
+      a1,
+      q1,
+      a2,
+      q2
+    FROM mid_internal_marks
+    WHERE hallticket = ? AND semester = ?
+  `;
+
+  connection.query(query, [regno, semester], (err, results) => {
+    if (err) {
+      console.error("❌ Error fetching mid marks:", err);
+      return res.status(500).json({ error: "Server error fetching internals" });
+    }
+
+    if (results.length === 0) {
+      return res.json({
+        regno,
+        semester,
+        internals: [],
+        message: "No internal marks found for this semester"
+      });
+    }
+
+    res.json({
+      regno,
+      semester,
+      internals: results
+    });
+  });
+});
+
 //  HOD send notification route
 app.post('/api/notifications/send', (req, res) => {
   const { userId, message } = req.body;
