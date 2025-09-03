@@ -2538,6 +2538,7 @@ app.get('/student/results/:regno', async (req, res) => {
   console.log("📥 Incoming Request:", { regno, semester });
 
   try {
+    // 🔹 Fetch semester-wise results (normal + autonomous)
     connection.query(
       `
       SELECT subcode, subname, grade, credits 
@@ -2557,6 +2558,7 @@ app.get('/student/results/:regno', async (req, res) => {
           return res.status(500).json({ error: "DB error (semResults)" });
         }
 
+        // 🔹 Fetch overall results (normal + autonomous)
         connection.query(
           `
           SELECT grade, credits 
@@ -2565,7 +2567,7 @@ app.get('/student/results/:regno', async (req, res) => {
 
           UNION ALL
 
-          SELECT grade, NULL as credits 
+          SELECT sgpa as grade, NULL as credits 
           FROM autonomous_results 
           WHERE regno = ?
           `,
@@ -2576,17 +2578,77 @@ app.get('/student/results/:regno', async (req, res) => {
               return res.status(500).json({ error: "DB error (allResults)" });
             }
 
-            const semCalc = calculateGPA(semResults);
-            const overallCalc = calculateGPA(allResults);
+            // ✅ Semester GPA Calculation:
+            // If autonomous semester → directly fetch SGPA from table instead of calculating
+            let semGPA = null;
+            let semPercentage = null;
 
-            res.json({
-              regno,
-              semester,
-              results: semResults,
-              sgpa: semCalc.gpa,
-              semPercentage: semCalc.percentage,
-              cgpa: overallCalc.gpa,
-              overallPercentage: overallCalc.percentage
+            const autonomousSemQuery = `
+              SELECT sgpa 
+              FROM autonomous_results 
+              WHERE regno = ? AND semester = ?
+              LIMIT 1
+            `;
+
+            connection.query(autonomousSemQuery, [regno, semester], (err, autoSem) => {
+              if (err) {
+                console.error("❌ Error fetching autonomous SGPA:", err);
+                return res.status(500).json({ error: "DB error (autoSGPA)" });
+              }
+
+              if (autoSem.length > 0 && autoSem[0].sgpa !== null) {
+                // Autonomous → use stored SGPA directly
+                semGPA = autoSem[0].sgpa.toFixed(2);
+                semPercentage = (semGPA * 10).toFixed(2);
+              } else {
+                // Non-autonomous → calculate SGPA
+                const semCalc = calculateGPA(semResults);
+                semGPA = semCalc.gpa;
+                semPercentage = semCalc.percentage;
+              }
+
+              // ✅ Overall CGPA & Percentage calculation:
+              // If autonomous results exist, use their SGPA directly.
+              let totalSGPA = 0;
+              let count = 0;
+
+              // Sum up SGPA for autonomous results
+              connection.query(
+                `SELECT sgpa FROM autonomous_results WHERE regno = ? AND sgpa IS NOT NULL`,
+                [regno],
+                (err, autoRows) => {
+                  if (err) {
+                    console.error("❌ Error fetching autonomous CGPA data:", err);
+                    return res.status(500).json({ error: "DB error (autoCGPA)" });
+                  }
+
+                  autoRows.forEach(row => {
+                    totalSGPA += row.sgpa;
+                    count++;
+                  });
+
+                  // For normal results → calculate from grades
+                  const normalResults = allResults.filter(r => r.credits !== null);
+                  if (normalResults.length > 0) {
+                    const normalCalc = calculateGPA(normalResults);
+                    totalSGPA += parseFloat(normalCalc.gpa) * normalResults.length;
+                    count += normalResults.length;
+                  }
+
+                  const cgpa = count > 0 ? (totalSGPA / count).toFixed(2) : "0.00";
+                  const overallPercentage = (cgpa * 10).toFixed(2);
+
+                  res.json({
+                    regno,
+                    semester,
+                    results: semResults,
+                    sgpa: semGPA,
+                    semPercentage,
+                    cgpa,
+                    overallPercentage
+                  });
+                }
+              );
             });
           }
         );
@@ -2604,6 +2666,7 @@ app.get("/student/overallResults/:regno", async (req, res) => {
   const { regno } = req.params;
 
   try {
+    // 🔹 Get SGPA directly from autonomous + normal results
     const [rows] = await connection.promise().query(
       `
       SELECT grade, credits 
@@ -2612,7 +2675,7 @@ app.get("/student/overallResults/:regno", async (req, res) => {
 
       UNION ALL
 
-      SELECT grade, NULL as credits 
+      SELECT sgpa as grade, NULL as credits 
       FROM autonomous_results 
       WHERE regno = ?
       `,
@@ -2621,11 +2684,30 @@ app.get("/student/overallResults/:regno", async (req, res) => {
 
     if (!rows.length) return res.json({ sgpa: "0.00", percentage: "0.00" });
 
-    const overallCalc = calculateGPA(rows);
+    // ✅ Separate autonomous & normal results
+    const autonomousRows = await connection.promise().query(
+      `SELECT sgpa FROM autonomous_results WHERE regno = ? AND sgpa IS NOT NULL`,
+      [regno]
+    );
+
+    const autoSGPAList = autonomousRows[0].map(r => r.sgpa);
+
+    let totalSGPA = autoSGPAList.reduce((sum, gpa) => sum + gpa, 0);
+    let count = autoSGPAList.length;
+
+    const normalResults = rows.filter(r => r.credits !== null);
+    if (normalResults.length > 0) {
+      const normalCalc = calculateGPA(normalResults);
+      totalSGPA += parseFloat(normalCalc.gpa) * normalResults.length;
+      count += normalResults.length;
+    }
+
+    const cgpa = count > 0 ? (totalSGPA / count).toFixed(2) : "0.00";
+    const percentage = (cgpa * 10).toFixed(2);
 
     res.json({
-      sgpa: overallCalc.gpa,
-      percentage: overallCalc.percentage
+      sgpa: cgpa,
+      percentage
     });
 
   } catch (err) {
@@ -2633,6 +2715,7 @@ app.get("/student/overallResults/:regno", async (req, res) => {
     res.status(500).json({ sgpa: "0.00", percentage: "0.00" });
   }
 });
+
 
 
 // result verification
