@@ -458,84 +458,137 @@ select#semester:hover {
     }
   });
 
-  async function fetchResults() {
-    const regno = localStorage.getItem("regno") || localStorage.getItem("userId");
-    const semester = document.getElementById("semester").value;
-    const container = document.getElementById("resultContainer");
+async function fetchResults() {
+  const regno = localStorage.getItem("regno") || localStorage.getItem("userId");
+  const semester = document.getElementById("semester").value;
+  const container = document.getElementById("resultContainer");
 
-    container.innerHTML = "";
+  container.innerHTML = "";
 
-    if (!regno) {
-      container.innerHTML = "<p class='error'>Student not logged in. Please login first.</p>";
+  if (!regno) {
+    container.innerHTML = "<p class='error'>Student not logged in. Please login first.</p>";
+    return;
+  }
+
+  if (!semester) {
+    container.innerHTML = "<p class='error'>Please select a semester.</p>";
+    return;
+  }
+
+  try {
+    container.innerHTML = "<p>Loading results...</p>";
+
+    // 🔹 1. Fetch Semester Results
+    const response = await fetch(`/student/results/${regno}?semester=${semester}`);
+    const data = await response.json();
+
+    if (!data.results || data.results.length === 0) {
+      container.innerHTML = "<p class='error'>No results found for this semester.</p>";
       return;
     }
 
-    if (!semester) {
-      container.innerHTML = "<p class='error'>Please select a semester.</p>";
-      return;
-    }
+    let html = `
+    <div style="display: flex; justify-content: center; margin-top: 20px;">
+      <div style="
+        background: white;
+        border-radius: 20px;
+        padding: 20px;
+        width: 90%;
+        max-width: 900px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      ">
+        <h3 style="text-align:center; color:#1f75cb; margin-bottom: 20px;">
+          Results for <strong>${data.regno}</strong> - Semester <strong>${data.semester}</strong>
+        </h3>
 
-    try {
-      container.innerHTML = "<p>Loading results...</p>";
-      const response = await fetch(`/student/results/${regno}?semester=${semester}`);
-      const data = await response.json();
+        <div style="display:flex; justify-content:center; gap:20px; flex-wrap:wrap; margin-bottom:20px;">
+          <div><strong>SGPA:</strong> ${data.sgpa}</div>
+          <div><strong>Percentage:</strong> ${data.semPercentage}%</div>
+        </div>
 
-      if (!data.results || data.results.length === 0) {
-        container.innerHTML = "<p class='error'>No results found for this semester.</p>";
-        return;
-      }
+        <div style="overflow-x: auto;">
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr style="background: #1f75cb; color: white;">
+              <th style="padding: 10px;">Subject Code</th>
+              <th style="padding: 10px;">Subject Name</th>
+              <th style="padding: 10px;">Grade</th>
+              <th style="padding: 10px;">Credits</th>
+            </tr>
+    `;
 
-      let html = `
-      <div style="display: flex; justify-content: center; margin-top: 20px;">
-        <div style="
-          background: white;
-          border-radius: 20px;
-          padding: 20px;
-          width: 90%;
-          max-width: 800px;
-          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-        ">
-          <h3 style="text-align:center; color:#1f75cb; margin-bottom: 20px;">Results for <strong>${data.regno}</strong> - Semester <strong>${data.semester}</strong></h3>
+    data.results.forEach(row => {
+      html += `
+            <tr style="text-align: center;">
+              <td style="padding: 8px;">${row.subcode}</td>
+              <td style="padding: 8px;">${row.subname || '-'}</td>
+              <td style="padding: 8px;">${row.grade}</td>
+              <td style="padding: 8px;">${row.credits}</td>
+            </tr>`;
+    });
 
-          <div style="display:flex; justify-content:center; gap:20px; flex-wrap:wrap; margin-bottom:20px;">
-            <div><strong>SGPA:</strong> ${data.sgpa}</div>
-            <div><strong>Percentage:</strong> ${data.semPercentage}%</div>
-          </div>
+    html += `
+          </table>
+        </div>
+    `;
 
-          <div style="overflow-x: auto;">
-            <table style="width: 100%; border-collapse: collapse;">
-              <tr style="background: #1f75cb; color: white;">
-                <th style="padding: 10px;">Subject Code</th>
-                <th style="padding: 10px;">Subject Name</th>
-                <th style="padding: 10px;">Grade</th>
-                <th style="padding: 10px;">Credits</th>
-              </tr>
+    // 🔹 2. Fetch Mid Internal Marks
+    const internalsRes = await fetch(`/student/internals/${regno}?semester=${semester}`);
+    const internalsData = await internalsRes.json();
+
+    if (internalsData.internals && internalsData.internals.length > 0) {
+      html += `
+        <h3 style="margin-top: 30px; color: #28a745; text-align:center;">Mid Internal Marks</h3>
+        <div style="overflow-x: auto;">
+          <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+            <tr style="background: #28a745; color: white;">
+              <th style="padding: 10px;">Subject Code</th>
+              <th style="padding: 10px;">MID-1</th>
+              <th style="padding: 10px;">Assignment 1</th>
+              <th style="padding: 10px;">Quiz 1</th>
+              <th style="padding: 10px;">MID-2</th>
+              <th style="padding: 10px;">Assignment 2</th>
+              <th style="padding: 10px;">Quiz 2</th>
+            </tr>
       `;
 
-      data.results.forEach(row => {
+      internalsData.internals.forEach(row => {
         html += `
-              <tr style="text-align: center;">
-                <td style="padding: 8px;">${row.subcode}</td>
-                <td style="padding: 8px;">${row.subname || '-'}</td>
-                <td style="padding: 8px;">${row.grade}</td>
-                <td style="padding: 8px;">${row.credits}</td>
-              </tr>`;
+            <tr style="text-align: center;">
+              <td style="padding: 8px;">${row.subcode}</td>
+              <td style="padding: 8px;">${row.mid1 || '-'}</td>
+              <td style="padding: 8px;">${row.a1 || '-'}</td>
+              <td style="padding: 8px;">${row.q1 || '-'}</td>
+              <td style="padding: 8px;">${row.mid2 || '-'}</td>
+              <td style="padding: 8px;">${row.a2 || '-'}</td>
+              <td style="padding: 8px;">${row.q2 || '-'}</td>
+            </tr>
+        `;
       });
 
-      html += `</table>
-        <div style="text-align: center; margin-top: 25px;">
-          <button onclick="window.print()" style="padding:10px 20px; margin:5px; background-color:#007BFF; color:white; border:none; border-radius:6px; cursor:pointer;">🖨️ Print</button>
-          <button onclick="downloadFormattedResult('${regno}', '${semester}')" style="padding:10px 20px; margin:5px; background-color:#28a745; color:white; border:none; border-radius:6px; cursor:pointer;">🏆 Generate Certificate</button>
-        </div>
-      `;
-
-      container.innerHTML = html;
-
-    } catch (err) {
-      console.error("Error fetching results:", err);
-      container.innerHTML = "<p class='error'>Error fetching results. Please try again later.</p>";
+      html += `</table></div>`;
+    } else {
+      html += `<p style="color:red; margin-top:15px; text-align:center;">
+                No internal marks found for this semester.
+              </p>`;
     }
+
+    // 🔹 3. Add Print & Download Buttons
+    html += `
+      <div style="text-align: center; margin-top: 25px;">
+        <button onclick="window.print()" style="padding:10px 20px; margin:5px; background-color:#007BFF; color:white; border:none; border-radius:6px; cursor:pointer;">🖨️ Print</button>
+        <button onclick="downloadFormattedResult('${regno}', '${semester}')" style="padding:10px 20px; margin:5px; background-color:#28a745; color:white; border:none; border-radius:6px; cursor:pointer;">🏆 Generate Certificate</button>
+      </div>
+    `;
+
+    html += `</div></div>`;
+
+    container.innerHTML = html;
+
+  } catch (err) {
+    console.error("Error fetching results:", err);
+    container.innerHTML = "<p class='error'>Error fetching results. Please try again later.</p>";
   }
+}
 
   function downloadFormattedResult(regno, semester) {
     if (!regno || !semester) {
