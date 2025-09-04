@@ -179,7 +179,7 @@ const pool = mysql.createPool({
 });
 
 
- pool.connect((err) => {
+ pool.query((err) => {
   if (err) {
     console.error('❌ Database connection failed:', err.stack);
   } else {
