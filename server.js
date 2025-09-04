@@ -179,7 +179,7 @@ const pool = mysql.createPool({
 });
 
 
-connection.connect((err) => {
+ pool.connect((err) => {
   if (err) {
     console.error('❌ Database connection failed:', err.stack);
   } else {
@@ -189,7 +189,7 @@ connection.connect((err) => {
 // 🔁 Cleanup old notifications every 24 hours
 setInterval(() => {
   const query = `DELETE FROM notifications WHERE date_sent < NOW() - INTERVAL 3 DAY`;
-  connection.query(query, (err, result) => {
+  pool.query(query, (err, result) => {
     if (err) {
       console.error("❌ Failed to delete old notifications:", err);
     } else {
@@ -311,7 +311,7 @@ app.post('/send-otp', (req, res) => {
   const { userId, email } = req.body;
 
   // First try from students
-  connection.query('SELECT email FROM students WHERE userId = ?', [userId], (err, results) => {
+  pool.query('SELECT email FROM students WHERE userId = ?', [userId], (err, results) => {
     if (err) return res.json({ success: false, message: "Server error" });
 
     if (results.length > 0 && results[0].email === email) {
@@ -319,7 +319,7 @@ app.post('/send-otp', (req, res) => {
     }
 
     // Try from staff
-    connection.query('SELECT staff_email FROM staff WHERE staff_id = ?', [userId], (err2, results2) => {
+    pool.query('SELECT staff_email FROM staff WHERE staff_id = ?', [userId], (err2, results2) => {
       if (err2 || results2.length === 0 || results2[0].staff_email !== email) {
         return res.json({ success: false, message: "User ID and email don't match." });
       }
@@ -383,7 +383,7 @@ app.post('/reset-password', async (req, res) => {
   try {
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-    connection.query(
+    pool.query(
       'UPDATE users SET password = ? WHERE userId = ?',
       [hashedPassword, userId],
       (err, result) => {
@@ -549,7 +549,7 @@ app.post('/send-bulk-notification', async (req, res) => {
     console.log("📦 Processing userId:", userId);
     await new Promise(resolve => {
       const query = 'SELECT email, name FROM students WHERE userId = ?';
-      connection.query(query, [userId], (err, results) => {
+      pool.query(query, [userId], (err, results) => {
         if (err || results.length === 0) {
           console.log("❌ Student not found or DB error for:", userId, err);
           failed++;
@@ -586,7 +586,7 @@ const mailOptions = {
             console.log("📧 Email sent to:", student.email);
           }
 
-          connection.query(
+          pool.query(
             'INSERT INTO notifications (userId, message) VALUES (?, ?)',
             [userId, message],
             (err3) => {
@@ -622,7 +622,7 @@ app.get('/notifications/:userId', (req, res) => {
     ORDER BY n.date_sent DESC
   `;
 
-  connection.query(query, [userId], (err, results) => {
+  pool.query(query, [userId], (err, results) => {
     if (err) {
       console.error("❌ Error fetching notifications:", err);
       return res.status(500).json({ success: false, message: "Error retrieving notifications" });
@@ -647,7 +647,7 @@ app.post('/impose-fine', (req, res) => {
   `;
   const fineValues = [userId, amount, reason, staffId, academic_year];
 
-  connection.query(fineQuery, fineValues, (err, result) => {
+  pool.query(fineQuery, fineValues, (err, result) => {
     if (err) {
       console.error("❌ Error inserting fine:", err);
       return res.status(500).json({ success: false, message: "Failed to insert fine" });
@@ -658,7 +658,7 @@ app.post('/impose-fine', (req, res) => {
       INSERT INTO notifications (userId, message, staffId)
       VALUES (?, ?, ?)
     `;
-    connection.query(notifyQuery, [userId, message, staffId], (err2) => {
+    pool.query(notifyQuery, [userId, message, staffId], (err2) => {
       if (err2) {
         console.error("❌ Notification insert error:", err2);
         return res.status(500).json({ success: false, message: "Fine added, but notification failed" });
@@ -673,7 +673,7 @@ app.post('/impose-fine', (req, res) => {
 //total fine there exist before
 app.get('/total-fine/:userId', (req, res) => {
   const { userId } = req.params;
-  connection.query('SELECT SUM(amount) AS totalFine FROM fines WHERE userId = ?', [userId], (err, results) => {
+  pool.query('SELECT SUM(amount) AS totalFine FROM fines WHERE userId = ?', [userId], (err, results) => {
     if (err) {
       console.error("Error fetching fine:", err);
       return res.status(500).json({ success: false });
