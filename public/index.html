@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sir C.R. Reddy College of Engineering | Student Management System</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Official Student Management System of Sir C.R. Reddy College of Engineering - Admissions, Attendance, Results, Fee Management, Certificates.">
+  <meta name="keywords" content="Sir C.R. Reddy College of Engineering, Student Management System, Admissions, Attendance, Results, Certificates, JNTUK, AICTE, NBA, NAAC">
+  <meta name="author" content="Sir C.R. Reddy College of Engineering">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      background: #f4f6f9;
+      color: #333;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      padding: 15px 30px;
+      position: relative;
+      flex-wrap: wrap;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .logo img {
+      height: 60px;
+      width: 60px;
+      border-radius: 50%;
+    }
+    .college-name {
+      flex: 1;
+      text-align: center;
+    }
+    .college-name h1 {
+      margin: 0;
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: #222;
+    }
+    .college-name h2 {
+      margin: 3px 0 0;
+      font-size: 1.1rem;
+      color: red;
+      font-weight: 600;
+    }
+    .college-name .accreditations {
+      margin-top: 5px;
+      font-size: 0.9rem;
+      color: #555;
+      line-height: 1.4;
+    }
+    .login-top {
+      position: absolute;
+      right: 20px;
+      top: 20px;
+    }
+    .login-top a {
+      text-decoration: none;
+      padding: 10px 18px;
+      background: #0077cc;
+      color: #fff;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      transition: 0.3s;
+    }
+    .login-top a:hover {
+      background: #005fa3;
+    }
+
+    /* Notifications */
+    .notifications {
+      background: #fff;
+      margin: 20px auto;
+      max-width: 95%;
+      padding: 15px;
+      border-left: 6px solid #0077cc;
+      border-radius: 6px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .notifications h3 {
+      margin-bottom: 10px;
+      font-size: 1.2rem;
+      color: #0077cc;
+    }
+    .notifications marquee a {
+      text-decoration: none;
+      color: #333;
+      font-weight: 500;
+      margin-right: 30px;
+      transition: 0.3s;
+    }
+    .notifications marquee a:hover {
+      color: #0077cc;
+      text-decoration: underline;
+    }
+
+    /* Sections */
+    .section {
+      max-width: 900px;
+      margin: 20px auto;
+      padding: 20px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    }
+    .section h2 {
+      margin-top: 0;
+      color: #0077cc;
+      font-size: 1.4rem;
+      border-bottom: 2px solid #0077cc;
+      padding-bottom: 6px;
+    }
+    .section p {
+      line-height: 1.6;
+      text-align: justify;
+    }
+
+    /* Counts */
+    .counts {
+      display: flex;
+      justify-content: space-around;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .count-box {
+      background: #f9fafc;
+      padding: 15px;
+      border-radius: 10px;
+      flex: 1;
+      margin: 0 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      transition: 0.3s;
+    }
+    .count-box:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .accreditations{
+      font-display: bold;
+      font-weight: 5px;
+    }
+    .count-box h3 {
+      margin: 0;
+      font-size: 1.8rem;
+      color: #0077cc;
+    }
+    .count-box p {
+      margin: 5px 0 0;
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    /* Login Button */
+    .login-btn {
+      text-decoration: none;
+      padding: 12px 20px;
+      background: #0077cc;
+      color: #fff;
+      border-radius: 8px;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+    .login-btn:hover {
+      background: #005fa3;
+    }
+
+    /* Footer */
+    footer {
+      background: #222;
+      color: #ddd;
+      text-align: center;
+      padding: 20px;
+      margin-top: 30px;
+      font-size: 0.95rem;
+    }
+    footer a {
+      color: #4da6ff;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    footer a:hover {
+      text-decoration: underline;
+      color: #80c1ff;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      header {
+        flex-direction: column;
+        text-align: center;
+      }
+      .college-name {
+        order: 2;
+      }
+      .logo {
+        order: 1;
+        margin-bottom: 10px;
+      }
+      .login-top {
+        position: static;
+        margin-top: 10px;
+        order: 3;
+      }
+      .counts {
+        flex-direction: column;
+      }
+      .count-box {
+        margin: 10px 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="logo">
+      <img src="crrengglogo.png" alt="College Logo">
+    </div>
+    <div class="college-name">
+      <h1>Sir C.R. Reddy College of Engineering</h1>
+      <h2>(Autonomous)</h2>
+      <div class="accreditations">
+        Approved by AICTE, 
+        Affiliated to JNTUK,
+        Accredited by NBA,
+        Accredited by NAAC with 'A' Grade
+      </div>
+    </div>
+    <div class="login-top">
+      <a href="login.html">Login</a>
+    </div>
+  </header>
+
+  <!-- Notifications -->
+  <section class="notifications">
+    <h3>📢 Latest Notifications</h3>
+    <marquee behavior="scroll" direction="left" scrollamount="5" 
+             onmouseover="this.stop();" onmouseout="this.start();">
+      <a href="results2025.html">📄 Final Year Exam Results Released (2025 Batch)</a> | 
+      <a href="nocportal.html">📝 NOC Portal Open for Final Year Students</a> | 
+      <a href="feedues.html">💰 Fee Due Date Extended till 15th Sept 2025</a> | 
+      <a href="workshop.html">🎓 Workshop on Cyber Security - Register Now</a> | 
+      <a href="mailto:sircrrcoestd@sircrrengg.ac.in?subject=Feedback%20on%20Student%20Management%20System&body=We%20value%20your%20suggestions%20for%20improvement.%20Please%20feel%20free%20to%20share%20your%20thoughts%20with%20us%20at%20sircrrcoestd@sircrrengg.ac.in">
+        ✉️ We value your suggestions for improvement. Please feel free to share your thoughts with us at sircrrcoestd@sircrrengg.ac.in
+      </a>
+    </marquee>
+  </section>
+
+ <!-- Login Counts -->
+<section class="section">
+  <div class="counts">
+    <div class="count-box">
+      <h3 id="studentCount">0</h3> <!-- Dynamic student count -->
+      <p>Student Logins</p>
+    </div>
+    <div class="count-box">
+      <h3 id="staffCount">0</h3> <!-- Dynamic staff count -->
+      <p>Staff Logins</p>
+    </div>
+  </div>
+</section>
+
+  <!-- About Section -->
+  <section class="section">
+    <h2>About Student Management System</h2>
+    <p>
+      The Student Management System (SMS) of Sir C.R. Reddy College of Engineering is a 
+      comprehensive digital platform for students, staff, and administrators. It simplifies 
+      admissions, attendance, fee management, academic progress tracking, and certificate 
+      generation. The system reduces paperwork, improves efficiency, and ensures transparency 
+      in academic operations.
+    </p>
+  </section>
+
+  <!-- Vision -->
+  <section class="section">
+    <h2>Vision</h2>
+    <p>
+      To be a center of excellence in engineering education and research, producing globally 
+      competent and socially responsible professionals.
+    </p>
+  </section>
+
+  <!-- Mission -->
+  <section class="section">
+    <h2>Mission</h2>
+    <p>
+      To impart quality technical education, foster innovation, encourage entrepreneurship, 
+      and prepare students to excel in their careers while contributing to society.
+    </p>
+  </section>
+
+  <!-- Login Again -->
+  <section class="section" style="text-align:center;">
+    <a href="login.html" class="login-btn">Login to Portal</a>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <p>© 2025 Sir C.R. Reddy College of Engineering | All Rights Reserved</p>
+    <p>
+      Feedback: 
+      <a href="mailto:sircrrcoestd@sircrrengg.ac.in?subject=Feedback%20on%20Student%20Management%20System&body=We%20value%20your%20suggestions%20for%20improvement.%20Please%20feel%20free%20to%20share%20your%20thoughts%20with%20us.">
+        sircrrcoestd@sircrrengg.ac.in
+      </a>
+    </p>
+  </footer>
+<script>
+  // Fetch login counts from backend and update UI
+  async function updateLoginCounts() {
+    try {
+      const res = await fetch("https://crr-noc.onrender.com/api/login-counts"); // 👈 your backend API
+      const data = await res.json();
+
+      // Update UI dynamically
+      document.getElementById("studentCount").textContent = data.studentCount || 0;
+      document.getElementById("staffCount").textContent = data.staffCount || 0;
+    } catch (err) {
+      console.error("Error fetching login counts:", err);
+    }
+  }
+
+  // Call the function when page loads
+  window.onload = updateLoginCounts;
+</script>
+</body>
+</html>
