@@ -15,20 +15,6 @@
     <meta property="og:url" content="https://crr-noc.onrender.com/" />
     <meta property="og:type" content="website" />
     <link rel="canonical" href="https://crr-noc.onrender.com/" />
-    <!-- Schema -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    "name": "CRR STD Portal",
-    "url": "https://crr-noc.onrender.com",
-    "description": "CRR Student Service Portal for NOC, attendance, fees, results.",
-    "publisher": {
-      "@type": "Organization",
-      "name": "SIR C.R Reddy College of Engineering"
-    }
-  }
-  </script>
 
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
 
@@ -68,11 +54,18 @@
             transition: all 0.3s ease;
         }
         
-        /* Logo */
-        .logo {
+        /* Logo and Name Container */
+        .logo-name-container {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 15px;
+            flex-grow: 1;
+            max-width: 70%;
+        }
+
+        /* Logo */
+        .logo {
+            flex-shrink: 0;
         }
         .logo img {
             height: 55px;
@@ -85,15 +78,12 @@
             transform: rotate(5deg) scale(1.05);
         }
 
-        /* College Name Container */
+        /* College Name */
         .college-name {
-            flex: 1;
-            text-align: center;
-            padding: 0 8px;
-            min-width: 200px;
+            flex-grow: 1;
+            text-align: left;
         }
 
-        /* College Title Auto-Resize */
         .college-name h1 {
             font-size: clamp(1rem, 2vw + 0.5rem, 1.7rem);
             font-weight: bold;
@@ -102,30 +92,24 @@
             line-height: 1.2;
             word-break: break-word;
             text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-            /* BOLD */
             font-weight: 700;
         }
 
-        /* Autonomous Subheading */
         .college-name h2 {
             font-size: clamp(0.7rem, 1vw + 0.4rem, 1rem);
             font-weight: 600;
-            /* Changed to RED */
             color: #dc3545; 
             margin-top: 5px;
             line-height: 1.1;
             letter-spacing: 0.5px;
-            /* BOLD */
             font-weight: 700;
         }
 
-        /* Accreditations */
         .college-name .accreditations {
             margin-top: 4px;
             font-size: clamp(0.6rem, 0.9vw + 0.3rem, 0.9rem);
             color: #d7e8ff;
             line-height: 1.3;
-            /* BOLD */
             font-weight: 600;
         }
 
@@ -133,7 +117,6 @@
         .login-top a {
             text-decoration: none;
             padding: 10px 20px;
-            /* Changed to RED */
             background: #dc3545; 
             color: #fff;
             font-weight: bold;
@@ -144,7 +127,6 @@
             white-space: nowrap;
         }
         .login-top a:hover {
-            /* Glow effect on hover */
             box-shadow: 0 0 15px rgba(255, 0, 0, 0.8), 0 0 25px rgba(255, 0, 0, 0.6);
             background: #dc3545;
             transform: scale(1.08);
@@ -152,44 +134,58 @@
 
         /* ================= RESPONSIVE HEADER ================= */
         @media (max-width: 768px) {
-            body { padding-top: 170px; }
+            body { padding-top: 130px; }
             header {
                 flex-direction: column;
-                text-align: center;
                 padding: 10px 15px;
             }
-            .logo img {
-                height: 50px;
-                width: 50px;
+            .logo-name-container {
+                justify-content: center;
+                text-align: center;
+                max-width: 100%;
+                gap: 10px;
             }
-            .college-name {
-                margin-top: 5px;
-            }
-            .login-top {
-                margin-top: 8px;
-            }
-        }
-        @media (max-width: 480px) {
-            body { padding-top: 150px; }
-            header {
-                padding: 8px 12px;
+            .logo {
+                display: block; /* Show logo on mobile */
             }
             .logo img {
                 height: 45px;
                 width: 45px;
             }
-            .college-name h1 {
-                font-size: clamp(1rem, 5vw, 1.3rem);
+            .college-name {
+                text-align: center;
+                width: 100%;
+            }
+            .college-name h1 { 
+                font-size: clamp(1rem, 5vw, 1.5rem); 
             }
             .college-name h2 {
-                font-size: clamp(0.7rem, 4vw, 0.95rem);
+                font-size: clamp(0.7rem, 4vw, 1.1rem); 
             }
             .college-name .accreditations {
-                font-size: clamp(0.6rem, 3vw, 0.8rem);
+                font-size: clamp(0.6rem, 3.5vw, 0.9rem);
+            }
+            .login-top {
+                margin-top: 8px;
             }
             .login-top a {
                 padding: 8px 16px;
                 font-size: clamp(0.65rem, 4vw, 0.9rem);
+            }
+        }
+        @media (max-width: 480px) {
+            .logo img {
+                height: 40px;
+                width: 40px;
+            }
+            .college-name h1 {
+                font-size: 1rem;
+            }
+            .college-name h2 {
+                font-size: 0.8rem;
+            }
+            .college-name .accreditations {
+                font-size: 0.7rem;
             }
         }
 
@@ -275,22 +271,43 @@
             max-width: 1200px;
             margin: 40px auto;
             padding: 20px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 25px;
-            align-items: center;
+            text-align: center; /* Centered layout as requested */
+        }
+        
+        .about-content {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(8px);
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+            transition: transform 0.3s ease;
+        }
+        .about-content:hover {
+            transform: translateY(-5px);
+        }
+        .about-content h2 {
+            color: #004aad;
+            font-size: clamp(1.4rem, 1.8vw + 0.5rem, 2rem);
+            margin-bottom: 10px;
+        }
+        .about-content p {
+            color: #444;
+            font-size: clamp(0.95rem, 1vw + 0.3rem, 1.05rem);
+            line-height: 1.7;
+            text-align: justify;
         }
 
         /* ================= IMAGE CAROUSEL ================= */
         .image-carousel-container {
             position: relative;
             width: 100%;
+            max-width: 1200px;
+            margin: 25px auto;
             height: auto;
             aspect-ratio: 16/9;
             overflow: hidden;
             border-radius: 16px;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-            
         }
 
         .image-carousel-track {
@@ -324,30 +341,6 @@
         }
         .prev-button { left: 10px; }
         .next-button { right: 10px; }
-
-        /* Right Content Styling */
-        .about-content {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(8px);
-            padding: 25px;
-            border-radius: 16px;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-            transition: transform 0.3s ease;
-        }
-        .about-content:hover {
-            transform: translateY(-5px);
-        }
-        .about-content h2 {
-            color: #004aad;
-            font-size: clamp(1.4rem, 1.8vw + 0.5rem, 2rem);
-            margin-bottom: 10px;
-        }
-        .about-content p {
-            color: #444;
-            font-size: clamp(0.95rem, 1vw + 0.3rem, 1.05rem);
-            line-height: 1.7;
-            text-align: justify;
-        }
 
         /* ================= VISION & MISSION ================= */
         .cards-container {
@@ -477,6 +470,11 @@
             opacity: 0;
             transform: translateY(20px);
             transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
         
         .course-card.visible {
@@ -906,14 +904,16 @@
 <body>
 
     <header>
-        <div class="logo">
-            <img src="crrengglogo.png" alt="College Logo" />
-        </div>
-        <div class="college-name">
-            <h1>Sir C.R. Reddy College of Engineering</h1>
-            <h2>(Autonomous)</h2>
-            <div class="accreditations">
-                Approved by AICTE | Affiliated to JNTUK | Accredited by NBA & NAAC (A Grade)
+        <div class="logo-name-container">
+            <div class="logo">
+                <img src="crrengglogo.png" alt="College Logo" />
+            </div>
+            <div class="college-name">
+                <h1>Sir C.R. Reddy College of Engineering</h1>
+                <h2>(Autonomous)</h2>
+                <div class="accreditations">
+                    Approved by AICTE | Affiliated to JNTUK | Accredited by NBA & NAAC (A Grade)
+                </div>
             </div>
         </div>
         <div class="login-top">
@@ -921,6 +921,19 @@
         </div>
     </header>
 
+
+    <section class="image-carousel-container">
+        <div class="image-carousel-track" id="image-carousel-track">
+            <img class="image-carousel-item" src="images/img1.jpg" alt="NAAC" />
+            <img class="image-carousel-item" src="images/img2.jpg" alt="AUTONOMOUS" />
+            <img class="image-carousel-item" src="images/img3.jpg" alt="AMAZON" />
+            <img class="image-carousel-item" src="images/img4.jpg" alt="WALMART" />
+            <img class="image-carousel-item" src="images/hackathon img.jpg" alt="HACKATHON" />
+        </div>
+        <button class="carousel-button prev-button" onclick="moveSlide(-1)"><i class="fas fa-chevron-left"></i></button>
+        <button class="carousel-button next-button" onclick="moveSlide(1)"><i class="fas fa-chevron-right"></i></button>
+    </section>
+    
     <section class="notifications">
         <h3>Latest Notifications</h3>
         <marquee behavior="scroll" direction="left" scrollamount="6" onmouseover="this.stop();" onmouseout="this.start();">
@@ -937,167 +950,147 @@
     </section>
 
     <section class="about-section">
-        <div class="image-carousel-container">
-            <div class="image-carousel-track" id="image-carousel-track">
-                <img class="image-carousel-item" src="images/img1.jpg" alt="NAAC ACCREDATION" />
-                <img class="image-carousel-item" src="images/img2.jpg" alt="AUTONOMOUS" />
-                <img class="image-carousel-item" src="images/img3.jpg" alt="AMAZON" />
-                <img class="image-carousel-item" src="images/img4.jpg" alt="WALMART" />
-                <img class="image-carousel-item" src="images/hackathon img.jpg" alt="HACKATHON" />
-            </div>
-            <button class="carousel-button prev-button" onclick="moveSlide(-1)"><i class="fas fa-chevron-left"></i></button>
-            <button class="carousel-button next-button" onclick="moveSlide(1)"><i class="fas fa-chevron-right"></i></button>
-        </div>
         <div class="about-content">
-            <h2>About Sir C.R. Reddy College of Engineering</h2>
-            <p>
-Sir C.R. Reddy College of Engineering(A) is the first Engineering College in Andhra Pradesh sanctioned and recognized by All India Council for Technical Education (AICTE). This College is permanently affiliated to JNTUK from the Academic Year 2017-18.
-
-Since its inception in 1989, Sir C.R. Reddy College of Engineering(A) has been a premier institute for quality engineering education in Andhra Pradesh under the stewardship of its broad minded and magnanimous management. The last two and a half decades has seen the Institute fulfilling its motto of 'QUALITY SERVICE & VALUE BASED EDUCATION' to the student community.
-
-Adhering to its core values, the institute gives top priority to ethical values and high standards and a commitment to value based education. We believe in working honestly and sincerely, in building trust and in maintaining a long lasting relationship with the Society. Our team comprises of highly qualified and motivated faculty. Core competence and a friendly but efficient work culture play an important role in our overall achievements.
-
-The College is situated near Vatluru railway gate in Eluru, the Head Quarters of West Godavari district. It is surrounded by beautiful paddy fields and is on Chennai-Howrah highway and train route. A large number of buses and trains run via this town. It is easily accessible from any part of the country by rail as well as road.
-
-The College is located in its own sprawling campus with an area of 30.48 acres. Its magnanimous infrastructure and greenery attracts the attention of people who pass by. The vast green campus housing several Departments provides a stimulating environment to the high caliber staff and students of the institution.
-
-The Campus at Vatluru is a place where students from all walks of life are under a single umbrella pursuing their BE/B.Tech, M.Tech and MBA courses.
-            </p>
+        <h2>Welcome to Sir C. R. Reddy College of Engineering (AUTONOMOUS)</h2>
+        <p>
+          Sir C.R. Reddy College of Engineering(A) is the first Engineering College in Andhra Pradesh sanctioned and recognized by All India Council for Technical Education (AICTE). This College is permanently affiliated to JNTUK from the Academic Year 2017-18.
+          <br><br>
+          Since its inception in 1989, Sir C.R. Reddy College of Engineering(A) has been a premier institute for quality engineering education in Andhra Pradesh under the stewardship of its broad-minded and magnanimous management. The last two and a half decades have seen the Institute fulfilling its motto of <strong>'QUALITY SERVICE & VALUE BASED EDUCATION'</strong> to the student community.
+          <br><br>
+          Adhering to its core values, the institute gives top priority to ethical values, high standards, and a commitment to value-based education. We believe in working honestly and sincerely, in building trust, and in maintaining a long-lasting relationship with society.
+          <br><br>
+          The College is situated near Vatluru railway gate in Eluru, the Head Quarters of West Godavari district. It is surrounded by beautiful paddy fields and is on the Chennai-Howrah highway and train route. A large number of buses and trains run via this town. It is easily accessible from any part of the country by rail as well as road.
+          <br><br>
+          The College is located in its own sprawling campus with an area of 30.48 acres. Its magnanimous infrastructure and greenery attract the attention of people who pass by. The vast green campus housing several Departments provides a stimulating environment to the high-caliber staff and students of the institution.
+          <br><br>
+          The Campus at Vatluru is a place where students from all walks of life are under a single umbrella pursuing their BE/B.Tech, M.Tech, and MBA courses.
+        </p>
         </div>
     </section>
 
     <section class="cards-container">
         <div class="card">
-            <div class="card-icon">🌟</div>
             <h3>Our Vision</h3>
             <p>
-
-To emerge as a premier institution in the field of technical education and research in the state and as a home for holistic development
-              of the students and contribute to the advancement of society and the region.
+                To emerge as a premier institution in the field of technical education and research in the state and
+                as a home for holistic development of the students and contribute to the advancement of society and the region.
             </p>
         </div>
 
         <div class="card">
-            <div class="card-icon">🎯</div>
             <h3>Our Mission</h3>
             <p>
-To provide high quality technical education through a creative balance of academic and industry oriented learning;
-              to create an inspiring environment of scholarship and research;
-              to instill high levels of academic and professional discipline;
-              and to establish standards that inculcate ethical and moral values that contribute to growth in career and development of society in general.
+                To provide high quality technical education through a creative balance of academic and industry oriented learning;
+                to create an inspiring environment of scholarship and research; to instill high levels of academic and professional discipline;
+                and to establish standards that inculcate ethical and moral values that contribute to growth in career and development of society in general.
             </p>
         </div>
     </section>
 
-    <section class="courses-section">
-        <h2>Courses & Departments</h2>
-        <p>
-            Sir C.R. Reddy College of Engineering offers a wide range of undergraduate and postgraduate programs  
-            designed to equip students with the knowledge and skills required to excel in the modern technological world.
-        </p>
+<section class="courses-section">
+  <h2>Courses & Departments</h2>
+  <p>
+    Sir C.R. Reddy College of Engineering offers a wide range of undergraduate and postgraduate programs  
+    designed to equip students with the knowledge and skills required to excel in the modern technological world.
+  </p>
 
-        <div class="course-cards-container">
-            <div class="course-card">
-                <div class="icon">💻</div>
-                <h3>Computer Science & Engineering</h3>
-                <p>
-                   To be a premier department in the region with an integrated teaching,
-                  learning and research environment that enables to address the challenges of the core and emerging technologies with social responsibility.
-                </p>
-            </div>
-             <div class="course-card">
-                <div class="icon">🧪</div>
-                <h3>Information Technology</h3>
-                <p>
-                    To be a premier department in the region in the field of Information Technology through academic excellence
-                  and research that enable graduates to meet the challenges of industry and society.
-                </p>
-            </div>
-        </div>
-            <div class="course-card">
-                <div class="icon">⚙️</div>
-                <h3>Mechanical Engineering</h3>
-                <p>
-                    To become a center of excellence in the field of Mechanical Engineering in this region,
-                  where the best in teaching, learning, and research synergize to foster the holistic development of students and contribute significantly to societal advancement.
-                </p>
-            </div>
+  <div class="course-cards-container">
+    <!-- Main CSE -->
+    <div class="course-card">
+      <div class="icon">💻</div>
+      <h3>Computer Science & Engineering (CSE)</h3>
+      <p>
+        To be a premier department in the region with an integrated teaching,
+        learning and research environment that enables addressing the challenges
+        of core and emerging technologies with social responsibility.
+      </p>
+    </div>
 
-            <div class="course-card">
-                <div class="icon">🔌</div>
-                <h3>Electrical & Electronics Engineering</h3>
-                <p>
-                    To be a department of excellence in the region in Electrical and Electronics Engineering through high quality teaching,
-                  research, innovation and holistic  development of students required for modern industry.
-                </p>
-            </div>
+    <!-- Allied Branch: CSC - Cyber Security -->
+    <div class="course-card">
+      <div class="icon">🔐</div>
+      <h3>Computer Science & Engineering (Cyber Security - CSC)</h3>
+      <p>
+        Focused on information protection, ethical hacking, and securing digital systems
+        against cyber threats, preparing students for careers in cybersecurity and defense.
+      </p>
+    </div>
 
-            <div class="course-card">
-                <div class="icon">🏗️</div>
-                <h3>Civil Engineering</h3>
-                <p>
-                    The Department of Civil Engineering strives to graduate highly qualified engineers,
-                  maintain nationally recognized research and provide quality professional and community service to the society.
-                </p>
-            </div>
+    <!-- Allied Branch: CAD - Data Science -->
+    <div class="course-card">
+      <div class="icon">📊</div>
+      <h3>Computer Science & Engineering (Data Science - CAD)</h3>
+      <p>
+        Specializes in data analytics, big data, and statistical modeling,
+        enabling students to extract valuable insights and build intelligent
+        data-driven solutions.
+      </p>
+    </div>
 
-            <div class="course-card">
-                <div class="icon">📡</div>
-                <h3>Electronics & Communication Engineering</h3>
-                <p>
-                    To be a premier department in the region that nurtures individuals for acquisition of knowledge and skills with research orientation
-                  which suits needs of industry and society in the field of Electronics and Communication Engineering.
-                </p>
-            </div>
+    <!-- Allied Branch: CSM - AI & ML -->
+    <div class="course-card">
+      <div class="icon">🤖</div>
+      <h3>Computer Science & Engineering (AI & ML - CSM)</h3>
+      <p>
+        Emphasizes Artificial Intelligence and Machine Learning techniques,
+        training students to design, build, and deploy intelligent systems
+        for real-world applications.
+      </p>
+    </div>
 
-    </section>
+    <!-- IT -->
+    <div class="course-card">
+      <div class="icon">🌐</div>
+      <h3>Information Technology</h3>
+      <p>
+        To be a premier department in the region in the field of Information Technology
+        through academic excellence and research that enable graduates to meet the challenges of industry and society.
+      </p>
+    </div>
 
-    <section class="notifications-section">
-        <h2>Latest Notifications</h2>
-        <p>Stay updated with important announcements, results, and upcoming events.</p>
+    <!-- Mechanical -->
+    <div class="course-card">
+      <div class="icon">⚙️</div>
+      <h3>Mechanical Engineering</h3>
+      <p>
+        To become a center of excellence in the field of Mechanical Engineering in this region,
+        where the best in teaching, learning, and research synergize to foster
+        the holistic development of students and contribute significantly to societal advancement.
+      </p>
+    </div>
 
-        <div class="notification-scroller-container">
-            <ul class="notification-list">
-                <li class="notification-item">
-                    <div class="notification-icon">📢</div>
-                    <div class="notification-content">
-                        <h4>Details Updation</h4>
-                        <p>All the students are informed that, update the students details/correct the details through your respected counsellors.</p>
-                        <div class="notification-date">📅 September 3, 2025</div>
-                    </div>
-                </li>
+    <!-- EEE -->
+    <div class="course-card">
+      <div class="icon">🔌</div>
+      <h3>Electrical & Electronics Engineering</h3>
+      <p>
+        To be a department of excellence in the region in Electrical and Electronics Engineering through high quality teaching,
+        research, innovation and holistic development of students required for modern industry.
+      </p>
+    </div>
 
-                <li class="notification-item">
-                    <div class="notification-icon">📌</div>
-                    <div class="notification-content">
-                        <h4>Results</h4>
-                        <p>All 3rd year & 4th year Results Are Updated in the STUDENT MANAGEMENT PORTAL.</p>
-                        <div class="notification-date">📅 September 3, 2025</div>
-                    </div>
-                </li>
+    <!-- Civil -->
+    <div class="course-card">
+      <div class="icon">🏗️</div>
+      <h3>Civil Engineering</h3>
+      <p>
+        The Department of Civil Engineering strives to graduate highly qualified engineers,
+        maintain nationally recognized research and provide quality professional and community service to the society.
+      </p>
+    </div>
 
-                <li class="notification-item">
-                    <div class="notification-icon">🎓</div>
-                    <div class="notification-content">
-                        <h4>Internal Hackathon</h4>
-                        <p>Internal Hackathon for Smart India.</p>
-                      <br>Hackathon 2K25<br>
-                      <p> Date 18th &19th sep 2025 <br>
-                         Time 10.30 am to 4.30pm</p>
-                        <div class="notification-date">📅 September 3, 2025</div>
-                    </div>
-                </li>
+    <!-- ECE -->
+    <div class="course-card">
+      <div class="icon">📡</div>
+      <h3>Electronics & Communication Engineering</h3>
+      <p>
+        To be a premier department in the region that nurtures individuals for acquisition of knowledge and skills
+        with research orientation which suits needs of industry and society in the field of Electronics and Communication Engineering.
+      </p>
+    </div>
+  </div>
+</section>
 
-                <li class="notification-item">
-                    <div class="notification-icon">📝</div>
-                    <div class="notification-content">
-                        <h4>Internal Assessment Marks</h4>
-                        <p>Mid-2 internal assessment marks will be updated soon....</p>
-                        <div class="notification-date">📅 September 3, 2025</div>
-                    </div>
-                </li>
-        </div>
-    </section>
     
     <section class="login-counts-container">
         <div class="login-count-card">
@@ -1135,8 +1128,9 @@ To provide high quality technical education through a creative balance of academ
                 <p>📍 Eluru, Eluru Dist, Andhra Pradesh, India - 534007</p>
                 <p>📧 <strong>principal@sircrrengg.ac.in</strong></p>
                 <p>📧 <strong>info@sircrrengg.ac.in</strong></p>
-              <p>📧 <strong>sircrrcoestd@sircrrengg.ac.in</strong></p>
-                <p>📞 <strong>+91 8812-231521</strong></p>
+                <p>📧 <strong>sircrrcoestd@sircrrengg.ac.in</strong></p>
+                <p>📞 <strong>9493830840</strong></p>
+                <p>📞 <strong>8985384116</strong></p>
             </div>
 
             <div class="footer-social">
