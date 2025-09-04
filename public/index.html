@@ -16,8 +16,7 @@
     <meta property="og:type" content="website" />
     <link rel="canonical" href="https://crr-noc.onrender.com/" />
 
-      <!-- Schema -->
-  <script type="application/ld+json">
+      <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "WebSite",
@@ -86,7 +85,6 @@
             height: 55px;
             width: 55px;
             border-radius: 50%;
-            border: 2px solid #fff;
             transition: transform 0.3s ease;
         }
         .logo img:hover {
@@ -96,7 +94,7 @@
         /* College Name */
         .college-name {
             flex-grow: 1;
-            text-align: left;
+            text-align: center;
         }
 
         .college-name h1 {
@@ -319,7 +317,7 @@
             max-width: 1200px;
             margin: 25px auto;
             height: auto;
-            aspect-ratio: 16/9;
+            aspect-ratio: 2/1;
             overflow: hidden;
             border-radius: 16px;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
@@ -603,10 +601,10 @@
             top: 0;
             left: 0;
             width: 100%;
-            animation: scroll-up 20s linear infinite; /* Adjust duration to change speed */
             list-style: none;
             padding: 0;
             margin: 0;
+            animation: scroll-up 20s linear infinite;
         }
         
         .notification-list:hover {
@@ -660,7 +658,7 @@
                 transform: translateY(0%);
             }
             100% {
-                transform: translateY(-100%);
+                transform: translateY(-50%);
             }
         }
         
@@ -950,7 +948,7 @@
     </section>
     
     <section class="notifications">
-        <h3>Latest Notifications</h3>
+        <h3>suggestions & improvement</h3>
         <marquee behavior="scroll" direction="left" scrollamount="6" onmouseover="this.stop();" onmouseout="this.start();">
             <a href="mailto:sircrrcoestd@sircrrengg.ac.in">
                 ✉️ We value your suggestions for improvement. Please share your feedback at sircrrcoestd@sircrrengg.ac.in
@@ -962,6 +960,84 @@
                 🔗 Student Management Portal — Login to access your dashboard.
             </a>
         </marquee>
+    </section>
+
+    <section class="notifications-section">
+        <h2>Latest Notifications</h2>
+        <p>Stay updated with important announcements, results, and upcoming events.</p>
+
+        <div class="notification-scroller-container">
+            <ul class="notification-list">
+                <li class="notification-item">
+                    <div class="notification-icon">📢</div>
+                    <div class="notification-content">
+                        <h4>Results Released</h4>
+                        <p>B.Tech 2rd Year 1-1 & 1-2 Semester Autonomous Results & for "JNTUK all years Results updated" have been declared. Check your portal for details.</p>
+                        <div class="notification-date">📅 September 3, 2025</div>
+                    </div>
+                </li>
+
+                <li class="notification-item">
+                    <div class="notification-icon">📌</div>
+                    <div class="notification-content">
+                        <h4>Details Updation</h4>
+                        <p>Students are requested to update their details through their rsepected counsellors.</p>
+                        <div class="notification-date">📅 September 3, 2025</div>
+                    </div>
+                </li>
+
+                <li class="notification-item">
+                    <div class="notification-icon">🎓</div>
+                    <div class="notification-content">
+                        <h4>Attendance</h4>
+                        <p>Upto August 31 Attendance are updated.</p>
+                        <div class="notification-date">📅 September 1, 2025</div>
+                    </div>
+                </li>
+
+                <li class="notification-item">
+                    <div class="notification-icon">📝</div>
+                    <div class="notification-content">
+                        <h4>Internal Assessment Marks</h4>
+                        <p>Mid-1 internal assessment marks for students will be available soon on the student portal.</p>
+                        <div class="notification-date">📅 September 3, 2025</div>
+                    </div>
+                </li>
+
+                <li class="notification-item">
+                    <div class="notification-icon">📢</div>
+                    <div class="notification-content">
+                        <h4>Results Released</h4>
+                        <p>B.Tech 2rd Year 1-1 & 1-2 Semester Autonomous Results & for "JNTUK all years Results updated" have been declared. Check your portal for details.</p>
+                        <div class="notification-date">📅 September 3, 2025</div>
+                    </div>
+                </li>
+                <li class="notification-item">
+                    <div class="notification-icon">📌</div>
+                    <div class="notification-content">
+                        <h4>Details Updation</h4>
+                        <p>Students are requested to update their details through their rsepected counsellors.</p>
+                        <div class="notification-date">📅 September 3, 2025</div>
+                    </div>
+                </li>
+                <li class="notification-item">
+                    <div class="notification-icon">🎓</div>
+                    <div class="notification-content">
+                        <<h4>Attendance</h4>
+                        <p>Upto August 31 Attendance are updated.</p>
+                        <div class="notification-date">📅 September 1, 2025</div>
+                    </div>
+                </li>
+                <li class="notification-item">
+                    <div class="notification-icon">📝</div>
+                    <div class="notification-content">
+                        <h4>Internal Assessment Marks</h4>
+                        <p>MMid-1 internal assessment marks for students will be available soon on the student portal.</p>
+                        <div class="notification-date">📅 September 3, 2025</div>
+                    </div>
+                </li>
+            </ul>
+        </div>
     </section>
 
     <section class="about-section">
@@ -1010,7 +1086,6 @@
   </p>
 
   <div class="course-cards-container">
-    <!-- Main CSE -->
     <div class="course-card">
       <div class="icon">💻</div>
       <h3>Computer Science & Engineering (CSE)</h3>
@@ -1021,7 +1096,6 @@
       </p>
     </div>
 
-    <!-- Allied Branch: CSC - Cyber Security -->
     <div class="course-card">
       <div class="icon">🔐</div>
       <h3>Computer Science & Engineering (Cyber Security - CSC)</h3>
@@ -1031,7 +1105,6 @@
       </p>
     </div>
 
-    <!-- Allied Branch: CAD - Data Science -->
     <div class="course-card">
       <div class="icon">📊</div>
       <h3>Computer Science & Engineering (Data Science - CAD)</h3>
@@ -1042,7 +1115,6 @@
       </p>
     </div>
 
-    <!-- Allied Branch: CSM - AI & ML -->
     <div class="course-card">
       <div class="icon">🤖</div>
       <h3>Computer Science & Engineering (AI & ML - CSM)</h3>
@@ -1053,7 +1125,6 @@
       </p>
     </div>
 
-    <!-- IT -->
     <div class="course-card">
       <div class="icon">🌐</div>
       <h3>Information Technology</h3>
@@ -1063,7 +1134,6 @@
       </p>
     </div>
 
-    <!-- Mechanical -->
     <div class="course-card">
       <div class="icon">⚙️</div>
       <h3>Mechanical Engineering</h3>
@@ -1074,7 +1144,6 @@
       </p>
     </div>
 
-    <!-- EEE -->
     <div class="course-card">
       <div class="icon">🔌</div>
       <h3>Electrical & Electronics Engineering</h3>
@@ -1084,7 +1153,6 @@
       </p>
     </div>
 
-    <!-- Civil -->
     <div class="course-card">
       <div class="icon">🏗️</div>
       <h3>Civil Engineering</h3>
@@ -1094,7 +1162,6 @@
       </p>
     </div>
 
-    <!-- ECE -->
     <div class="course-card">
       <div class="icon">📡</div>
       <h3>Electronics & Communication Engineering</h3>
