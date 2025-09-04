@@ -422,11 +422,6 @@ body {
   color: #fff;
   text-shadow: 0 0 12px rgba(255, 255, 255, 0.8);
 }
-    .hidden {
-  display: none !important;
-}
-
-
   </style>
 </head>
 <body>
@@ -574,7 +569,6 @@ body {
       buttons.forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
       wrapper.classList.add('shift-up');
-      document.getElementById("mission-vision").style.display = "none";
 
       if (role === "admin") {
         hideAll();
