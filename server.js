@@ -167,12 +167,15 @@ if (!fs.existsSync(uploadDir)) {
 }
 
 // ✅ Use MySQL connection from .env
-const connection = mysql.createConnection({
+const pool = mysql.createPool({
   host: process.env.MYSQLHOST,
   user: process.env.MYSQLUSER,
   password: process.env.MYSQLPASSWORD,
   database: process.env.MYSQLDATABASE,
-  port: process.env.MYSQLPORT
+  port: process.env.MYSQLPORT,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
 });
 
 
@@ -199,7 +202,6 @@ setInterval(() => {
 // ✅ Admin routes
 app.use("/admin", adminRoutes);
 
-// 🔐 Login route
 app.post('/login', (req, res) => {
   const { userId, password, role } = req.body;
 
@@ -207,11 +209,16 @@ app.post('/login', (req, res) => {
   console.log(`[LOGIN ATTEMPT] ${new Date().toLocaleString()} | Role: ${role} | UserID: ${userId}`);
 
   // Step 1: Get user by ID and role
-  connection.query(
+  pool.query(
     'SELECT * FROM users WHERE userId = ? AND role = ?',
     [userId, role],
     (err, results) => {
-      if (err || results.length === 0) {
+      if (err) {
+        console.error("❌ DB Error during login:", err);
+        return res.status(500).json({ success: false, message: 'Database error. Please try again.' });
+      }
+
+      if (results.length === 0) {
         return res.status(401).json({ success: false, message: 'Invalid credentials or role mismatch' });
       }
 
@@ -219,16 +226,21 @@ app.post('/login', (req, res) => {
 
       // Step 2: Compare input password with hashed password
       bcrypt.compare(password, user.password, (err2, isMatch) => {
-        if (err2 || !isMatch) {
+        if (err2) {
+          console.error("❌ Bcrypt error:", err2);
+          return res.status(500).json({ success: false, message: 'Internal error during password check' });
+        }
+
+        if (!isMatch) {
           return res.status(401).json({ success: false, message: 'Incorrect password' });
         }
 
-        // ✅ Password correct
+        // ✅ Password correct → Save session
         req.session.userId = userId;
         req.session.role = role;
 
         // ✅ Increment login count for this role
-        connection.query(
+        pool.query(
           "INSERT INTO login_counts (role, count) VALUES (?, 1) ON DUPLICATE KEY UPDATE count = count + 1",
           [role],
           (err3) => {
@@ -247,7 +259,7 @@ app.post('/login', (req, res) => {
         else if (role === "exam") redirectTo = `/examcell`;
         else if (role === "accounts") redirectTo = `/accounts.html`;
 
-        res.status(200).json({
+        return res.status(200).json({
           success: true,
           message: 'Login successful',
           userId,
@@ -264,7 +276,7 @@ app.post('/login', (req, res) => {
 app.get("/api/login-counts", (req, res) => {
   const sql = "SELECT role, `count` FROM login_counts";
 
-  connection.query(sql, (err, results) => {
+   pool.query(sql, (err, results) => {
     if (err) {
       console.error("❌ Error fetching login counts:", err);
       return res.status(500).json({ success: false, message: "DB Error" });
@@ -393,7 +405,7 @@ app.post('/reset-password', async (req, res) => {
 app.get('/student/:userId', (req, res) => {
   const { userId } = req.params;
 
-  connection.query('SELECT * FROM students WHERE userId = ?', [userId], (err, results) => {
+  pool.query('SELECT * FROM students WHERE userId = ?', [userId], (err, results) => {
     if (err) return res.status(500).json({ success: false, message: 'DB error' });
 
     if (results.length === 0) {
