@@ -495,136 +495,158 @@
                 });
         });
 
-        // Submit DU Numbers
-        document.querySelector(".update").addEventListener("click", () => {
-            const paymentData = [
-                { type: "tuition", du: tuition.value, amount: tuitionAmount.value },
-                { type: "hostel", du: hostel.value, amount: hostelAmount.value },
-                { type: "bus", du: bus.value, amount: busAmount.value },
-                { type: "university", du: university.value, amount: universityAmount.value },
-                { type: "semester", du: semester.value, amount: semesterAmount.value },
-                { type: "library", du: library.value, amount: libraryAmount.value },
-                { type: "fines", du: fines.value, amount: finesAmount.value }
-            ].filter(entry => entry.du.trim() !== "" || entry.amount.trim() !== "");
+// Submit DU Numbers
+document.querySelector(".update").addEventListener("click", () => {
+    const paymentData = [
+        { type: "tuition", du: tuition.value, amount: tuitionAmount.value },
+        { type: "hostel", du: hostel.value, amount: hostelAmount.value },
+        { type: "bus", du: bus.value, amount: busAmount.value },
+        { type: "university", du: university.value, amount: universityAmount.value },
+        { type: "semester", du: semester.value, amount: semesterAmount.value },
+        { type: "library", du: library.value, amount: libraryAmount.value },
+        { type: "fines", du: fines.value, amount: finesAmount.value }
+    ].filter(entry => entry.du.trim() !== "" || entry.amount.trim() !== "");
 
-            if (paymentData.length === 0) {
+    // ✅ Check if at least one payment is filled
+    if (paymentData.length === 0) {
+        return Swal.fire({
+            icon: "info",
+            title: "Missing Information",
+            text: "Please enter at least one DU number and its corresponding amount.",
+            confirmButtonColor: '#0b2e59'
+        });
+    }
+
+    // ✅ Validate incomplete inputs
+    for (const p of paymentData) {
+        if ((p.du.trim() && !p.amount.trim()) || (!p.du.trim() && p.amount.trim())) {
+            return Swal.fire({
+                icon: "warning",
+                title: "Incomplete Details",
+                text: `Please enter both DU number and amount for ${p.type} fee.`,
+                confirmButtonColor: '#0b2e59'
+            });
+        }
+    }
+
+    const academicYear = document.getElementById("academicYear").value;
+    if (!academicYear) {
+        return Swal.fire({
+            icon: "warning",
+            title: "Academic Year Required",
+            text: "Please select the academic year to continue.",
+            confirmButtonColor: '#0b2e59'
+        });
+    }
+
+    // ✅ Confirmation Preview
+    const html = `
+        <p style="text-align: left; font-size: 1rem; color: ${getComputedStyle(document.documentElement).getPropertyValue('--text-dark')};">
+            <strong>Academic Year:</strong> ${academicYear}<br><br>
+            ${paymentData.map(p => `
+                <strong>${p.type.charAt(0).toUpperCase() + p.type.slice(1)} Fee</strong><br>
+                DU Number: ${p.du}<br>
+                Amount: ₹${p.amount}<br>
+            `).join("<hr style='border-color: #ddd; margin: 10px 0;'>")}
+        </p>
+    `;
+
+    Swal.fire({
+        title: "Confirm Fee Details",
+        html: html,
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonText: "Submit",
+        cancelButtonText: "Cancel",
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#dc3545'
+    }).then(result => {
+        if (!result.isConfirmed) return;
+
+        // ✅ Final data to send (du instead of du_number ✅)
+        const submitData = {
+            userId,
+            academic_year: academicYear,
+            payments: paymentData.map(p => ({
+                type: p.type,
+                du: p.du,
+                amount: parseFloat(p.amount)
+            }))
+        };
+
+        fetch("/submit-du", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(submitData)
+        })
+        .then(res => res.json().then(data => ({ status: res.status, body: data })))
+        .then(({ status, body }) => {
+            // ✅ Handle duplicate DU numbers separately
+            if (status === 400 && body.message?.includes("already exists")) {
                 return Swal.fire({
-                    icon: "info",
-                    title: "Missing Information",
-                    text: "Please enter at least one DU number and its corresponding amount.",
+                    icon: "error",
+                    title: "Duplicate Reference Number",
+                    text: body.message,
                     confirmButtonColor: '#0b2e59'
                 });
             }
 
-            const academicYear = document.getElementById("academicYear").value;
-            if (!academicYear) {
-                return Swal.fire({
-                    icon: "warning",
-                    title: "Academic Year Required",
-                    text: "Please select the academic year to continue.",
+            // ✅ Handle success
+            if (body.success) {
+                Swal.fire({
+                    icon: "success",
+                    title: "Fee Details Submitted",
+                    text: body.message || "Your fee details have been saved successfully.",
                     confirmButtonColor: '#0b2e59'
+                }).then(() => {
+                    document.querySelectorAll('.form-card input').forEach(inp => inp.value = "");
+                    document.getElementById("academicYear").value = "";
                 });
+            } else {
+                throw new Error(body.message || "Unexpected error");
             }
-            
-            // Format data for confirmation modal
-            const html = `
-                <p style="text-align: left; font-size: 1rem; color: ${getComputedStyle(document.documentElement).getPropertyValue('--text-dark')};">
-                    <strong>Academic Year:</strong> ${academicYear}<br><br>
-                    ${paymentData.map(p => `
-                        <strong>${p.type.charAt(0).toUpperCase() + p.type.slice(1)} Fee</strong><br>
-                        DU Number: ${p.du}<br>
-                        Amount: ₹${p.amount}<br>
-                    `).join("<hr style='border-color: #ddd; margin: 10px 0;'>")}
-                </p>
-            `;
-
+        })
+        .catch(err => {
+            console.error("Error submitting fee details:", err);
             Swal.fire({
-                title: "Confirm Fee Details",
-                html: html,
-                icon: "question",
-                showCancelButton: true,
-                confirmButtonText: "Submit",
-                cancelButtonText: "Cancel",
-                confirmButtonColor: '#28a745',
-                cancelButtonColor: '#dc3545'
-            }).then(result => {
-                if (!result.isConfirmed) return;
-
-                const submitData = {
-                    userId,
-                    academic_year: academicYear,
-                    payments: paymentData.map(p => ({
-                        type: p.type,
-                        du_number: p.du,
-                        amount: parseFloat(p.amount)
-                    }))
-                };
-
-                fetch("/submit-du", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(submitData)
-                })
-                .then(res => {
-                    if (!res.ok) {
-                        return res.json().then(errorData => {
-                            throw new Error(errorData.message || 'Network response was not ok');
-                        });
-                    }
-                    return res.json();
-                })
-                .then(data => {
-                    Swal.fire({
-                        icon: "success",
-                        title: "Success",
-                        text: data.message || "Fee details updated successfully.",
-                        confirmButtonColor: '#0b2e59'
-                    }).then(() => {
-                        document.querySelectorAll('.form-card input').forEach(inp => inp.value = "");
-                        document.getElementById("academicYear").value = "";
-                    });
-                })
-                .catch(err => {
-                    console.error("Error submitting fee details:", err);
-                    Swal.fire({
-                        icon: "error",
-                        title: "Update Failed",
-                        text: `An error occurred: ${err.message}`,
-                        confirmButtonColor: '#0b2e59'
-                    });
-                });
+                icon: "error",
+                title: "Update Failed",
+                text: `An error occurred: ${err.message}`,
+                confirmButtonColor: '#0b2e59'
             });
         });
+    });
+});
 
-        // DU Numbers: auto-uppercase + only A-Z and 0-9
-        document.querySelectorAll('input[type="text"]').forEach(input => {
-            input.addEventListener('input', () => {
-                input.value = input.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-            });
-        });
+// DU Numbers: auto-uppercase + only A-Z and 0-9
+document.querySelectorAll('input[type="text"]').forEach(input => {
+    input.addEventListener('input', () => {
+        input.value = input.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    });
+});
 
-        // Amounts: only numbers
-        document.querySelectorAll('input[type="number"]').forEach(input => {
-            input.addEventListener('input', () => {
-                input.value = input.value.replace(/[^\d]/g, '');
-            });
-        });
+// Amounts: only numbers allowed
+document.querySelectorAll('input[type="number"]').forEach(input => {
+    input.addEventListener('input', () => {
+        input.value = input.value.replace(/[^\d]/g, '');
+    });
+});
 
-        // Enter key to move to next field
-        const formInputs = document.querySelectorAll('.form-card input, .form-card select, .form-card button');
-        formInputs.forEach((input, index) => {
-            input.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    let nextInput = formInputs[index + 1];
-                    if (nextInput) {
-                        nextInput.focus();
-                    } else {
-                        document.querySelector(".update").click();
-                    }
-                }
-            });
-        });
+// Enter key moves to next field
+const formInputs = document.querySelectorAll('.form-card input, .form-card select, .form-card button');
+formInputs.forEach((input, index) => {
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            let nextInput = formInputs[index + 1];
+            if (nextInput) {
+                nextInput.focus();
+            } else {
+                document.querySelector(".update").click();
+            }
+        }
+    });
+});
     </script>
 </body>
 </html>
