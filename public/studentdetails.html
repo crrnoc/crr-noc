@@ -1,339 +1,494 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Student Details</title>
-  <link rel="icon" href="crrengglogo.png" type="image/png" />
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Student Details</title>
+    <link rel="icon" href="crrengglogo.png" type="image/png" />
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.20/dist/sweetalert2.min.css"
+    />
+    <style>
+        :root {
+            --primary-color: #0b2e59;
+            --secondary-color: #2c6e91;
+            --accent-color: #f7a048;
+            --background-dark: #f0f2f5;
+            --background-light: #ffffff;
+            --text-dark: #333333;
+            --text-light: #f4f4f4;
+            --card-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            --border-radius-lg: 16px;
+            --border-radius-md: 10px;
+        }
 
-    body {
-      background-color: #2e2e2e;
-    }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
-    a {
-      text-decoration: none;
-      color: inherit;
-    }
+        body {
+            background-color: var(--background-dark);
+        }
 
-    .container {
-      display: flex;
-      min-height: 100vh;
-    }
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
 
-    .sidebar {
-      width: 270px;
-      background-color: rgb(247, 201, 155);
-      display: flex;
-      flex-direction: column;
-      padding: 20px;
-      box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
-      position: fixed;
-      top: 0;
-      bottom: 0;
-      left: 0;
-      overflow-y: auto;
-      transition: top 0.3s ease-in-out;
-      z-index: 999;
-    }
-.photo-container {
-  display: flex;
-  justify-content: center;
-  position: relative;
-  margin-bottom: 20px;
-}
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
 
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background-color: var(--primary-color);
+            display: flex;
+            flex-direction: column;
+            padding: 30px 20px;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease-in-out;
+            z-index: 1000;
+            overflow-y: auto;
+        }
 
-.home-icon {
-  margin-top: 35px;
-  position: absolute;
-  top: -10px;
-  left: -10px;
-  background-color: #fff;
-  border-radius: 50%;
-  font-size: 22px;
-  padding: 6px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-  text-decoration: none;
-  color: #000;
-  transition: transform 0.2s ease;
-}
+        .photo-container {
+            display: flex;
+            justify-content: center;
+            position: relative;
+            margin-bottom: 20px;
+        }
 
-.home-icon:hover {
-  transform: scale(1.1);
-  background-color: #f09000;
-  color: white;
-}
+        .home-icon {
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            background-color: var(--background-light);
+            color: var(--primary-color);
+            border-radius: 50%;
+            font-size: 22px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s ease, background-color 0.3s ease;
+        }
 
-    .sidebar-photo {
-  width: 100px;
-  height: 100px;
-  object-fit: cover;
-  border-radius: 50%;
-  margin: 0 auto 10px;
-  border: 3px solid #333;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-}
+        .home-icon:hover {
+            transform: scale(1.1);
+            background-color: var(--accent-color);
+            color: var(--text-light);
+        }
 
-    .sidebar h2 {
-      margin: 40px 20px 20px 20px;
-      color: black;
-      font-size: 18px;
-      font-weight: bold;
-    }
+        .sidebar-photo {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            border: 4px solid var(--accent-color);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
 
-    .menu {
-      list-style: none;
-      padding: 0;
-    }
+        .sidebar h2 {
+            margin: 40px 20px 20px 20px;
+            color: var(--text-light);
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
 
-    .menu li {
-      list-style: none;
-      margin-bottom: 15px;
-    }
+        .menu {
+            list-style: none;
+            padding: 0;
+            flex-grow: 1;
+        }
 
-    .menu li a {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 16px;
-      color: black;
-      padding: 12px 20px;
-      border-radius: 8px;
-      transition: all 0.3s ease;
-    }
+        .menu li {
+            list-style: none;
+            margin-bottom: 12px;
+        }
 
-    .menu li a:hover,
-    .menu li.active a {
-      background-color: #d4d4d4;
-      font-weight: bold;
-      transform: translateX(5px);
-      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
-    }
+        .menu li a {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 1rem;
+            color: var(--text-light);
+            padding: 15px 20px;
+            border-radius: var(--border-radius-md);
+            transition: all 0.3s ease;
+        }
 
-    .menu li a span {
-      font-size: 18px;
-      transition: transform 0.3s ease;
-    }
+        .menu li a:hover,
+        .menu li.active a {
+            background-color: rgba(255, 255, 255, 0.1);
+            font-weight: 500;
+            transform: translateX(5px);
+            box-shadow: var(--card-shadow);
+        }
 
-    .menu li a:hover span {
-      transform: scale(1.2);
-    }
+        .menu li a i {
+            font-size: 1.2rem;
+            width: 25px;
+            text-align: center;
+            color: var(--text-light);
+            transition: color 0.3s ease;
+        }
 
-    .logout {
-      background-color: #f09000;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 20px;
-      cursor: pointer;
-      font-size: 16px;
-      width: 50%;
-      margin: 20px auto 0;
-      transition: background 0.3s ease;
-    }
+        .logout {
+            background-color: var(--accent-color);
+            color: var(--text-light);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            width: 60%;
+            margin: 20px auto 0;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
 
-    .logout:hover {
-      background-color: #d07900;
-    }
+        .logout:hover {
+            background-color: #d3853b;
+            transform: scale(1.05);
+        }
 
-    .details-section {
-      flex-grow: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background-color: #ffffff;
-      padding: 20px;
-      margin-left: 270px;
-    }
+        /* Main Section */
+        .details-section {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--background-dark);
+            padding: 40px 30px;
+            margin-left: 280px;
+        }
 
-    .details-card {
-      background: linear-gradient(135deg, rgba(30, 157, 216, 0.85), rgba(23, 124, 171, 0.85));
-      color: #fff;
-      width: 90%;
-      max-width: 800px;
-      padding: 35px;
-      border-radius: 25px;
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      box-shadow: 0 12px 20px rgba(0, 0, 0, 0.3), 0 6px 8px rgba(0, 0, 0, 0.22);
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
+        .details-card {
+            background-color: var(--background-light);
+            color: var(--text-dark);
+            width: 100%;
+            max-width: 800px;
+            padding: 35px;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--card-shadow);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
 
-    .details-card:hover {
-      transform: scale(1.01);
-      box-shadow: 0 15px 25px rgba(0, 0, 0, 0.4);
-    }
+        .details-card:hover {
+            transform: scale(1.01);
+        }
 
-    .details-card p {
-      margin: 12px 0;
-      font-size: 18px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-      padding-bottom: 6px;
-    }
+        .details-card h2 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 25px;
+            font-size: 2rem;
+        }
+        
+        /* Table styles */
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .details-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            font-size: 1rem;
+        }
+        
+        .details-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .details-table strong {
+            color: var(--primary-color);
+            display: block;
+            width: 100%;
+        }
 
-    .mobile-toggle {
-      display: none;
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background-color: #1f75cb;
-      color: white;
-      font-size: 24px;
-      padding: 12px 18px;
-      border-radius: 50px;
-      z-index: 9999;
-      cursor: pointer;
-      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-    }
+        /* Mobile View & Responsive Design */
+        .mobile-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background-color: var(--secondary-color);
+            color: var(--text-light);
+            font-size: 24px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            align-items: center;
+            justify-content: center;
+            z-index: 1001;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease;
+        }
 
-    @media (max-width: 768px) {
-      .container {
-        flex-direction: column;
-      }
-
-      .sidebar {
-        top: -100%;
-        left: 0;
-        width: 100%;
-        max-height: 90vh;
-        background-color: rgb(247, 201, 155);
-      }
-
-      .sidebar.open {
-        top: 0;
-      }
-
-      .mobile-toggle {
-        display: block;
-      }
-
-      .details-section {
-        margin-left: 0;
-        padding: 15px;
-        justify-content: center;
-      }
-
-      .details-card {
-        width: 100%;
-        padding: 20px;
-      }
-
-      .details-card p {
-        font-size: 16px;
-      }
-    }
-  </style>
+        @media (max-width: 992px) {
+            .mobile-toggle {
+                display: flex;
+            }
+            .sidebar {
+                transform: translateX(-100%);
+                left: 0;
+                right: initial;
+                width: 250px;
+                max-width: 80vw;
+                box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .details-section {
+                margin-left: 0;
+                padding: 20px;
+            }
+            .details-card {
+                padding: 20px;
+            }
+            .details-table td {
+                font-size: 0.9rem;
+                padding: 10px;
+                display: flex;
+                flex-direction: column;
+                border-bottom: none;
+            }
+            .details-table strong {
+                font-size: 1rem;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <div class="sidebar">
-      <div class="photo-container">
-  <div class="photo-wrapper">
-    <a href="studentwelcome.html" class="home-icon" title="Home">🏠</a>
-    <img id="sidebarPhoto" class="sidebar-photo" style="display: none;" />
-  </div>
-</div>
+    <div class="container">
+        <div class="sidebar">
+            <div class="photo-container">
+                <a href="studentwelcome.html" class="home-icon" title="Home">
+                    <i class="fas fa-home"></i>
+                </a>
+                <img id="sidebarPhoto" class="sidebar-photo" style="display: none;" />
+            </div>
 
-      <h2>ID: <span id="userId">Loading...</span></h2>
-      <ul class="menu">
-        <li class="active"><a href="#"><span>📄</span> Student details</a></li>
-        <li><a href="feedetails.html"><span>🎓</span> Fee details</a></li>
-        <li><a href="updaterefno.html"><span>🔄</span> Update fee payment</a></li>
-        <li><a href="attendence.html"><span>📅</span> View Attendance</a></li>
-        <li><a href="studentresults.html"><span>📊</span> Student Results</a></li>
-        <li><a href="generatenoc.html"><span>➕</span> Generate NOC</a></li>
-        <li><a href="settings.html"><span>⚙️</span> Settings</a></li>
-      </ul>
-      <button class="logout" onclick="logout()">Logout</button>
+            <h2>ID: <span id="userId">Loading...</span></h2>
+            <ul class="menu">
+                <li class="active">
+                    <a href="studentdetails.html"><i class="fas fa-user-circle"></i> Student details</a>
+                </li>
+                <li>
+                    <a href="feedetails.html"><i class="fas fa-graduation-cap"></i> Fee details</a>
+                </li>
+                <li>
+                    <a href="updaterefno.html"><i class="fas fa-sync-alt"></i> Update fee payment</a>
+                </li>
+                <li>
+                    <a href="attendence.html"><i class="fas fa-calendar-alt"></i> View Attendance</a>
+                </li>
+                <li>
+                    <a href="studentresults.html"><i class="fas fa-chart-bar"></i> Student Results</a>
+                </li>
+                <li>
+                    <a href="generatenoc.html"><i class="fas fa-file-invoice"></i> Generate NOC</a>
+                </li>
+                <li>
+                    <a href="settings.html"><i class="fas fa-cog"></i> Settings</a>
+                </li>
+            </ul>
+            <button class="logout" onclick="confirmLogout()">Logout</button>
+        </div>
+
+        <div class="details-section">
+            <div class="details-card">
+                <h2>Student Details</h2>
+                <div id="student-data">
+                    <p>Loading student data...</p>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="details-section">
-      <div class="details-card"></div>
-    </div>
-  </div>
+    <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
 
-  <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
-
-<script>
-  function toggleMobileMenu() {
-    const sidebar = document.querySelector('.sidebar');
-    sidebar.classList.toggle('open');
-  }
-
-  // Close sidebar on mobile after clicking any link
-  document.querySelectorAll(".menu li a").forEach(link => {
-    link.addEventListener("click", () => {
-      if (window.innerWidth <= 768) {
-        document.querySelector('.sidebar').classList.remove('open');
-      }
-    });
-  });
-
-  // Prevent back navigation after logout
-  window.history.pushState(null, "", window.location.href);
-  window.onpopstate = () => window.history.pushState(null, "", window.location.href);
-
-  document.addEventListener("DOMContentLoaded", () => {
-    const studentId = localStorage.getItem('userId');
-
-    if (!studentId) {
-      alert("Please login first.");
-      window.location.href = "index.html";
-      return;
-    }
-
-    document.getElementById("userId").textContent = studentId;
-
-    fetch(`/student/${studentId}`)
-      .then(res => res.json())
-      .then(data => {
-        const card = document.querySelector('.details-card');
-        const photo = document.getElementById("sidebarPhoto");
-
-        if (data.name) {
-          photo.src = data.photo_url || "";
-          photo.style.display = data.photo_url ? "block" : "none";
-
-          card.innerHTML = `
-            <p><strong>Student Name:</strong> ${data.name || "N/A"}</p>
-            <p><strong>Date of Birth:</strong> ${data.dob ? new Date(data.dob).toLocaleDateString('en-CA') : 'N/A'}</p>
-            <p><strong>Reg. No:</strong> ${data.reg_no || "N/A"}</p>
-            <p><strong>Course:</strong> ${data.course || "N/A"}</p>
-            <p><strong>Semester:</strong> ${data.semester || "N/A"}</p>
-            <p><strong>Section:</strong> ${data.section || "N/A"}</p>
-            <p><strong>Year:</strong> ${data.year || "N/A"}</p>
-            <p><strong>Father Name:</strong> ${data.father_name || "N/A"}</p>
-            <p><strong>Father Mobile:</strong> ${data.father_mobile || "N/A"}</p>
-            <p><strong>Student Mobile:</strong> ${data.mobile_no || "N/A"}</p>
-            <p><strong>Email:</strong> ${data.email || "N/A"}</p>
-            <p><strong>Admission Type:</strong> ${data.admission_type || "N/A"}</p>
-            <p><strong>Counsellor Name:</strong> ${data.counsellor_name || "N/A"}</p>
-            <p><strong>Counsellor Mobile:</strong> ${data.counsellor_mobile || "N/A"}</p>
-          `;
-        } else {
-          card.innerHTML = `<p>No data found!</p>`;
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.20/dist/sweetalert2.all.min.js"></script>
+    <script>
+        function toggleMobileMenu() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('open');
         }
-      })
-      .catch(() => {
-        document.querySelector('.details-card').innerHTML = '<p>Something went wrong. Please try again later.</p>';
-      });
-  });
 
-  function logout() {
-    localStorage.removeItem("userId");
-    if ("caches" in window) {
-      caches.keys().then(names => names.forEach(name => caches.delete(name)));
-    }
-    window.location.replace("index.html");
-  }
-</script>
+        document.querySelectorAll(".menu li a").forEach(link => {
+            link.addEventListener("click", () => {
+                if (window.innerWidth <= 992) {
+                    document.querySelector('.sidebar').classList.remove('open');
+                }
+            });
+        });
+
+        function confirmLogout() {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You will be logged out of your account.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#0b2e59',
+                cancelButtonColor: '#f7a048',
+                confirmButtonText: 'Yes, log out!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    logout();
+                }
+            });
+        }
+
+        function logout() {
+            localStorage.removeItem("userId");
+            if ("caches" in window) {
+                caches.keys().then(names => names.forEach(name => caches.delete(name)));
+            }
+            window.location.replace("index.html");
+        }
+
+        window.history.pushState(null, "", window.location.href);
+        window.onpopstate = () => window.history.pushState(null, "", window.location.href);
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const studentId = localStorage.getItem('userId');
+            const studentDataContainer = document.getElementById('student-data');
+
+            if (!studentId) {
+                Swal.fire({
+                    title: 'Access Denied',
+                    text: 'Please login first to view this page.',
+                    icon: 'error',
+                    confirmButtonText: 'Go to Login',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    confirmButtonColor: '#0b2e59'
+                }).then(() => {
+                    window.location.href = "index.html";
+                });
+                return;
+            }
+
+            document.getElementById("userId").textContent = studentId;
+
+            fetch(`/student/${studentId}`)
+                .then(res => {
+                    if (!res.ok) {
+                        return res.json().then(errorData => {
+                            throw new Error(errorData.message || 'Network response was not ok');
+                        });
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    const photo = document.getElementById("sidebarPhoto");
+
+                    if (data && data.name) {
+                        photo.src = data.photo_url || "";
+                        photo.style.display = data.photo_url ? "block" : "none";
+
+                        studentDataContainer.innerHTML = `
+                            <table class="details-table">
+                                <tr>
+                                    <td><strong>Student Name</strong></td>
+                                    <td>${data.name || "N/A"}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Date of Birth</strong></td>
+                                    <td>${data.dob ? new Date(data.dob).toLocaleDateString('en-CA') : 'N/A'}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Reg. No</strong></td>
+                                    <td>${data.reg_no || "N/A"}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Course</strong></td>
+                                    <td>${data.course || "N/A"}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Semester</strong></td>
+                                    <td>${data.semester || "N/A"}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Section</strong></td>
+                                    <td>${data.section || "N/A"}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Year</strong></td>
+                                    <td>${data.year || "N/A"}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Father Name</strong></td>
+                                    <td>${data.father_name || "N/A"}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Father Mobile</strong></td>
+                                    <td>${data.father_mobile || "N/A"}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Student Mobile</strong></td>
+                                    <td>${data.mobile_no || "N/A"}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Email</strong></td>
+                                    <td>${data.email || "N/A"}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Admission Type</strong></td>
+                                    <td>${data.admission_type || "N/A"}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Counsellor Name</strong></td>
+                                    <td>${data.counsellor_name || "N/A"}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Counsellor Mobile</strong></td>
+                                    <td>${data.counsellor_mobile || "N/A"}</td>
+                                </tr>
+                            </table>
+                        `;
+                    } else {
+                        studentDataContainer.innerHTML = `<p>No data found for this student.</p>`;
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'No Data',
+                            text: 'No student data was found. Please contact the administrator.',
+                            confirmButtonColor: '#0b2e59'
+                        });
+                    }
+                })
+                .catch(err => {
+                    studentDataContainer.innerHTML = '<p>Something went wrong. Please try again later.</p>';
+                    console.error("Fetch error:", err);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: 'Failed to load student data. Please try again.',
+                        footer: `<p>${err.message}</p>`,
+                        confirmButtonColor: '#0b2e59'
+                    });
+                });
+        });
+    </script>
 </body>
 </html>
