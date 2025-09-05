@@ -233,7 +233,7 @@
   <tr>
     <td>${row.userId}</td>
     <td>${row.name || '-'}</td>
-    <td>${row.academic_year || '-'}</td> <!--  Display academic year -->
+    <td>${row.academic_year || '-'}</td> <!-- ✅ Display academic year -->
     <td>${row.fee_type || '-'}</td>
     <td>₹${row.amount_paid || '-'}</td>
     <td>${row.sbi_ref_no || '-'}</td>
@@ -246,38 +246,38 @@
   }
 
   function searchDU() {
-    const query = document.getElementById("searchInput").value.trim();
-    if (!query) return loadMatches();
+  const query = document.getElementById("searchInput").value.trim();
+  if (!query) return loadMatches();
 
-    fetch("/admin/search-student-sbi", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query })
-    })
-    .then(res => res.json())
-    .then(data => {
-      const tbody = document.querySelector("#matchTable tbody");
-      if (data.success && data.data.length) {
-      tbody.innerHTML = data.map(row => `
-  <tr>
-    <td>${row.userId}</td>
-    <td>${row.name || '-'}</td>
-    <td>${row.fee_type || '-'}</td>
-    <td>₹${row.amount_paid || '-'}</td>
-    <td>${row.sbi_ref_no || '-'}</td>
-    <td>${row.matched ? '✅' : '❌'}</td>
-    <td>${row.matched_on || '-'}</td>
-  </tr>
-`).join("");
-
-      } else {
-        tbody.innerHTML = `<tr><td colspan="7">No matching records found.</td></tr>`;
-      }
-    })
-    .catch(() => {
-      Swal.fire("Error", "Search failed. Please try again.", "error");
-    });
-  }
+  fetch("/admin/search-student-sbi", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ query })
+  })
+  .then(res => res.json())
+  .then(data => {
+    const tbody = document.querySelector("#matchTable tbody");
+    if (data.success && data.data.length) {
+      tbody.innerHTML = data.data.map(row => `
+        <tr>
+          <td>${row.userId}</td>
+          <td>${row.studentName || '-'}</td>
+          <td>${row.academic_year || '-'}</td>
+          <td>${row.fee_type || '-'}</td>
+          <td>₹${row.amount_paid || '-'}</td>
+          <td>${row.sbi_ref_no || '-'}</td>
+          <td>${row.fee_matched ? '✅' : '❌'}</td>
+          <td>${row.fee_matched_on || '-'}</td>
+        </tr>
+      `).join("");
+    } else {
+      tbody.innerHTML = `<tr><td colspan="8">No matching records found.</td></tr>`;
+    }
+  })
+  .catch(() => {
+    Swal.fire("Error", "Search failed. Please try again.", "error");
+  });
+}
 
   // Prevent back nav after logout
   window.addEventListener("pageshow", (e) => {
