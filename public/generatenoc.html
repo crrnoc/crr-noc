@@ -1,443 +1,586 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Generate NOC</title>
-  <link rel="icon" href="crrengglogo.png" type="image/png" />
-<style>
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  }
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Generate NOC</title>
+    <link rel="icon" href="crrengglogo.png" type="image/png" />
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.20/dist/sweetalert2.min.css"
+    />
+    <style>
+        :root {
+            --primary-color: #0b2e59;
+            --secondary-color: #2c6e91;
+            --accent-color: #f7a048;
+            --background-dark: #f0f2f5;
+            --background-light: #ffffff;
+            --text-dark: #333333;
+            --text-light: #f4f4f4;
+            --card-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            --border-radius-lg: 16px;
+            --border-radius-md: 10px;
+        }
 
-  body {
-    background-color: #1d1d1d;
-  }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
-  a {
-    text-decoration: none;
-    color: inherit;
-  }
+        body {
+            background-color: var(--background-dark);
+        }
 
-  .container {
-    display: flex;
-    height: 100vh;
-    flex-direction: row;
-  }
-.photo-container {
-  display: flex;
-  justify-content: center;
-  position: relative;
-  margin-bottom: 20px;
-}
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
 
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background-color: var(--primary-color);
+            display: flex;
+            flex-direction: column;
+            padding: 30px 20px;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease-in-out;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .photo-container {
+            display: flex;
+            justify-content: center;
+            position: relative;
+            margin-bottom: 20px;
+        }
 
-.home-icon {
-  margin-top: 35px;
-  position: absolute;
-  top: -10px;
-  left: -10px;
-  background-color: #fff;
-  border-radius: 50%;
-  font-size: 22px;
-  padding: 6px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-  text-decoration: none;
-  color: #000;
-  transition: transform 0.2s ease;
-}
+        .home-icon {
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            background-color: var(--background-light);
+            color: var(--primary-color);
+            border-radius: 50%;
+            font-size: 22px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s ease, background-color 0.3s ease;
+        }
 
-.home-icon:hover {
-  transform: scale(1.1);
-  background-color: #f09000;
-  color: white;
-}
-  .sidebar {
-    width: 270px;
-    background-color: rgb(247, 201, 155);
-    display: flex;
-    flex-direction: column;
-    padding: 20px;
-    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    overflow-y: auto;
-    transition: top 0.3s ease-in-out;
-    z-index: 999;
-  }
+        .home-icon:hover {
+            transform: scale(1.1);
+            background-color: var(--accent-color);
+            color: var(--text-light);
+        }
 
-  .sidebar h2 {
-    margin: 40px 20px 20px 20px;
-    color: black;
-    font-size: 18px;
-    font-weight: bold;
-  }
-  .sidebar-photo {
-  width: 100px;
-  height: 100px;
-  object-fit: cover;
-  border-radius: 50%;
-  margin: 0 auto 10px;
-  border: 3px solid #333;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-}
-  .menu {
-    list-style-type: none;
-    padding: 0;
-  }
+        .sidebar-photo {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            border: 4px solid var(--accent-color);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
 
-  .menu li {
-    margin-bottom: 15px;
-  }
+        .sidebar h2 {
+            margin: 40px 20px 20px 20px;
+            color: var(--text-light);
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
 
-  .menu li a {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 16px;
-    color: black;
-    padding: 12px 20px;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-  }
+        .menu {
+            list-style: none;
+            padding: 0;
+            flex-grow: 1;
+        }
 
-  .menu li a:hover,
-  .menu li.active a {
-    background-color: #d4d4d4;
-    font-weight: bold;
-    transform: translateX(5px);
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
-  }
+        .menu li {
+            list-style: none;
+            margin-bottom: 12px;
+        }
 
-  .menu li a span {
-    font-size: 18px;
-    transition: transform 0.3s ease;
-  }
+        .menu li a {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 1rem;
+            color: var(--text-light);
+            padding: 15px 20px;
+            border-radius: var(--border-radius-md);
+            transition: all 0.3s ease;
+        }
 
-  .menu li a:hover span {
-    transform: scale(1.2);
-  }
+        .menu li a:hover,
+        .menu li.active a {
+            background-color: rgba(255, 255, 255, 0.1);
+            font-weight: 500;
+            transform: translateX(5px);
+            box-shadow: var(--card-shadow);
+        }
 
-  .logout {
-    background-color: #f09000;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 20px;
-    cursor: pointer;
-    font-size: 16px;
-    width: 50%;
-    margin: 20px auto 0;
-    transition: background 0.3s ease;
-  }
+        .menu li a i {
+            font-size: 1.2rem;
+            width: 25px;
+            text-align: center;
+            color: var(--text-light);
+            transition: color 0.3s ease;
+        }
 
-  .logout:hover {
-    background-color: #d07900;
-  }
+        .logout {
+            background-color: var(--accent-color);
+            color: var(--text-light);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            width: 60%;
+            margin: 20px auto 0;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
 
-  .main {
-    flex-grow: 1;
-    background-color: white;
-    padding: 40px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-left: 270px;
-  }
+        .logout:hover {
+            background-color: #d3853b;
+            transform: scale(1.05);
+        }
+        
+        /* Main Content */
+        .main {
+            flex-grow: 1;
+            background-color: var(--background-dark);
+            padding: 40px 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-left: 280px;
+            transition: margin-left 0.3s ease-in-out;
+            min-height: 100vh;
+        }
 
-  .form {
-    background: linear-gradient(135deg, rgba(54, 169, 225, 0.85), rgba(20, 110, 180, 0.85));
-    padding: 40px;
-    border-radius: 20px;
-    width: 100%;
-    max-width: 500px;
-    color: white;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.3), 0 6px 8px rgba(0, 0, 0, 0.22);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-  }
+        .form-card {
+            background: linear-gradient(135deg, rgba(44, 110, 145, 0.9), rgba(11, 46, 89, 0.9));
+            padding: 40px;
+            border-radius: var(--border-radius-lg);
+            width: 100%;
+            max-width: 500px;
+            color: var(--text-light);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.3), 0 6px 8px rgba(0, 0, 0, 0.22);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
 
-  .form:hover {
-    transform: scale(1.01);
-    box-shadow: 0 16px 28px rgba(0, 0, 0, 0.35);
-  }
+        .form-card:hover {
+            transform: scale(1.01);
+            box-shadow: 0 16px 28px rgba(0, 0, 0, 0.35);
+        }
 
-  .noc-box {
-    background-color: rgba(255, 255, 255, 0.95);
-    padding: 25px 30px;
-    border-radius: 15px;
-    text-align: center;
-    width: 100%;
-    color: #1d1d1d;
-    box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.1);
-    transition: box-shadow 0.3s ease;
-  }
+        .form-card h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 1.5rem;
+            font-weight: 500;
+        }
 
-  .noc-box:hover {
-    box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.15);
-  }
+        .form-content {
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 25px;
+            border-radius: var(--border-radius-md);
+            text-align: center;
+            color: var(--text-dark);
+            box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.1);
+            transition: box-shadow 0.3s ease;
+        }
 
-  .noc-box h2 {
-    margin-bottom: 20px;
-    font-size: 18px;
-  }
+        .form-content:hover {
+            box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.15);
+        }
 
-  .buttons {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    gap: 15px;
-    margin-top: 20px;
-  }
+        .buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
 
-  .buttons select {
-    padding: 10px;
-    font-size: 16px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-    width: 100%;
-    max-width: 250px;
-  }
+        .buttons select {
+            padding: 12px 15px;
+            font-size: 1rem;
+            border-radius: var(--border-radius-md);
+            border: 1px solid #ccc;
+            width: 100%;
+            max-width: 300px;
+            margin: 0 auto;
+            background: var(--background-light);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            outline: none;
+        }
 
-  .buttons button.download {
-    background-color: #1D73D2;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    font-size: 16px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.3s ease;
-  }
+        .buttons select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(11, 46, 89, 0.2);
+        }
 
-  .buttons button.download:hover {
-    background-color: #105a99;
-    transform: scale(1.05);
-  }
+        .buttons button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            max-width: 300px;
+            margin: 0 auto;
+            padding: 12px 20px;
+            font-size: 1rem;
+            border-radius: var(--border-radius-md);
+            border: none;
+            cursor: pointer;
+            color: var(--text-light);
+            font-weight: bold;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
 
-  .mobile-toggle {
-    display: none;
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: #1f75cb;
-    color: white;
-    font-size: 24px;
-    padding: 12px 18px;
-    border-radius: 50px;
-    z-index: 9999;
-    cursor: pointer;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-  }
+        .buttons button i {
+            font-size: 1.1rem;
+        }
 
-  @media (max-width: 768px) {
-    .container {
-      flex-direction: column;
-    }
+        .download-year {
+            background-color: var(--primary-color);
+        }
 
-    .sidebar {
-      top: -100%;
-      left: 0;
-      width: 100%;
-      max-height: 90vh;
-      position: fixed;
-    }
+        .download-year:hover {
+            background-color: #081e3a;
+            transform: translateY(-2px);
+        }
 
-    .sidebar.open {
-      top: 0;
-    }
+        .download-combined {
+            background-color: var(--secondary-color);
+        }
 
-    .mobile-toggle {
-      display: block;
-    }
+        .download-combined:hover {
+            background-color: #215c7e;
+            transform: translateY(-2px);
+        }
+        
+        /* Mobile View & Responsive Design */
+        .mobile-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background-color: var(--secondary-color);
+            color: var(--text-light);
+            font-size: 24px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            align-items: center;
+            justify-content: center;
+            z-index: 1001;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease;
+        }
 
-    .main {
-      margin-left: 0;
-      padding: 20px;
-    }
-
-    .form {
-      width: 100%;
-      padding: 25px;
-    }
-
-    .buttons select {
-      width: 100%;
-    }
-  }
-</style>
+        @media (max-width: 992px) {
+            .mobile-toggle {
+                display: flex;
+            }
+            .sidebar {
+                transform: translateX(-100%);
+                left: 0;
+                right: initial;
+                width: 250px;
+                max-width: 80vw;
+                box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .main {
+                margin-left: 0;
+                padding: 20px;
+            }
+            .form-card {
+                padding: 25px;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <!-- Sidebar -->
-    <div class="sidebar">
-    <div class="photo-container">
-  <div class="photo-wrapper">
-    <a href="studentwelcome.html" class="home-icon" title="Home">🏠</a>
-    <img id="sidebarPhoto" class="sidebar-photo" style="display: none;" />
-  </div>
-</div>
-
-    <h2>ID: <span id="userId">Loading...</span></h2>
-      <ul class="menu">
-        <li><a href="studentdetails.html"><span>📄</span> Student details</a></li>
-        <li><a href="feedetails.html"><span>🎓</span> Fee details</a></li>
-        <li><a href="updaterefno.html"><span>🔄</span> Update fee payment</a></li>
-        <li><a href="attendence.html"><span>📅</span> View Attendance</a></li>
-        <li><a href="studentresults.html"><span>📊</span> Student Results</a></li>
-        <li class="active"><a href="#"><span>➕</span> Generate NOC</a></li>
-        <li><a href="settings.html"><span>⚙️</span> Settings</a></li>
-      </ul>
-      <button class="logout" onclick="logout()">Logout</button>
-    </div>
-
-    <!-- Main Content -->
-    <div class="main">
-      <div class="form">
-        <div class="noc-box">
-          <h2>Generate No Objection Certificate / No Due Certificate</h2>
-          <div class="buttons">
-            <select id="nocYear">
-              <option value="">Select Academic Year</option>
-              <option value="1">1st Year</option>
-              <option value="2">2nd Year</option>
-              <option value="3">3rd Year</option>
-              <option value="4">4th Year</option>
-            </select>
-            <button type="button" class="download" onclick="downloadNOC()">Download</button>
-            <button type="button" onclick="downloadCombinedNOC()" class="download" style="background-color: darkblue;">Download Final Clearance Certificate</button>
-
-          </div>
+    <div class="container">
+        <div class="sidebar">
+            <div class="photo-container">
+                <a href="studentwelcome.html" class="home-icon" title="Home">
+                    <i class="fas fa-home"></i>
+                </a>
+                <img id="sidebarPhoto" class="sidebar-photo" style="display: none;" />
+            </div>
+            <h2>ID: <span id="userId">Loading...</span></h2>
+            <ul class="menu">
+                <li><a href="studentdetails.html"><i class="fas fa-user-circle"></i> Student details</a></li>
+                <li><a href="feedetails.html"><i class="fas fa-graduation-cap"></i> Fee details</a></li>
+                <li><a href="updaterefno.html"><i class="fas fa-sync-alt"></i> Update fee payment</a></li>
+                <li><a href="attendence.html"><i class="fas fa-calendar-alt"></i> View Attendance</a></li>
+                <li><a href="studentresults.html"><i class="fas fa-chart-bar"></i> Student Results</a></li>
+                <li class="active"><a href="#"><i class="fas fa-file-invoice"></i> Generate NOC</a></li>
+                <li><a href="settings.html"><i class="fas fa-cog"></i> Settings</a></li>
+            </ul>
+            <button class="logout" onclick="confirmLogout()">Logout</button>
         </div>
-      </div>
+
+        <div class="main">
+            <div class="form-card">
+                <div class="form-content">
+                    <h2>Generate No Objection / No Due Certificate</h2>
+                    <div class="buttons">
+                        <select id="nocYear">
+                            <option value="">Select Academic Year</option>
+                            <option value="1">1st Year</option>
+                            <option value="2">2nd Year</option>
+                            <option value="3">3rd Year</option>
+                            <option value="4">4th Year</option>
+                        </select>
+                        <button type="button" class="download download-year" onclick="downloadNOC()">
+                            <i class="fas fa-download"></i> Download Year-wise
+                        </button>
+                        <button type="button" class="download download-combined" onclick="downloadCombinedNOC()">
+                            <i class="fas fa-file-pdf"></i> Download Final Clearance
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
-    <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-  // 🔐 Unauthorized login check
-  const userId = localStorage.getItem("userId");
-  if (!userId) {
-    Swal.fire({
-      icon: 'warning',
-      title: 'Login Required',
-      text: 'Please login to access this page.'
-    }).then(() => {
-      window.location.href = "index.html";
-    });
-  }
+    
+    <div class="mobile-toggle" onclick="toggleMobileMenu()">
+        <i class="fas fa-bars"></i>
+    </div>
 
-  document.getElementById("userId").textContent = userId;
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.20/dist/sweetalert2.all.min.js"></script>
+    <script>
+        function toggleMobileMenu() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('open');
+        }
 
-  // ✅ Load sidebar photo
-  fetch(`/student/${userId}`)
-    .then(res => res.json())
-    .then(data => {
-      const photo = document.getElementById("sidebarPhoto");
-      if (photo && data.photo_url) {
-        photo.src = data.photo_url;
-        photo.style.display = "block";
-      }
-    })
-    .catch(err => {
-      console.warn("⚠️ Failed to load photo:", err.message);
-    });
-
-  function downloadNOC() {
-    const year = document.getElementById("nocYear").value;
-    if (!year) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Select Year',
-        text: 'Please select an academic year to generate NOC.'
-      });
-      return;
-    }
-
-    const url = `/generate-noc/${userId}?year=${year}`;
-    window.open(url, '_blank');
-
-    Swal.fire({
-      icon: 'success',
-      title: 'NOC Downloaded',
-      text: `NOC for ${year} year downloaded successfully.`,
-      timer: 2000,
-      showConfirmButton: false
-    });
-  }
-
-  function downloadCombinedNOC() {
-    if (!userId) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'User ID not found!'
-      });
-      return;
-    }
-
-    fetch(`/generate-combined-noc/${userId}`)
-      .then(res => {
-        if (!res.ok) throw new Error("Failed to generate combined NOC");
-        return res.blob();
-      })
-      .then(blob => {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `Combined_NOC_${userId}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-
-        Swal.fire({
-          icon: 'success',
-          title: 'Final Clearance Certificate Downloaded',
-          text: 'Combined NOC downloaded successfully.',
-          timer: 2000,
-          showConfirmButton: false
+        document.querySelectorAll(".menu li a").forEach(link => {
+            link.addEventListener("click", () => {
+                if (window.innerWidth <= 992) {
+                    document.querySelector('.sidebar').classList.remove('open');
+                }
+            });
         });
-      })
-      .catch(err => {
-        console.error("Download error:", err);
-        Swal.fire({
-          icon: 'error',
-          title: 'Download Failed',
-          text: 'Something went wrong while generating NOC.'
+
+        function confirmLogout() {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You will be logged out of your account.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#0b2e59',
+                cancelButtonColor: '#f7a048',
+                confirmButtonText: 'Yes, log out!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    logout();
+                }
+            });
+        }
+
+        function logout() {
+            localStorage.removeItem("userId");
+            if ('caches' in window) {
+                caches.keys().then(names => names.forEach(name => caches.delete(name)));
+            }
+            window.location.replace("index.html");
+        }
+        
+        // Prevent back navigation after logout
+        window.history.pushState(null, "", window.location.href);
+        window.onpopstate = () => window.history.pushState(null, "", window.location.href);
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const userId = localStorage.getItem("userId");
+            if (!userId) {
+                Swal.fire({
+                    title: 'Access Denied',
+                    text: 'Please login first to view this page.',
+                    icon: 'error',
+                    confirmButtonText: 'Go to Login',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    confirmButtonColor: '#0b2e59'
+                }).then(() => {
+                    window.location.href = "index.html";
+                });
+                return;
+            }
+            document.getElementById("userId").textContent = userId;
+
+            // Load sidebar photo
+            fetch(`/student/${userId}`)
+                .then(res => res.json())
+                .then(data => {
+                    const photo = document.getElementById("sidebarPhoto");
+                    if (photo && data.photo_url) {
+                        photo.src = data.photo_url;
+                        photo.style.display = "block";
+                    }
+                })
+                .catch(err => {
+                    console.warn("⚠️ Failed to load photo:", err.message);
+                });
         });
-      });
-  }
 
-  function toggleMobileMenu() {
-    document.querySelector('.sidebar').classList.toggle('open');
-  }
+        function downloadNOC() {
+            const userId = localStorage.getItem("userId");
+            const year = document.getElementById("nocYear").value;
 
-  document.querySelectorAll(".menu li a").forEach(link => {
-    link.addEventListener("click", () => {
-      if (window.innerWidth <= 768) {
-        document.querySelector('.sidebar').classList.remove('open');
-      }
-    });
-  });
+            if (!year) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Select Year',
+                    text: 'Please select an academic year to generate the NOC.',
+                    confirmButtonColor: '#0b2e59'
+                });
+                return;
+            }
+            
+            Swal.fire({
+                title: 'Generating NOC...',
+                text: 'Please wait, your document is being prepared.',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
 
-  function logout() {
-    localStorage.removeItem("userId");
-    if ("caches" in window) {
-      caches.keys().then((names) => names.forEach((name) => caches.delete(name)));
-    }
-    window.location.replace("index.html");
-  }
-</script>
+            const url = `/generate-noc/${userId}?year=${year}`;
+            
+            // Simulating a real fetch to handle errors properly
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(errorData => {
+                            throw new Error(errorData.message || 'Server error occurred.');
+                        });
+                    }
+                    return response.blob();
+                })
+                .then(blob => {
+                    const fileUrl = window.URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = fileUrl;
+                    a.download = `NOC_${userId}_Year${year}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    window.URL.revokeObjectURL(fileUrl);
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'NOC Generated!',
+                        text: 'Your document is being downloaded.',
+                        timer: 2000,
+                        showConfirmButton: false,
+                        confirmButtonColor: '#0b2e59'
+                    });
+                })
+                .catch(err => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Download Failed',
+                        text: err.message,
+                        confirmButtonColor: '#0b2e59'
+                    });
+                });
+        }
+
+        function downloadCombinedNOC() {
+            const userId = localStorage.getItem("userId");
+            if (!userId) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'User ID not found!',
+                    confirmButtonColor: '#0b2e59'
+                });
+                return;
+            }
+            
+            Swal.fire({
+                title: 'Generating Certificate...',
+                text: 'Please wait, your final clearance certificate is being prepared.',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            fetch(`/generate-combined-noc/${userId}`)
+                .then(res => {
+                    if (!res.ok) {
+                        return res.json().then(errorData => {
+                            throw new Error(errorData.message || 'Failed to generate combined NOC');
+                        });
+                    }
+                    return res.blob();
+                })
+                .then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = `Final_Clearance_${userId}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    window.URL.revokeObjectURL(url);
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Certificate Generated!',
+                        text: 'Your final clearance certificate is being downloaded.',
+                        timer: 2000,
+                        showConfirmButton: false,
+                        confirmButtonColor: '#0b2e59'
+                    });
+                })
+                .catch(err => {
+                    console.error("Download error:", err);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Download Failed',
+                        text: err.message,
+                        confirmButtonColor: '#0b2e59'
+                    });
+                });
+        }
+    </script>
 </body>
 </html>
