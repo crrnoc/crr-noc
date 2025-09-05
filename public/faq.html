@@ -299,8 +299,27 @@
             transition: transform 0.3s ease;
         }
 
+        .mobile-home-icon {
+            display: none;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: var(--accent-color);
+            color: var(--text-light);
+            font-size: 24px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            align-items: center;
+            justify-content: center;
+            z-index: 1001;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease;
+        }
+
         @media (max-width: 992px) {
-            .mobile-toggle {
+            .mobile-toggle, .mobile-home-icon {
                 display: flex;
             }
             .sidebar {
@@ -360,6 +379,10 @@
     <div class="mobile-toggle" onclick="toggleMobileMenu()">
         <i class="fas fa-bars"></i>
     </div>
+    
+    <a href="studentwelcome.html" class="mobile-home-icon" title="Home">
+        <i class="fas fa-home"></i>
+    </a>
     
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.20/dist/sweetalert2.all.min.js"></script>
     <script>
