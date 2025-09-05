@@ -1,361 +1,513 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>FAQ - NOC GENERATION PLATFORM</title>
-  <link rel="icon" href="crrengglogo.png" type="image/png" />
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FAQ - STUDENT PORTAL</title>
+    <link rel="icon" href="crrengglogo.png" type="image/png" />
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.20/dist/sweetalert2.min.css"
+    />
+    <style>
+        :root {
+            --primary-color: #0b2e59;
+            --secondary-color: #2c6e91;
+            --accent-color: #f7a048;
+            --background-dark: #f0f2f5;
+            --background-light: #ffffff;
+            --text-dark: #333333;
+            --text-light: #f4f4f4;
+            --card-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            --border-radius-lg: 16px;
+            --border-radius-md: 10px;
+        }
 
-    body {
-      background-color: #2e2e2e;
-    }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
-    a {
-      text-decoration: none;
-      color: inherit;
-    }
+        body {
+            background-color: var(--background-dark);
+        }
 
-    .container {
-      display: flex;
-      min-height: 100vh;
-    }
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
 
-.sidebar {
-  width: 270px;
-  background-color: rgb(247, 201, 155);
-  display: flex;
-  flex-direction: column;
-  padding: 20px;
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
-  
-  position: fixed; /* Lock the sidebar */
-  top: 0;
-  bottom: 0;
-  left: 0;
-  overflow-y: auto;
-  z-index: 1000; /* Keep it on top if needed */
-}
-    .sidebar h2 {
-      margin: 40px 20px 20px 20px;
-      color: black;
-      font-size: 18px;
-      font-weight: bold;
-    }
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
 
-    .menu {
-      list-style-type: none;
-      padding: 0;
-    }
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background-color: var(--primary-color);
+            display: flex;
+            flex-direction: column;
+            padding: 30px 20px;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease-in-out;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .photo-container {
+            display: flex;
+            justify-content: center;
+            position: relative;
+            margin-bottom: 20px;
+        }
 
-    .menu li {
-      margin-bottom: 15px;
-    }
+        .home-icon {
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            background-color: var(--background-light);
+            color: var(--primary-color);
+            border-radius: 50%;
+            font-size: 22px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s ease, background-color 0.3s ease;
+        }
 
-    .menu li a {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 16px;
-      color: black;
-      padding: 12px 20px;
-      border-radius: 8px;
-      transition: all 0.3s ease;
-    }
+        .home-icon:hover {
+            transform: scale(1.1);
+            background-color: var(--accent-color);
+            color: var(--text-light);
+        }
 
-    .menu li a:hover,
-    .menu li.active a {
-      background-color: #d4d4d4;
-      font-weight: bold;
-      transform: translateX(5px);
-      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
-    }
+        .sidebar-photo {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            border: 4px solid var(--accent-color);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
 
-    .menu li a span {
-      font-size: 18px;
-      transition: transform 0.3s ease;
-    }
+        .sidebar h2 {
+            margin: 40px 20px 20px 20px;
+            color: var(--text-light);
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
 
-    .menu li a:hover span {
-      transform: scale(1.2);
-    }
+        .menu {
+            list-style: none;
+            padding: 0;
+            flex-grow: 1;
+        }
 
-    .logout {
-      background-color: #f09000;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 20px;
-      cursor: pointer;
-      font-size: 16px;
-      width: 50%;
-      margin: 20px auto 0;
-      transition: background 0.3s ease;
-    }
+        .menu li {
+            list-style: none;
+            margin-bottom: 12px;
+        }
 
-    .logout:hover {
-      background-color: #d07900;
-    }
+        .menu li a {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 1rem;
+            color: var(--text-light);
+            padding: 15px 20px;
+            border-radius: var(--border-radius-md);
+            transition: all 0.3s ease;
+        }
 
-.content {
-  flex-grow: 1;
-  background-color: white;
-  padding: 40px;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  margin-left: 270px; /* So content doesn’t go under the sidebar */
-}
-    .faq-container {
-      background: #fff;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
-      width: 100%;
-      max-width: 800px;
-    }
-     .back-btn {
-      background: none;
-      border: none;
-      font-size: 16px;
-      font-weight: bold;
-      color: #000000;
-      display: inline-flex;
-      align-items: center;
-      margin-bottom: 20px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
+        .menu li a:hover,
+        .menu li.active a {
+            background-color: rgba(255, 255, 255, 0.1);
+            font-weight: 500;
+            transform: translateX(5px);
+            box-shadow: var(--card-shadow);
+        }
 
-    .back-btn:hover {
-      color: #ffa10a;
-      transform: translateX(-4px);
-    }
+        .menu li a i {
+            font-size: 1.2rem;
+            width: 25px;
+            text-align: center;
+            color: var(--text-light);
+            transition: color 0.3s ease;
+        }
 
-    .back-btn span {
-      margin-left: 8px;
-    }
-    .faq-container h2 {
-      font-size: 26px;
-      font-weight: bold;
-      margin-bottom: 20px;
-      text-align: center;
-    }
+        .logout {
+            background-color: var(--accent-color);
+            color: var(--text-light);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            width: 60%;
+            margin: 20px auto 0;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
 
-    .faq-item {
-      margin-bottom: 20px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      padding: 15px 20px;
-      transition: box-shadow 0.3s ease;
-    }
+        .logout:hover {
+            background-color: #d3853b;
+            transform: scale(1.05);
+        }
 
-    .faq-item:hover {
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
+        /* Main Content */
+        .main {
+            flex-grow: 1;
+            padding: 40px 30px;
+            margin-left: 280px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            transition: margin-left 0.3s ease-in-out;
+            min-height: 100vh;
+        }
 
-    .question {
-      font-weight: bold;
-      font-size: 18px;
-      cursor: pointer;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+        .faq-container {
+            background: linear-gradient(135deg, rgba(44, 110, 145, 0.9), rgba(11, 46, 89, 0.9));
+            padding: 40px;
+            border-radius: var(--border-radius-lg);
+            width: 100%;
+            max-width: 800px;
+            color: var(--text-light);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.3), 0 6px 8px rgba(0, 0, 0, 0.22);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
 
-    .question:hover {
-      color: #0077B6;
-    }
+        .faq-container:hover {
+            transform: scale(1.01);
+            box-shadow: 0 16px 28px rgba(0, 0, 0, 0.35);
+        }
 
-    .answer {
-      display: none;
-      padding-top: 10px;
-      color: #444;
-      font-size: 16px;
-    }
+        .back-btn {
+            background: none;
+            border: none;
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text-light);
+            display: inline-flex;
+            align-items: center;
+            margin-bottom: 25px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+        }
 
-    .arrow {
-      font-size: 16px;
-      transition: transform 0.3s ease;
-    }
+        .back-btn:hover {
+            color: var(--accent-color);
+            transform: translateX(-4px);
+        }
 
-    .rotate {
-      transform: rotate(180deg);
-    }
+        .back-btn i {
+            margin-right: 8px;
+            font-size: 1.1rem;
+        }
 
-    @media (max-width: 768px) {
-       .mobile-toggle {
-    display: none;
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: #1f75cb;
-    color: white;
-    font-size: 24px;
-    padding: 12px 18px;
-    border-radius: 50px;
-    z-index: 9999;
-    cursor: pointer;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-  }
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 500;
+            margin-bottom: 25px;
+            text-align: center;
+        }
 
-  @media (max-width: 768px) {
-    .container {
-      flex-direction: column;
-    }
+        .faq-item {
+            margin-bottom: 15px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: var(--border-radius-md);
+            transition: background-color 0.3s ease;
+            overflow: hidden;
+        }
+        
+        .faq-item:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
 
-    .sidebar {
-      top: -100%;
-      left: 0;
-      width: 100%;
-      max-height: 90vh;
-      position: fixed;
-      transition: top 0.3s ease-in-out;
-      z-index: 1000;
-    }
+        .question {
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+        }
 
-    .sidebar.open {
-      top: 0;
-    }
+        .question:hover {
+            color: var(--accent-color);
+        }
 
-    .content {
-      margin-left: 0;
-      padding: 20px;
-    }
+        .answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+            padding: 0 20px;
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 0.95rem;
+        }
 
-    .faq-container {
-      padding: 20px;
-    }
+        .answer.open {
+            max-height: 500px; /* Adjust as needed */
+            padding: 15px 20px;
+        }
 
-    .mobile-toggle {
-      display: block;
-    }
-  }
-      
-    }
-  </style>
+        .arrow {
+            font-size: 0.9rem;
+            transition: transform 0.3s ease;
+        }
+
+        .question.open .arrow {
+            transform: rotate(180deg);
+        }
+
+        /* Mobile View & Responsive Design */
+        .mobile-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background-color: var(--secondary-color);
+            color: var(--text-light);
+            font-size: 24px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            align-items: center;
+            justify-content: center;
+            z-index: 1001;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease;
+        }
+
+        @media (max-width: 992px) {
+            .mobile-toggle {
+                display: flex;
+            }
+            .sidebar {
+                transform: translateX(-100%);
+                left: 0;
+                right: initial;
+                width: 250px;
+                max-width: 80vw;
+                box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .main {
+                margin-left: 0;
+                padding: 20px;
+            }
+            .faq-container {
+                padding: 25px;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <!-- Sidebar -->
-    <div class="sidebar">
-      <h2><strong>ID:</strong> <span id="userId">Loading...</span></h2>
-      <ul class="menu">
-        <li><a href="studentdetails.html"><span>📄</span> Student details</a></li>
-        <li><a href="feedetails.html"><span>🎓</span> Fee details</a></li>
-        <li><a href="updaterefno.html"><span>🔄</span> Update fee payment</a></li>
-        <li><a href="attendence.html"><span>📅</span> View Attendance</a></li>
-        <li><a href="studentresults.html"><span>📊</span> Student Results</a></li>
-        <li><a href="generatenoc.html"><span>➕</span> Generate NOC</a></li>
-        <li class="active"><a href="settings.html"><span>⚙️</span> Settings</a></li>
-      </ul>
-      <button class="logout" onclick="logout()">Logout</button>
+    <div class="container">
+        <div class="sidebar">
+            <div class="photo-container">
+                <a href="studentwelcome.html" class="home-icon" title="Home">
+                    <i class="fas fa-home"></i>
+                </a>
+                <img id="sidebarPhoto" class="sidebar-photo" style="display: none;" />
+            </div>
+            <h2>ID: <span id="userId">Loading...</span></h2>
+            <ul class="menu">
+                <li><a href="studentdetails.html"><i class="fas fa-user-circle"></i> Student details</a></li>
+                <li><a href="feedetails.html"><i class="fas fa-graduation-cap"></i> Fee details</a></li>
+                <li><a href="updaterefno.html"><i class="fas fa-sync-alt"></i> Update fee payment</a></li>
+                <li><a href="attendence.html"><i class="fas fa-calendar-alt"></i> View Attendance</a></li>
+                <li><a href="studentresults.html"><i class="fas fa-chart-bar"></i> Student Results</a></li>
+                <li><a href="generatenoc.html"><i class="fas fa-file-invoice"></i> Generate NOC</a></li>
+                <li class="active"><a href="settings.html"><i class="fas fa-cog"></i> Settings</a></li>
+            </ul>
+            <button class="logout" onclick="confirmLogout()">Logout</button>
+        </div>
+
+        <div class="main">
+            <div class="faq-container">
+                <button class="back-btn" onclick="goBack()">
+                    <i class="fas fa-arrow-left"></i> Back to Settings
+                </button>
+                <h2>Frequently Asked Questions</h2>
+                <div id="faq-list"></div>
+            </div>
+        </div>
     </div>
 
-    <!-- FAQ Content -->
-    <div class="content">
-      <div class="faq-container">
-        <button class="back-btn" onclick="goBack()"> <span>Back to Settings</span></button>
-        <h2>Frequently Asked Questions</h2>
-        <div id="faq-list"></div>
-      </div>
+    <div class="mobile-toggle" onclick="toggleMobileMenu()">
+        <i class="fas fa-bars"></i>
     </div>
-  </div>
-  <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
-  <script>
-    const questions = [
-      "How do I log in to the NOC portal?",
-      "What is my User ID?",
-      "What should I do if I forget my password?",
-      "Can staff access the portal?",
-      "Can I register myself on the portal?",
-      "When can I generate my NOC?",
-      "What are the conditions to generate NOC?",
-      "Do I need to clear all fee dues before generating NOC?",
-      "How do I update my fee payment status?",
-      "Where can I view my student details?",
-      "Can I edit my personal information?",
-      "Can I generate NOC in 2nd or 3rd year?",
-      "Is Aadhaar number required for NOC?",
-      "Who should I contact for help or errors?"
-    ];
-
-    const answers = [
-      "To log in, visit the portal homepage and enter your User ID and password, then click the login button.",
-      "Your User ID is your student registration number, e.g., 23B8xxxxxx.",
-      "No Tension! Your Registration Number Is Your Password.",
-      "Yes, staff and admin can log in using their registered User ID and password.",
-      "No. Only pre-registered users (students, staff, or admin) can log in. Manual registration is disabled.",
-      "You can generate your NOC at any time.",
-      "You must be a CRRENGG student & You need to update your fee in this portal then only you can generate NOC.",
-      "NO, full fee clearance is not mandatory to unlock the NOC generation option, It Shows due list.",
-      "Go to 'Update Fee Payment' from the sidebar menu and update your payment proof or update details.",
-      "Click on 'Student Details' in the menu to view your profile, academic info, and contact details.",
-      "Yes. Navigate to 'Edit Profile', click 'Update Profile', and save after making your changes.",
-      "Yes. Every student in CRRENGG are eligible for NOC generation as per policy.",
-      "NO, a valid Aadhaar number is not required as part of identity verification for NOC.",
-      "Use the 'Help & Feedback' or contact your department staff/admin directly for any technical support."
-    ];
-
-    const faqList = document.getElementById("faq-list");
-    questions.forEach((q, i) => {
-      const item = document.createElement("div");
-      item.classList.add("faq-item");
-      item.innerHTML = `
-        <div class="question">${q}<span class="arrow">▼</span></div>
-        <div class="answer">${answers[i]}</div>
-      `;
-      faqList.appendChild(item);
-
-      item.querySelector(".question").addEventListener("click", () => {
-        const ans = item.querySelector(".answer");
-        const arrow = item.querySelector(".arrow");
-        const visible = ans.style.display === "block";
-        document.querySelectorAll(".answer").forEach(el => el.style.display = "none");
-        document.querySelectorAll(".arrow").forEach(a => a.classList.remove("rotate"));
-        if (!visible) {
-          ans.style.display = "block";
-          arrow.classList.add("rotate");
+    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.20/dist/sweetalert2.all.min.js"></script>
+    <script>
+        function toggleMobileMenu() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('open');
         }
-      });
-    });
 
-    const userId = localStorage.getItem("userId");
-    document.getElementById("userId").textContent = userId;
+        document.querySelectorAll(".menu li a").forEach(link => {
+            link.addEventListener("click", () => {
+                if (window.innerWidth <= 992) {
+                    document.querySelector('.sidebar').classList.remove('open');
+                }
+            });
+        });
 
-function logout() {
-    localStorage.removeItem("userId");
-    if ("caches" in window) {
-      caches.keys().then((names) => names.forEach((name) => caches.delete(name)));
-    }
-    window.location.replace("index.html");
-  }
+        function goBack() {
+            window.location.href = "settings.html";
+        }
 
-         function toggleMobileMenu() {
-    const sidebar = document.querySelector('.sidebar');
-    sidebar.classList.toggle('open');
-  }
+        function confirmLogout() {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You will be logged out of your account.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#0b2e59',
+                cancelButtonColor: '#f7a048',
+                confirmButtonText: 'Yes, log out!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    logout();
+                }
+            });
+        }
 
-  document.querySelectorAll(".menu li a").forEach(link => {
-    link.addEventListener("click", () => {
-      if (window.innerWidth <= 768) {
-        document.querySelector('.sidebar').classList.remove('open');
-      }
-    });
-  });
+        function logout() {
+            localStorage.removeItem("userId");
+            localStorage.removeItem("regno");
+            if ('caches' in window) {
+                caches.keys().then(names => names.forEach(name => caches.delete(name)));
+            }
+            window.location.replace("index.html");
+        }
+        
+        // Prevent back navigation after logout
+        window.history.pushState(null, "", window.location.href);
+        window.onpopstate = () => window.history.pushState(null, "", window.location.href);
 
+        document.addEventListener("DOMContentLoaded", () => {
+            const userId = localStorage.getItem("userId") || localStorage.getItem("regno");
+            if (!userId) {
+                Swal.fire({
+                    title: 'Access Denied',
+                    text: 'Please login first to view this page.',
+                    icon: 'error',
+                    confirmButtonText: 'Go to Login',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    confirmButtonColor: '#0b2e59'
+                }).then(() => {
+                    window.location.href = "index.html";
+                });
+                return;
+            }
+            document.getElementById("userId").textContent = userId;
 
-    function goBack() {
-    window.location.href = "settings.html";
-  }
+            // Load sidebar photo
+            fetch(`/student/${userId}`)
+                .then(res => res.json())
+                .then(data => {
+                    const photo = document.getElementById("sidebarPhoto");
+                    if (photo && data.photo_url) {
+                        photo.src = data.photo_url;
+                        photo.style.display = "block";
+                    }
+                })
+                .catch(err => {
+                    console.warn("⚠️ Failed to load photo:", err.message);
+                });
 
-  </script>
+            const questions = [
+                "How do I log in to the student portal?",
+                "What is my User ID?",
+                "What should I do if I forget my password?",
+                "Can staff access the portal?",
+                "Can I register myself on the portal?",
+                "When can I generate my NOC?",
+                "What are the conditions to generate NOC?",
+                "Do I need to clear all fee dues before generating NOC?",
+                "How do I update my fee payment status?",
+                "Where can I view my student details?",
+                "Can I edit my personal information?",
+                "Can I generate NOC in 2nd or 3rd year?",
+                "Is Aadhaar number required for NOC?",
+                "Who should I contact for help or errors?"
+            ];
+
+            const answers = [
+                "To log in, visit the portal homepage and enter your User ID and password, then click the login button.",
+                "Your User ID is your student registration number, e.g., 23B8xxxxxx.",
+                "Your registration number is your default password. If you have changed it, please use the new one. If you forget, contact the college admin.",
+                "Yes, staff and admin can log in using their registered User ID and password.",
+                "No. Only pre-registered users (students, staff, or admin) can log in. Manual registration is disabled.",
+                "You can generate your NOC at any time.",
+                "You must be a CRRENGG student, and you need to update your fee payments in this portal to generate the NOC.",
+                "NO, full fee clearance is not mandatory to unlock the NOC generation option. The portal will show your fee due list.",
+                "Go to 'Update fee payment' from the sidebar menu to update your payment proof and details.",
+                "Click on 'Student Details' in the menu to view your profile, academic information, and contact details.",
+                "Yes. Navigate to 'Edit Profile' or 'Update Details', update your information, and save after making your changes.",
+                "Yes. All students in CRRENGG are eligible for NOC generation as per policy.",
+                "NO, a valid Aadhaar number is not required for identity verification to generate the NOC.",
+                "For technical support or any errors, please use the 'Help & Feedback' form or contact your department staff/admin directly."
+            ];
+
+            const faqList = document.getElementById("faq-list");
+            questions.forEach((q, i) => {
+                const item = document.createElement("div");
+                item.classList.add("faq-item");
+                item.innerHTML = `
+                    <div class="question">
+                        <span>${q}</span>
+                        <i class="fas fa-chevron-down arrow"></i>
+                    </div>
+                    <div class="answer">${answers[i]}</div>
+                `;
+                faqList.appendChild(item);
+
+                const questionElement = item.querySelector(".question");
+                const answerElement = item.querySelector(".answer");
+
+                questionElement.addEventListener("click", () => {
+                    const isOpen = questionElement.classList.contains("open");
+
+                    // Close all other open answers
+                    document.querySelectorAll(".question.open").forEach(openQ => {
+                        if (openQ !== questionElement) {
+                            openQ.classList.remove("open");
+                            openQ.nextElementSibling.classList.remove("open");
+                        }
+                    });
+
+                    // Toggle the current one
+                    questionElement.classList.toggle("open");
+                    answerElement.classList.toggle("open");
+                });
+            });
+        });
+    </script>
 </body>
 </html>
