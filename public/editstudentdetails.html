@@ -275,7 +275,7 @@ function showEditForm(data) {
       <label>Admission Type</label>
       <select name="admission_type" required>
         <option value="">--Select Type--</option>
-        ${["convenor","management","convenor(spot)","management(spot)","spot","lateral"].map(a=>`<option value="${a}" ${data.admission_type===a?"selected":""}>${a}</option>`).join("")}
+        ${["CONVENER","MANAGEMENT","CONVENER(SPOT)","MANAGEMENT(SPOT)","SPOT","LATERAL"].map(a=>`<option value="${a}" ${data.admission_type===a?"selected":""}>${a}</option>`).join("")}
       </select>
 
       <label>Upload New Photo (max 100KB)</label>
