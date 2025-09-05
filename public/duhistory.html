@@ -1,467 +1,562 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Manage Fee Entries</title>
-  <link rel="icon" href="crrengglogo.png" type="image/png" />
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<style>
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  }
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Fee Entries</title>
+    <link rel="icon" href="crrengglogo.png" type="image/png" />
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.20/dist/sweetalert2.min.css"
+    />
+    <style>
+        :root {
+            --primary-color: #0b2e59;
+            --secondary-color: #2c6e91;
+            --accent-color: #f7a048;
+            --background-dark: #f0f2f5;
+            --background-light: #ffffff;
+            --text-dark: #333333;
+            --text-light: #f4f4f4;
+            --card-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            --border-radius-lg: 16px;
+            --border-radius-md: 10px;
+        }
 
-  body {
-    background-color: #1d1d1d;
-  }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
-  a {
-    text-decoration: none;
-    color: inherit;
-  }
+        body {
+            background-color: var(--background-dark);
+        }
 
-  .container {
-    display: flex;
-    min-height: 100vh;
-  }
-.photo-container {
-  display: flex;
-  justify-content: center;
-  position: relative;
-  margin-bottom: 20px;
-}
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
 
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background-color: var(--primary-color);
+            display: flex;
+            flex-direction: column;
+            padding: 30px 20px;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease-in-out;
+            z-index: 1000;
+            overflow-y: auto;
+        }
 
-.home-icon {
-  margin-top: 35px;
-  position: absolute;
-  top: -10px;
-  left: -10px;
-  background-color: #fff;
-  border-radius: 50%;
-  font-size: 22px;
-  padding: 6px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-  text-decoration: none;
-  color: #000;
-  transition: transform 0.2s ease;
-}
+        .photo-container {
+            display: flex;
+            justify-content: center;
+            position: relative;
+            margin-bottom: 20px;
+        }
 
-.home-icon:hover {
-  transform: scale(1.1);
-  background-color: #f09000;
-  color: white;
-}
-  .sidebar {
-    width: 270px;
-    background-color: rgb(247, 201, 155);
-    display: flex;
-    flex-direction: column;
-    padding: 20px;
-    box-shadow: 2px 0 5px rgba(0,0,0,0.2);
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    overflow-y: auto;
-    transition: top 0.3s ease-in-out;
-    z-index: 999;
-  }
+        .home-icon {
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            background-color: var(--background-light);
+            color: var(--primary-color);
+            border-radius: 50%;
+            font-size: 22px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s ease, background-color 0.3s ease;
+        }
 
-  .sidebar h2 {
-    margin: 40px 20px 20px 20px;
-    color: black;
-    font-size: 18px;
-    font-weight: bold;
-  }
-  .sidebar-photo {
-  width: 100px;
-  height: 100px;
-  object-fit: cover;
-  border-radius: 50%;
-  margin: 0 auto 10px;
-  border: 3px solid #333;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-}
-  .menu {
-    list-style-type: none;
-    padding: 0;
-  }
+        .home-icon:hover {
+            transform: scale(1.1);
+            background-color: var(--accent-color);
+            color: var(--text-light);
+        }
 
-  .menu li {
-    margin-bottom: 15px;
-  }
+        .sidebar-photo {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            border: 4px solid var(--accent-color);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
 
-  .menu li a {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 16px;
-    color: black;
-    padding: 12px 20px;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-  }
+        .sidebar h2 {
+            margin: 40px 20px 20px 20px;
+            color: var(--text-light);
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
 
-  .menu li a:hover,
-  .menu li.active a {
-    background-color: #d4d4d4;
-    font-weight: bold;
-    transform: translateX(5px);
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
-  }
+        .menu {
+            list-style: none;
+            padding: 0;
+            flex-grow: 1;
+        }
 
-  .logout {
-    background-color: #f09000;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 20px;
-    cursor: pointer;
-    font-size: 16px;
-    width: 50%;
-    margin: 20px auto 0;
-    transition: background 0.3s ease;
-  }
+        .menu li {
+            list-style: none;
+            margin-bottom: 12px;
+        }
 
-  .logout:hover {
-    background-color: #d07900;
-  }
+        .menu li a {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 1rem;
+            color: var(--text-light);
+            padding: 15px 20px;
+            border-radius: var(--border-radius-md);
+            transition: all 0.3s ease;
+        }
 
-  .main {
-    flex-grow: 1;
-    background-color: white;
-    padding: 40px;
-    margin-left: 270px;
-    overflow-y: auto;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
+        .menu li a:hover,
+        .menu li.active a {
+            background-color: rgba(255, 255, 255, 0.1);
+            font-weight: 500;
+            transform: translateX(5px);
+            box-shadow: var(--card-shadow);
+        }
 
-  .form {
-    background-color: #36A9E1;
-    padding: 30px;
-    border-radius: 10px;
-    width: 100%;
-    max-width: 900px;
-    color: black;
-    overflow-x: auto;
-  }
+        .menu li a i {
+            font-size: 1.2rem;
+            width: 25px;
+            text-align: center;
+            color: var(--text-light);
+            transition: color 0.3s ease;
+        }
 
-  .back-btn {
-    background: none;
-    border: none;
-    font-size: 16px;
-    font-weight: bold;
-    color: #ffffff;
-    display: inline-flex;
-    align-items: center;
-    margin-bottom: 20px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
+        .logout {
+            background-color: var(--accent-color);
+            color: var(--text-light);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            width: 60%;
+            margin: 20px auto 0;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
 
-  .back-btn:hover {
-    color: #16ff0a;
-    transform: translateX(-4px);
-  }
+        .logout:hover {
+            background-color: #d3853b;
+            transform: scale(1.05);
+        }
 
-  .back-btn span {
-    margin-left: 8px;
-  }
+        /* Main Content */
+        .main {
+            flex-grow: 1;
+            padding: 40px 30px;
+            margin-left: 280px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: margin-left 0.3s ease-in-out;
+            min-height: 100vh;
+        }
 
-  h2 {
-    text-align: center;
-    margin-bottom: 20px;
-  }
+        .form-card {
+            background: linear-gradient(135deg, rgba(44, 110, 145, 0.9), rgba(11, 46, 89, 0.9));
+            padding: 40px;
+            border-radius: var(--border-radius-lg);
+            width: 100%;
+            max-width: 900px;
+            color: var(--text-light);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.3), 0 6px 8px rgba(0, 0, 0, 0.22);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
 
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    background-color: #C5D8E8;
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    margin-top: 20px;
-    color: black;
-    min-width: 700px;
-  }
+        .back-btn {
+            background: none;
+            border: none;
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text-light);
+            display: inline-flex;
+            align-items: center;
+            margin-bottom: 25px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+        }
 
-  th, td {
-    padding: 12px;
-    text-align: center;
-    border-bottom: 1px solid #ccc;
-  }
+        .back-btn:hover {
+            color: var(--accent-color);
+            transform: translateX(-4px);
+        }
 
-  th {
-    background-color: #1ea1f2;
-    color: white;
-    transition: all 0.2s ease;
-    cursor: pointer;
-  }
+        .back-btn i {
+            margin-right: 8px;
+            font-size: 1.1rem;
+        }
+        
+        h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 1.5rem;
+            font-weight: 500;
+        }
 
-  tr:hover {
-    background-color: #f1f1f1;
-    transform: translateX(-4px);
-  }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: var(--border-radius-md);
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            color: var(--text-dark);
+            min-width: 700px;
+        }
 
-  .delete-btn {
-    background-color: #e53935;
-    color: white;
-    border: none;
-    padding: 6px 12px;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: inline-flex;
-    align-items: center;
-  }
+        th, td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+        }
 
-  .delete-btn:hover {
-    background-color: #c62828;
-    transform: translateX(-4px);
-  }
+        th {
+            background-color: var(--primary-color);
+            color: var(--text-light);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+        }
 
-  td span {
-    font-size: 14px;
-    color: green;
-    font-weight: bold;
-  }
+        td {
+            font-size: 0.9rem;
+        }
 
-  .mobile-toggle {
-    display: none;
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: #1f75cb;
-    color: white;
-    font-size: 24px;
-    padding: 12px 18px;
-    border-radius: 50px;
-    z-index: 9999;
-    cursor: pointer;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-  }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
 
-  @media (max-width: 768px) {
-    .container {
-      flex-direction: column;
-    }
+        .delete-btn {
+            background-color: #e53935;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.8rem;
+        }
 
-    .sidebar {
-      top: -100%;
-      width: 100%;
-      max-height: 90vh;
-      position: fixed;
-    }
+        .delete-btn:hover {
+            background-color: #c62828;
+            transform: scale(1.05);
+        }
+        
+        .verified-status {
+            color: #4caf50;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
 
-    .sidebar.open {
-      top: 0;
-    }
+        .no-data {
+            text-align: center;
+            padding: 20px;
+            font-style: italic;
+            color: #666;
+        }
 
-    .main {
-      margin-left: 0 !important;
-      padding: 20px;
-    }
+        /* Mobile View & Responsive Design */
+        .mobile-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background-color: var(--secondary-color);
+            color: var(--text-light);
+            font-size: 24px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            align-items: center;
+            justify-content: center;
+            z-index: 1001;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease;
+        }
 
-    .mobile-toggle {
-      display: block;
-    }
-
-    table {
-      min-width: 700px;
-    }
-
-    .form::-webkit-scrollbar {
-      height: 6px;
-    }
-
-    .form::-webkit-scrollbar-thumb {
-      background: rgba(0, 0, 0, 0.2);
-      border-radius: 4px;
-    }
-  }
-</style>
-
+        @media (max-width: 992px) {
+            .mobile-toggle {
+                display: flex;
+            }
+            .sidebar {
+                transform: translateX(-100%);
+                left: 0;
+                right: initial;
+                width: 250px;
+                max-width: 80vw;
+                box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .main {
+                margin-left: 0;
+                padding: 20px;
+            }
+            .form-card {
+                padding: 25px;
+                overflow-x: auto;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <!-- Sidebar -->
-    <div class="sidebar">
-      <div class="photo-container">
-  <div class="photo-wrapper">
-    <a href="studentwelcome.html" class="home-icon" title="Home">🏠</a>
-    <img id="sidebarPhoto" class="sidebar-photo" style="display: none;" />
-  </div>
-</div>
+    <div class="container">
+        <div class="sidebar">
+            <div class="photo-container">
+                <a href="studentwelcome.html" class="home-icon" title="Home">
+                    <i class="fas fa-home"></i>
+                </a>
+                <img id="sidebarPhoto" class="sidebar-photo" style="display: none;" />
+            </div>
+            <h2>ID: <span id="userId">Loading...</span></h2>
+            <ul class="menu">
+                <li><a href="studentdetails.html"><i class="fas fa-user-circle"></i> Student details</a></li>
+                <li><a href="feedetails.html"><i class="fas fa-graduation-cap"></i> Fee details</a></li>
+                <li><a href="updaterefno.html"><i class="fas fa-sync-alt"></i> Update fee payment</a></li>
+                <li><a href="attendence.html"><i class="fas fa-calendar-alt"></i> View Attendance</a></li>
+                <li><a href="studentresults.html"><i class="fas fa-chart-bar"></i> Student Results</a></li>
+                <li><a href="generatenoc.html"><i class="fas fa-file-invoice"></i> Generate NOC</a></li>
+                <li class="active"><a href="settings.html"><i class="fas fa-cog"></i> Settings</a></li>
+            </ul>
+            <button class="logout" onclick="confirmLogout()">Logout</button>
+        </div>
 
-      <h2>ID: <span id="userId">Loading...</span></h2>
-      <ul class="menu">
-        <li><a href="studentdetails.html"><span>📄</span> Student details</a></li>
-        <li><a href="feedetails.html"><span>🎓</span> Fee details</a></li>
-        <li><a href="updaterefno.html"><span>🔄</span> Update fee payment</a></li>
-        <li><a href="attendence.html"><span>📅</span> View Attendance</a></li>
-        <li><a href="studentresults.html"><span>📊</span> Student Results</a></li>
-        <li><a href="generatenoc.html"><span>➕</span> Generate NOC</a></li>
-        <li class="active"><a href="settings.html"><span>⚙️</span> Settings</a></li>
-      </ul>
-      <button class="logout" onclick="logout()">Logout</button>
+        <div class="main">
+            <div class="form-card">
+                <button class="back-btn" onclick="goBack()">
+                    <i class="fas fa-arrow-left"></i> Back to Settings
+                </button>
+                <h2>My Fee Submissions</h2>
+                <div style="overflow-x: auto;">
+                    <table id="feeTable">
+                        <thead>
+                            <tr>
+                                <th>Fee Type</th>
+                                <th>Amount Paid</th>
+                                <th>Ref. No.</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mobile-toggle" onclick="toggleMobileMenu()">
+        <i class="fas fa-bars"></i>
     </div>
 
-    <!-- Main Content -->
-    <div class="main">
-      <div class="form">
-        <button class="back-btn" onclick="goBack()"> <span>Back to Settings</span></button>
-        <h2>My Fee Submissions</h2>
-        <table id="feeTable">
-          <thead>
-            <tr>
-              <th>Fee Type</th>
-              <th>Amount Paid</th>
-              <th>DU Number</th>
-              <th>Date</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            <!-- Filled dynamically -->
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-  <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-  // 🔐 Unauthorized login check
-  const userId = localStorage.getItem("userId");
-  if (!userId) {
-    Swal.fire({
-      icon: 'warning',
-      title: 'Login Required',
-      text: 'Please login to access this page.'
-    }).then(() => {
-      window.location.href = "index.html";
-    });
-  } else {
-    document.getElementById("userId").textContent = userId || "Unknown";
-
-    // ✅ Load sidebar photo
-    fetch(`/student/${userId}`)
-      .then(res => res.json())
-      .then(data => {
-        const photo = document.getElementById("sidebarPhoto");
-        if (photo && data.photo_url) {
-          photo.src = data.photo_url;
-          photo.style.display = "block";
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.20/dist/sweetalert2.all.min.js"></script>
+    <script>
+        function toggleMobileMenu() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('open');
         }
-      })
-      .catch(err => {
-        console.warn("⚠️ Failed to load photo:", err.message);
-      });
 
-    function loadPayments() {
-      const tbody = document.querySelector("#feeTable tbody");
-      tbody.innerHTML = `<tr><td colspan="5">Loading...</td></tr>`;
-
-      fetch(`/my-fee-entries/${userId}`)
-        .then(res => res.json())
-        .then(data => {
-          tbody.innerHTML = "";
-          if (data.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="5">No fee entries found.</td></tr>`;
-          } else {
-            data.forEach(entry => {
-              const tr = document.createElement("tr");
-              const isVerified = entry.matched === 1;
-
-              tr.innerHTML = `
-                <td>${entry.fee_type}</td>
-                <td>₹${parseFloat(entry.amount_paid).toFixed(2)}</td>
-                <td>${entry.sbi_ref_no}</td>
-                <td>${new Date(entry.created_at).toLocaleString()}</td>
-                <td>
-                  ${isVerified 
-                    ? '<span style="color: green; font-weight: bold;">✔ Verified by Admin</span>' 
-                    : `<button class="delete-btn" onclick="deleteEntry('${entry.id}')">Delete</button>`}
-                </td>
-              `;
-              tbody.appendChild(tr);
+        document.querySelectorAll(".menu li a").forEach(link => {
+            link.addEventListener("click", () => {
+                if (window.innerWidth <= 992) {
+                    document.querySelector('.sidebar').classList.remove('open');
+                }
             });
-          }
-        })
-        .catch(err => {
-          console.error("Error loading fee entries:", err);
-          tbody.innerHTML = `<tr><td colspan="5">Failed to load data.</td></tr>`;
         });
-    }
 
-    function deleteEntry(id) {
-      Swal.fire({
-        title: 'Are you sure?',
-        text: "Do you want to delete this fee entry?",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Yes, delete it!'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          fetch(`/delete-fee-entry/${id}`, {
-            method: "DELETE"
-          })
-          .then(res => res.json())
-          .then(resp => {
+        function goBack() {
+            window.location.href = "settings.html";
+        }
+
+        function confirmLogout() {
             Swal.fire({
-              icon: 'success',
-              title: 'Deleted!',
-              text: resp.message || "Fee entry deleted successfully."
+                title: 'Are you sure?',
+                text: "You will be logged out of your account.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#0b2e59',
+                cancelButtonColor: '#f7a048',
+                confirmButtonText: 'Yes, log out!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    logout();
+                }
             });
+        }
+
+        function logout() {
+            localStorage.removeItem("userId");
+            localStorage.removeItem("regno");
+            if ('caches' in window) {
+                caches.keys().then(names => names.forEach(name => caches.delete(name)));
+            }
+            window.location.replace("index.html");
+        }
+        
+        // Prevent back navigation after logout
+        window.history.pushState(null, "", window.location.href);
+        window.onpopstate = () => window.history.pushState(null, "", window.location.href);
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const userId = localStorage.getItem("userId") || localStorage.getItem("regno");
+            if (!userId) {
+                Swal.fire({
+                    title: 'Access Denied',
+                    text: 'Please login first to view this page.',
+                    icon: 'error',
+                    confirmButtonText: 'Go to Login',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    confirmButtonColor: '#0b2e59'
+                }).then(() => {
+                    window.location.href = "index.html";
+                });
+                return;
+            }
+            document.getElementById("userId").textContent = userId;
+
+            // Load sidebar photo
+            fetch(`/student/${userId}`)
+                .then(res => res.json())
+                .then(data => {
+                    const photo = document.getElementById("sidebarPhoto");
+                    if (photo && data.photo_url) {
+                        photo.src = data.photo_url;
+                        photo.style.display = "block";
+                    }
+                })
+                .catch(err => {
+                    console.warn("⚠️ Failed to load photo:", err.message);
+                });
+
+            function loadPayments() {
+                const tbody = document.querySelector("#feeTable tbody");
+                tbody.innerHTML = `<tr><td colspan="5" class="no-data">Loading...</td></tr>`;
+
+                fetch(`/my-fee-entries/${userId}`)
+                    .then(res => {
+                        if (!res.ok) throw new Error('Network response was not ok');
+                        return res.json();
+                    })
+                    .then(data => {
+                        tbody.innerHTML = "";
+                        if (data.length === 0) {
+                            tbody.innerHTML = `<tr><td colspan="5" class="no-data">No fee entries found.</td></tr>`;
+                            return;
+                        }
+
+                        data.forEach(entry => {
+                            const tr = document.createElement("tr");
+                            const isVerified = entry.matched === 1;
+
+                            const statusHtml = isVerified 
+                                ? `<span class="verified-status"><i class="fas fa-check-circle"></i> Verified</span>` 
+                                : `<button class="delete-btn" onclick="deleteEntry('${entry.id}')"><i class="fas fa-trash-alt"></i> Delete</button>`;
+
+                            const date = new Date(entry.created_at).toLocaleString('en-US', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            });
+
+                            tr.innerHTML = `
+                                <td>${entry.fee_type}</td>
+                                <td>₹${parseFloat(entry.amount_paid).toFixed(2)}</td>
+                                <td>${entry.sbi_ref_no}</td>
+                                <td>${date}</td>
+                                <td>${statusHtml}</td>
+                            `;
+                            tbody.appendChild(tr);
+                        });
+                    })
+                    .catch(err => {
+                        console.error("Error loading fee entries:", err);
+                        tbody.innerHTML = `<tr><td colspan="5" class="no-data">Failed to load data. Please try again.</td></tr>`;
+                    });
+            }
+
+            window.deleteEntry = function(id) {
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "This action cannot be undone!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#2c6e91',
+                    confirmButtonText: 'Yes, delete it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        fetch(`/delete-fee-entry/${id}`, {
+                            method: "DELETE"
+                        })
+                        .then(res => {
+                            if (!res.ok) throw new Error('Failed to delete');
+                            return res.json();
+                        })
+                        .then(resp => {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Deleted!',
+                                text: resp.message || "Fee entry deleted successfully.",
+                                confirmButtonColor: '#0b2e59'
+                            });
+                            loadPayments();
+                        })
+                        .catch(err => {
+                            console.error("Error deleting entry:", err);
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Failed!',
+                                text: "Deletion failed. Please try again later.",
+                                confirmButtonColor: '#0b2e59'
+                            });
+                        });
+                    }
+                });
+            }
+
             loadPayments();
-          })
-          .catch(err => {
-            console.error("Error deleting entry:", err);
-            Swal.fire({
-              icon: 'error',
-              title: 'Failed!',
-              text: "Delete failed. Please try again later."
-            });
-          });
-        }
-      });
-    }
-
-    function toggleMobileMenu() {
-      const sidebar = document.querySelector('.sidebar');
-      sidebar.classList.toggle('open');
-    }
-
-    document.querySelectorAll(".menu li a").forEach(link => {
-      link.addEventListener("click", () => {
-        if (window.innerWidth <= 768) {
-          document.querySelector('.sidebar').classList.remove('open');
-        }
-      });
-    });
-           function goBack() {
-    window.location.href = "settings.html";
-  }
-
-    function logout() {
-      localStorage.removeItem("userId");
-      if ("caches" in window) {
-        caches.keys().then((names) => names.forEach((name) => caches.delete(name)));
-      }
-      window.location.replace("index.html");
-    }
-
-    loadPayments();
-  }
-</script>
+        });
+    </script>
 </body>
 </html>
