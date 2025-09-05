@@ -6,8 +6,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" href="crrengglogo.png" />
   <link href="https://fonts.googleapis.com/css2?family=Segoe+UI&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
   <style>
+    /* YOUR ORIGINAL STYLING - UNCHANGED */
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
 
     body {
@@ -168,7 +169,7 @@
       <li onclick="navigateTo('/editattendance')">✏️ Edit Attendance</li>
       <li onclick="navigateTo('/sendsms')">📤 Send SMS</li>
     </ul>
-    <button onclick="logout()"> Logout</button>
+    <button onclick="confirmLogout()"> Logout</button>
   </div>
 
 <div class="main">
@@ -192,104 +193,138 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-  const userId = localStorage.getItem("userId");
 
-  if (!userId) {
-    alert("Please login first.");
-    window.location.href = "index.html";
-  }
+    // --- MODIFICATIONS START HERE ---
 
-  function navigateTo(route) {
-    window.location.href = route;
-  }
-
-  function logout() {
-    fetch("/logout")
-      .then(() => {
-        localStorage.removeItem("userId");
-        window.location.replace("index.html");
-      })
-      .catch(() => {
-        Swal.fire("Logout Failed", "Please try again", "error");
-      });
-  }
-
-  function toggleSidebar() {
-    document.getElementById("sidebar").classList.toggle("open");
-  }
-
-  window.addEventListener("pageshow", (event) => {
-    if (event.persisted) window.location.reload();
-  });
-  window.history.pushState(null, "", window.location.href);
-  window.onpopstate = () => window.history.pushState(null, "", window.location.href);
-
-document.getElementById("attendanceForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const semester = document.getElementById("semester").value;
-  const file = document.getElementById("attendanceFile").files[0];
-
-  if (!semester || !file) {
-    Swal.fire("Missing Fields", "Please select semester and upload a file.", "warning");
-    return;
-  }
-
-  const formData = new FormData();
-  formData.append("semester", semester);
-  formData.append("file", file); // ✅ renamed from 'pdf' to 'file'
-
-  document.getElementById("submitBtn").disabled = true;
-
-  Swal.fire({
-    title: "Uploading...",
-    html: "Processing attendance file...",
-    allowOutsideClick: false,
-    didOpen: () => Swal.showLoading()
-  });
-
-  try {
-    const response = await fetch("/upload-attendance", {
-      method: "POST",
-      body: formData
-    });
-
-    const contentType = response.headers.get("content-type");
-    if (!contentType.includes("application/json")) {
-      throw new Error("Server returned non-JSON response.");
+    // 1. UPDATED: Unauthorized Access Check with SweetAlert
+    const adminId = localStorage.getItem("adminId"); // Using a more specific key for admin
+    if (!adminId) {
+        Swal.fire({
+            title: 'Access Denied',
+            text: 'You must be logged in as an admin to access this page.',
+            icon: 'error',
+            confirmButtonText: 'Go to Login',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            confirmButtonColor: '#3085d6'
+        }).then(() => {
+            window.location.href = "index.html";
+        });
     }
 
-    const result = await response.json();
-    Swal.fire({
-      icon: result.total === 0 ? "warning" : "success",
-      title: result.total === 0 ? "No Records Found" : "Upload Successful",
-      html: `
-        <b>${result.message}</b><br>
-        Total Records: <strong>${result.total}</strong><br>
-        <a href="${result.excel_file}" target="_blank" style="
-          display:inline-block;
-          margin-top:10px;
-          padding:8px 14px;
-          background:#28a745;
-          color:white;
-          border-radius:5px;
-          text-decoration:none;
-        ">⬇ Download Clean Excel</a>
-      `
+    // 2. ADDED: SweetAlert2 Logout Confirmation
+    function confirmLogout() {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You will be logged out of your account.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, log out!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                logout();
+            }
+        });
+    }
+    
+    // UPDATED: Original logout logic is now called by the confirmation
+    function logout() {
+      fetch("/logout")
+        .then(() => {
+          localStorage.removeItem("adminId");
+          window.location.replace("index.html");
+        })
+        .catch(() => {
+          Swal.fire("Logout Failed", "Please try again", "error");
+        });
+    }
+
+    // --- MODIFICATIONS END HERE ---
+
+
+    // --- YOUR ORIGINAL SCRIPT - UNCHANGED ---
+
+    function navigateTo(route) {
+        window.location.href = route;
+    }
+
+    function toggleSidebar() {
+        document.getElementById("sidebar").classList.toggle("open");
+    }
+
+    window.addEventListener("pageshow", (event) => {
+        if (event.persisted) window.location.reload();
     });
 
-    if (result.total > 0) e.target.reset();
-  } catch (err) {
-    Swal.fire("Upload Failed ❌", err.message || "Something went wrong.", "error");
-  } finally {
-    document.getElementById("submitBtn").disabled = false;
-  }
-});
+    window.history.pushState(null, "", window.location.href);
+    window.onpopstate = () => window.history.pushState(null, "", window.location.href);
+
+    document.getElementById("attendanceForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const semester = document.getElementById("semester").value;
+        const file = document.getElementById("attendanceFile").files[0];
+
+        if (!semester || !file) {
+            Swal.fire("Missing Fields", "Please select semester and upload a file.", "warning");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("semester", semester);
+        formData.append("file", file);
+
+        document.getElementById("submitBtn").disabled = true;
+
+        Swal.fire({
+            title: "Uploading...",
+            html: "Processing attendance file...",
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
+
+        try {
+            const response = await fetch("/upload-attendance", {
+                method: "POST",
+                body: formData
+            });
+
+            const contentType = response.headers.get("content-type");
+            if (!contentType.includes("application/json")) {
+                throw new Error("Server returned non-JSON response.");
+            }
+
+            const result = await response.json();
+            Swal.fire({
+                icon: result.total === 0 ? "warning" : "success",
+                title: result.total === 0 ? "No Records Found" : "Upload Successful",
+                html: `
+                    <b>${result.message}</b><br>
+                    Total Records: <strong>${result.total}</strong><br>
+                    <a href="${result.excel_file}" target="_blank" style="
+                        display:inline-block;
+                        margin-top:10px;
+                        padding:8px 14px;
+                        background:#28a745;
+                        color:white;
+                        border-radius:5px;
+                        text-decoration:none;
+                    ">⬇ Download Clean Excel</a>
+                `
+            });
+
+            if (result.total > 0) e.target.reset();
+        } catch (err) {
+            Swal.fire("Upload Failed ❌", err.message || "Something went wrong.", "error");
+        } finally {
+            document.getElementById("submitBtn").disabled = false;
+        }
+    });
   
 </script>
 
 </body>
 </html>
-
-
-
