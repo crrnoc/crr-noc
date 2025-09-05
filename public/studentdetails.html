@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Student Details</title>
+    <title>Student Details - STUDENT PORTAL</title>
     <link rel="icon" href="crrengglogo.png" type="image/png" />
     <link
         rel="stylesheet"
@@ -64,7 +64,7 @@
             z-index: 1000;
             overflow-y: auto;
         }
-
+        
         .photo-container {
             display: flex;
             justify-content: center;
@@ -178,6 +178,8 @@
             background-color: var(--background-dark);
             padding: 40px 30px;
             margin-left: 280px;
+            transition: margin-left 0.3s ease-in-out;
+            min-height: 100vh;
         }
 
         .details-card {
@@ -244,8 +246,27 @@
             transition: transform 0.3s ease;
         }
 
+        .mobile-home-icon {
+            display: none;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: var(--accent-color);
+            color: var(--text-light);
+            font-size: 24px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            align-items: center;
+            justify-content: center;
+            z-index: 1001;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease;
+        }
+
         @media (max-width: 992px) {
-            .mobile-toggle {
+            .mobile-toggle, .mobile-home-icon {
                 display: flex;
             }
             .sidebar {
@@ -326,7 +347,13 @@
         </div>
     </div>
 
-    <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
+    <div class="mobile-toggle" onclick="toggleMobileMenu()">
+        <i class="fas fa-bars"></i>
+    </div>
+    
+    <a href="studentwelcome.html" class="mobile-home-icon" title="Home">
+        <i class="fas fa-home"></i>
+    </a>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.20/dist/sweetalert2.all.min.js"></script>
     <script>
@@ -361,6 +388,7 @@
 
         function logout() {
             localStorage.removeItem("userId");
+            localStorage.removeItem("regno");
             if ("caches" in window) {
                 caches.keys().then(names => names.forEach(name => caches.delete(name)));
             }
@@ -371,7 +399,7 @@
         window.onpopstate = () => window.history.pushState(null, "", window.location.href);
 
         document.addEventListener("DOMContentLoaded", () => {
-            const studentId = localStorage.getItem('userId');
+            const studentId = localStorage.getItem('userId') || localStorage.getItem('regno');
             const studentDataContainer = document.getElementById('student-data');
 
             if (!studentId) {
@@ -391,6 +419,7 @@
 
             document.getElementById("userId").textContent = studentId;
 
+            // Load student data from API
             fetch(`/student/${studentId}`)
                 .then(res => {
                     if (!res.ok) {
