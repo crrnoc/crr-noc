@@ -1,309 +1,398 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Staff Settings</title>
-  <link rel="icon" href="crrengglogo.png" type="image/png" />
-<style>
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  }
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Staff Settings</title>
+    <link rel="icon" href="crrengglogo.png" type="image/png" />
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.20/dist/sweetalert2.min.css"
+    />
+    <style>
+        :root {
+            --primary-color: #0b2e59;
+            --secondary-color: #2c6e91;
+            --accent-color: #f7a048;
+            --background-dark: #f0f2f5;
+            --background-light: #ffffff;
+            --text-dark: #333333;
+            --text-light: #f4f4f4;
+            --card-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            --border-radius-lg: 16px;
+            --border-radius-md: 10px;
+        }
 
-  body {
-    background-color: #1d1d1d;
-    color: #000;
-    min-height: 100vh;
-  }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
-  .main-container {
-    display: flex;
-    min-height: 100vh;
-  }
+        body {
+            background-color: var(--background-dark);
+            color: var(--text-dark);
+            min-height: 100vh;
+        }
+        
+        /* Container and Overlay */
+        .main-container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
 
-  /* Sidebar same style */
-  .sidebar {
-    width: 270px;
-    background-color: rgb(247, 201, 155);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    padding: 20px;
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    overflow-y: auto;
-    z-index: 100;
-  }
+        .no-scroll {
+            overflow: hidden;
+        }
 
-  .sidebar h2 {
-    margin: 40px 20px 20px 20px;
-    color: black;
-    font-size: 18px;
-  }
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background-color: var(--primary-color);
+            display: flex;
+            flex-direction: column;
+            padding: 30px 20px;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease-in-out;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .home-icon {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            font-size: 1.5rem;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: color 0.3s ease, transform 0.3s ease;
+        }
+        
+        .home-icon:hover {
+            color: var(--accent-color);
+            transform: scale(1.1);
+        }
 
-  .menu {
-    list-style-type: none;
-    padding: 0;
-  }
+        .sidebar-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 40px;
+        }
 
-  .menu li {
-    margin-bottom: 15px;
-  }
+        .sidebar h2 {
+            margin-top: 15px;
+            color: var(--text-light);
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
 
-  .menu li a {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 16px;
-    color: black;
-    padding: 12px 20px;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-    text-decoration: none;
-  }
+        .menu {
+            list-style: none;
+            flex-grow: 1;
+        }
 
-  .menu li a:hover,
-  .menu li.active a {
-    background-color: #d4d4d4;
-    font-weight: bold;
-    transform: translateX(5px);
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
-  }
+        .menu li {
+            margin-bottom: 12px;
+        }
 
-  .menu li a span {
-    font-size: 18px;
-    transition: transform 0.3s ease;
-  }
+        .menu li a {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 1rem;
+            color: var(--text-light);
+            padding: 15px 20px;
+            border-radius: var(--border-radius-md);
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
 
-  .menu li a:hover span {
-    transform: scale(1.2);
-  }
+        .menu li a:hover,
+        .menu li.active a {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--text-light);
+            font-weight: 500;
+            transform: translateX(5px);
+            box-shadow: var(--card-shadow);
+        }
 
-  .logout {
-    background-color: #f09000;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 20px;
-    cursor: pointer;
-    font-size: 16px;
-    width: 50%;
-    margin: 20px auto;
-    transition: background 0.3s ease;
-  }
+        .menu li a i {
+            font-size: 1.2rem;
+            width: 25px;
+            text-align: center;
+            color: var(--text-light);
+            transition: color 0.3s ease;
+        }
 
-  .logout:hover {
-    background-color: #d07900;
-  }
+        .logout {
+            background-color: var(--accent-color);
+            color: var(--text-light);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            width: 60%;
+            margin: 20px auto 0;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
 
-  /* Main container with perfect centering */
-  .main {
-    flex-grow: 1;
-    background-color: white;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-left: 270px;
-    min-height: 100vh;
-    padding: 20px;
-  }
+        .logout:hover {
+            background-color: #d3853b;
+            transform: scale(1.05);
+        }
 
-  .form {
-    background: linear-gradient(135deg, rgba(54, 169, 225, 0.85), rgba(30, 130, 190, 0.85));
-    padding: 40px;
-    border-radius: 20px;
-    width: 100%;
-    max-width: 500px;
-    color: white;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.3), 0 6px 8px rgba(0, 0, 0, 0.22);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-  }
+        /* Main Content */
+        .main {
+            flex-grow: 1;
+            margin-left: 280px;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: var(--background-dark);
+        }
 
-  .form:hover {
-    transform: scale(1.01);
-    box-shadow: 0 16px 28px rgba(0, 0, 0, 0.35);
-  }
+        .header {
+            width: 100%;
+            background: var(--background-light);
+            padding: 15px 30px;
+            box-shadow: var(--card-shadow);
+            border-radius: var(--border-radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 25px;
+            position: sticky;
+            top: 20px;
+            z-index: 10;
+        }
+        .header h1 {
+            color: var(--primary-color);
+            font-size: 1.5rem;
+        }
+        
+        .settings-container {
+            width: 100%;
+            max-width: 600px;
+            background-color: var(--background-light);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--card-shadow);
+            padding: 30px;
+            text-align: center;
+        }
 
-  .settings-box {
-    background-color: rgba(255, 255, 255, 0.95);
-    border-radius: 15px;
-    padding: 25px 30px;
-    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
-    transition: box-shadow 0.3s ease;
-  }
+        .settings-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
 
-  .settings-box:hover {
-    box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.15);
-  }
+        .settings-list li {
+            margin-bottom: 15px;
+        }
 
-  .settings-box ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
+        .settings-list a {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 1.1rem;
+            color: var(--text-dark);
+            padding: 15px 20px;
+            background-color: #f9f9f9;
+            border-radius: var(--border-radius-md);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: 1px solid #e0e0e0;
+        }
 
-  .settings-box li {
-    margin-bottom: 15px;
-  }
+        .settings-list a:hover {
+            background-color: #e6f0ff;
+            color: var(--primary-color);
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .settings-list a i {
+            color: var(--primary-color);
+            width: 25px;
+            text-align: center;
+            font-size: 1.4rem;
+        }
+        
+        /* Mobile View */
+        .mobile-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background-color: var(--secondary-color);
+            color: var(--text-light);
+            font-size: 24px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1001;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease;
+        }
 
-  .settings-box li a {
-    display: flex;
-    align-items: center;
-    font-size: 16px;
-    padding: 12px 15px;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-    color: #1d1d1d;
-    background-color: rgba(255, 255, 255, 0.6);
-    text-decoration: none;
-  }
-
-  .settings-box li a:hover {
-    background-color: #e3eef7;
-    font-weight: bold;
-    transform: translateX(5px);
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
-  }
-
-  .settings-box li a i,
-  .settings-box li a span {
-    margin-right: 10px;
-    font-size: 18px;
-  }
-
-  .mobile-toggle {
-    display: none;
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: #1f75cb;
-    color: white;
-    font-size: 24px;
-    padding: 12px 18px;
-    border-radius: 50px;
-    z-index: 2000;
-    cursor: pointer;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-  }
-
-  @media (max-width: 768px) {
-    .main-container {
-      flex-direction: column;
-    }
-
-    .sidebar {
-      width: 100%;
-      top: -100%;
-      position: fixed;
-      height: 90vh;
-      transition: top 0.3s ease-in-out;
-      z-index: 1000;
-    }
-
-    .sidebar.open {
-      top: 0;
-    }
-
-    .main {
-      margin-left: 0;
-      padding: 20px;
-    }
-
-    .form {
-      width: 100%;
-      padding: 25px;
-    }
-
-    .mobile-toggle {
-      display: block;
-    }
-  }
-</style>
-
+        @media (max-width: 992px) {
+            .mobile-toggle {
+                display: flex;
+            }
+            .sidebar {
+                transform: translateX(-100%);
+                width: 250px;
+                max-width: 80vw;
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .main {
+                margin-left: 0;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="main-container">
-    <!-- Sidebar -->
-    <div class="sidebar">
-      <h2><strong>ID:</strong> <span id="userId">Loading...</span></h2>
-      <ul class="menu">
-        <li><a href="knowaboutstd1.html"><span>👤</span> Know about Student</a></li>
-        <li><a href="editstudentdetails.html"><span>✏️</span> Edit Student Details</a></li>
-        <li><a href="sendnotification.html"><span>📨</span> Send Notification</a></li>
-        <li><a href="updatefee.html"><span>💵</span> Update Fee</a></li>
-        <li><a href="imposefines.html"><span>💰</span> Impose Fines</a></li>
-        <li><a href="addstudent.html"><span>➕</span> Add Student</a></li>
-        <li><a href="mark_attendance.html"><span>📝</span> Mark Attendance</a></li>
-        <li><a href="backlogs.html"><span>📚</span> Find Backlogs</a></li>
-        <li><a href="mycounselling.html"><span>📋</span> View Counselling</a></li>
-        <li class="active"><a href="#"><span>⚙️</span> Settings</a></li>
-      </ul>
-      <button class="logout" onclick="logout()">Logout</button>
-    </div>
-
-    <!-- Main Content -->
-    <div class="main">
-      <div class="form">
-        <div class="settings-box">
-          <ul>
-            <li><a href="stafffaq.html"><i></i> FAQ</a></li>
-            <li><a href="staffhelp.html"><span></span> Help & Feedback</a></li>
-            <li><a href="developersforstaff.html"><i></i> About Developers</a></li>
-            <li><a href="privacypolicy.html"><span></span> Privacy Policy</a></li>
-          </ul>
+    <div class="overlay" onclick="toggleMobileMenu()"></div>
+    <div class="main-container">
+        <div class="sidebar" id="sidebar">
+            <a href="staff-dashboard.html" class="home-icon"><i class="fas fa-home"></i></a>
+            <div class="sidebar-header">
+                <h2 id="staffName">Staff Name</h2>
+                <h2 style="margin-top: 5px;">ID: <span id="staffId">Loading...</span></h2>
+            </div>
+            <ul class="menu">
+                <li><a href="staff-dashboard.html"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+                <li><a href="knowaboutstd1.html"><i class="fas fa-search"></i> Know about Student</a></li>
+                <li><a href="editstudentdetails.html"><i class="fas fa-user-edit"></i> Edit Student Details</a></li>
+                <li><a href="sendnotification.html"><i class="fas fa-paper-plane"></i> Send Notification</a></li>
+                <li><a href="updatefee.html"><i class="fas fa-money-bill-wave"></i> Update Fee</a></li>
+                <li><a href="imposefines.html"><i class="fas fa-money-check-alt"></i> Impose Fines</a></li>
+                <li><a href="addstudent.html"><i class="fas fa-user-plus"></i> Add Student</a></li>
+                <li><a href="mark_attendance.html"><i class="fas fa-clipboard-list"></i> Mark Attendance</a></li>
+                <li><a href="backlogs.html"><i class="fas fa-book-open"></i> Find Backlogs</a></li>
+                <li><a href="mycounselling.html"><i class="fas fa-handshake"></i> View Counselling</a></li>
+                <li class="active"><a href="#"><i class="fas fa-cog"></i> Settings</a></li>
+            </ul>
+            <button class="logout" onclick="confirmLogout()">Logout</button>
         </div>
-      </div>
+
+        <div class="main">
+            <div class="header">
+                <h1>Settings</h1>
+            </div>
+            <div class="settings-container">
+                <ul class="settings-list">
+                    <li><a href="stafffaq.html"><i class="fas fa-question-circle"></i> FAQ</a></li>
+                    <li><a href="staffhelp.html"><i class="fas fa-hands-helping"></i> Help & Feedback</a></li>
+                    <li><a href="developersforstaff.html"><i class="fas fa-code"></i> About Developers</a></li>
+                    <li><a href="privacypolicy.html"><i class="fas fa-shield-alt"></i> Privacy Policy</a></li>
+                </ul>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
-  
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-  const userId = localStorage.getItem("userId");
+    <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
 
-  if (!userId) {
-    Swal.fire({
-      icon: "warning",
-      title: "Unauthorized Access",
-      text: "Please login to continue.",
-      confirmButtonText: "Go to Login"
-    }).then(() => {
-      window.location.href = "index.html";
-    });
-  }
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        const userId = localStorage.getItem("userId");
+        const role = localStorage.getItem("role");
 
-  document.getElementById("userId").textContent = userId || "Unknown";
+        if (!userId || role !== "staff") {
+            Swal.fire({
+                icon: "error",
+                title: "Unauthorized Access",
+                text: "Please login as staff to continue.",
+                confirmButtonText: "Go to Login",
+                confirmButtonColor: '#0b2e59'
+            }).then(() => {
+                window.location.href = "index.html";
+            });
+        } else {
+            document.getElementById("staffId").textContent = userId || "Unknown";
+            fetch(`/staff/${userId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.staff_name) {
+                        document.getElementById("staffName").textContent = data.staff_name;
+                    }
+                })
+                .catch(err => {
+                    console.error("Error loading staff data:", err);
+                });
+        }
 
-  function toggleMobileMenu() {
-    document.querySelector('.sidebar').classList.toggle('open');
-  }
+        function confirmLogout() {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You will be logged out of your account.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#0b2e59',
+                cancelButtonColor: '#d3853b',
+                confirmButtonText: 'Yes, log out!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    logout();
+                }
+            });
+        }
 
-  document.querySelectorAll(".menu li a").forEach(link => {
-    link.addEventListener("click", () => {
-      if (window.innerWidth <= 768) {
-        document.querySelector('.sidebar').classList.remove('open');
-      }
-    });
-  });
+        function logout() {
+            localStorage.clear();
+            if ("caches" in window) {
+                caches.keys().then((names) => names.forEach((name) => caches.delete(name)));
+            }
+            window.location.replace("index.html");
+        }
 
-  function logout() {
-    localStorage.removeItem("userId");
-    if ("caches" in window) {
-      caches.keys().then((names) => names.forEach((name) => caches.delete(name)));
-    }
-    window.location.replace("index.html");
-  }
-</script>
+        function toggleMobileMenu() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.overlay');
+            const body = document.body;
 
+            sidebar.classList.toggle('open');
+            overlay.style.display = sidebar.classList.contains('open') ? 'block' : 'none';
+            body.classList.toggle('no-scroll', sidebar.classList.contains('open'));
+        }
+
+        document.querySelectorAll(".menu li a").forEach(link => {
+            link.addEventListener("click", () => {
+                if (window.innerWidth <= 992) {
+                    toggleMobileMenu();
+                }
+            });
+        });
+    </script>
 </body>
 </html>
-
