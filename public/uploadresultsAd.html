@@ -204,17 +204,7 @@
       window.location.href = route;
     }
 
-    // Logout
-    function logout() {
-      fetch("/logout", { credentials: "include" })
-        .then(() => {
-          localStorage.removeItem("userId");
-          window.location.replace("index.html");
-        })
-        .catch(() => {
-          Swal.fire("Logout Failed", "Please try again", "error");
-        });
-    }
+
 
     // 🔹 Removed check-session block (backend handles session)
 
