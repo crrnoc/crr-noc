@@ -216,8 +216,6 @@
         });
     }
 
-    // 🔹 Removed check-session block (backend handles session)
-
     // Prevent back button after logout
     window.history.pushState(null, "", window.location.href);
     window.onpopstate = () => window.history.pushState(null, "", window.location.href);
@@ -255,7 +253,8 @@
       try {
         const response = await fetch(endpoint, {
           method: "POST",
-          body: formData
+          body: formData,
+          credentials: "include"   // ✅ ensures session cookie is sent
         });
 
         const result = await response.json();
