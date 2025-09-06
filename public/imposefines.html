@@ -1,361 +1,476 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Impose Fines</title>
-  <link rel="icon" href="crrengglogo.png" type="image/png" />
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff - Impose Fines</title>
+    <link rel="icon" href="crrengglogo.png" type="image/png" />
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.20/dist/sweetalert2.min.css"
+    />
+    <style>
+        :root {
+            --primary-color: #0b2e59;
+            --secondary-color: #2c6e91;
+            --accent-color: #f7a048;
+            --background-dark: #f0f2f5;
+            --background-light: #ffffff;
+            --text-dark: #333333;
+            --text-light: #f4f4f4;
+            --card-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            --border-radius-lg: 16px;
+            --border-radius-md: 10px;
+        }
 
-    body {
-      background-color: #1d1d1d;
-      color: #000;
-    }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
-    .main-container {
-      display: flex;
-      height: 100vh;
-      flex-direction: row;
-    }
+        body {
+            background-color: var(--background-dark);
+            color: var(--text-dark);
+        }
 
-    .sidebar {
-      width: 270px;
-      background-color: rgb(247, 201, 155);
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      padding: 20px;
-      position: fixed;
-      top: 0;
-      bottom: 0;
-      left: 0;
-      z-index: 100;
-      overflow-y: auto;
-      transition: top 0.3s ease-in-out;
-    }
+        /* Container and Overlay */
+        .main-container {
+            display: flex;
+            min-height: 100vh;
+        }
 
-    .sidebar h2 {
-      margin: 40px 20px 20px 20px;
-      color: black;
-      font-size: 18px;
-    }
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
 
-    .menu {
-      list-style-type: none;
-      padding: 0;
-    }
+        .no-scroll {
+            overflow: hidden;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background-color: var(--primary-color);
+            display: flex;
+            flex-direction: column;
+            padding: 30px 20px;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease-in-out;
+            z-index: 1000;
+            overflow-y: auto;
+        }
 
-    .menu li {
-      margin-bottom: 15px;
-    }
+        .home-icon {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            font-size: 1.5rem;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: color 0.3s ease, transform 0.3s ease;
+        }
 
-    .menu li a {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 16px;
-      color: black;
-      padding: 12px 20px;
-      border-radius: 8px;
-      transition: all 0.3s ease;
-    }
+        .home-icon:hover {
+            color: var(--accent-color);
+            transform: scale(1.1);
+        }
 
-    .menu li a:hover,
-    .menu li.active a {
-      background-color: #d4d4d4;
-      font-weight: bold;
-      transform: translateX(5px);
-      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
-    }
+        .sidebar-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 40px;
+        }
 
-    .menu li a span {
-      font-size: 18px;
-      transition: transform 0.3s ease;
-    }
+        .sidebar h2 {
+            margin-top: 15px;
+            color: var(--text-light);
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
 
-    .menu li a:hover span {
-      transform: scale(1.2);
-    }
+        .menu {
+            list-style: none;
+            flex-grow: 1;
+        }
 
-    .logout {
-      background-color: #f09000;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 20px;
-      cursor: pointer;
-      font-size: 16px;
-      width: 50%;
-      margin: 20px auto;
-      transition: background 0.3s ease;
-    }
+        .menu li {
+            margin-bottom: 12px;
+        }
 
-    .logout:hover {
-      background-color: #d07900;
-    }
+        .menu li a {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 1rem;
+            color: var(--text-light);
+            padding: 15px 20px;
+            border-radius: var(--border-radius-md);
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
 
-    .content {
-      flex-grow: 1;
-      background-color: white;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-      margin-left: 270px;
-      padding: 20px;
-    }
+        .menu li a:hover,
+        .menu li.active a {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--text-light);
+            font-weight: 500;
+            transform: translateX(5px);
+            box-shadow: var(--card-shadow);
+        }
 
-    .fine-box {
-      background: linear-gradient(135deg, rgba(30, 161, 242, 0.85), rgba(10, 120, 210, 0.85));
-      padding: 35px 30px;
-      border-radius: 20px;
-      color: white;
-      max-width: 500px;
-      margin: 0 auto;
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      box-shadow: 0 12px 20px rgba(0, 0, 0, 0.3), 0 6px 8px rgba(0, 0, 0, 0.22);
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
+        .menu li a i {
+            font-size: 1.2rem;
+            width: 25px;
+            text-align: center;
+            color: var(--text-light);
+            transition: color 0.3s ease;
+        }
 
-    .fine-box:hover {
-      transform: scale(1.01);
-      box-shadow: 0 16px 28px rgba(0, 0, 0, 0.35);
-    }
+        .logout {
+            background-color: var(--accent-color);
+            color: var(--text-light);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            width: 60%;
+            margin: 20px auto 0;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
 
-    .fine-box h2 {
-      text-align: center;
-      margin-bottom: 25px;
-    }
+        .logout:hover {
+            background-color: #d3853b;
+            transform: scale(1.05);
+        }
 
-    .fine-box input,
-    .fine-box textarea,
-    .fine-box select {
-      width: 100%;
-      padding: 12px;
-      margin-bottom: 15px;
-      border-radius: 8px;
-      border: none;
-      font-size: 15px;
-      background-color: rgba(255, 255, 255, 0.9);
-      color: #000;
-      transition: box-shadow 0.3s ease;
-    }
+        /* Main Content */
+        .content {
+            flex-grow: 1;
+            background-color: var(--background-dark);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            padding: 20px;
+            margin-left: 280px;
+            transition: margin-left 0.3s ease;
+        }
 
-    .fine-box input:focus,
-    .fine-box textarea:focus,
-    .fine-box select:focus {
-    outline: none;
-    box-shadow: 0 0 5px rgba(30, 161, 242, 0.8);
-    }
+        .header {
+            width: 100%;
+            background: var(--background-light);
+            padding: 15px 30px;
+            box-shadow: var(--card-shadow);
+            border-radius: var(--border-radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 25px;
+            position: sticky;
+            top: 20px;
+            z-index: 10;
+        }
 
-    .fine-box button {
-      padding: 12px;
-      width: 100%;
-      font-size: 16px;
-      font-weight: bold;
-      background-color: #28a745;
-      color: white;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: background 0.3s ease, transform 0.2s ease;
-    }
+        .header h1 {
+            color: var(--primary-color);
+            font-size: 1.5rem;
+        }
+        
+        .fine-box {
+            background-color: var(--background-light);
+            padding: 40px 35px;
+            border-radius: var(--border-radius-lg);
+            max-width: 500px;
+            width: 100%;
+            box-shadow: var(--card-shadow);
+            text-align: center;
+        }
 
-    .fine-box button:hover {
-      background-color: #218838;
-      transform: scale(1.05);
-    }
+        .fine-box h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: var(--primary-color);
+            font-size: 1.5rem;
+        }
 
-    .mobile-toggle {
-      display: none;
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background-color: #1f75cb;
-      color: white;
-      font-size: 24px;
-      padding: 12px 18px;
-      border-radius: 50px;
-      z-index: 9999;
-      cursor: pointer;
-      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-    }
+        .fine-box input,
+        .fine-box textarea,
+        .fine-box select {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border-radius: var(--border-radius-md);
+            border: 1px solid #ddd;
+            font-size: 0.9rem;
+            background-color: #f9f9f9;
+            transition: border-color 0.3s ease;
+        }
 
-    @media (max-width: 768px) {
-      .main-container {
-        flex-direction: column;
-      }
+        .fine-box input:focus,
+        .fine-box textarea:focus,
+        .fine-box select:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
 
-      .sidebar {
-        width: 100%;
-        top: -100%;
-        position: fixed;
-        max-height: 90vh;
-        z-index: 999;
-      }
+        .fine-box button {
+            margin-top: 10px;
+            padding: 14px;
+            width: 100%;
+            font-size: 1rem;
+            font-weight: bold;
+            background-color: var(--primary-color);
+            color: var(--text-light);
+            border: none;
+            border-radius: var(--border-radius-md);
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
 
-      .sidebar.open {
-        top: 0;
-      }
+        .fine-box button:hover {
+            background-color: var(--secondary-color);
+            transform: scale(1.01);
+        }
 
-      .content {
-        margin-left: 0;
-        padding: 20px;
-      }
-
-      .mobile-toggle {
-        display: block;
-      }
-    }
-
-    a {
-      text-decoration: none;
-      color: inherit;
-    }
-  </style>
+        /* Mobile View */
+        .mobile-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background-color: var(--secondary-color);
+            color: var(--text-light);
+            font-size: 24px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1001;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease;
+        }
+        @media (max-width: 992px) {
+            .mobile-toggle {
+                display: flex;
+            }
+            .sidebar {
+                transform: translateX(-100%);
+                width: 250px;
+                max-width: 80vw;
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .content {
+                margin-left: 0;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="main-container">
-    <!-- Sidebar -->
-    <div class="sidebar">
-      <h2><strong>ID:</strong> <span id="userId">Loading...</span></h2>
-      <ul class="menu">
-        <li><a href="knowaboutstd1.html"><span>👤</span> Know about Student</a></li>
-        <li><a href="editstudentdetails.html"><span>✏️</span> Edit Student Details</a></li>
-        <li><a href="sendnotification.html"><span>📨</span> Send Notification</a></li>
-        <li><a href="updatefee.html"><span>💵</span> Update Fee</a></li>
-        <li class="active"><a href="#"><span>💰</span> Impose Fines</a></li>
-        <li><a href="addstudent.html"><span>➕</span> Add Student</a></li>
-        <li><a href="mark_attendance.html"><span>📝</span> Mark Attendance</a></li>
-        <li><a href="backlogs.html"><span>📚</span> Find Backlogs</a></li>
-        <li><a href="mycounselling.html"><span>📋</span> View Counselling</a></li>
-        <li><a href="staffsettings.html"><span>⚙️</span> Settings</a></li>
-      </ul>
-      <button class="logout" onclick="logout()">Logout</button>
+    <div class="overlay" onclick="toggleMobileMenu()"></div>
+    <div class="main-container">
+        <div class="sidebar">
+            <a href="staff-dashboard.html" class="home-icon"><i class="fas fa-home"></i></a>
+            <div class="sidebar-header">
+                <h2 id="staffName">Staff Name</h2>
+                <h2 style="margin-top: 5px;">ID: <span id="staffId">Loading...</span></h2>
+            </div>
+            <ul class="menu">
+                <li><a href="staff-dashboard.html"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+                <li><a href="knowaboutstd1.html"><i class="fas fa-search"></i> Know about Student</a></li>
+                <li><a href="editstudentdetails.html"><i class="fas fa-user-edit"></i> Edit Student Details</a></li>
+                <li><a href="sendnotification.html"><i class="fas fa-paper-plane"></i> Send Notification</a></li>
+                <li><a href="updatefee.html"><i class="fas fa-money-bill-wave"></i> Update Fee</a></li>
+                <li class="active"><a href="#"><i class="fas fa-money-check-alt"></i> Impose Fines</a></li>
+                <li><a href="addstudent.html"><i class="fas fa-user-plus"></i> Add Student</a></li>
+                <li><a href="mark_attendance.html"><i class="fas fa-clipboard-list"></i> Mark Attendance</a></li>
+                <li><a href="backlogs.html"><i class="fas fa-book-open"></i> Find Backlogs</a></li>
+                <li><a href="mycounselling.html"><i class="fas fa-handshake"></i> View Counselling</a></li>
+                <li><a href="staffsettings.html"><i class="fas fa-cog"></i> Settings</a></li>
+            </ul>
+            <button class="logout" onclick="confirmLogout()">Logout</button>
+        </div>
+
+        <div class="content">
+            <div class="header">
+                <h1>Impose Fine</h1>
+            </div>
+            <div class="fine-box">
+                <h2>Impose Fine</h2>
+                <input type="text" id="studentId" placeholder="Student Reg. No." required />
+                <select id="fineYear" required>
+                    <option value="" disabled selected>Select Academic Year</option>
+                    <option value="1">1st Year</option>
+                    <option value="2">2nd Year</option>
+                    <option value="3">3rd Year</option>
+                    <option value="4">4th Year</option>
+                </select>
+                <textarea id="reason" rows="3" placeholder="Reason for the fine" required></textarea>
+                <input type="number" id="amount" placeholder="Amount (₹)" required />
+                <button onclick="imposeFine()">Impose Fine</button>
+            </div>
+        </div>
     </div>
+    <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
 
-    <!-- Main Content -->
-    <div class="content">
-      <div class="fine-box">
-      <h2>Impose Fine</h2>
-<input type="text" id="studentId" placeholder="Student User ID" required />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // 🔐 Unauthorized Login Check
+        const userId = localStorage.getItem("userId");
+        if (!userId) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Access Denied',
+                text: 'Please login first to view this page.',
+                confirmButtonText: 'Go to Login',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                confirmButtonColor: '#0b2e59'
+            }).then(() => {
+                window.location.href = "index.html";
+            });
+        } else {
+            document.getElementById("staffId").textContent = userId;
+            fetch(`/staff/${userId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.staff_name) {
+                        document.getElementById("staffName").textContent = data.staff_name;
+                    }
+                })
+                .catch(err => {
+                    console.error("Error loading staff data:", err);
+                });
 
-<select id="fineYear" required>
-  <option value="" disabled selected>Select Academic Year</option>
-  <option value="1">1st Year</option>
-  <option value="2">2nd Year</option>
-  <option value="3">3rd Year</option>
-  <option value="4">4th Year</option>
-</select>
+            function imposeFine() {
+                const studentId = document.getElementById("studentId").value.trim();
+                const reason = document.getElementById("reason").value.trim();
+                const amount = parseInt(document.getElementById("amount").value.trim());
+                const academic_year = document.getElementById("fineYear").value;
+                const staffId = userId;
 
-<textarea id="reason" rows="3" placeholder="Reason"></textarea>
-<input type="number" id="amount" placeholder="Amount (₹)" required />
+                if (!studentId || isNaN(amount) || !academic_year || !reason) {
+                    Swal.fire({
+                        icon: "warning",
+                        title: "Missing Information",
+                        text: "Please fill in all the required fields: Registration Number, Year, Reason, and Amount."
+                    });
+                    return;
+                }
+                
+                if (amount <= 0) {
+                    Swal.fire({
+                        icon: "warning",
+                        title: "Invalid Amount",
+                        text: "The fine amount must be greater than zero."
+                    });
+                    return;
+                }
 
-        <button onclick="imposeFine()">Impose Fine</button>
-      </div>
-    </div>
-  </div>
+                Swal.fire({
+                    title: 'Imposing Fine...',
+                    text: 'Please wait, this may take a moment.',
+                    didOpen: () => { Swal.showLoading(); },
+                    allowOutsideClick: false
+                });
 
-  <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-  // 🔐 Unauthorized Login Check
-  const userId = localStorage.getItem("userId");
-  if (!userId) {
-    Swal.fire({
-      icon: 'warning',
-      title: 'Login Required',
-      text: 'Please login to access this page.'
-    }).then(() => {
-      window.location.href = "index.html";
-    });
-  } else {
-    document.getElementById("userId").textContent = userId;
+                fetch("/impose-fine", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        userId: studentId,
+                        reason,
+                        amount,
+                        academic_year,
+                        staffId
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            icon: "success",
+                            title: "Fine Imposed",
+                            text: `Fine of ₹${amount} successfully imposed on ${studentId} for "${reason}".`
+                        }).then(() => {
+                            document.getElementById("studentId").value = "";
+                            document.getElementById("reason").value = "";
+                            document.getElementById("amount").value = "";
+                            document.getElementById("fineYear").value = "";
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Error",
+                            text: data.message || "Failed to impose fine. Please check the student ID and try again."
+                        });
+                    }
+                })
+                .catch(err => {
+                    console.error("Error:", err);
+                    Swal.fire({
+                        icon: "error",
+                        title: "Server Error",
+                        text: "Failed to impose fine. Please check your network and try again."
+                    });
+                });
+            }
 
-    function imposeFine() {
-      const studentId = document.getElementById("studentId").value.trim();
-      const reason = document.getElementById("reason").value.trim();
-      const amount = parseInt(document.getElementById("amount").value.trim());
-      const academic_year = document.getElementById("fineYear").value;
-      const staffId = userId;
+            function toggleMobileMenu() {
+                const sidebar = document.querySelector('.sidebar');
+                const overlay = document.querySelector('.overlay');
+                const body = document.body;
+                
+                sidebar.classList.toggle('open');
+                overlay.style.display = sidebar.classList.contains('open') ? 'block' : 'none';
+                body.classList.toggle('no-scroll', sidebar.classList.contains('open'));
+            }
 
-      if (!studentId || isNaN(amount) || !academic_year) {
-        Swal.fire({
-          icon: "warning",
-          title: "Missing Fields",
-          text: "Please enter all required fields including Year and Amount."
-        });
-        return;
-      }
-
-      if (!reason) {
-        Swal.fire({
-          icon: "warning",
-          title: "Missing Reason",
-          text: "Please enter the reason for the fine."
-        });
-        return;
-      }
-
-      fetch("/impose-fine", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: studentId,
-          reason,
-          amount,
-          academic_year,
-          staffId
-        })
-      })
-      .then(res => res.json())
-      .then(data => {
-        Swal.fire({
-          icon: data.success ? "success" : "error",
-          title: data.success ? "Fine Imposed" : "Error",
-          text: data.message
-        });
-
-        if (data.success) {
-          document.getElementById("studentId").value = "";
-          document.getElementById("reason").value = "";
-          document.getElementById("amount").value = "";
-          document.getElementById("fineYear").value = "";
+            function confirmLogout() {
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "You will be logged out of your account.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#0b2e59',
+                    cancelButtonColor: '#d3853b',
+                    confirmButtonText: 'Yes, log out!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        logout();
+                    }
+                });
+            }
+            
+            function logout() {
+                localStorage.clear();
+                window.location.href = "index.html";
+            }
         }
-      })
-      .catch(err => {
-        console.error("Error:", err);
-        Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: "Failed to impose fine. Please try again."
-        });
-      });
-    }
-
-    function toggleMobileMenu() {
-      const sidebar = document.querySelector('.sidebar');
-      sidebar.classList.toggle('open');
-    }
-
-    function logout() {
-      localStorage.removeItem("userId");
-      if ("caches" in window) {
-        caches.keys().then(names => names.forEach(name => caches.delete(name)));
-      }
-      window.location.replace("index.html");
-    }
-  }
-</script>
+    </script>
 </body>
 </html>
-
