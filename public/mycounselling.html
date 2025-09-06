@@ -1,692 +1,902 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>My Counselling Students</title>
-  <link rel="icon" href="crrengglogo.png" type="image/png" />
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<style>
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  }
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Staff - My Counselling Students</title>
+    <link rel="icon" href="crrengglogo.png" type="image/png" />
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.20/dist/sweetalert2.min.css"
+    />
+    <style>
+        :root {
+            --primary-color: #0b2e59;
+            --secondary-color: #2c6e91;
+            --accent-color: #f7a048;
+            --background-dark: #f0f2f5;
+            --background-light: #ffffff;
+            --text-dark: #333333;
+            --text-light: #f4f4f4;
+            --card-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            --border-radius-lg: 16px;
+            --border-radius-md: 10px;
+        }
 
-  body {
-    background-color: #ffffff;
-    color: #000;
-  }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
-  .main-container {
-    display: flex;
-    height: 100vh;
-    flex-direction: row;
-  }
+        body {
+            background-color: var(--background-dark);
+            color: var(--text-dark);
+        }
+        
+        /* Container and Overlay */
+        .main-container {
+            display: flex;
+            min-height: 100vh;
+        }
 
-  .sidebar {
-    width: 270px;
-    background-color: rgb(247, 201, 155);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    padding: 20px;
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    z-index: 100;
-    overflow-y: auto;
-    transition: top 0.3s ease-in-out;
-  }
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
 
-  .sidebar h2 {
-    margin: 40px 20px 20px 20px;
-    color: black;
-    font-size: 18px;
-  }
+        .no-scroll {
+            overflow: hidden;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background-color: var(--primary-color);
+            display: flex;
+            flex-direction: column;
+            padding: 30px 20px;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease-in-out;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .home-icon {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            font-size: 1.5rem;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: color 0.3s ease, transform 0.3s ease;
+        }
+        
+        .home-icon:hover {
+            color: var(--accent-color);
+            transform: scale(1.1);
+        }
 
-  .menu {
-    list-style-type: none;
-    padding: 0;
-  }
+        .sidebar-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 40px;
+        }
 
-  .menu li {
-    margin-bottom: 15px;
-  }
+        .sidebar h2 {
+            margin-top: 15px;
+            color: var(--text-light);
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
 
-  .menu li a {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 16px;
-    color: black;
-    padding: 12px 20px;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-    text-decoration: none;
-    border: none;
-  }
+        .menu {
+            list-style: none;
+            flex-grow: 1;
+        }
 
-  .menu li a:hover,
-  .menu li.active a {
-    background-color: #d4d4d4;
-    font-weight: bold;
-    transform: translateX(5px);
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
-  }
+        .menu li {
+            margin-bottom: 12px;
+        }
 
-  .menu li a span {
-    font-size: 18px;
-    transition: transform 0.3s ease;
-  }
+        .menu li a {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 1rem;
+            color: var(--text-light);
+            padding: 15px 20px;
+            border-radius: var(--border-radius-md);
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
 
-  .menu li a:hover span {
-    transform: scale(1.2);
-  }
+        .menu li a:hover,
+        .menu li.active a {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--text-light);
+            font-weight: 500;
+            transform: translateX(5px);
+            box-shadow: var(--card-shadow);
+        }
 
-  .logout {
-    background-color: #f09000;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 20px;
-    cursor: pointer;
-    font-size: 16px;
-    width: 50%;
-    margin: 20px auto;
-    transition: background 0.3s ease;
-  }
+        .menu li a i {
+            font-size: 1.2rem;
+            width: 25px;
+            text-align: center;
+            color: var(--text-light);
+            transition: color 0.3s ease;
+        }
 
-  .logout:hover {
-    background-color: #d07900;
-  }
+        .logout {
+            background-color: var(--accent-color);
+            color: var(--text-light);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            width: 60%;
+            margin: 20px auto 0;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
 
-  .content {
-    flex-grow: 1;
-    margin-left: 270px;
-    padding: 40px 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
+        .logout:hover {
+            background-color: #d3853b;
+            transform: scale(1.05);
+        }
+        
+        /* Main Content */
+        .content {
+            flex-grow: 1;
+            margin-left: 280px;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: var(--background-dark);
+        }
 
-  .header {
-    font-size: 24px;
-    font-weight: bold;
-    margin-bottom: 20px;
-    color: black;
-  }
+        .header {
+            width: 100%;
+            background: var(--background-light);
+            padding: 15px 30px;
+            box-shadow: var(--card-shadow);
+            border-radius: var(--border-radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 25px;
+            position: sticky;
+            top: 20px;
+            z-index: 10;
+        }
+        .header h1 {
+            color: var(--primary-color);
+            font-size: 1.5rem;
+        }
 
-  .card-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 20px;
-    width: 100%;
-    max-width: 1200px;
-  }
+        .card-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            width: 100%;
+            max-width: 1200px;
+        }
 
-  /* Updated student-card design */
-  .student-card {
-    background: #fff;
-    border-radius: 12px;
-    padding: 20px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-    transition: all 0.3s ease;
-    cursor: pointer;
-  }
+        .student-card {
+            background: var(--background-light);
+            border-radius: var(--border-radius-lg);
+            padding: 25px;
+            box-shadow: var(--card-shadow);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+        }
 
-  .student-card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-  }
+        .student-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
 
-  .student-card h3 {
-    margin-bottom: 10px;
-    font-size: 18px;
-    font-weight: bold;
-    color: #222;
-  }
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
 
-  .student-card p {
-    font-size: 14px;
-    margin: 4px 0;
-    color: #555;
-  }
+        .card-header img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid var(--accent-color);
+        }
 
-  .mobile-toggle {
-    display: none;
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: #1f75cb;
-    color: white;
-    font-size: 24px;
-    padding: 12px 18px;
-    border-radius: 50px;
-    z-index: 10001;
-    cursor: pointer;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-  }
+        .card-header h3 {
+            margin: 0;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
 
-  /* Modal Overlay */
-  #modalOverlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    backdrop-filter: blur(6px);
-    background: rgba(0, 0, 0, 0.6);
-    z-index: 9999;
-    animation: fadeInOverlay 0.3s ease;
-  }
+        .student-card p {
+            font-size: 0.9rem;
+            margin: 6px 0;
+            color: #555;
+        }
 
-  .modal-box {
-    background: white;
-    border-radius: 20px;
-    padding: 30px 35px;
-    width: 95%;
-    max-width: 750px;
-    max-height: 90vh;
-    overflow-y: auto;
-    position: relative;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
-    animation: modalFadeIn 0.4s ease;
-  }
+        .student-card strong {
+            color: var(--text-dark);
+        }
 
-  .modal-close {
-    position: absolute;
-    top: 14px;
-    right: 18px;
-    background: #ff3b3b;
-    color: white;
-    border: none;
-    padding: 10px 16px;
-    font-size: 18px;
-    font-weight: bold;
-    border-radius: 50%;
-    cursor: pointer;
-    transition: background 0.3s ease, transform 0.2s ease;
-  }
+        .no-students {
+            text-align: center;
+            color: #666;
+            margin-top: 50px;
+            font-size: 1.2rem;
+        }
 
-  .modal-close:hover {
-    background: #e60000;
-    transform: scale(1.1);
-  }
+        /* Modal */
+        #studentModal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10001;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
 
-  /* Tabs & Table Styling */
-  .modal-box button {
-    background: #f6f6f6;
-    border: none;
-    color: #333;
-    padding: 10px 16px;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-  }
+        #studentModal.show {
+            opacity: 1;
+            visibility: visible;
+        }
 
-  .modal-box button:hover {
-    background: #ddd;
-  }
+        .modal-content {
+            background: var(--background-light);
+            border-radius: var(--border-radius-lg);
+            padding: 30px;
+            width: 95%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
 
-  .modal-box table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 12px;
-    font-size: 14px;
-  }
+        #studentModal.show .modal-content {
+            transform: scale(1);
+        }
 
-  .modal-box table th,
-  .modal-box table td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: center;
-  }
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #ff4d4d;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
 
-  .modal-box table th {
-    background: #f6f6f6;
-    font-weight: bold;
-  }
+        .modal-close:hover {
+            background: #e60000;
+            transform: scale(1.1);
+        }
 
-  @keyframes modalFadeIn {
-    from { opacity: 0; transform: translateY(-20px) scale(0.95); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
-  }
+        .modal-header h2 {
+            color: var(--primary-color);
+            margin-bottom: 5px;
+            font-size: 1.6rem;
+        }
 
-  @keyframes fadeInOverlay {
-    from { background: rgba(0, 0, 0, 0); }
-    to { background: rgba(0, 0, 0, 0.6); }
-  }
+        .modal-header p {
+            font-size: 0.9rem;
+            color: #666;
+        }
 
-  @media (max-width: 768px) {
-    .main-container {
-      flex-direction: column;
-    }
+        .tab-buttons {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            border-bottom: 2px solid #ddd;
+            flex-wrap: wrap;
+        }
 
-    .sidebar {
-      width: 100%;
-      position: fixed;
-      top: -100%;
-      left: 0;
-      background-color: rgb(247, 201, 155);
-      height: auto;
-      max-height: 90vh;
-      overflow-y: auto;
-      z-index: 10000;
-      transition: top 0.4s ease;
-    }
+        .tab-button {
+            padding: 12px 20px;
+            border: none;
+            background: #f6f6f6;
+            color: var(--text-dark);
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
+            transition: all 0.3s ease;
+            position: relative;
+            top: 2px;
+        }
 
-    .sidebar.open {
-      top: 0;
-    }
+        .tab-button.active {
+            background: var(--background-light);
+            border-bottom: 2px solid var(--accent-color);
+            color: var(--accent-color);
+            font-weight: bold;
+        }
 
-    .content {
-      margin-left: 0;
-      margin-top: 100px;
-      padding: 20px;
-    }
+        .tab-content {
+            display: none;
+            padding: 20px 0;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
 
-    .mobile-toggle {
-      display: block;
-    }
-  }
-</style>
+        .tab-content h3 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .tab-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .tab-content th, .tab-content td {
+            border: 1px solid #e0e0e0;
+            padding: 10px;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        .tab-content th {
+            background-color: var(--background-dark);
+            color: var(--primary-color);
+        }
+
+        .info-card {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: var(--border-radius-md);
+            margin-top: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Mobile View */
+        .mobile-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background-color: var(--secondary-color);
+            color: var(--text-light);
+            font-size: 24px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1001;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease;
+        }
+
+        @media (max-width: 992px) {
+            .mobile-toggle {
+                display: flex;
+            }
+            .sidebar {
+                transform: translateX(-100%);
+                width: 250px;
+                max-width: 80vw;
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .content {
+                margin-left: 0;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="main-container">
-    <!-- Sidebar -->
-    <div class="sidebar" id="sidebar">
-      <h2>ID: <span id="userId">Loading...</span></h2>
-      <ul class="menu">
-        <li><a href="knowaboutstd1.html"><span>👤</span> Know about Student</a></li>
-        <li><a href="editstudentdetails.html"><span>✏️</span> Edit Student Details</a></li>
-        <li><a href="sendnotification.html"><span>📨</span> Send Notification</a></li>
-        <li><a href="updatefee.html"><span>💵</span> Update Fee</a></li>
-        <li><a href="imposefines.html"><span>💰</span> Impose Fines</a></li>
-        <li><a href="addstudent.html"><span>➕</span> Add Student</a></li>
-        <li><a href="mark_attendance.html"><span>📝</span> Mark Attendance</a></li>
-        <li><a href="backlogs.html"><span>📚</span> Find Backlogs</a></li>
-        <li class="active"><a href="#"><span>📋</span> View Counselling</a></li>
-        <li><a href="staffsettings.html"><span>⚙️</span> Settings</a></li>
-      </ul>
-      <button class="logout" onclick="logout()">Logout</button>
-    </div>
-
-    <!-- Main Content -->
-    <div class="content">
-      <div class="header">My Counselling Students</div>
-      <div class="card-container" id="cardContainer">
-        <!-- Student cards will be injected here -->
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal -->
-  <div id="studentModal" style="display: none;">
-    <div id="modalOverlay">
-      <div class="modal-box">
-        <h2 id="modalName">Student Name</h2>
-        <p><strong>Father Name:</strong> <span id="modalFatherName"></span></p>
-        <p><strong>Father Mobile:</strong> <span id="modalFatherMobile"></span></p>
-
-        <!-- Tab Buttons -->
-<div style="margin: 20px 0; display: flex; gap: 10px; flex-wrap: wrap;">
-  <button onclick="showTab('attendance')" id="btnAttendance"> Attendance</button>
-  <button onclick="showTab('results')" id="btnResults"> Results</button>
-  <button onclick="showTab('midmarks')" id="btnMidMarks"> Mid Marks</button>
-  <button onclick="showTab('fee')" id="btnFee"> Fee Details</button>
-</div>
-
-        <!-- Attendance Section -->
-        <div id="attendanceTab" style="display: none;">
-          <h3 style="margin-top: 20px; border-bottom: 1px solid #ddd; padding-bottom: 6px;"> Attendance Details</h3>
-          <div id="attendanceContent"></div>
+    <div class="overlay" onclick="toggleMobileMenu()"></div>
+    <div class="main-container">
+        <div class="sidebar" id="sidebar">
+            <a href="staff-dashboard.html" class="home-icon"><i class="fas fa-home"></i></a>
+            <div class="sidebar-header">
+                <h2 id="staffName">Staff Name</h2>
+                <h2 style="margin-top: 5px;">ID: <span id="staffId">Loading...</span></h2>
+            </div>
+            <ul class="menu">
+                <li><a href="staff-dashboard.html"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+                <li><a href="knowaboutstd1.html"><i class="fas fa-search"></i> Know about Student</a></li>
+                <li><a href="editstudentdetails.html"><i class="fas fa-user-edit"></i> Edit Student Details</a></li>
+                <li><a href="sendnotification.html"><i class="fas fa-paper-plane"></i> Send Notification</a></li>
+                <li><a href="updatefee.html"><i class="fas fa-money-bill-wave"></i> Update Fee</a></li>
+                <li><a href="imposefines.html"><i class="fas fa-money-check-alt"></i> Impose Fines</a></li>
+                <li><a href="addstudent.html"><i class="fas fa-user-plus"></i> Add Student</a></li>
+                <li><a href="mark_attendance.html"><i class="fas fa-clipboard-list"></i> Mark Attendance</a></li>
+                <li><a href="backlogs.html"><i class="fas fa-book-open"></i> Find Backlogs</a></li>
+                <li class="active"><a href="#"><i class="fas fa-handshake"></i> View Counselling</a></li>
+                <li><a href="staffsettings.html"><i class="fas fa-cog"></i> Settings</a></li>
+            </ul>
+            <button class="logout" onclick="confirmLogout()">Logout</button>
         </div>
 
-        <!-- Results Section -->
-        <div id="resultsTab" style="display: none;">
-          <h3 style="margin-top: 20px; border-bottom: 1px solid #ddd; padding-bottom: 6px;"> Results Overview</h3>
-          <h4 style="margin-bottom: 8px;">🎓 Select Semester to View Results:</h4>
-          <select id="semesterSelect">
-            <option value="">-- Select --</option>
-            <option value="1-1">1-1</option>
-            <option value="1-2">1-2</option>
-            <option value="2-1">2-1</option>
-            <option value="2-2">2-2</option>
-            <option value="3-1">3-1</option>
-            <option value="3-2">3-2</option>
-            <option value="4-1">4-1</option>
-            <option value="4-2">4-2</option>
-          </select>
-          <div id="resultsContent"></div>
+        <div class="content">
+            <div class="header">
+                <h1>My Counselling Students</h1>
+            </div>
+            <div class="card-container" id="cardContainer">
+                </div>
         </div>
-
-        <!-- Mid Marks Section -->
-        <div id="midmarksTab" style="display: none;">
-          <h3 style="margin-top: 20px; border-bottom: 1px solid #ddd; padding-bottom: 6px;"> Mid Marks</h3>
-          <h4 style="margin-bottom: 8px;"> Select Year and Semester to View Mid Marks:</h4>
-
-          <label for="midYearSelect">Year:</label>
-          <select id="midYearSelect">
-            <option value="">Select Year</option>
-            <option value="1">1st Year</option>
-            <option value="2">2nd Year</option>
-            <option value="3">3rd Year</option>
-            <option value="4">4th Year</option>
-          </select>
-
-          <label for="midSemesterSelect" style="margin-left: 15px;">Semester:</label>
-          <select id="midSemesterSelect">
-            <option value="">Select Semester</option>
-            <option value="1">1</option>
-            <option value="2">2</option>
-          </select>
-
-          <div id="midmarksContent" style="margin-top: 20px;"></div>
-        </div>
-          <!-- Fee Details Section -->
-<div id="feeTab" style="display: none;">
-  <h3 style="margin-top: 20px; border-bottom: 1px solid #ddd; padding-bottom: 6px;"> Fee Details</h3>
-  <div id="feeContent" style="margin-top: 20px;"></div>
-</div>
-
-        <button class="modal-close" onclick="closeModal()">✖</button>
-      </div>
     </div>
-  </div>
 
-  <!-- Mobile Toggle -->
-  <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
+    <div id="studentModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+            <div class="modal-header">
+                <h2 id="modalName">Student Name</h2>
+                <p><strong>Reg No:</strong> <span id="modalRegNo"></span></p>
+                <p><strong>Father Name:</strong> <span id="modalFatherName"></span></p>
+                <p><strong>Father Mobile:</strong> <span id="modalFatherMobile"></span></p>
+            </div>
 
-<script>
-  const userId = localStorage.getItem("userId");
-  const role = localStorage.getItem("role");
-  document.getElementById("userId").textContent = userId || "Unknown";
+            <div class="tab-buttons">
+                <button class="tab-button active" data-tab="attendance"><i class="fas fa-clipboard-check"></i> Attendance</button>
+                <button class="tab-button" data-tab="results"><i class="fas fa-poll-h"></i> Results</button>
+                <button class="tab-button" data-tab="midmarks"><i class="fas fa-book-reader"></i> Mid Marks</button>
+                <button class="tab-button" data-tab="fee"><i class="fas fa-receipt"></i> Fee Details</button>
+            </div>
 
-  let currentStudent = null;
+            <div id="attendanceTab" class="tab-content active">
+                <h3 class="info-title">Attendance Details</h3>
+                <div id="attendanceContent"></div>
+            </div>
 
-  if (!userId || role !== "staff") {
-    Swal.fire({
-      icon: "error",
-      title: "Unauthorized",
-      text: "You must login as staff to view this page.",
-      confirmButtonText: "Go to Login"
-    }).then(() => {
-      window.location.href = "index.html";
-    });
-  } else {
-    fetch(`/my-counselling-students/${userId}`)
-      .then(res => res.json())
-      .then(data => {
-        const container = document.getElementById("cardContainer");
+            <div id="resultsTab" class="tab-content">
+                <h3 class="info-title">Results Overview</h3>
+                <label for="semesterSelect">Select Semester:</label>
+                <select id="semesterSelect">
+                    <option value="">-- Select --</option>
+                    <option value="1-1">1-1</option>
+                    <option value="1-2">1-2</option>
+                    <option value="2-1">2-1</option>
+                    <option value="2-2">2-2</option>
+                    <option value="3-1">3-1</option>
+                    <option value="3-2">3-2</option>
+                    <option value="4-1">4-1</option>
+                    <option value="4-2">4-2</option>
+                </select>
+                <div id="resultsContent"></div>
+            </div>
 
-        if (data.success && data.students.length > 0) {
-          data.students.forEach(std => {
-            const card = document.createElement("div");
-            card.className = "student-card";
-            card.innerHTML = `
-              <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
-                <img src="https://ui-avatars.com/api/?name=${std.name}&background=random&rounded=true" style="width:40px; height:40px; border-radius:50%;">
-                <h3 style="margin:0;">${std.name}</h3>
-              </div>
-              <p><strong>Reg No:</strong> ${std.reg_no}</p>
-              <p><strong>Course:</strong> ${std.course}</p>
-              <p><strong>Year:</strong> ${std.year}</p>
-              <p><strong>Section:</strong> ${std.section}</p>
-              <p><strong>Email:</strong> ${std.email}</p>
-              <p><strong>Mobile:</strong> ${std.mobile_no}</p>
-            `;
-            card.onclick = () => openModal(std);
-            container.appendChild(card);
-          });
+            <div id="midmarksTab" class="tab-content">
+                <h3 class="info-title">Mid Marks</h3>
+                <div class="select-group">
+                    <label for="midYearSelect">Year:</label>
+                    <select id="midYearSelect">
+                        <option value="">Select Year</option>
+                        <option value="1">1st Year</option>
+                        <option value="2">2nd Year</option>
+                        <option value="3">3rd Year</option>
+                        <option value="4">4th Year</option>
+                    </select>
+                    <label for="midSemesterSelect" style="margin-left: 15px;">Semester:</label>
+                    <select id="midSemesterSelect">
+                        <option value="">Select Semester</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                    </select>
+                </div>
+                <div id="midmarksContent"></div>
+            </div>
+
+            <div id="feeTab" class="tab-content">
+                <h3 class="info-title">Fee Details</h3>
+                <div id="feeContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        const userId = localStorage.getItem("userId");
+        const role = localStorage.getItem("role");
+        let currentStudent = null;
+
+        if (!userId || role !== "staff") {
+            Swal.fire({
+                icon: "error",
+                title: "Unauthorized",
+                text: "You must login as staff to view this page.",
+                confirmButtonText: "Go to Login",
+                confirmButtonColor: '#0b2e59'
+            }).then(() => {
+                window.location.href = "index.html";
+            });
         } else {
-          container.innerHTML = `<p style="text-align:center; color:#666;">No students assigned yet.</p>`;
+            document.getElementById("staffId").textContent = userId || "Unknown";
+            fetch(`/staff/${userId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.staff_name) {
+                        document.getElementById("staffName").textContent = data.staff_name;
+                    }
+                })
+                .catch(err => {
+                    console.error("Error loading staff data:", err);
+                });
+            fetchStudents();
         }
-      })
-      .catch(err => {
-        console.error("Error fetching students:", err);
-        Swal.fire("Error", "Failed to fetch student data.", "error");
-      });
-  }
 
-  function openModal(student) {
-    currentStudent = student;
-
-    document.getElementById("modalName").textContent = student.name;
-    document.getElementById("modalFatherName").textContent = student.father_name || "N/A";
-    document.getElementById("modalFatherMobile").textContent = student.father_mobile || "N/A";
-
-    document.getElementById("studentModal").style.display = "block";
-    document.body.style.overflow = "hidden";
-    showTab("attendance");
-
-    // Attendance
-    fetch(`/student-attendance/${student.reg_no}`)
-      .then(res => res.json())
-      .then(data => {
-        const container = document.getElementById("attendanceContent");
-        if (data.success && data.data.length > 0) {
-          const rows = data.data.map(row => `
-            <tr>
-              <td>${row.semester}</td>
-              <td>${row.total_classes}</td>
-              <td>${row.attended_classes}</td>
-              <td>${row.percentage}%</td>
-            </tr>`).join("");
-          container.innerHTML = `
-            <table>
-              <tr>
-                <th>Semester</th>
-                <th>Total</th>
-                <th>Attended</th>
-                <th>%</th>
-              </tr>
-              ${rows}
-            </table>`;
-        } else {
-          container.innerHTML = "No attendance data available.";
+        function fetchStudents() {
+            fetch(`/my-counselling-students/${userId}`)
+                .then(res => res.json())
+                .then(data => {
+                    const container = document.getElementById("cardContainer");
+                    container.innerHTML = "";
+                    if (data.success && data.students.length > 0) {
+                        data.students.forEach(std => {
+                            const card = document.createElement("div");
+                            card.className = "student-card";
+                            card.innerHTML = `
+                                <div class="card-header">
+                                    <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(std.name)}&background=random&rounded=true" alt="Avatar">
+                                    <h3>${std.name}</h3>
+                                </div>
+                                <p><strong>Reg No:</strong> ${std.reg_no}</p>
+                                <p><strong>Course:</strong> ${std.course || 'N/A'}</p>
+                                <p><strong>Year:</strong> ${std.year || 'N/A'}</p>
+                                <p><strong>Section:</strong> ${std.section || 'N/A'}</p>
+                                <p><strong>Email:</strong> ${std.email || 'N/A'}</p>
+                                <p><strong>Mobile:</strong> ${std.mobile_no || 'N/A'}</p>
+                            `;
+                            card.onclick = () => openModal(std);
+                            container.appendChild(card);
+                        });
+                    } else {
+                        container.innerHTML = `<p class="no-students">No students assigned to you yet.</p>`;
+                    }
+                })
+                .catch(err => {
+                    console.error("Error fetching students:", err);
+                    Swal.fire("Error", "Failed to load student data.", "error");
+                });
         }
-      });
 
-    // Results
-    const semesterDropdown = document.getElementById("semesterSelect");
-    semesterDropdown.value = "";
-    document.getElementById("resultsContent").innerHTML = "";
+        function openModal(student) {
+            currentStudent = student;
+            const modal = document.getElementById("studentModal");
+            document.body.classList.add("no-scroll");
+            modal.classList.add("show");
 
-    semesterDropdown.onchange = () => {
-      const semester = semesterDropdown.value;
-      if (!semester) return;
+            document.getElementById("modalName").textContent = student.name;
+            document.getElementById("modalRegNo").textContent = student.reg_no;
+            document.getElementById("modalFatherName").textContent = student.father_name || "N/A";
+            document.getElementById("modalFatherMobile").textContent = student.father_mobile || "N/A";
 
-      fetch(`/student/results/${student.reg_no}?semester=${semester}`)
-        .then(res => res.json())
-        .then(data => {
-          const container = document.getElementById("resultsContent");
-          if (data.results && data.results.length > 0) {
-            const subjectRows = data.results.map(r => `
-              <tr>
-                <td>${r.subcode}</td>
-                <td>${r.subname}</td>
-                <td>${r.grade}</td>
-                <td>${r.credits}</td>
-              </tr>`).join("");
-            container.innerHTML = `
-              <table>
-                <tr>
-                  <th>Sub Code</th>
-                  <th>Subject</th>
-                  <th>Grade</th>
-                  <th>Credits</th>
-                </tr>
-                ${subjectRows}
-              </table>
-              <div>
-                <p><strong>SGPA:</strong> ${data.sgpa}</p>
-                <p><strong>CGPA:</strong> ${data.cgpa}</p>
-                <p><strong>Percentage:</strong> ${data.percentage}%</p>
-              </div>`;
-          } else {
-            container.innerHTML = "No result data for selected semester.";
-          }
+            const tabButtons = document.querySelectorAll('.tab-button');
+            tabButtons.forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.tab === 'attendance') {
+                    btn.classList.add('active');
+                }
+            });
+            showTab('attendance');
+            fetchAttendance(student.reg_no);
+            document.getElementById("semesterSelect").value = "";
+            document.getElementById("resultsContent").innerHTML = "";
+            document.getElementById("midYearSelect").value = "";
+            document.getElementById("midSemesterSelect").value = "";
+            document.getElementById("midmarksContent").innerHTML = "";
+        }
+
+        function closeModal() {
+            const modal = document.getElementById("studentModal");
+            document.body.classList.remove("no-scroll");
+            modal.classList.remove("show");
+            currentStudent = null;
+        }
+
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+
+            if (currentStudent) {
+                switch(tabName) {
+                    case 'attendance':
+                        fetchAttendance(currentStudent.reg_no);
+                        break;
+                    case 'results':
+                        document.getElementById("semesterSelect").onchange = () => fetchResults(currentStudent.reg_no);
+                        break;
+                    case 'midmarks':
+                        document.getElementById("midYearSelect").onchange = () => fetchMidMarks(currentStudent.reg_no);
+                        document.getElementById("midSemesterSelect").onchange = () => fetchMidMarks(currentStudent.reg_no);
+                        break;
+                    case 'fee':
+                        fetchFeeDetails(currentStudent.reg_no);
+                        break;
+                }
+            }
+        }
+        
+        function fetchAttendance(regNo) {
+             const container = document.getElementById("attendanceContent");
+             container.innerHTML = `<p style="text-align: center; color: #888;">Loading...</p>`;
+            fetch(`/student-attendance/${regNo}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.data.length > 0) {
+                        const rows = data.data.map(row => `
+                            <tr>
+                                <td>${row.semester}</td>
+                                <td>${row.total_classes}</td>
+                                <td>${row.attended_classes}</td>
+                                <td>${row.percentage}%</td>
+                            </tr>`).join("");
+                        container.innerHTML = `
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Semester</th>
+                                        <th>Total Classes</th>
+                                        <th>Attended</th>
+                                        <th>Percentage</th>
+                                    </tr>
+                                </thead>
+                                <tbody>${rows}</tbody>
+                            </table>`;
+                    } else {
+                        container.innerHTML = "<p style='text-align: center; color: #888;'>No attendance data available.</p>";
+                    }
+                })
+                .catch(() => {
+                    container.innerHTML = "<p style='text-align: center; color: #d00000;'>Error loading attendance data.</p>";
+                });
+        }
+
+        function fetchResults(regNo) {
+            const semester = document.getElementById("semesterSelect").value;
+            const container = document.getElementById("resultsContent");
+            if (!semester) {
+                container.innerHTML = "";
+                return;
+            }
+            container.innerHTML = `<p style="text-align: center; color: #888;">Loading results...</p>`;
+            fetch(`/student/results/${regNo}?semester=${semester}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.results && data.results.length > 0) {
+                        const subjectRows = data.results.map(r => `
+                            <tr>
+                                <td>${r.subcode}</td>
+                                <td>${r.subname}</td>
+                                <td>${r.grade}</td>
+                                <td>${r.credits}</td>
+                            </tr>`).join("");
+                        container.innerHTML = `
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Sub Code</th>
+                                        <th>Subject</th>
+                                        <th>Grade</th>
+                                        <th>Credits</th>
+                                    </tr>
+                                </thead>
+                                <tbody>${subjectRows}</tbody>
+                            </table>
+                            <div class="info-card">
+                                <p><strong>SGPA:</strong> ${data.sgpa || 'N/A'}</p>
+                                <p><strong>CGPA:</strong> ${data.cgpa || 'N/A'}</p>
+                                <p><strong>Percentage:</strong> ${data.percentage ? `${data.percentage}%` : 'N/A'}</p>
+                            </div>`;
+                    } else {
+                        container.innerHTML = "<p style='text-align: center; color: #888;'>No result data for this semester.</p>";
+                    }
+                })
+                .catch(() => {
+                    container.innerHTML = "<p style='text-align: center; color: #d00000;'>Error loading results.</p>";
+                });
+        }
+
+        function fetchMidMarks(regNo) {
+            const year = document.getElementById("midYearSelect").value;
+            const semester = document.getElementById("midSemesterSelect").value;
+            const container = document.getElementById("midmarksContent");
+            if (!year || !semester) {
+                container.innerHTML = "";
+                return;
+            }
+            container.innerHTML = `<p style="text-align: center; color: #888;">Loading mid marks...</p>`;
+            fetch(`/student/midmarks/${regNo}?year=${year}&semester=${semester}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.midmarks && data.midmarks.length > 0) {
+                        const rows = data.midmarks.map(row => `
+                            <tr>
+                                <td>${row.sub_code}</td>
+                                <td>${row.mid1 || 'N/A'}</td>
+                                <td>${row.a1 || 'N/A'}</td>
+                                <td>${row.q1 || 'N/A'}</td>
+                                <td>${row.mid2 || 'N/A'}</td>
+                                <td>${row.a2 || 'N/A'}</td>
+                                <td>${row.q2 || 'N/A'}</td>
+                                <td>${row.lds_or_status || 'N/A'}</td>
+                            </tr>`).join("");
+                        container.innerHTML = `
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Subject Code</th>
+                                        <th>Mid 1</th>
+                                        <th>A1</th>
+                                        <th>Q1</th>
+                                        <th>Mid 2</th>
+                                        <th>A2</th>
+                                        <th>Q2</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>${rows}</tbody>
+                            </table>`;
+                    } else {
+                        container.innerHTML = "<p style='text-align: center; color: #888;'>No mid marks found for selected period.</p>";
+                    }
+                })
+                .catch(() => {
+                    container.innerHTML = "<p style='text-align: center; color: #d00000;'>Error loading mid marks.</p>";
+                });
+        }
+
+        function fetchFeeDetails(regNo) {
+            const container = document.getElementById("feeContent");
+            container.innerHTML = `<p style="text-align: center; color: #888;">Loading fee details...</p>`;
+            fetch(`/fee-status/${regNo}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.success || !data.years || Object.keys(data.years).length === 0) {
+                        container.innerHTML = "<p style='text-align: center; color: #888;'>No fee data available.</p>";
+                        return;
+                    }
+
+                    let html = "";
+                    for (const year in data.years) {
+                        const fee = data.years[year];
+                        const types = ["tuition", "hostel", "bus", "university", "semester", "library", "fines"];
+                        let totalExpected = 0, totalPaid = 0;
+
+                        let rows = types.map(type => {
+                            const expected = parseFloat(fee.expected[type] || 0);
+                            const paidAmt = parseFloat(fee.paid[type] || 0);
+                            totalExpected += expected;
+                            totalPaid += paidAmt;
+                            const remaining = Math.max(0, expected - paidAmt);
+                            return `
+                                <tr>
+                                    <td>${type.charAt(0).toUpperCase() + type.slice(1)}</td>
+                                    <td>₹${paidAmt.toFixed(2)}</td>
+                                    <td>₹${remaining.toFixed(2)}</td>
+                                    <td>₹${expected.toFixed(2)}</td>
+                                </tr>`;
+                        }).join("");
+
+                        html += `
+                            <div class="info-card">
+                                <h3>Academic Year: ${year}</h3>
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Type</th>
+                                            <th>Paid</th>
+                                            <th>Remaining</th>
+                                            <th>Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>${rows}</tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <th>Total</th>
+                                            <th>₹${totalPaid.toFixed(2)}</th>
+                                            <th>₹${(totalExpected - totalPaid).toFixed(2)}</th>
+                                            <th>₹${totalExpected.toFixed(2)}</th>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>`;
+                    }
+                    container.innerHTML = html;
+                })
+                .catch(() => {
+                    container.innerHTML = "<p style='text-align: center; color: #d00000;'>Error loading fee data.</p>";
+                });
+        }
+        
+        function confirmLogout() {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You will be logged out of your account.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#0b2e59',
+                cancelButtonColor: '#d3853b',
+                confirmButtonText: 'Yes, log out!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    logout();
+                }
+            });
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = "index.html";
+        }
+
+        function toggleMobileMenu() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.overlay');
+            const body = document.body;
+
+            sidebar.classList.toggle('open');
+            overlay.style.display = sidebar.classList.contains('open') ? 'block' : 'none';
+            body.classList.toggle('no-scroll', sidebar.classList.contains('open'));
+        }
+
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.tab-button')) {
+                const tabName = e.target.closest('.tab-button').dataset.tab;
+                showTab(tabName);
+            }
         });
-    };
-
-    // Mid Marks
-    document.getElementById("midYearSelect").value = "";
-    document.getElementById("midSemesterSelect").value = "";
-    document.getElementById("midmarksContent").innerHTML = "";
-
-    document.getElementById("midYearSelect").onchange = fetchMidMarks;
-    document.getElementById("midSemesterSelect").onchange = fetchMidMarks;
-
-    // Fee Details
-    fetch(`/fee-status/${student.reg_no}`)
-      .then(res => res.json())
-      .then(data => {
-        const container = document.getElementById("feeContent");
-        if (!data.success || !data.years) {
-          container.innerHTML = "<p>No fee data available.</p>";
-          return;
-        }
-
-        let html = "";
-        for (const year in data.years) {
-          const fee = data.years[year];
-          const types = ["tuition", "hostel", "bus", "university", "semester", "library", "fines"];
-          let total = 0, paid = 0;
-
-          let rows = types.map(type => {
-            const expected = parseFloat(fee.expected[type] || 0);
-            const paidAmt = parseFloat(fee.paid[type] || 0);
-            total += expected;
-            paid += paidAmt;
-            const remain = Math.max(0, expected - paidAmt);
-            return `
-              <tr>
-                <td>${type.charAt(0).toUpperCase() + type.slice(1)}</td>
-                <td>₹${paidAmt.toFixed(2)}</td>
-                <td>₹${remain.toFixed(2)}</td>
-                <td>₹${expected.toFixed(2)}</td>
-              </tr>`;
-          }).join("");
-
-          html += `
-            <div style="margin-bottom: 20px;">
-              <h4 style="color: #1f75cb;">Academic Year: ${year}</h4>
-              <table>
-                <thead>
-                  <tr><th>Type</th><th>Paid</th><th>Remaining</th><th>Total</th></tr>
-                </thead>
-                <tbody>${rows}</tbody>
-                <tfoot>
-                  <tr><th>Total</th><th>₹${paid.toFixed(2)}</th><th>₹${(total - paid).toFixed(2)}</th><th>₹${total.toFixed(2)}</th></tr>
-                </tfoot>
-              </table>
-            </div>`;
-        }
-
-        document.getElementById("feeContent").innerHTML = html;
-      })
-      .catch(err => {
-        document.getElementById("feeContent").innerHTML = "<p>Error loading fee data.</p>";
-        console.error(err);
-      });
-  }
-
-  function fetchMidMarks() {
-    if (!currentStudent) return;
-
-    const year = document.getElementById("midYearSelect").value;
-    const semester = document.getElementById("midSemesterSelect").value;
-
-    fetch(`/student/midmarks/${currentStudent.reg_no}?year=${year}&semester=${semester}`)
-      .then(res => res.json())
-      .then(data => {
-        const container = document.getElementById("midmarksContent");
-        if (!data.midmarks || data.midmarks.length === 0) {
-          container.innerHTML = "<p>No mid marks found for selected year and semester.</p>";
-          return;
-        }
-
-        let html = `
-          <table>
-            <tr>
-              <th>Subject Code</th>
-              <th>Mid 1</th>
-              <th>A1</th>
-              <th>Q1</th>
-              <th>Mid 2</th>
-              <th>A2</th>
-              <th>Q2</th>
-              <th>Status</th>
-            </tr>`;
-        data.midmarks.forEach(row => {
-          html += `
-            <tr>
-              <td>${row.sub_code}</td>
-              <td>${row.mid1}</td>
-              <td>${row.a1}</td>
-              <td>${row.q1}</td>
-              <td>${row.mid2}</td>
-              <td>${row.a2}</td>
-              <td>${row.q2}</td>
-              <td>${row.lds_or_status}</td>
-            </tr>`;
-        });
-        html += `</table>`;
-        container.innerHTML = html;
-      })
-      .catch(err => {
-        console.error("Error fetching mid marks:", err);
-        document.getElementById("midmarksContent").innerHTML = "<p>Error loading mid marks.</p>";
-      });
-  }
-
-  function showTab(tabName) {
-    const tabs = ['attendance', 'results', 'midmarks', 'fee'];
-    tabs.forEach(t => {
-      document.getElementById(t + 'Tab').style.display = (t === tabName) ? 'block' : 'none';
-      const btn = document.getElementById('btn' + t.charAt(0).toUpperCase() + t.slice(1));
-      if (btn) {
-        btn.style.backgroundColor = (t === tabName) ? '#ddd' : '#f6f6f6';
-      }
-    });
-  }
-
-  function closeModal() {
-    document.getElementById("studentModal").style.display = "none";
-    document.body.style.overflow = "";
-  }
-
-  function logout() {
-    localStorage.clear();
-    window.location.href = "index.html";
-  }
-
-  function toggleMobileMenu() {
-    document.querySelector('.sidebar').classList.toggle('open');
-  }
-
-  // Close modal when clicked outside
-  document.addEventListener("click", function (e) {
-    const modalBox = document.querySelector(".modal-box");
-    const modal = document.getElementById("studentModal");
-    if (
-      modal.style.display === "block" &&
-      !modalBox.contains(e.target) &&
-      !e.target.closest(".student-card") &&
-      !e.target.closest(".sidebar") &&
-      !e.target.closest(".mobile-toggle")
-    ) {
-      closeModal();
-    }
-  });
-</script>
+    </script>
 </body>
 </html>
