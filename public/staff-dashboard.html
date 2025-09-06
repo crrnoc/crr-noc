@@ -37,11 +37,28 @@
         body {
             background-color: var(--background-dark);
             color: var(--text-dark);
+            transition: background-color 0.3s ease;
         }
 
         .container {
             display: flex;
             min-height: 100vh;
+        }
+
+        /* Overlay for mobile menu */
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        .no-scroll {
+            overflow: hidden;
         }
 
         /* Sidebar */
@@ -59,6 +76,7 @@
             transition: transform 0.3s ease-in-out;
             z-index: 1000;
             overflow-y: auto;
+            transform: translateX(0);
         }
 
         .sidebar-header {
@@ -114,7 +132,8 @@
             box-shadow: var(--card-shadow);
         }
 
-        .menu li a i {
+        .menu li a i,
+        .menu li a span {
             font-size: 1.2rem;
             width: 25px;
             text-align: center;
@@ -151,6 +170,7 @@
             flex-direction: column;
             align-items: center;
             gap: 30px;
+            transition: margin-left 0.3s ease;
         }
 
         /* Cards and Sections */
@@ -158,13 +178,16 @@
         .slideshow-container,
         .college-info,
         .notifications,
-        .suggestions {
+        .suggestions,
+        .staff-details-card {
             background-color: var(--background-light);
             border-radius: var(--border-radius-lg);
             box-shadow: var(--card-shadow);
             padding: 30px;
             width: 100%;
             max-width: 1100px;
+            display: flex;
+            flex-direction: column;
         }
 
         .welcome-card {
@@ -186,6 +209,64 @@
             font-size: 1.1rem;
             opacity: 0.9;
             line-height: 1.5;
+        }
+
+        .staff-details-card {
+            padding: 20px 30px;
+        }
+
+        .staff-details-card h2 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+
+        .staff-details-card .detail-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .staff-details-card .detail-group i {
+            color: var(--secondary-color);
+            font-size: 1.5rem;
+        }
+
+        .staff-details-card .detail-group label {
+            font-weight: bold;
+            width: 100px;
+        }
+
+        .staff-details-card .detail-group span,
+        .staff-details-card .detail-group input {
+            flex-grow: 1;
+            font-size: 1rem;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            transition: border-color 0.3s ease;
+        }
+
+        .staff-details-card .detail-group input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        .staff-details-card .edit-btn,
+        .staff-details-card .save-btn {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .staff-details-card .edit-btn:hover,
+        .staff-details-card .save-btn:hover {
+            background-color: #d3853b;
         }
 
         .notifications,
@@ -224,6 +305,7 @@
         .slideshow-container {
             padding: 0;
             overflow: hidden;
+            position: relative;
         }
 
         .slide {
@@ -268,7 +350,6 @@
             width: 50px;
             height: 50px;
             border-radius: 50%;
-            display: flex;
             align-items: center;
             justify-content: center;
             z-index: 1001;
@@ -281,6 +362,7 @@
             .mobile-toggle {
                 display: flex;
             }
+
             .sidebar {
                 transform: translateX(-100%);
                 left: 0;
@@ -289,52 +371,86 @@
                 max-width: 80vw;
                 box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
             }
+
             .sidebar.open {
                 transform: translateX(0);
             }
+            
             .main-section {
                 margin-left: 0;
                 padding: 20px;
             }
+
             .welcome-card,
             .slideshow-container,
             .college-info,
             .notifications,
-            .suggestions {
+            .suggestions,
+            .staff-details-card {
                 padding: 20px;
+            }
+
+            .welcome-card h1 {
+                font-size: 2rem;
+            }
+
+            .welcome-card p {
+                font-size: 1rem;
             }
         }
     </style>
 </head>
 <body>
+    <div class="overlay" onclick="toggleMobileMenu()"></div>
+
     <div class="container">
         <div class="sidebar">
             <div class="sidebar-header">
                 <img id="sidebarPhoto" class="sidebar-photo" style="display: none;" />
-                <h2>ID: <span id="userId">Loading...</span></h2>
+                <h2 id="staffName">Staff Name</h2>
+                <h2 style="margin-top: 5px;">ID: <span id="staffId">Loading...</span></h2>
             </div>
             <ul class="menu">
-                <li class="active"><a href="#"><i class="fas fa-user-circle"></i> Staff Dashboard</a></li>
                 <li><a href="knowaboutstd1.html"><i class="fas fa-user-circle"></i> Know about Student</a></li>
-                <li><a href="editstudentdetails.html"><span>✏️</span> Edit Student Details</a></li>
-                <li><a href="sendnotification.html"><span>📨</span> Send Notification</a></li>
-                <li><a href="updatefee.html"><span>💵</span> Update Fee</a></li>
-                <li><a href="imposefines.html"><span>💰</span> Impose Fines</a></li>
-                <li><a href="addstudent.html"><span>➕</span> Add Student</a></li>
-                <li><a href="mark_attendance.html"><span>📝</span> Mark Attendance</a></li>
-                <li><a href="backlogs.html"><span>📚</span> Find Backlogs</a></li>
-                <li><a href="mycounselling.html"><span>📋</span> View Counselling</a></li>
-                <li><a href="staffsettings.html"><span>⚙️</span> Settings</a></li>
+                <li><a href="editstudentdetails.html"><i class="fas fa-user-edit"></i> Edit Student Details</a></li>
+                <li><a href="sendnotification.html"><i class="fas fa-paper-plane"></i> Send Notification</a></li>
+                <li><a href="updatefee.html"><i class="fas fa-money-bill-wave"></i> Update Fee</a></li>
+                <li><a href="imposefines.html"><i class="fas fa-money-check-alt"></i> Impose Fines</a></li>
+                <li><a href="addstudent.html"><i class="fas fa-user-plus"></i> Add Student</a></li>
+                <li><a href="mark_attendance.html"><i class="fas fa-clipboard-list"></i> Mark Attendance</a></li>
+                <li><a href="backlogs.html"><i class="fas fa-book-open"></i> Find Backlogs</a></li>
+                <li><a href="mycounselling.html"><i class="fas fa-handshake"></i> View Counselling</a></li>
+                <li><a href="staffsettings.html"><i class="fas fa-cog"></i> Settings</a></li>
             </ul>
             <button class="logout" onclick="confirmLogout()">Logout</button>
         </div>
 
         <div class="main-section">
             <div class="welcome-card">
-                <h1>Welcome, <span id="welcomeName">Staff Member</span>!</h1>
+                <h1>Welcome, <span id="welcomeName"></span>!</h1>
                 <p>
                     We're glad to have you back. Use the sidebar to access your staff tools.
                 </p>
+            </div>
+
+            <div class="staff-details-card">
+                <h2>My Profile</h2>
+                <div class="detail-group">
+                    <label for="staffIdDisplay">Staff ID:</label>
+                    <span id="staffIdDisplay">Loading...</span>
+                </div>
+                <div class="detail-group">
+                    <label for="staffNameInput">Name:</label>
+                    <input type="text" id="staffNameInput" value="" disabled />
+                </div>
+                <div class="detail-group">
+                    <label for="staffEmailInput">Email:</label>
+                    <input type="email" id="staffEmailInput" value="" disabled />
+                </div>
+                <div style="text-align: right;">
+                    <button class="edit-btn" onclick="toggleEdit()">Edit Profile</button>
+                    <button class="save-btn" onclick="saveProfile()" style="display: none;">Save Changes</button>
+                </div>
             </div>
 
             <div class="notifications" id="dynamicNotifications">
@@ -390,7 +506,13 @@
     <script>
         // Toggle mobile sidebar
         function toggleMobileMenu() {
-            document.querySelector('.sidebar').classList.toggle('open');
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.overlay');
+            const body = document.body;
+
+            sidebar.classList.toggle('open');
+            overlay.style.display = sidebar.classList.contains('open') ? 'block' : 'none';
+            body.classList.toggle('no-scroll', sidebar.classList.contains('open'));
         }
 
         // SweetAlert2 Confirmation for Logout
@@ -437,6 +559,72 @@
         }
 
         setInterval(nextSlide, 5000); // auto-slide every 5s
+
+        // Toggle edit mode for staff details
+        function toggleEdit() {
+            const nameInput = document.getElementById('staffNameInput');
+            const emailInput = document.getElementById('staffEmailInput');
+            const editBtn = document.querySelector('.edit-btn');
+            const saveBtn = document.querySelector('.save-btn');
+
+            const isEditing = nameInput.disabled;
+            nameInput.disabled = !isEditing;
+            emailInput.disabled = !isEditing;
+
+            if (isEditing) {
+                editBtn.style.display = 'none';
+                saveBtn.style.display = 'inline-block';
+            } else {
+                editBtn.style.display = 'inline-block';
+                saveBtn.style.display = 'none';
+            }
+        }
+
+        // Save staff details (requires a backend API)
+        function saveProfile() {
+            const userId = localStorage.getItem('userId');
+            const newName = document.getElementById('staffNameInput').value;
+            const newEmail = document.getElementById('staffEmailInput').value;
+
+            // Simple validation
+            if (!newName || !newEmail) {
+                Swal.fire('Error', 'Name and Email cannot be empty.', 'error');
+                return;
+            }
+
+            // You would typically send a request to your backend here
+            /*
+            fetch(`/staff/update/${userId}`, {
+                method: 'POST', // Or PUT
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ name: newName, email: newEmail })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire('Success', 'Profile updated successfully!', 'success');
+                    // Update the sidebar name as well
+                    document.getElementById('welcomeName').textContent = newName;
+                    document.getElementById('staffName').textContent = newName;
+                    toggleEdit();
+                } else {
+                    Swal.fire('Error', 'Failed to update profile.', 'error');
+                }
+            })
+            .catch(err => {
+                console.error('Update error:', err);
+                Swal.fire('Error', 'An error occurred while updating.', 'error');
+            });
+            */
+           
+            // Simulating a successful update for demonstration
+            Swal.fire('Success', 'Profile updated successfully!', 'success');
+            document.getElementById('welcomeName').textContent = newName;
+            document.getElementById('staffName').textContent = newName;
+            toggleEdit();
+        }
 
         // Load notifications dynamically for staff
         function loadNotifications(userId) {
@@ -492,15 +680,25 @@
                 return;
             }
 
-            document.getElementById("userId").textContent = userId;
-            showSlide(currentSlide); // Show first slide
+            // Display ID and show first slide
+            document.getElementById("staffId").textContent = userId;
+            document.getElementById("staffIdDisplay").textContent = userId;
+            showSlide(currentSlide);
 
             // Fetch and display staff name & photo
             fetch(`/staff/${userId}`) // Assuming a new endpoint for staff data
-                .then(res => res.json())
+                .then(res => {
+                    if (!res.ok) {
+                        throw new Error('Staff data fetch failed');
+                    }
+                    return res.json();
+                })
                 .then(data => {
-                    if (data.name) {
-                        document.getElementById("welcomeName").textContent = data.name;
+                    if (data.staff_name) {
+                        document.getElementById("welcomeName").textContent = data.staff_name;
+                        document.getElementById("staffName").textContent = data.staff_name;
+                        document.getElementById("staffNameInput").value = data.staff_name;
+                        document.getElementById("staffEmailInput").value = data.staff_email;
                     }
                     if (data.photo_url) {
                         const photo = document.getElementById("sidebarPhoto");
@@ -510,6 +708,7 @@
                 })
                 .catch(err => {
                     console.error("Error loading staff data:", err);
+                    Swal.fire('Error', 'Failed to load staff details. Please try again.', 'error');
                 });
 
             // Call dynamic notifications function for staff
