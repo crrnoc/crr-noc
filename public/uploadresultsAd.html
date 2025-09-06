@@ -162,7 +162,7 @@
     <ul>
       <li onclick="navigateTo('/uploadresultsAd')">📥 Upload Results</li>
     </ul>
-    <button onclick="logout()">🚪 Logout</button>
+    <button onclick="navigateTo('index.html')">🚪 Logout</button>
   </div>
 
   <div class="main">
@@ -194,74 +194,66 @@
   </div>
 
 <script>
-    // Toggle sidebar for mobile
-    function toggleSidebar() {
-      document.getElementById("sidebar").classList.toggle("open");
+  // Toggle sidebar for mobile
+  function toggleSidebar() {
+    document.getElementById("sidebar").classList.toggle("open");
+  }
+
+  // Navigate to pages
+  function navigateTo(route) {
+    window.location.href = route;
+  }
+
+  // Handle Upload Form
+  document.getElementById("uploadForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const semester = document.getElementById("semester").value;
+    const file = document.getElementById("pdfFile").files[0];
+    const resultType = document.getElementById("resultType").value;
+
+    if (!semester || !file || !resultType) {
+      Swal.fire("Missing Details", "Please select result type, semester, and upload a file.", "warning");
+      return;
     }
 
-    // Navigate to pages
-    function navigateTo(route) {
-      window.location.href = route;
-    }
+    const endpoint = resultType === "autonomous"
+      ? "/admin/upload-autonomous-result-pdf"
+      : "/upload";
 
+    const formData = new FormData();
+    formData.append("semester", semester);
+    formData.append("pdf", file);
 
+    document.getElementById("submitBtn").disabled = true;
 
-    // 🔹 Removed check-session block (backend handles session)
+    Swal.fire({
+      title: "Uploading...",
+      html: "Processing your PDF...",
+      allowOutsideClick: false,
+      didOpen: () => Swal.showLoading()
+    });
 
-    // Prevent back button after logout
-    window.history.pushState(null, "", window.location.href);
-    window.onpopstate = () => window.history.pushState(null, "", window.location.href);
-
-    // Handle Upload Form
-    document.getElementById("uploadForm").addEventListener("submit", async function (e) {
-      e.preventDefault();
-
-      const semester = document.getElementById("semester").value;
-      const file = document.getElementById("pdfFile").files[0];
-      const resultType = document.getElementById("resultType").value;
-
-      if (!semester || !file || !resultType) {
-        Swal.fire("Missing Details", "Please select result type, semester, and upload a file.", "warning");
-        return;
-      }
-
-      const endpoint = resultType === "autonomous"
-        ? "/admin/upload-autonomous-result-pdf"
-        : "/upload";
-
-      const formData = new FormData();
-      formData.append("semester", semester);
-      formData.append("pdf", file);
-
-      document.getElementById("submitBtn").disabled = true;
-
-      Swal.fire({
-        title: "Uploading...",
-        html: "Processing your PDF...",
-        allowOutsideClick: false,
-        didOpen: () => Swal.showLoading()
+    try {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        body: formData
       });
 
-      try {
-        const response = await fetch(endpoint, {
-          method: "POST",
-          body: formData
-        });
+      const result = await response.json();
+      Swal.fire({
+        icon: result.success === false || result.total === 0 ? "warning" : "success",
+        title: result.total === 0 ? "No Valid Records ⚠️" : "Upload Successful ✅",
+        text: result.message || "Upload completed.",
+      });
 
-        const result = await response.json();
-        Swal.fire({
-          icon: result.success === false || result.total === 0 ? "warning" : "success",
-          title: result.total === 0 ? "No Valid Records ⚠️" : "Upload Successful ✅",
-          text: result.message || "Upload completed.",
-        });
-
-        if (result.success !== false && result.total > 0) e.target.reset();
-      } catch (error) {
-        Swal.fire("Upload Failed ❌", error.message || "Something went wrong.", "error");
-      } finally {
-        document.getElementById("submitBtn").disabled = false;
-      }
-    });
+      if (result.success !== false && result.total > 0) e.target.reset();
+    } catch (error) {
+      Swal.fire("Upload Failed ❌", error.message || "Something went wrong.", "error");
+    } finally {
+      document.getElementById("submitBtn").disabled = false;
+    }
+  });
 </script>
 </body>
 </html>
