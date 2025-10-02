@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Notifications - STUDENT PORTAL</title>
+    <link rel="icon" href="crrengglogo.png" type="image/png" />
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.20/dist/sweetalert2.min.css"
+    />
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
+        :root {
+            --primary-color: #0b2e59;
+            --secondary-color: #2c6e91;
+            --accent-color: #f7a048;
+            --background-dark: #f0f2f5;
+            --background-light: #ffffff;
+            --text-dark: #333333;
+            --text-light: #f4f4f4;
+            --card-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            --border-radius-lg: 16px;
+            --border-radius-md: 10px;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #17a2b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--background-dark);
+        }
+
+        body.no-scroll {
+            overflow: hidden;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background-color: var(--primary-color);
+            display: flex;
+            flex-direction: column;
+            padding: 30px 20px;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease-in-out;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .photo-container {
+            display: flex;
+            justify-content: center;
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .home-icon {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background-color: var(--background-light);
+            color: var(--primary-color);
+            border-radius: 50%;
+            font-size: 22px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s ease, background-color 0.3s ease;
+        }
+
+        .home-icon:hover {
+            transform: scale(1.1);
+            background-color: var(--accent-color);
+            color: var(--text-light);
+        }
+
+        .sidebar-photo {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            border: 4px solid var(--accent-color);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        .sidebar h2 {
+            margin: 40px 20px 20px 20px;
+            color: var(--text-light);
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .menu {
+            list-style: none;
+            padding: 0;
+            flex-grow: 1;
+        }
+
+        .menu li {
+            list-style: none;
+            margin-bottom: 12px;
+        }
+
+        .menu li a {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 1rem;
+            color: var(--text-light);
+            padding: 15px 20px;
+            border-radius: var(--border-radius-md);
+            transition: all 0.3s ease;
+        }
+
+        .menu li a:hover,
+        .menu li.active a {
+            background-color: rgba(255, 255, 255, 0.1);
+            font-weight: 500;
+            transform: translateX(5px);
+            box-shadow: var(--card-shadow);
+        }
+
+        .menu li a i {
+            font-size: 1.2rem;
+            width: 25px;
+            text-align: center;
+            color: var(--text-light);
+            transition: color 0.3s ease;
+        }
+
+        .logout {
+            background-color: var(--accent-color);
+            color: var(--text-light);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            width: 60%;
+            margin: 20px auto 0;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
+
+        .logout:hover {
+            background-color: #d3853b;
+            transform: scale(1.05);
+        }
+
+        /* Main Section */
+        .main-section {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: var(--background-dark);
+            padding: 40px 30px;
+            margin-left: 280px;
+            transition: margin-left 0.3s ease-in-out;
+            min-height: 100vh;
+        }
+
+        /* Back Button */
+        .back-button {
+            align-self: flex-start;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 20px;
+            background: var(--background-light);
+            color: var(--primary-color);
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--card-shadow);
+            transition: all 0.3s ease;
+            font-weight: 500;
+            text-decoration: none;
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+            background: linear-gradient(135deg, var(--background-light), #f8f9fa);
+        }
+
+        .back-button i {
+            font-size: 1.1rem;
+        }
+
+        /* Main Card */
+        .notifications-card {
+            background-color: var(--background-light);
+            color: var(--text-dark);
+            width: 100%;
+            max-width: 900px;
+            padding: 35px;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--card-shadow);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .notifications-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+        }
+
+        .notifications-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        }
+
+        .notifications-card h2 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 30px;
+            font-size: 2rem;
+            font-weight: 700;
+            padding-top: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        /* Notifications List */
+        .notifications-list {
+            max-height: 600px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .notifications-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .notifications-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .notifications-list::-webkit-scrollbar-thumb {
+            background: var(--secondary-color);
+            border-radius: 10px;
+        }
+
+        .notifications-list::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-color);
+        }
+
+        /* Individual Notifications */
+        .notification {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 20px 25px;
+            margin-bottom: 20px;
+            border-left: 5px solid var(--accent-color);
+            border-radius: var(--border-radius-md);
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .notification::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 50px;
+            height: 50px;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23f7a048" opacity="0.1"><path d="M12,2A2,2 0 0,1 14,4C14,4.74 13.6,5.39 13,5.73V7A7,7 0 0,1 20,14V16L22,18V19H2V18L4,16V14C4,10.56 6.22,7.56 9.5,6.85C9.5,6.85 9.5,6.85 9.5,6.85C9.5,6.85 9.5,6.85 9.5,6.85C10,6.76 10.5,6.76 11,6.85C11,6.4 11.18,6 11.5,5.73C10.9,5.39 10.5,4.74 10.5,4A2,2 0 0,1 12,2M12,20A2,2 0 0,0 14,18H10A2,2 0 0,0 12,20Z"/></svg>') no-repeat center;
+            background-size: contain;
+        }
+
+        .notification:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            background: linear-gradient(135deg, #ffffff, #f8f9fa);
+        }
+
+        .notification-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .notification-from {
+            font-weight: 600;
+            color: var(--primary-color);
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .staff-icon {
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, var(--accent-color), #e68a00);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+        }
+
+        .notification-date {
+            font-size: 0.9rem;
+            color: var(--secondary-color);
+            font-weight: 500;
+            background: rgba(44, 110, 145, 0.1);
+            padding: 5px 10px;
+            border-radius: 15px;
+        }
+
+        .notification-message {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: var(--text-dark);
+            margin: 10px 0;
+        }
+
+        .notification-type {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .notification-type.system {
+            background: linear-gradient(135deg, var(--info-color), #0c7cd5);
+            color: white;
+        }
+
+        .notification-type.staff {
+            background: linear-gradient(135deg, var(--success-color), #1e7e34);
+            color: white;
+        }
+
+        .notification-type.important {
+            background: linear-gradient(135deg, var(--danger-color), #c82333);
+            color: white;
+        }
+
+        /* Loading & Empty States */
+        .loading-state, .empty-state, .error-state {
+            text-align: center;
+            padding: 60px 30px;
+        }
+
+        .loading-state {
+            color: var(--primary-color);
+        }
+
+        .empty-state {
+            color: var(--secondary-color);
+        }
+
+        .error-state {
+            color: var(--danger-color);
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .status-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        .status-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .status-message {
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        /* Statistics */
+        .notification-stats {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 20px;
+            border-radius: var(--border-radius-md);
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--secondary-color);
+            font-weight: 500;
+        }
+
+        /* Mobile Toggle & Overlay */
+        .mobile-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background-color: var(--secondary-color);
+            color: var(--text-light);
+            font-size: 24px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            align-items: center;
+            justify-content: center;
+            z-index: 1001;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease;
+            border: none;
+        }
+
+        .mobile-toggle:hover {
+            transform: scale(1.1);
+            background-color: var(--accent-color);
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(3px);
+            z-index: 999;
+            transition: opacity 0.3s ease-in-out;
+            opacity: 0;
+        }
+
+        .overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .mobile-toggle {
+                display: flex;
+            }
+            
+            .sidebar {
+                transform: translateX(-100%);
+                width: 250px;
+                max-width: 85vw;
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .main-section {
+                margin-left: 0;
+                padding: 25px 20px;
+            }
+
+            .back-button {
+                margin-bottom: 15px;
+            }
+            
+            .notifications-card {
+                padding: 25px;
+            }
+
+            .notifications-card h2 {
+                font-size: 1.6rem;
+                margin-bottom: 25px;
+            }
+
+            .notification {
+                padding: 18px 20px;
+                margin-bottom: 18px;
+            }
+
+            .notification-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            .notification-from {
+                font-size: 1rem;
+            }
+
+            .staff-icon {
+                width: 25px;
+                height: 25px;
+                font-size: 0.8rem;
+            }
+
+            .notification-date {
+                font-size: 0.85rem;
+            }
+
+            .notification-message {
+                font-size: 0.95rem;
+            }
+
+            .notification-stats {
+                padding: 18px;
+                gap: 15px;
+            }
+
+            .stat-number {
+                font-size: 1.5rem;
+            }
+
+            .stat-label {
+                font-size: 0.85rem;
+            }
+
+            .notifications-list {
+                max-height: 500px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .sidebar {
+                width: 220px;
+                max-width: 75vw;
+                padding: 20px 15px;
+            }
+
+            .sidebar h2 {
+                font-size: 1rem;
+                margin: 20px 10px;
+            }
+
+            .menu li a {
+                font-size: 0.9rem;
+                padding: 12px 15px;
+                gap: 10px;
+            }
+
+            .logout {
+                width: 80%;
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+
+            .main-section {
+                padding: 20px 15px;
+            }
+
+            .back-button {
+                padding: 10px 15px;
+                font-size: 0.9rem;
+            }
+
+            .notifications-card {
+                padding: 20px;
+                border-radius: var(--border-radius-md);
+            }
+
+            .notifications-card h2 {
+                font-size: 1.4rem;
+                margin-bottom: 20px;
+            }
+
+            .notification {
+                padding: 15px 18px;
+                margin-bottom: 15px;
+            }
+
+            .notification-from {
+                font-size: 0.95rem;
+            }
+
+            .staff-icon {
+                width: 22px;
+                height: 22px;
+                font-size: 0.75rem;
+            }
+
+            .notification-date {
+                font-size: 0.8rem;
+                padding: 4px 8px;
+            }
+
+            .notification-message {
+                font-size: 0.9rem;
+            }
+
+            .notification-type {
+                font-size: 0.75rem;
+                padding: 3px 8px;
+            }
+
+            .notification-stats {
+                padding: 15px;
+                gap: 12px;
+            }
+
+            .stat-item {
+                min-width: 80px;
+            }
+
+            .stat-number {
+                font-size: 1.3rem;
+            }
+
+            .stat-label {
+                font-size: 0.8rem;
+            }
+
+            .notifications-list {
+                max-height: 400px;
+                padding-right: 5px;
+            }
+
+            .mobile-toggle {
+                width: 45px;
+                height: 45px;
+                font-size: 20px;
+                top: 15px;
+                left: 15px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .notifications-card {
+                padding: 15px;
+                margin: 15px auto;
+            }
+
+            .notifications-card h2 {
+                font-size: 1.2rem;
+            }
+
+            .notification {
+                padding: 12px 15px;
+            }
+
+            .notification-message {
+                font-size: 0.85rem;
+            }
+
+            .notification-stats {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .stat-item {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="overlay" onclick="toggleMobileMenu()"></div>
+    
+    <div class="container">
+        <div class="sidebar" id="sidebar">
+            <div class="photo-container">
+                <a href="studentwelcome.html" class="home-icon" title="Home">
+                    <i class="fas fa-home"></i>
+                </a>
+                <img id="sidebarPhoto" class="sidebar-photo" style="display: none;" />
+            </div>
+
+            <h2>ID: <span id="userId">Loading...</span></h2>
+            
+            <ul class="menu">
+                <li>
+                    <a href="studentdetails.html"><i class="fas fa-user-circle"></i> Student details</a>
+                </li>
+                <li>
+                    <a href="feedetails.html"><i class="fas fa-graduation-cap"></i> Fee details</a>
+                </li>
+                <li>
+                    <a href="updaterefno.html"><i class="fas fa-sync-alt"></i> Update fee payment</a>
+                </li>
+                <li>
+                    <a href="attendence.html"><i class="fas fa-calendar-alt"></i> View Attendance</a>
+                </li>
+                <li>
+                    <a href="studentresults.html"><i class="fas fa-chart-bar"></i> Student Results</a>
+                </li>
+                <li>
+                    <a href="generatenoc.html"><i class="fas fa-file-invoice"></i> Generate NOC</a>
+                </li>
+                <li class="active">
+                    <a href="settings.html"><i class="fas fa-cog"></i> Settings</a>
+                </li>
+            </ul>
+            
+            <button class="logout" onclick="confirmLogout()">Logout</button>
+        </div>
+
+        <div class="main-section">
+            <a href="settings.html" class="back-button">
+                <i class="fas fa-arrow-left"></i>
+                Back to Settings
+            </a>
+
+            <div class="notifications-card">
+                <h2><i class="fas fa-bell"></i> My Notifications</h2>
+                
+                <div class="notification-stats" id="notificationStats" style="display: none;">
+                    <div class="stat-item">
+                        <div class="stat-number" id="totalNotifications">0</div>
+                        <div class="stat-label">Total</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="systemNotifications">0</div>
+                        <div class="stat-label">System</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="staffNotifications">0</div>
+                        <div class="stat-label">Staff</div>
+                    </div>
+                </div>
+
+                <div class="notifications-list" id="notificationList">
+                    <div class="loading-state">
+                        <div class="loading-spinner"></div>
+                        <div class="status-title">Loading Notifications</div>
+                        <div class="status-message">Please wait while we fetch your notifications...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <button class="mobile-toggle" onclick="toggleMobileMenu()">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.20/dist/sweetalert2.all.min.js"></script>
+    <script>
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.querySelector('.overlay');
+            const body = document.body;
+            
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
+            body.classList.toggle('no-scroll');
+        }
+
+        document.querySelectorAll(".menu li a").forEach(link => {
+            link.addEventListener("click", () => {
+                if (window.innerWidth <= 992) {
+                    toggleMobileMenu();
+                }
+            });
+        });
+
+        function confirmLogout() {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You will be logged out of your account.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#0b2e59',
+                cancelButtonColor: '#f7a048',
+                confirmButtonText: 'Yes, log out!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    logout();
+                }
+            });
+        }
+
+        function logout() {
+            fetch("/logout", { method: "GET", credentials: "include" })
+              .then(() => {
+                  localStorage.clear();
+                  sessionStorage.clear();
+                  if ("caches" in window) {
+                      caches.keys().then(names => names.forEach(name => caches.delete(name)));
+                  }
+                  window.location.replace("index.html");
+              })
+              .catch(() => {
+                  window.location.replace("index.html");
+              });
+        }
+
+        // Prevent back navigation after logout
+        window.history.pushState(null, "", window.location.href);
+        window.onpopstate = () => window.history.pushState(null, "", window.location.href);
+
+        function getNotificationType(staffName) {
+            if (!staffName || staffName.toLowerCase() === 'system') {
+                return 'system';
+            }
+            return 'staff';
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffTime = Math.abs(now - date);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays === 1) {
+                return 'Today';
+            } else if (diffDays === 2) {
+                return 'Yesterday';
+            } else if (diffDays <= 7) {
+                return `${diffDays - 1} days ago`;
+            } else {
+                return date.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+            }
+        }
+
+        function getStaffInitials(name) {
+            if (!name || name.toLowerCase() === 'system') {
+                return 'S';
+            }
+            return name.split(' ').map(word => word[0]).join('').substring(0, 2).toUpperCase();
+        }
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            const userId = localStorage.getItem("userId") || localStorage.getItem("regno");
+            
+            // Check authentication
+            if (!userId) {
+                Swal.fire({
+                    title: 'Access Denied',
+                    text: 'Please login first to view this page.',
+                    icon: 'error',
+                    confirmButtonText: 'Go to Login',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    confirmButtonColor: '#0b2e59'
+                }).then(() => {
+                    window.location.href = "index.html";
+                });
+                return;
+            }
+
+            document.getElementById("userId").textContent = userId;
+
+            // Load sidebar photo
+            try {
+                const res = await fetch(`/student/${userId}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    const photo = document.getElementById("sidebarPhoto");
+                    if (photo && data && data.name) {
+                        photo.src = data.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name)}&background=random&rounded=true&bold=true&size=128`;
+                        photo.style.display = "block";
+                    }
+                }
+            } catch (err) {
+                console.warn("⚠️ Failed to load photo:", err.message);
+            }
+
+            // Load notifications
+            try {
+                const res = await fetch(`/notifications/${userId}`);
+                
+                if (!res.ok) {
+                    throw new Error('Failed to fetch notifications');
+                }
+
+                const data = await res.json();
+                const list = document.getElementById("notificationList");
+                const stats = document.getElementById("notificationStats");
+                
+                if (!data.success || !data.notifications || data.notifications.length === 0) {
+                    list.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-bell-slash status-icon"></i>
+                            <div class="status-title">No Notifications</div>
+                            <div class="status-message">You don't have any notifications at the moment. Check back later for updates!</div>
+                        </div>`;
+                    return;
+                }
+
+                // Calculate statistics
+                const totalCount = data.notifications.length;
+                const systemCount = data.notifications.filter(n => !n.staff_name || n.staff_name.toLowerCase() === 'system').length;
+                const staffCount = totalCount - systemCount;
+
+                // Update statistics
+                document.getElementById("totalNotifications").textContent = totalCount;
+                document.getElementById("systemNotifications").textContent = systemCount;
+                document.getElementById("staffNotifications").textContent = staffCount;
+                stats.style.display = 'flex';
+
+                // Build notifications HTML
+                let notificationsHTML = '';
+                
+                data.notifications.forEach(note => {
+                    const notificationType = getNotificationType(note.staff_name);
+                    const staffName = note.staff_name || 'System';
+                    const initials = getStaffInitials(staffName);
+                    const formattedDate = formatDate(note.date_sent);
+                    
+                    notificationsHTML += `
+                        <div class="notification">
+                            <div class="notification-header">
+                                <div class="notification-from">
+                                    <div class="staff-icon">${initials}</div>
+                                    From: ${staffName}
+                                    <span class="notification-type ${notificationType}">${notificationType}</span>
+                                </div>
+                                <div class="notification-date">
+                                    <i class="fas fa-clock"></i> ${formattedDate}
+                                </div>
+                            </div>
+                            <div class="notification-message">${note.message}</div>
+                        </div>`;
+                });
+
+                list.innerHTML = notificationsHTML;
+
+            } catch (err) {
+                console.error("Error fetching notifications:", err);
+                document.getElementById("notificationList").innerHTML = `
+                    <div class="error-state">
+                        <i class="fas fa-exclamation-circle status-icon"></i>
+                        <div class="status-title">Error Loading Notifications</div>
+                        <div class="status-message">Unable to load your notifications. Please try again later or contact support.</div>
+                        <p style="font-size: 0.9rem; opacity: 0.7; margin-top: 10px;">${err.message}</p>
+                    </div>`;
+            }
+        });
+    </script>
+    <script src="session.js"></script>
+</body>
+</html>

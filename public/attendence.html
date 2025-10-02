@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>View Attendance - STUDENT PORTAL</title>
+    <link rel="icon" href="crrengglogo.png" type="image/png" />
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.20/dist/sweetalert2.min.css"
+    />
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
+        :root {
+            --primary-color: #0b2e59;
+            --secondary-color: #2c6e91;
+            --accent-color: #f7a048;
+            --background-dark: #f0f2f5;
+            --background-light: #ffffff;
+            --text-dark: #333333;
+            --text-light: #f4f4f4;
+            --card-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            --border-radius-lg: 16px;
+            --border-radius-md: 10px;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #17a2b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--background-dark);
+        }
+
+        body.no-scroll {
+            overflow: hidden;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background-color: var(--primary-color);
+            display: flex;
+            flex-direction: column;
+            padding: 30px 20px;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease-in-out;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .photo-container {
+            display: flex;
+            justify-content: center;
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .home-icon {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background-color: var(--background-light);
+            color: var(--primary-color);
+            border-radius: 50%;
+            font-size: 22px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s ease, background-color 0.3s ease;
+        }
+
+        .home-icon:hover {
+            transform: scale(1.1);
+            background-color: var(--accent-color);
+            color: var(--text-light);
+        }
+
+        .sidebar-photo {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            border: 4px solid var(--accent-color);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        .sidebar h2 {
+            margin: 40px 20px 20px 20px;
+            color: var(--text-light);
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .menu {
+            list-style: none;
+            padding: 0;
+            flex-grow: 1;
+        }
+
+        .menu li {
+            list-style: none;
+            margin-bottom: 12px;
+        }
+
+        .menu li a {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 1rem;
+            color: var(--text-light);
+            padding: 15px 20px;
+            border-radius: var(--border-radius-md);
+            transition: all 0.3s ease;
+        }
+
+        .menu li a:hover,
+        .menu li.active a {
+            background-color: rgba(255, 255, 255, 0.1);
+            font-weight: 500;
+            transform: translateX(5px);
+            box-shadow: var(--card-shadow);
+        }
+
+        .menu li a i {
+            font-size: 1.2rem;
+            width: 25px;
+            text-align: center;
+            color: var(--text-light);
+            transition: color 0.3s ease;
+        }
+
+        .logout {
+            background-color: var(--accent-color);
+            color: var(--text-light);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            width: 60%;
+            margin: 20px auto 0;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
+
+        .logout:hover {
+            background-color: #d3853b;
+            transform: scale(1.05);
+        }
+
+        /* Main Section */
+        .content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: var(--background-dark);
+            padding: 40px 30px;
+            margin-left: 280px;
+            transition: margin-left 0.3s ease-in-out;
+            min-height: 100vh;
+        }
+
+        /* Main Card */
+        .attendance-card {
+            background-color: var(--background-light);
+            color: var(--text-dark);
+            width: 100%;
+            max-width: 1000px;
+            padding: 35px;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--card-shadow);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .attendance-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+        }
+
+        .attendance-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        }
+
+        .attendance-card h2 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 30px;
+            font-size: 2rem;
+            font-weight: 700;
+            padding-top: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        /* Loading State */
+        .loading-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 50px;
+            color: var(--primary-color);
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .loading-message {
+            font-size: 1rem;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        /* Error & Info States */
+        .error-state, .info-state {
+            text-align: center;
+            padding: 50px;
+        }
+
+        .error-state {
+            color: var(--danger-color);
+        }
+
+        .info-state {
+            color: var(--info-color);
+        }
+
+        .status-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        .status-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .status-message {
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        /* Enhanced Accordion Styles */
+        .accordion-item {
+            margin-bottom: 20px;
+            border-radius: var(--border-radius-md);
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s ease, box-shadow 0.3s ease;
+        }
+
+        .accordion-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .accordion-toggle {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: var(--text-light);
+            padding: 20px 25px;
+            width: 100%;
+            text-align: left;
+            border: none;
+            border-radius: 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .accordion-toggle:hover {
+            background: linear-gradient(135deg, var(--secondary-color), var(--accent-color));
+            transform: translateY(-1px);
+        }
+
+        .accordion-semester {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .semester-icon {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .accordion-toggle .arrow {
+            transition: transform 0.3s ease;
+            font-size: 1.2rem;
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+
+        .accordion-toggle.active .arrow {
+            transform: rotate(180deg);
+        }
+
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease, padding 0.3s ease;
+            background: var(--background-light);
+            border-radius: 0;
+        }
+
+        .accordion-content.open {
+            max-height: 400px;
+            padding: 25px;
+        }
+
+        /* Enhanced Table Styles */
+        .table-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            border-radius: var(--border-radius-md);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            background: var(--background-light);
+        }
+
+        .attendance-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 1rem;
+            min-width: 400px;
+            background: var(--background-light);
+        }
+
+        .attendance-table thead {
+            background: linear-gradient(135deg, var(--background-dark), #e9ecef);
+            color: var(--primary-color);
+        }
+
+        .attendance-table th {
+            padding: 18px 15px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border: none;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .attendance-table td {
+            padding: 15px;
+            border-bottom: 1px solid #e9ecef;
+            text-align: center;
+            transition: background-color 0.2s ease;
+            font-weight: 500;
+        }
+
+        .attendance-table tbody tr {
+            transition: all 0.2s ease;
+        }
+
+        .attendance-table tbody tr:hover {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            transform: translateY(-1px);
+        }
+
+        /* Attendance Stats */
+        .attendance-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: var(--border-radius-md);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-item {
+            text-align: center;
+            flex: 1;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--secondary-color);
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .stat-divider {
+            width: 1px;
+            height: 40px;
+            background: rgba(11, 46, 89, 0.2);
+        }
+
+        /* Attendance Percentage Badge */
+        .percentage-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 15px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .percentage-excellent { 
+            background: linear-gradient(135deg, #28a745, #20c997); 
+            color: white; 
+        }
+        .percentage-good { 
+            background: linear-gradient(135deg, #17a2b8, #007bff); 
+            color: white; 
+        }
+        .percentage-average { 
+            background: linear-gradient(135deg, #ffc107, #fd7e14); 
+            color: #333; 
+        }
+        .percentage-poor { 
+            background: linear-gradient(135deg, #dc3545, #e83e8c); 
+            color: white; 
+        }
+
+        /* Mobile Toggle & Overlay */
+        .mobile-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background-color: var(--secondary-color);
+            color: var(--text-light);
+            font-size: 24px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            align-items: center;
+            justify-content: center;
+            z-index: 1001;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease;
+            border: none;
+        }
+
+        .mobile-toggle:hover {
+            transform: scale(1.1);
+            background-color: var(--accent-color);
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(3px);
+            z-index: 999;
+            transition: opacity 0.3s ease-in-out;
+            opacity: 0;
+        }
+
+        .overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .mobile-toggle {
+                display: flex;
+            }
+            
+            .sidebar {
+                transform: translateX(-100%);
+                width: 250px;
+                max-width: 85vw;
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .content {
+                margin-left: 0;
+                padding: 25px 20px;
+            }
+            
+            .attendance-card {
+                padding: 25px;
+            }
+
+            .attendance-card h2 {
+                font-size: 1.6rem;
+                margin-bottom: 25px;
+            }
+
+            .accordion-toggle {
+                padding: 18px 20px;
+                font-size: 1rem;
+            }
+
+            .semester-icon {
+                width: 30px;
+                height: 30px;
+                padding: 6px;
+            }
+
+            .accordion-content.open {
+                padding: 20px;
+            }
+
+            .attendance-stats {
+                flex-direction: column;
+                gap: 15px;
+                padding: 18px;
+            }
+
+            .stat-divider {
+                width: 80%;
+                height: 1px;
+            }
+
+            .stat-item {
+                width: 100%;
+            }
+
+            .stat-value {
+                font-size: 1.5rem;
+            }
+
+            .attendance-table {
+                font-size: 0.9rem;
+                min-width: 450px;
+            }
+
+            .attendance-table th, .attendance-table td {
+                padding: 12px 10px;
+            }
+
+            .percentage-badge {
+                font-size: 1rem;
+                padding: 6px 12px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .sidebar {
+                width: 220px;
+                max-width: 75vw;
+                padding: 20px 15px;
+            }
+
+            .sidebar h2 {
+                font-size: 1rem;
+                margin: 20px 10px;
+            }
+
+            .menu li a {
+                font-size: 0.9rem;
+                padding: 12px 15px;
+                gap: 10px;
+            }
+
+            .logout {
+                width: 80%;
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+
+            .content {
+                padding: 20px 15px;
+            }
+
+            .attendance-card {
+                padding: 20px;
+                border-radius: var(--border-radius-md);
+            }
+
+            .attendance-card h2 {
+                font-size: 1.4rem;
+                margin-bottom: 20px;
+            }
+
+            .accordion-toggle {
+                padding: 15px 18px;
+                font-size: 0.95rem;
+            }
+
+            .accordion-semester {
+                gap: 10px;
+            }
+
+            .semester-icon {
+                width: 28px;
+                height: 28px;
+                padding: 5px;
+            }
+
+            .accordion-content.open {
+                padding: 18px;
+                max-height: 350px;
+            }
+
+            .attendance-stats {
+                padding: 15px;
+                gap: 12px;
+            }
+
+            .stat-value {
+                font-size: 1.3rem;
+            }
+
+            .stat-label {
+                font-size: 0.85rem;
+            }
+
+            .table-container {
+                margin: 15px -20px;
+                border-radius: 0;
+            }
+
+            .attendance-table {
+                font-size: 0.85rem;
+                min-width: 400px;
+            }
+
+            .attendance-table th, .attendance-table td {
+                padding: 10px 8px;
+            }
+
+            .percentage-badge {
+                font-size: 0.9rem;
+                padding: 5px 10px;
+            }
+
+            .mobile-toggle {
+                width: 45px;
+                height: 45px;
+                font-size: 20px;
+                top: 15px;
+                left: 15px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .attendance-card {
+                padding: 15px;
+                margin: 15px auto;
+            }
+
+            .attendance-card h2 {
+                font-size: 1.2rem;
+            }
+
+            .attendance-table {
+                min-width: 350px;
+                font-size: 0.8rem;
+            }
+
+            .attendance-table th, .attendance-table td {
+                padding: 8px 6px;
+            }
+
+            .accordion-toggle {
+                font-size: 0.9rem;
+                padding: 12px 15px;
+            }
+
+            .stat-value {
+                font-size: 1.2rem;
+            }
+
+            .percentage-badge {
+                font-size: 0.85rem;
+                padding: 4px 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="overlay" onclick="toggleMobileMenu()"></div>
+    
+    <div class="container">
+        <div class="sidebar" id="sidebar">
+            <div class="photo-container">
+                <a href="studentwelcome.html" class="home-icon" title="Home">
+                    <i class="fas fa-home"></i>
+                </a>
+                <img id="sidebarPhoto" class="sidebar-photo" style="display: none;" />
+            </div>
+
+            <h2>ID: <span id="userId">Loading...</span></h2>
+            
+            <ul class="menu">
+                <li>
+                    <a href="studentdetails.html"><i class="fas fa-user-circle"></i> Student details</a>
+                </li>
+                <li>
+                    <a href="feedetails.html"><i class="fas fa-graduation-cap"></i> Fee details</a>
+                </li>
+                <li>
+                    <a href="updaterefno.html"><i class="fas fa-sync-alt"></i> Update fee payment</a>
+                </li>
+                <li class="active">
+                    <a href="attendence.html"><i class="fas fa-calendar-alt"></i> View Attendance</a>
+                </li>
+                <li>
+                    <a href="studentresults.html"><i class="fas fa-chart-bar"></i> Student Results</a>
+                </li>
+                <li>
+                    <a href="generatenoc.html"><i class="fas fa-file-invoice"></i> Generate NOC</a>
+                </li>
+                <li>
+                    <a href="settings.html"><i class="fas fa-cog"></i> Settings</a>
+                </li>
+            </ul>
+            
+            <button class="logout" onclick="confirmLogout()">Logout</button>
+        </div>
+
+        <div class="content">
+            <div class="attendance-card" id="attendance-container">
+                <h2><i class="fas fa-calendar-check"></i> Semester-wise Attendance</h2>
+                
+                <div class="loading-state">
+                    <div class="loading-spinner"></div>
+                    <div class="loading-title">Loading Attendance Data</div>
+                    <div class="loading-message">Please wait while we fetch your attendance records...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button class="mobile-toggle" onclick="toggleMobileMenu()">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.20/dist/sweetalert2.all.min.js"></script>
+    <script>
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.querySelector('.overlay');
+            const body = document.body;
+            
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
+            body.classList.toggle('no-scroll');
+        }
+        
+        document.querySelectorAll(".menu li a").forEach(link => {
+            link.addEventListener("click", () => {
+                if (window.innerWidth <= 992) {
+                    toggleMobileMenu();
+                }
+            });
+        });
+
+        function confirmLogout() {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You will be logged out of your account.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#0b2e59',
+                cancelButtonColor: '#f7a048',
+                confirmButtonText: 'Yes, log out!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    logout();
+                }
+            });
+        }
+
+        function logout() {
+            fetch("/logout", { method: "GET", credentials: "include" })
+              .then(() => {
+                  localStorage.clear();
+                  sessionStorage.clear();
+                  if ("caches" in window) {
+                      caches.keys().then(names => names.forEach(name => caches.delete(name)));
+                  }
+                  window.location.replace("index.html");
+              })
+              .catch(() => {
+                  window.location.replace("index.html");
+              });
+        }
+
+        // Prevent back navigation after logout
+        window.history.pushState(null, "", window.location.href);
+        window.onpopstate = () => window.history.pushState(null, "", window.location.href);
+
+        function getPercentageClass(percentage) {
+            const percent = parseFloat(percentage || 0);
+            if (percent >= 85) return 'percentage-excellent';
+            if (percent >= 75) return 'percentage-good';
+            if (percent >= 65) return 'percentage-average';
+            return 'percentage-poor';
+        }
+
+        function getPercentageIcon(percentage) {
+            const percent = parseFloat(percentage || 0);
+            if (percent >= 85) return 'fas fa-star';
+            if (percent >= 75) return 'fas fa-thumbs-up';
+            if (percent >= 65) return 'fas fa-exclamation-triangle';
+            return 'fas fa-exclamation-circle';
+        }
+        
+        document.addEventListener("DOMContentLoaded", async () => {
+            const userId = localStorage.getItem("userId");
+            const attendanceContainer = document.getElementById("attendance-container");
+
+            // Check authentication
+            if (!userId) {
+                Swal.fire({
+                    title: 'Access Denied',
+                    text: 'Please login first to view this page.',
+                    icon: 'error',
+                    confirmButtonText: 'Go to Login',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    confirmButtonColor: '#0b2e59'
+                }).then(() => {
+                    window.location.href = "index.html";
+                });
+                return;
+            }
+
+            document.getElementById("userId").textContent = userId;
+
+            // Load sidebar photo
+            try {
+                const res = await fetch(`/student/${userId}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    const photo = document.getElementById("sidebarPhoto");
+                    if (photo && data && data.name) {
+                        photo.src = data.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name)}&background=random&rounded=true&bold=true&size=128`;
+                        photo.style.display = "block";
+                    }
+                }
+            } catch (err) {
+                console.warn("Failed to load photo:", err.message);
+            }
+
+            // Load attendance data
+            try {
+                const res = await fetch(`/student-attendance/${userId}`);
+                
+                if (!res.ok) {
+                    const errorData = await res.json().catch(() => ({}));
+                    throw new Error(errorData.message || 'Failed to load attendance data');
+                }
+
+                const result = await res.json();
+                
+                if (!result.success || !result.data || result.data.length === 0) {
+                    attendanceContainer.innerHTML = `
+                        <h2><i class="fas fa-calendar-check"></i> Semester-wise Attendance</h2>
+                        <div class="info-state">
+                            <i class="fas fa-info-circle status-icon"></i>
+                            <div class="status-title">No Attendance Data Available</div>
+                            <div class="status-message">No attendance records were found for your student ID. Please contact the administrator if you believe this is an error.</div>
+                        </div>`;
+                    
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'No Data Found',
+                        text: 'No attendance details were found. Please contact the administrator.',
+                        confirmButtonColor: '#0b2e59'
+                    });
+                    return;
+                }
+                
+                // Build content
+                let contentHTML = `
+                    <h2><i class="fas fa-calendar-check"></i> Semester-wise Attendance</h2>
+                `;
+
+                const data = result.data;
+
+                // Calculate overall stats
+                let totalClasses = 0;
+                let totalAttended = 0;
+                
+                data.forEach(record => {
+                    totalClasses += parseInt(record.total_classes || 0);
+                    totalAttended += parseInt(record.attended_classes || 0);
+                });
+
+                const overallPercentage = totalClasses > 0 ? ((totalAttended / totalClasses) * 100).toFixed(2) : '0.00';
+
+                // Add overall stats section
+                contentHTML += `
+                    <div class="attendance-stats">
+                        <div class="stat-item">
+                            <div class="stat-label"><i class="fas fa-calendar"></i> Total Classes</div>
+                            <div class="stat-value">${totalClasses}</div>
+                        </div>
+                        <div class="stat-divider"></div>
+                        <div class="stat-item">
+                            <div class="stat-label"><i class="fas fa-check-circle"></i> Attended</div>
+                            <div class="stat-value">${totalAttended}</div>
+                        </div>
+                        <div class="stat-divider"></div>
+                        <div class="stat-item">
+                            <div class="stat-label"><i class="fas fa-percentage"></i> Overall</div>
+                            <div class="stat-value">${overallPercentage}%</div>
+                        </div>
+                    </div>
+                `;
+
+                // Add semester accordions
+                data.forEach((record, index) => {
+                    const { semester, total_classes, attended_classes, percentage } = record;
+                    const percentageValue = parseFloat(percentage || 0).toFixed(2);
+                    const percentageClass = getPercentageClass(percentageValue);
+                    const percentageIcon = getPercentageIcon(percentageValue);
+                    
+                    contentHTML += `
+                        <div class="accordion-item">
+                            <button class="accordion-toggle" data-index="${index}">
+                                <div class="accordion-semester">
+                                    <div class="semester-icon">
+                                        <i class="fas fa-graduation-cap"></i>
+                                    </div>
+                                    <span>Semester ${semester}</span>
+                                    <span class="percentage-badge ${percentageClass}">
+                                        <i class="${percentageIcon}"></i>
+                                        ${percentageValue}%
+                                    </span>
+                                </div>
+                                <span class="arrow">▼</span>
+                            </button>
+                            <div class="accordion-content">
+                                <div class="table-container">
+                                    <table class="attendance-table">
+                                        <thead>
+                                            <tr>
+                                                <th><i class="fas fa-calendar"></i> Total Classes</th>
+                                                <th><i class="fas fa-check-circle"></i> Attended</th>
+                                                <th><i class="fas fa-times-circle"></i> Missed</th>
+                                                <th><i class="fas fa-percentage"></i> Percentage</th>
+                                                <th><i class="fas fa-chart-line"></i> Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td><strong>${total_classes}</strong></td>
+                                                <td><strong style="color: var(--success-color);">${attended_classes}</strong></td>
+                                                <td><strong style="color: var(--danger-color);">${total_classes - attended_classes}</strong></td>
+                                                <td>
+                                                    <span class="percentage-badge ${percentageClass}">
+                                                        <i class="${percentageIcon}"></i>
+                                                        ${percentageValue}%
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <strong style="color: ${parseFloat(percentageValue) >= 75 ? 'var(--success-color)' : 'var(--danger-color)'};">
+                                                        ${parseFloat(percentageValue) >= 75 ? 'Good' : 'Needs Improvement'}
+                                                    </strong>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>`;
+                });
+
+                attendanceContainer.innerHTML = contentHTML;
+
+                // Add accordion functionality
+                document.querySelectorAll(".accordion-toggle").forEach(btn => {
+                    btn.addEventListener("click", () => {
+                        const index = btn.dataset.index;
+                        const content = btn.nextElementSibling;
+                        const arrow = btn.querySelector('.arrow');
+                        
+                        // Close all other accordions
+                        document.querySelectorAll(".accordion-content").forEach((otherContent, i) => {
+                            if (i != index) {
+                                otherContent.classList.remove("open");
+                                const otherBtn = otherContent.previousElementSibling;
+                                const otherArrow = otherBtn.querySelector('.arrow');
+                                otherBtn.classList.remove("active");
+                                otherArrow.textContent = "▼";
+                            }
+                        });
+                        
+                        // Toggle current accordion
+                        content.classList.toggle("open");
+                        btn.classList.toggle("active");
+                        arrow.textContent = content.classList.contains("open") ? "▲" : "▼";
+                    });
+                });
+
+            } catch (err) {
+                console.error("Error loading attendance:", err);
+                attendanceContainer.innerHTML = `
+                    <h2><i class="fas fa-calendar-check"></i> Semester-wise Attendance</h2>
+                    <div class="error-state">
+                        <i class="fas fa-times-circle status-icon"></i>
+                        <div class="status-title">Unable to Load Attendance Data</div>
+                        <div class="status-message">Something went wrong while loading your attendance records. Please try again later or contact the administrator.</div>
+                        <p style="font-size: 0.9rem; opacity: 0.7; margin-top: 15px;">${err.message}</p>
+                    </div>`;
+                
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'Failed to load attendance details. Please contact the administrator.',
+                    footer: `<p>${err.message}</p>`,
+                    confirmButtonColor: '#0b2e59'
+                });
+            }
+        });
+    </script>
+    <script src="session.js"></script>
+</body>
+</html>

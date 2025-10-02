@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FAQ - STUDENT PORTAL</title>
+    <link rel="icon" href="crrengglogo.png" type="image/png" />
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.20/dist/sweetalert2.min.css"
+    />
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
+        :root {
+            --primary-color: #0b2e59;
+            --secondary-color: #2c6e91;
+            --accent-color: #f7a048;
+            --background-dark: #f0f2f5;
+            --background-light: #ffffff;
+            --text-dark: #333333;
+            --text-light: #f4f4f4;
+            --card-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            --border-radius-lg: 16px;
+            --border-radius-md: 10px;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #17a2b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--background-dark);
+        }
+
+        body.no-scroll {
+            overflow: hidden;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background-color: var(--primary-color);
+            display: flex;
+            flex-direction: column;
+            padding: 30px 20px;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease-in-out;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .photo-container {
+            display: flex;
+            justify-content: center;
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .home-icon {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background-color: var(--background-light);
+            color: var(--primary-color);
+            border-radius: 50%;
+            font-size: 22px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s ease, background-color 0.3s ease;
+        }
+
+        .home-icon:hover {
+            transform: scale(1.1);
+            background-color: var(--accent-color);
+            color: var(--text-light);
+        }
+
+        .sidebar-photo {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            border: 4px solid var(--accent-color);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        .sidebar h2 {
+            margin: 40px 20px 20px 20px;
+            color: var(--text-light);
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .menu {
+            list-style: none;
+            padding: 0;
+            flex-grow: 1;
+        }
+
+        .menu li {
+            list-style: none;
+            margin-bottom: 12px;
+        }
+
+        .menu li a {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 1rem;
+            color: var(--text-light);
+            padding: 15px 20px;
+            border-radius: var(--border-radius-md);
+            transition: all 0.3s ease;
+        }
+
+        .menu li a:hover,
+        .menu li.active a {
+            background-color: rgba(255, 255, 255, 0.1);
+            font-weight: 500;
+            transform: translateX(5px);
+            box-shadow: var(--card-shadow);
+        }
+
+        .menu li a i {
+            font-size: 1.2rem;
+            width: 25px;
+            text-align: center;
+            color: var(--text-light);
+            transition: color 0.3s ease;
+        }
+
+        .logout {
+            background-color: var(--accent-color);
+            color: var(--text-light);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            width: 60%;
+            margin: 20px auto 0;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
+
+        .logout:hover {
+            background-color: #d3853b;
+            transform: scale(1.05);
+        }
+
+        /* Main Section */
+        .main-section {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: var(--background-dark);
+            padding: 40px 30px;
+            margin-left: 280px;
+            transition: margin-left 0.3s ease-in-out;
+            min-height: 100vh;
+        }
+
+        /* Back Button */
+        .back-button {
+            align-self: flex-start;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 20px;
+            background: var(--background-light);
+            color: var(--primary-color);
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--card-shadow);
+            transition: all 0.3s ease;
+            font-weight: 500;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+            background: linear-gradient(135deg, var(--background-light), #f8f9fa);
+        }
+
+        .back-button i {
+            font-size: 1.1rem;
+        }
+
+        /* Main Card */
+        .faq-card {
+            background-color: var(--background-light);
+            color: var(--text-dark);
+            width: 100%;
+            max-width: 900px;
+            padding: 35px;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--card-shadow);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .faq-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+        }
+
+        .faq-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        }
+
+        .faq-card h2 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 30px;
+            font-size: 2rem;
+            font-weight: 700;
+            padding-top: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        /* Search Box */
+        .search-container {
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 15px 20px 15px 50px;
+            font-size: 1rem;
+            border: 2px solid #e9ecef;
+            border-radius: var(--border-radius-md);
+            background: #f8f9fa;
+            color: var(--text-dark);
+            transition: all 0.3s ease;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background: var(--background-light);
+            box-shadow: 0 0 0 3px rgba(11, 46, 89, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--secondary-color);
+            font-size: 1.1rem;
+        }
+
+        /* Category Filters */
+        .category-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 30px;
+            justify-content: center;
+        }
+
+        .category-btn {
+            padding: 8px 16px;
+            background: #e9ecef;
+            color: var(--secondary-color);
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .category-btn:hover, .category-btn.active {
+            background: var(--primary-color);
+            color: var(--text-light);
+            transform: translateY(-2px);
+        }
+
+        /* FAQ Items */
+        .faq-list {
+            max-height: 600px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .faq-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .faq-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .faq-list::-webkit-scrollbar-thumb {
+            background: var(--secondary-color);
+            border-radius: 10px;
+        }
+
+        .faq-list::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-color);
+        }
+
+        .faq-item {
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: var(--border-radius-md);
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+        }
+
+        .faq-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+            border-left-color: var(--accent-color);
+        }
+
+        .faq-item.hidden {
+            display: none;
+        }
+
+        .question {
+            padding: 20px 25px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1.05rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+            color: var(--primary-color);
+        }
+
+        .question:hover {
+            background: rgba(11, 46, 89, 0.05);
+            color: var(--secondary-color);
+        }
+
+        .question-text {
+            flex: 1;
+            margin-right: 15px;
+            line-height: 1.4;
+        }
+
+        .question-category {
+            font-size: 0.8rem;
+            background: var(--accent-color);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            margin-right: 15px;
+            font-weight: 500;
+        }
+
+        .arrow {
+            width: 30px;
+            height: 30px;
+            background: var(--primary-color);
+            color: var(--text-light);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .question.open .arrow {
+            transform: rotate(180deg);
+            background: var(--accent-color);
+        }
+
+        .answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease, padding 0.3s ease;
+            background: var(--background-light);
+            color: var(--text-dark);
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        .answer.open {
+            max-height: 300px;
+            padding: 20px 25px;
+        }
+
+        .answer p {
+            margin-bottom: 10px;
+        }
+
+        .answer ul {
+            margin-left: 20px;
+            margin-bottom: 10px;
+        }
+
+        .answer li {
+            margin-bottom: 5px;
+        }
+
+        /* No Results State */
+        .no-results {
+            text-align: center;
+            padding: 60px 30px;
+            color: var(--secondary-color);
+        }
+
+        .no-results i {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: var(--accent-color);
+        }
+
+        .no-results h3 {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+        }
+
+        .no-results p {
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        /* Mobile Toggle & Overlay */
+        .mobile-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background-color: var(--secondary-color);
+            color: var(--text-light);
+            font-size: 24px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            align-items: center;
+            justify-content: center;
+            z-index: 1001;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease;
+            border: none;
+        }
+
+        .mobile-toggle:hover {
+            transform: scale(1.1);
+            background-color: var(--accent-color);
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(3px);
+            z-index: 999;
+            transition: opacity 0.3s ease-in-out;
+            opacity: 0;
+        }
+
+        .overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .mobile-toggle {
+                display: flex;
+            }
+            
+            .sidebar {
+                transform: translateX(-100%);
+                width: 250px;
+                max-width: 85vw;
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .main-section {
+                margin-left: 0;
+                padding: 25px 20px;
+            }
+
+            .back-button {
+                margin-bottom: 15px;
+            }
+            
+            .faq-card {
+                padding: 25px;
+            }
+
+            .faq-card h2 {
+                font-size: 1.6rem;
+                margin-bottom: 25px;
+            }
+
+            .search-box {
+                padding: 12px 15px 12px 45px;
+                font-size: 0.95rem;
+            }
+
+            .search-icon {
+                left: 15px;
+            }
+
+            .category-filters {
+                gap: 8px;
+                margin-bottom: 25px;
+            }
+
+            .category-btn {
+                padding: 6px 12px;
+                font-size: 0.85rem;
+            }
+
+            .question {
+                padding: 18px 20px;
+                font-size: 1rem;
+            }
+
+            .question-category {
+                font-size: 0.75rem;
+                padding: 3px 8px;
+                margin-right: 10px;
+            }
+
+            .arrow {
+                width: 25px;
+                height: 25px;
+                font-size: 0.8rem;
+            }
+
+            .answer.open {
+                padding: 18px 20px;
+                max-height: 250px;
+            }
+
+            .faq-list {
+                max-height: 500px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .sidebar {
+                width: 220px;
+                max-width: 75vw;
+                padding: 20px 15px;
+            }
+
+            .sidebar h2 {
+                font-size: 1rem;
+                margin: 20px 10px;
+            }
+
+            .menu li a {
+                font-size: 0.9rem;
+                padding: 12px 15px;
+                gap: 10px;
+            }
+
+            .logout {
+                width: 80%;
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+
+            .main-section {
+                padding: 20px 15px;
+            }
+
+            .back-button {
+                padding: 10px 15px;
+                font-size: 0.9rem;
+            }
+
+            .faq-card {
+                padding: 20px;
+                border-radius: var(--border-radius-md);
+            }
+
+            .faq-card h2 {
+                font-size: 1.4rem;
+                margin-bottom: 20px;
+            }
+
+            .search-box {
+                padding: 10px 12px 10px 40px;
+                font-size: 0.9rem;
+            }
+
+            .search-icon {
+                left: 12px;
+                font-size: 1rem;
+            }
+
+            .category-filters {
+                gap: 6px;
+                margin-bottom: 20px;
+            }
+
+            .category-btn {
+                padding: 5px 10px;
+                font-size: 0.8rem;
+            }
+
+            .question {
+                padding: 15px 18px;
+                font-size: 0.95rem;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .question-text {
+                margin-right: 0;
+            }
+
+            .question-meta {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .question-category {
+                font-size: 0.7rem;
+                padding: 2px 6px;
+                margin-right: 0;
+            }
+
+            .arrow {
+                width: 22px;
+                height: 22px;
+                font-size: 0.75rem;
+            }
+
+            .answer.open {
+                padding: 15px 18px;
+                max-height: 200px;
+            }
+
+            .answer {
+                font-size: 0.9rem;
+            }
+
+            .faq-list {
+                max-height: 400px;
+                padding-right: 5px;
+            }
+
+            .mobile-toggle {
+                width: 45px;
+                height: 45px;
+                font-size: 20px;
+                top: 15px;
+                left: 15px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .faq-card {
+                padding: 15px;
+                margin: 15px auto;
+            }
+
+            .faq-card h2 {
+                font-size: 1.2rem;
+            }
+
+            .question {
+                padding: 12px 15px;
+                font-size: 0.9rem;
+            }
+
+            .answer.open {
+                padding: 12px 15px;
+            }
+
+            .answer {
+                font-size: 0.85rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="overlay" onclick="toggleMobileMenu()"></div>
+    
+    <div class="container">
+        <div class="sidebar" id="sidebar">
+            <div class="photo-container">
+                <a href="studentwelcome.html" class="home-icon" title="Home">
+                    <i class="fas fa-home"></i>
+                </a>
+                <img id="sidebarPhoto" class="sidebar-photo" style="display: none;" />
+            </div>
+
+            <h2>ID: <span id="userId">Loading...</span></h2>
+            
+            <ul class="menu">
+                <li>
+                    <a href="studentdetails.html"><i class="fas fa-user-circle"></i> Student details</a>
+                </li>
+                <li>
+                    <a href="feedetails.html"><i class="fas fa-graduation-cap"></i> Fee details</a>
+                </li>
+                <li>
+                    <a href="updaterefno.html"><i class="fas fa-sync-alt"></i> Update fee payment</a>
+                </li>
+                <li>
+                    <a href="attendence.html"><i class="fas fa-calendar-alt"></i> View Attendance</a>
+                </li>
+                <li>
+                    <a href="studentresults.html"><i class="fas fa-chart-bar"></i> Student Results</a>
+                </li>
+                <li>
+                    <a href="generatenoc.html"><i class="fas fa-file-invoice"></i> Generate NOC</a>
+                </li>
+                <li class="active">
+                    <a href="settings.html"><i class="fas fa-cog"></i> Settings</a>
+                </li>
+            </ul>
+            
+            <button class="logout" onclick="confirmLogout()">Logout</button>
+        </div>
+
+        <div class="main-section">
+            <button class="back-button" onclick="goBack()">
+                <i class="fas fa-arrow-left"></i>
+                Back to Settings
+            </button>
+
+            <div class="faq-card">
+                <h2><i class="fas fa-question-circle"></i> Frequently Asked Questions</h2>
+                
+                <div class="search-container">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" class="search-box" placeholder="Search frequently asked questions..." id="searchInput">
+                </div>
+
+                <div class="category-filters">
+                    <button class="category-btn active" data-category="all">All Questions</button>
+                    <button class="category-btn" data-category="login">Login & Access</button>
+                    <button class="category-btn" data-category="profile">Student Profile</button>
+                    <button class="category-btn" data-category="fees">Fee Management</button>
+                    <button class="category-btn" data-category="results">Results & Grades</button>
+                    <button class="category-btn" data-category="attendance">Attendance</button>
+                    <button class="category-btn" data-category="noc">NOC Certificate</button>
+                    <button class="category-btn" data-category="technical">Technical Issues</button>
+                </div>
+
+                <div class="faq-list" id="faq-list">
+                    <!-- FAQ items will be populated by JavaScript -->
+                </div>
+
+                <div class="no-results" id="no-results" style="display: none;">
+                    <i class="fas fa-search"></i>
+                    <h3>No Questions Found</h3>
+                    <p>No FAQ items match your search criteria. Try using different keywords or browse all questions.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <button class="mobile-toggle" onclick="toggleMobileMenu()">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.20/dist/sweetalert2.all.min.js"></script>
+    <script>
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.querySelector('.overlay');
+            const body = document.body;
+            
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
+            body.classList.toggle('no-scroll');
+        }
+
+        document.querySelectorAll(".menu li a").forEach(link => {
+            link.addEventListener("click", () => {
+                if (window.innerWidth <= 992) {
+                    toggleMobileMenu();
+                }
+            });
+        });
+
+        function goBack() {
+            window.location.href = "settings.html";
+        }
+
+        function confirmLogout() {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You will be logged out of your account.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#0b2e59',
+                cancelButtonColor: '#f7a048',
+                confirmButtonText: 'Yes, log out!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    logout();
+                }
+            });
+        }
+
+        function logout() {
+            fetch("/logout", { method: "GET", credentials: "include" })
+              .then(() => {
+                  localStorage.clear();
+                  sessionStorage.clear();
+                  if ("caches" in window) {
+                      caches.keys().then(names => names.forEach(name => caches.delete(name)));
+                  }
+                  window.location.replace("index.html");
+              })
+              .catch(() => {
+                  window.location.replace("index.html");
+              });
+        }
+
+        // Prevent back navigation after logout
+        window.history.pushState(null, "", window.location.href);
+        window.onpopstate = () => window.history.pushState(null, "", window.location.href);
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            const userId = localStorage.getItem("userId") || localStorage.getItem("regno");
+            
+            // Check authentication
+            if (!userId) {
+                Swal.fire({
+                    title: 'Access Denied',
+                    text: 'Please login first to view this page.',
+                    icon: 'error',
+                    confirmButtonText: 'Go to Login',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    confirmButtonColor: '#0b2e59'
+                }).then(() => {
+                    window.location.href = "index.html";
+                });
+                return;
+            }
+
+            document.getElementById("userId").textContent = userId;
+
+            // Load sidebar photo
+            try {
+                const res = await fetch(`/student/${userId}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    const photo = document.getElementById("sidebarPhoto");
+                    if (photo && data && data.name) {
+                        photo.src = data.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name)}&background=random&rounded=true&bold=true&size=128`;
+                        photo.style.display = "block";
+                    }
+                }
+            } catch (err) {
+                console.warn("⚠️ Failed to load photo:", err.message);
+            }
+
+            // FAQ Data with comprehensive questions covering all portal features
+            const faqData = [
+                // Login & Access
+                {
+                    category: "login",
+                    question: "How do I log in to the student portal?",
+                    answer: "To log in, visit the portal homepage and enter your User ID (registration number) and password, then click the login button. Make sure you have a stable internet connection."
+                },
+                {
+                    category: "login",
+                    question: "What is my User ID for the portal?",
+                    answer: "Your User ID is your student registration number (e.g., 23B8xxxxxx). This is the same number you use for official college communications."
+                },
+                {
+                    category: "login",
+                    question: "What should I do if I forget my password?",
+                    answer: "Your registration number is your default password. If you have changed it and forgotten the new one, please contact your college administration for password reset assistance."
+                },
+                {
+                    category: "login",
+                    question: "Can I register myself on the portal?",
+                    answer: "No, manual registration is disabled for security reasons. Only pre-registered users (students, staff, or admin) can log in using their assigned credentials."
+                },
+                {
+                    category: "login",
+                    question: "Can staff and faculty access this portal?",
+                    answer: "Yes, staff and admin can log in using their registered User ID and password. They have different access levels and functionalities compared to students."
+                },
+
+                // Student Profile
+                {
+                    category: "profile",
+                    question: "Where can I view my student details and profile?",
+                    answer: "Click on 'Student Details' in the sidebar menu to view your complete profile including personal information, academic details, and contact information."
+                },
+                {
+                    category: "profile",
+                    question: "Can I edit my personal information in the portal?",
+                    answer: "Yes, you can update your profile information. Navigate to the student details section, make your changes, and save them. Some critical information may require admin approval."
+                },
+                {
+                    category: "profile",
+                    question: "How do I update my profile photo?",
+                    answer: "In the Student Details section, you can upload a new profile photo. Make sure the image is clear, recent, and follows the college's photo guidelines."
+                },
+                {
+                    category: "profile",
+                    question: "What information is displayed in my student profile?",
+                    answer: "Your profile shows personal details, academic information, contact details, program enrollment, current semester, and academic progress statistics."
+                },
+
+                // Fee Management
+                {
+                    category: "fees",
+                    question: "How do I update my fee payment information?",
+                    answer: "Go to 'Update Fee Payment' from the sidebar menu. Enter your payment details including amount, reference number, and transaction date, then submit for verification."
+                },
+                {
+                    category: "fees",
+                    question: "Where can I see my fee payment history?",
+                    answer: "Navigate to 'Fee Details' to view your complete fee payment history, pending amounts, and payment status for each semester."
+                },
+                {
+                    category: "fees",
+                    question: "How do I delete incorrect fee entries?",
+                    answer: "In Settings > 'Delete DU Entries', you can remove unverified fee entries. Verified payments cannot be deleted and require admin assistance if incorrect."
+                },
+                {
+                    category: "fees",
+                    question: "What information do I need for fee payment updates?",
+                    answer: "You need the fee type, amount paid, SBI reference number, payment date, and any transaction receipt details for accurate fee record updates."
+                },
+                {
+                    category: "fees",
+                    question: "Why is my fee payment showing as unverified?",
+                    answer: "Payments are marked as unverified until the administration matches them with official bank records. This process may take a few business days."
+                },
+
+                // Results & Grades
+                {
+                    category: "results",
+                    question: "How can I view my semester results and grades?",
+                    answer: "Click on 'Student Results' in the sidebar to view your semester-wise results, grades, SGPA, and overall CGPA. Select the specific semester you want to view."
+                },
+                {
+                    category: "results",
+                    question: "Where can I find my mid-term examination marks?",
+                    answer: "In the Student Results section, scroll down to the 'View Mid Marks' section. Select your year and semester to view detailed mid-term marks including Mid1, Mid2, assignments, and quizzes."
+                },
+                {
+                    category: "results",
+                    question: "Can I download or print my result certificates?",
+                    answer: "Yes, in the Student Results section, you can print your results or generate official certificates in PDF format for each semester."
+                },
+                {
+                    category: "results",
+                    question: "What does SGPA and CGPA mean in my results?",
+                    answer: "SGPA (Semester Grade Point Average) is your performance for that specific semester. CGPA (Cumulative Grade Point Average) is your overall performance across all completed semesters."
+                },
+                {
+                    category: "results",
+                    question: "How are mid marks calculated and displayed?",
+                    answer: "Mid marks include Mid1, Mid2 examinations, assignments (A1, A2), and quizzes (Q1, Q2). The system shows individual scores and calculates your internal assessment performance."
+                },
+
+                // Attendance
+                {
+                    category: "attendance",
+                    question: "How do I check my attendance records?",
+                    answer: "Click on 'View Attendance' in the sidebar menu to see your semester-wise attendance records, including total classes, attended classes, and attendance percentage."
+                },
+                {
+                    category: "attendance",
+                    question: "What is the minimum attendance requirement?",
+                    answer: "Generally, students need to maintain at least 75% attendance. Check with your department for specific attendance policies and requirements."
+                },
+                {
+                    category: "attendance",
+                    question: "Can I view subject-wise attendance?",
+                    answer: "The current system shows overall attendance by semester. For detailed subject-wise attendance, you may need to contact your department office."
+                },
+                {
+                    category: "attendance",
+                    question: "How often is attendance data updated?",
+                    answer: "Attendance data is typically updated after each academic session. There may be a delay of 1-2 days for the latest attendance to reflect in the portal."
+                },
+
+                // NOC Certificate
+                {
+                    category: "noc",
+                    question: "When and how can I generate my NOC certificate?",
+                    answer: "You can generate your NOC at any time by going to 'Generate NOC' in the sidebar. Select the academic year or choose to download the final clearance certificate."
+                },
+                {
+                    category: "noc",
+                    question: "What are the requirements to generate an NOC?",
+                    answer: "You must be a registered CRRENGG student and should have updated your fee payment records in the portal. Full fee clearance is not mandatory to access NOC generation."
+                },
+                {
+                    category: "noc",
+                    question: "Can I generate NOC in 2nd or 3rd year?",
+                    answer: "Yes, all students at CRRENGG are eligible for NOC generation regardless of their current year, as per the college policy."
+                },
+                {
+                    category: "noc",
+                    question: "Is Aadhaar number required for NOC generation?",
+                    answer: "No, a valid Aadhaar number is not required for identity verification to generate the NOC certificate."
+                },
+                {
+                    category: "noc",
+                    question: "What's the difference between year-wise and final clearance NOC?",
+                    answer: "Year-wise NOC is for a specific academic year, while final clearance NOC is a comprehensive certificate covering your entire academic period at the institution."
+                },
+
+                // Technical Issues
+                {
+                    category: "technical",
+                    question: "The portal is not loading properly. What should I do?",
+                    answer: "Try refreshing the page, clearing your browser cache, or using a different browser. Ensure you have a stable internet connection. If problems persist, contact technical support."
+                },
+                {
+                    category: "technical",
+                    question: "How do I get help if I encounter errors in the portal?",
+                    answer: "Use the 'Help & Feedback' form in the Settings menu to report technical issues. Provide detailed information about the error and the steps you were taking when it occurred."
+                },
+                {
+                    category: "technical",
+                    question: "Can I access the portal on my mobile device?",
+                    answer: "Yes, the portal is fully responsive and works on all devices including smartphones and tablets. Use any modern web browser for the best experience."
+                },
+                {
+                    category: "technical",
+                    question: "Who should I contact for technical support?",
+                    answer: "For technical issues, use the 'Help & Feedback' form in Settings, or contact your department staff/admin directly. Include details about your device, browser, and the specific issue."
+                },
+                {
+                    category: "technical",
+                    question: "Why am I getting logged out frequently?",
+                    answer: "For security reasons, the portal has session timeouts. Make sure to save your work regularly and avoid leaving the portal idle for extended periods."
+                },
+                {
+                    category: "technical",
+                    question: "How do I enable notifications from the portal?",
+                    answer: "Go to Settings > Notifications to manage your notification preferences. Make sure your browser allows notifications from the portal domain."
+                },
+
+                // General Portal Usage
+                {
+                    category: "login",
+                    question: "What browsers are supported by the portal?",
+                    answer: "The portal works best with modern browsers like Chrome, Firefox, Safari, and Edge. Make sure your browser is updated to the latest version for optimal performance."
+                },
+                {
+                    category: "technical",
+                    question: "How do I navigate back to the main dashboard?",
+                    answer: "Click on the home icon in the sidebar or use the 'Back' buttons available on most pages. The sidebar menu is always available for easy navigation."
+                },
+                {
+                    category: "profile",
+                    question: "Can I change my password in the portal?",
+                    answer: "Password change functionality may be available in the Settings section. If not visible, contact your college administration for password modification assistance."
+                }
+            ];
+
+            // Initialize FAQ
+            initializeFAQ(faqData);
+
+            // Search functionality
+            const searchInput = document.getElementById('searchInput');
+            searchInput.addEventListener('input', () => filterFAQ(faqData));
+
+            // Category filter functionality
+            const categoryBtns = document.querySelectorAll('.category-btn');
+            categoryBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    categoryBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    filterFAQ(faqData);
+                });
+            });
+
+            function initializeFAQ(data) {
+                const faqList = document.getElementById('faq-list');
+                faqList.innerHTML = '';
+
+                data.forEach((item, index) => {
+                    const faqItem = document.createElement('div');
+                    faqItem.className = 'faq-item';
+                    faqItem.dataset.category = item.category;
+                    faqItem.dataset.index = index;
+                    
+                    faqItem.innerHTML = `
+                        <div class="question" onclick="toggleAnswer(${index})">
+                            <span class="question-text">${item.question}</span>
+                            <div class="question-meta">
+                                <span class="question-category">${getCategoryName(item.category)}</span>
+                                <div class="arrow">
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="answer">
+                            <p>${item.answer}</p>
+                        </div>
+                    `;
+                    
+                    faqList.appendChild(faqItem);
+                });
+            }
+
+            function getCategoryName(category) {
+                const categoryNames = {
+                    'login': 'Login',
+                    'profile': 'Profile',
+                    'fees': 'Fees',
+                    'results': 'Results',
+                    'attendance': 'Attendance',
+                    'noc': 'NOC',
+                    'technical': 'Technical'
+                };
+                return categoryNames[category] || 'General';
+            }
+
+            window.toggleAnswer = function(index) {
+                const question = document.querySelector(`[data-index="${index}"] .question`);
+                const answer = document.querySelector(`[data-index="${index}"] .answer`);
+                
+                const isOpen = question.classList.contains('open');
+                
+                // Close all other answers
+                document.querySelectorAll('.question.open').forEach(q => {
+                    if (q !== question) {
+                        q.classList.remove('open');
+                        q.parentElement.querySelector('.answer').classList.remove('open');
+                    }
+                });
+                
+                // Toggle current answer
+                question.classList.toggle('open');
+                answer.classList.toggle('open');
+            }
+
+            function filterFAQ(data) {
+                const searchTerm = searchInput.value.toLowerCase();
+                const activeCategory = document.querySelector('.category-btn.active').dataset.category;
+                const faqItems = document.querySelectorAll('.faq-item');
+                const noResults = document.getElementById('no-results');
+                
+                let visibleCount = 0;
+
+                faqItems.forEach((item, index) => {
+                    const faqData = data[index];
+                    const matchesSearch = !searchTerm || 
+                        faqData.question.toLowerCase().includes(searchTerm) ||
+                        faqData.answer.toLowerCase().includes(searchTerm);
+                    const matchesCategory = activeCategory === 'all' || faqData.category === activeCategory;
+                    
+                    if (matchesSearch && matchesCategory) {
+                        item.classList.remove('hidden');
+                        visibleCount++;
+                    } else {
+                        item.classList.add('hidden');
+                        // Close if open
+                        const question = item.querySelector('.question');
+                        const answer = item.querySelector('.answer');
+                        question.classList.remove('open');
+                        answer.classList.remove('open');
+                    }
+                });
+
+                // Show/hide no results message
+                if (visibleCount === 0) {
+                    noResults.style.display = 'block';
+                } else {
+                    noResults.style.display = 'none';
+                }
+            }
+        });
+    </script>
+    <script src="session.js"></script>
+</body>
+</html>

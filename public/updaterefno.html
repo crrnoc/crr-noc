@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Update Fee Payment</title>
+    <link rel="icon" href="crrengglogo.png" type="image/png" />
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.20/dist/sweetalert2.min.css"
+    />
+    <style>
+        :root {
+            --primary-color: #0b2e59;
+            --secondary-color: #2c6e91;
+            --accent-color: #f7a048;
+            --background-dark: #f0f2f5;
+            --background-light: #ffffff;
+            --text-dark: #333333;
+            --text-light: #f4f4f4;
+            --card-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            --border-radius-lg: 16px;
+            --border-radius-md: 10px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--background-dark);
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background-color: var(--primary-color);
+            display: flex;
+            flex-direction: column;
+            padding: 30px 20px;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease-in-out;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .photo-container {
+            display: flex;
+            justify-content: center;
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .home-icon {
+            position: absolute;
+            top: -10px;
+            right: -10px; /* Adjusted to top-right */
+            background-color: var(--background-light);
+            color: var(--primary-color);
+            border-radius: 50%;
+            font-size: 22px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s ease, background-color 0.3s ease;
+        }
+
+        .home-icon:hover {
+            transform: scale(1.1);
+            background-color: var(--accent-color);
+            color: var(--text-light);
+        }
+
+        .sidebar-photo {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 4px solid var(--accent-color);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        .sidebar h2 {
+            margin: 40px 20px 20px 20px;
+            color: var(--text-light);
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .menu {
+            list-style: none;
+            padding: 0;
+            flex-grow: 1;
+        }
+
+        .menu li {
+            list-style: none;
+            margin-bottom: 12px;
+        }
+
+        .menu li a {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 1rem;
+            color: var(--text-light);
+            padding: 15px 20px;
+            border-radius: var(--border-radius-md);
+            transition: all 0.3s ease;
+        }
+
+        .menu li a:hover,
+        .menu li.active a {
+            background-color: rgba(255, 255, 255, 0.1);
+            font-weight: 500;
+            transform: translateX(5px);
+            box-shadow: var(--card-shadow);
+        }
+
+        .menu li a i {
+            font-size: 1.2rem;
+            width: 25px;
+            text-align: center;
+            color: var(--text-light);
+            transition: color 0.3s ease;
+        }
+
+        .logout {
+            background-color: var(--accent-color);
+            color: var(--text-light);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            width: 60%;
+            margin: 20px auto 0;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
+
+        .logout:hover {
+            background-color: #d3853b;
+            transform: scale(1.05);
+        }
+
+        /* Main Section */
+        .main {
+            flex-grow: 1;
+            background-color: var(--background-dark);
+            padding: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            margin-left: 280px;
+        }
+
+        .form-card {
+            background-color: var(--background-light);
+            color: var(--text-dark);
+            padding: 35px;
+            border-radius: var(--border-radius-lg);
+            width: 100%;
+            max-width: 650px;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .form-card:hover {
+            transform: scale(1.01);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
+        }
+
+        .form-card h2 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 25px;
+            font-size: 2rem;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: block;
+            color: var(--primary-color);
+        }
+
+        .input-group .input-row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .input-group input,
+        .input-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: var(--border-radius-md);
+            background-color: #f9f9f9;
+            color: var(--text-dark);
+            font-size: 1rem;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .input-group input:focus,
+        .input-group select:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 5px rgba(44, 110, 145, 0.3);
+        }
+
+        .buttons {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .buttons button {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            background-color: var(--primary-color);
+            color: var(--text-light);
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
+
+        .buttons button:hover {
+            background-color: var(--secondary-color);
+            transform: scale(1.05);
+        }
+        
+        /* Remove arrows from number inputs */
+        input[type=number]::-webkit-outer-spin-button,
+        input[type=number]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input[type=number] {-moz-appearance: textfield; /* Firefox */
+        }
+        
+        /* Mobile View & Responsive Design */
+        .mobile-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background-color: var(--secondary-color);
+            color: var(--text-light);
+            font-size: 24px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            align-items: center;
+            justify-content: center;
+            z-index: 1001;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease;
+        }
+
+        @media (max-width: 992px) {
+            .mobile-toggle {
+                display: flex;
+            }
+            .sidebar {
+                transform: translateX(-100%);
+                left: 0;
+                right: initial;
+                width: 250px;
+                max-width: 80vw;
+                box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .main {
+                margin-left: 0;
+                padding: 20px;
+            }
+            .form-card {
+                width: 100%;
+                padding: 25px 15px;
+            }
+            .input-group .input-row {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="photo-container">
+                <a href="studentwelcome.html" class="home-icon" title="Home">
+                    <i class="fas fa-home"></i>
+                </a>
+                <img id="sidebarPhoto" class="sidebar-photo" style="display: none;" />
+            </div>
+            <h2>ID: <span id="userId">Loading...</span></h2>
+            <ul class="menu">
+                <li><a href="studentdetails.html"><i class="fas fa-user-circle"></i> Student details</a></li>
+                <li><a href="feedetails.html"><i class="fas fa-graduation-cap"></i> Fee details</a></li>
+                <li class="active"><a href="#"><i class="fas fa-sync-alt"></i> Update fee payment</a></li>
+                <li><a href="attendence.html"><i class="fas fa-calendar-alt"></i> View Attendance</a></li>
+                <li><a href="studentresults.html"><i class="fas fa-chart-bar"></i> Student Results</a></li>
+                <li><a href="generatenoc.html"><i class="fas fa-file-invoice"></i> Generate NOC</a></li>
+                <li><a href="settings.html"><i class="fas fa-cog"></i> Settings</a></li>
+            </ul>
+            <button class="logout" onclick="confirmLogout()">Logout</button>
+        </div>
+
+        <div class="main">
+            <div class="form-card">
+                <h2>Update Fee Payment</h2>
+                <div class="input-group">
+                    <label>Select Academic Year</label>
+                    <select id="academicYear" required>
+                        <option value="" disabled selected>Choose Year</option>
+                        <option value="1">1st Year</option>
+                        <option value="2">2nd Year</option>
+                        <option value="3">3rd Year</option>
+                        <option value="4">4th Year</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Tuition Fee</label>
+                    <div class="input-row">
+                        <input type="text" id="tuition" placeholder="Enter DU number" />
+                        <input type="number" id="tuitionAmount" placeholder="Enter Amount Paid" />
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Hostel Fee</label>
+                    <div class="input-row">
+                        <input type="text" id="hostel" placeholder="Enter DU number" />
+                        <input type="number" id="hostelAmount" placeholder="Enter Amount Paid" />
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Bus Fee</label>
+                    <div class="input-row">
+                        <input type="text" id="bus" placeholder="Enter DU number" />
+                        <input type="number" id="busAmount" placeholder="Enter Amount Paid" />
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>University Fee</label>
+                    <div class="input-row">
+                        <input type="text" id="university" placeholder="Enter DU number" />
+                        <input type="number" id="universityAmount" placeholder="Enter Amount Paid" />
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Semester Fee</label>
+                    <div class="input-row">
+                        <input type="text" id="semester" placeholder="Enter DU number" />
+                        <input type="number" id="semesterAmount" placeholder="Enter Amount Paid" />
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Library Dues</label>
+                    <div class="input-row">
+                        <input type="text" id="library" placeholder="Enter DU number" />
+                        <input type="number" id="libraryAmount" placeholder="Enter Amount Paid" />
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Fines</label>
+                    <div class="input-row">
+                        <input type="text" id="fines" placeholder="Enter DU number" />
+                        <input type="number" id="finesAmount" placeholder="Enter Amount Paid" />
+                    </div>
+                </div>
+                <div class="buttons">
+                    <button class="update">Update</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mobile-toggle" onclick="toggleMobileMenu()">
+        <i class="fas fa-bars"></i>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.20/dist/sweetalert2.all.min.js"></script>
+<script>
+    function toggleMobileMenu() {
+        const sidebar = document.querySelector('.sidebar');
+        const mobileToggle = document.querySelector('.mobile-toggle');
+        sidebar.classList.toggle('open');
+        mobileToggle.textContent = sidebar.classList.contains('open') ? '×' : '☰';
+    }
+
+    document.querySelectorAll(".menu li a").forEach(link => {
+        link.addEventListener("click", () => {
+            if (window.innerWidth <= 992) {
+                document.querySelector('.sidebar').classList.remove('open');
+                document.querySelector('.mobile-toggle').textContent = '☰';
+            }
+        });
+    });
+
+    // SweetAlert2 Confirmation for Logout
+    function confirmLogout() {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You will be logged out of your account.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#0b2e59',
+            cancelButtonColor: '#f7a048',
+            confirmButtonText: 'Yes, log out!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                logout();
+            }
+        });
+    }
+
+    // Logout and clear session
+function logout() {
+    fetch("/logout", { method: "GET", credentials: "include" })
+      .then(() => {
+          localStorage.clear();
+          sessionStorage.clear();
+          if ("caches" in window) {
+              caches.keys().then(names => names.forEach(name => caches.delete(name)));
+          }
+          window.location.replace("index.html");
+      })
+      .catch(() => {
+          window.location.replace("index.html");
+      });
+}
+    // Prevent back navigation after logout
+    window.history.pushState(null, "", window.location.href);
+    window.onpopstate = () => window.history.pushState(null, "", window.location.href);
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const userId = localStorage.getItem("userId");
+        if (!userId) {
+            Swal.fire({
+                title: 'Access Denied',
+                text: 'Please login first to view this page.',
+                icon: 'error',
+                confirmButtonText: 'Go to Login',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                confirmButtonColor: '#0b2e59'
+            }).then(() => {
+                window.location.href = "index.html";
+            });
+            return;
+        }
+
+        document.getElementById("userId").textContent = userId || "Unknown";
+        
+        fetch(`/student/${userId}`)
+            .then(res => res.json())
+            .then(data => {
+                const photo = document.getElementById("sidebarPhoto");
+                if (photo && data.photo_url) {
+                    photo.src = data.photo_url;
+                    photo.style.display = "block";
+                }
+            })
+            .catch(err => {
+                console.warn("Failed to load photo:", err.message);
+            });
+    });
+
+    // Submit DU Numbers
+    document.querySelector(".update").addEventListener("click", () => {
+        const paymentData = [
+            { type: "tuition", du: tuition.value, amount: tuitionAmount.value },
+            { type: "hostel", du: hostel.value, amount: hostelAmount.value },
+            { type: "bus", du: bus.value, amount: busAmount.value },
+            { type: "university", du: university.value, amount: universityAmount.value },
+            { type: "semester", du: semester.value, amount: semesterAmount.value },
+            { type: "library", du: library.value, amount: libraryAmount.value },
+            { type: "fines", du: fines.value, amount: finesAmount.value }
+        ].filter(entry => entry.du.trim() !== "" || entry.amount.trim() !== "");
+
+        if (paymentData.length === 0) {
+            return Swal.fire({
+                icon: "info",
+                title: "Missing Information",
+                text: "Please enter at least one DU number and its corresponding amount.",
+                confirmButtonColor: '#0b2e59'
+            });
+        }
+
+        for (const p of paymentData) {
+            if ((p.du.trim() && !p.amount.trim()) || (!p.du.trim() && p.amount.trim())) {
+                return Swal.fire({
+                    icon: "warning",
+                    title: "Incomplete Details",
+                    text: `Please enter both DU number and amount for ${p.type} fee.`,
+                    confirmButtonColor: '#0b2e59'
+                });
+            }
+        }
+
+        const academicYear = document.getElementById("academicYear").value;
+        if (!academicYear) {
+            return Swal.fire({
+                icon: "warning",
+                title: "Academic Year Required",
+                text: "Please select the academic year to continue.",
+                confirmButtonColor: '#0b2e59'
+            });
+        }
+
+        const html = `
+            <p style="text-align: left; font-size: 1rem; color: ${getComputedStyle(document.documentElement).getPropertyValue('--text-dark')};">
+                <strong>Academic Year:</strong> ${academicYear}<br><br>
+                ${paymentData.map(p => `
+                    <strong>${p.type.charAt(0).toUpperCase() + p.type.slice(1)} Fee</strong><br>
+                    DU Number: ${p.du}<br>
+                    Amount: ₹${p.amount}<br>
+                `).join("<hr style='border-color: #ddd; margin: 10px 0;'>")}
+            </p>
+        `;
+
+        Swal.fire({
+            title: "Confirm Fee Details",
+            html: html,
+            icon: "question",
+            showCancelButton: true,
+            confirmButtonText: "Submit",
+            cancelButtonText: "Cancel",
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#dc3545'
+        }).then(result => {
+            if (!result.isConfirmed) return;
+
+            const submitData = {
+                userId: localStorage.getItem("userId"),
+                academic_year: academicYear,
+                payments: paymentData.map(p => ({
+                    type: p.type,
+                    du: p.du,
+                    amount: parseFloat(p.amount)
+                }))
+            };
+
+            fetch("/submit-du", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(submitData)
+            })
+            .then(res => res.json().then(data => ({ status: res.status, body: data })))
+            .then(({ status, body }) => {
+                if (status === 400) {
+                    return Swal.fire({
+                        icon: "error",
+                        title: "Duplicate Reference Number",
+                        text: body.message,
+                        confirmButtonColor: '#0b2e59'
+                    });
+                }
+
+                if (status === 500) {
+                    return Swal.fire({
+                        icon: "error",
+                        title: "Server Error",
+                        text: "Something went wrong. Please try again later.",
+                        confirmButtonColor: '#0b2e59'
+                    });
+                }
+
+                if (body.success) {
+                    Swal.fire({
+                        icon: "success",
+                        title: "Fee Details Submitted",
+                        text: body.message || "Your fee details have been saved successfully.",
+                        confirmButtonColor: '#0b2e59'
+                    }).then(() => {
+                        document.querySelectorAll('.form-card input').forEach(inp => inp.value = "");
+                        document.getElementById("academicYear").value = "";
+                    });
+                } else {
+                    throw new Error(body.message || "Unexpected error");
+                }
+            })
+            .catch(err => {
+                console.error("Error submitting fee details:", err);
+                Swal.fire({
+                    icon: "error",
+                    title: "Update Failed",
+                    text: `An error occurred: ${err.message}`,
+                    confirmButtonColor: '#0b2e59'
+                });
+            });
+        });
+    });
+
+    // DU Numbers: auto-uppercase + only A-Z and 0-9
+    document.querySelectorAll('input[type="text"]').forEach(input => {
+        input.addEventListener('input', () => {
+            input.value = input.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        });
+    });
+
+    // Amounts: only numbers allowed
+    document.querySelectorAll('input[type="number"]').forEach(input => {
+        input.addEventListener('input', () => {
+            input.value = input.value.replace(/[^\d]/g, '');
+        });
+    });
+
+    // Enter key moves to next field
+    const formInputs = document.querySelectorAll('.form-card input, .form-card select, .form-card button');
+    formInputs.forEach((input, index) => {
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                let nextInput = formInputs[index + 1];
+                if (nextInput) {
+                    nextInput.focus();
+                } else {
+                    document.querySelector(".update").click();
+                }
+            }
+        });
+    });
+</script>
+    <script src="session.js"></script>
+</body>
+</html>

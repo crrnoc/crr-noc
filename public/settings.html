@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Student Settings - STUDENT PORTAL</title>
+    <link rel="icon" href="crrengglogo.png" type="image/png" />
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.20/dist/sweetalert2.min.css"
+    />
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
+        :root {
+            --primary-color: #0b2e59;
+            --secondary-color: #2c6e91;
+            --accent-color: #f7a048;
+            --background-dark: #f0f2f5;
+            --background-light: #ffffff;
+            --text-dark: #333333;
+            --text-light: #f4f4f4;
+            --card-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            --border-radius-lg: 16px;
+            --border-radius-md: 10px;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #17a2b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--background-dark);
+        }
+
+        body.no-scroll {
+            overflow: hidden;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background-color: var(--primary-color);
+            display: flex;
+            flex-direction: column;
+            padding: 30px 20px;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease-in-out;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .photo-container {
+            display: flex;
+            justify-content: center;
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .home-icon {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background-color: var(--background-light);
+            color: var(--primary-color);
+            border-radius: 50%;
+            font-size: 22px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s ease, background-color 0.3s ease;
+        }
+
+        .home-icon:hover {
+            transform: scale(1.1);
+            background-color: var(--accent-color);
+            color: var(--text-light);
+        }
+
+        .sidebar-photo {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            border: 4px solid var(--accent-color);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        .sidebar h2 {
+            margin: 40px 20px 20px 20px;
+            color: var(--text-light);
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .menu {
+            list-style: none;
+            padding: 0;
+            flex-grow: 1;
+        }
+
+        .menu li {
+            list-style: none;
+            margin-bottom: 12px;
+        }
+
+        .menu li a {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 1rem;
+            color: var(--text-light);
+            padding: 15px 20px;
+            border-radius: var(--border-radius-md);
+            transition: all 0.3s ease;
+        }
+
+        .menu li a:hover,
+        .menu li.active a {
+            background-color: rgba(255, 255, 255, 0.1);
+            font-weight: 500;
+            transform: translateX(5px);
+            box-shadow: var(--card-shadow);
+        }
+
+        .menu li a i {
+            font-size: 1.2rem;
+            width: 25px;
+            text-align: center;
+            color: var(--text-light);
+            transition: color 0.3s ease;
+        }
+
+        .logout {
+            background-color: var(--accent-color);
+            color: var(--text-light);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            width: 60%;
+            margin: 20px auto 0;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
+
+        .logout:hover {
+            background-color: #d3853b;
+            transform: scale(1.05);
+        }
+
+        /* Main Section */
+        .main-section {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--background-dark);
+            padding: 40px 30px;
+            margin-left: 280px;
+            transition: margin-left 0.3s ease-in-out;
+            min-height: 100vh;
+        }
+
+        /* Main Card */
+        .settings-card {
+            background-color: var(--background-light);
+            color: var(--text-dark);
+            width: 100%;
+            max-width: 700px;
+            padding: 35px;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--card-shadow);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .settings-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+        }
+
+        .settings-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        }
+
+        .settings-card h2 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 30px;
+            font-size: 2rem;
+            font-weight: 700;
+            padding-top: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        /* Settings Categories */
+        .settings-category {
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 25px;
+            border-radius: var(--border-radius-md);
+            border-left: 4px solid var(--accent-color);
+            position: relative;
+        }
+
+        .settings-category::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 60px;
+            height: 60px;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23f7a048" opacity="0.1"><path d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11.03L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.22,8.95 2.27,9.22 2.46,9.37L4.57,11.03C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.22,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.68 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z"/></svg>') no-repeat center;
+            background-size: contain;
+        }
+
+        .category-title {
+            color: var(--primary-color);
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .category-title i {
+            font-size: 1.4rem;
+            color: var(--accent-color);
+        }
+
+        /* Settings List */
+        .settings-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .settings-item {
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .settings-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .settings-link {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 20px;
+            background: var(--background-light);
+            border-radius: var(--border-radius-md);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .settings-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+            border-left-color: var(--accent-color);
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        }
+
+        .settings-link-content {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .settings-icon {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: var(--text-light);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: transform 0.3s ease;
+        }
+
+        .settings-link:hover .settings-icon {
+            transform: scale(1.1);
+            background: linear-gradient(135deg, var(--accent-color), #e68a00);
+        }
+
+        .settings-text {
+            flex: 1;
+        }
+
+        .settings-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+
+        .settings-description {
+            font-size: 0.9rem;
+            color: var(--secondary-color);
+            line-height: 1.4;
+        }
+
+        .settings-arrow {
+            color: var(--secondary-color);
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .settings-link:hover .settings-arrow {
+            color: var(--accent-color);
+            transform: translateX(5px);
+        }
+
+        /* Special styling for different categories */
+        .general-settings .settings-icon {
+            background: linear-gradient(135deg, var(--info-color), #0c7cd5);
+        }
+
+        .support-settings .settings-icon {
+            background: linear-gradient(135deg, var(--success-color), #1e7e34);
+        }
+
+        .about-settings .settings-icon {
+            background: linear-gradient(135deg, var(--warning-color), #e0a800);
+        }
+
+        .danger-settings .settings-icon {
+            background: linear-gradient(135deg, var(--danger-color), #c82333);
+        }
+
+        /* Mobile Toggle & Overlay */
+        .mobile-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background-color: var(--secondary-color);
+            color: var(--text-light);
+            font-size: 24px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            align-items: center;
+            justify-content: center;
+            z-index: 1001;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease;
+            border: none;
+        }
+
+        .mobile-toggle:hover {
+            transform: scale(1.1);
+            background-color: var(--accent-color);
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(3px);
+            z-index: 999;
+            transition: opacity 0.3s ease-in-out;
+            opacity: 0;
+        }
+
+        .overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .mobile-toggle {
+                display: flex;
+            }
+            
+            .sidebar {
+                transform: translateX(-100%);
+                width: 250px;
+                max-width: 85vw;
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .main-section {
+                margin-left: 0;
+                padding: 25px 20px;
+                justify-content: flex-start;
+                padding-top: 40px;
+            }
+            
+            .settings-card {
+                padding: 25px;
+            }
+
+            .settings-card h2 {
+                font-size: 1.6rem;
+                margin-bottom: 25px;
+            }
+
+            .settings-category {
+                padding: 20px;
+                margin-bottom: 25px;
+            }
+
+            .category-title {
+                font-size: 1.2rem;
+                margin-bottom: 18px;
+            }
+
+            .settings-link {
+                padding: 15px 18px;
+            }
+
+            .settings-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 1.1rem;
+            }
+
+            .settings-title {
+                font-size: 1rem;
+            }
+
+            .settings-description {
+                font-size: 0.85rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .sidebar {
+                width: 220px;
+                max-width: 75vw;
+                padding: 20px 15px;
+            }
+
+            .sidebar h2 {
+                font-size: 1rem;
+                margin: 20px 10px;
+            }
+
+            .menu li a {
+                font-size: 0.9rem;
+                padding: 12px 15px;
+                gap: 10px;
+            }
+
+            .logout {
+                width: 80%;
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+
+            .main-section {
+                padding: 20px 15px;
+                padding-top: 35px;
+            }
+
+            .settings-card {
+                padding: 20px;
+                border-radius: var(--border-radius-md);
+            }
+
+            .settings-card h2 {
+                font-size: 1.4rem;
+                margin-bottom: 20px;
+            }
+
+            .settings-category {
+                padding: 18px;
+                margin-bottom: 20px;
+            }
+
+            .category-title {
+                font-size: 1.1rem;
+                margin-bottom: 15px;
+            }
+
+            .settings-item {
+                margin-bottom: 12px;
+            }
+
+            .settings-link {
+                padding: 15px;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .settings-link-content {
+                width: 100%;
+                gap: 12px;
+            }
+
+            .settings-icon {
+                width: 35px;
+                height: 35px;
+                font-size: 1rem;
+            }
+
+            .settings-title {
+                font-size: 0.95rem;
+            }
+
+            .settings-description {
+                font-size: 0.8rem;
+            }
+
+            .settings-arrow {
+                align-self: flex-end;
+                font-size: 1.1rem;
+            }
+
+            .mobile-toggle {
+                width: 45px;
+                height: 45px;
+                font-size: 20px;
+                top: 15px;
+                left: 15px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .settings-card {
+                padding: 15px;
+                margin: 15px auto;
+            }
+
+            .settings-card h2 {
+                font-size: 1.2rem;
+            }
+
+            .settings-category {
+                padding: 15px;
+            }
+
+            .category-title {
+                font-size: 1rem;
+            }
+
+            .settings-link {
+                padding: 12px;
+            }
+
+            .settings-icon {
+                width: 32px;
+                height: 32px;
+                font-size: 0.9rem;
+            }
+
+            .settings-title {
+                font-size: 0.9rem;
+            }
+
+            .settings-description {
+                font-size: 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="overlay" onclick="toggleMobileMenu()"></div>
+    
+    <div class="container">
+        <div class="sidebar" id="sidebar">
+            <div class="photo-container">
+                <a href="studentwelcome.html" class="home-icon" title="Home">
+                    <i class="fas fa-home"></i>
+                </a>
+                <img id="sidebarPhoto" class="sidebar-photo" style="display: none;" />
+            </div>
+
+            <h2>ID: <span id="userId">Loading...</span></h2>
+            
+            <ul class="menu">
+                <li>
+                    <a href="studentdetails.html"><i class="fas fa-user-circle"></i> Student details</a>
+                </li>
+                <li>
+                    <a href="feedetails.html"><i class="fas fa-graduation-cap"></i> Fee details</a>
+                </li>
+                <li>
+                    <a href="updaterefno.html"><i class="fas fa-sync-alt"></i> Update fee payment</a>
+                </li>
+                <li>
+                    <a href="attendence.html"><i class="fas fa-calendar-alt"></i> View Attendance</a>
+                </li>
+                <li>
+                    <a href="studentresults.html"><i class="fas fa-chart-bar"></i> Student Results</a>
+                </li>
+                <li>
+                    <a href="generatenoc.html"><i class="fas fa-file-invoice"></i> Generate NOC</a>
+                </li>
+                <li class="active">
+                    <a href="settings.html"><i class="fas fa-cog"></i> Settings</a>
+                </li>
+            </ul>
+            
+            <button class="logout" onclick="confirmLogout()">Logout</button>
+        </div>
+
+        <div class="main-section">
+            <div class="settings-card">
+                <h2><i class="fas fa-cogs"></i> Settings & Information</h2>
+                
+                <!-- General Settings -->
+                <div class="settings-category general-settings">
+                    <div class="category-title">
+                        <i class="fas fa-sliders-h"></i>
+                        General Settings
+                    </div>
+                    <ul class="settings-list">
+                        <li class="settings-item">
+                            <a href="notifications.html" class="settings-link">
+                                <div class="settings-link-content">
+                                    <div class="settings-icon">
+                                        <i class="fas fa-bell"></i>
+                                    </div>
+                                    <div class="settings-text">
+                                        <div class="settings-title">Notifications</div>
+                                        <div class="settings-description">See Notifications From Your Faculty/Staff</div>
+                                    </div>
+                                </div>
+                                <div class="settings-arrow">
+                                    <i class="fas fa-chevron-right"></i>
+                                </div>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Support & Help -->
+                <div class="settings-category support-settings">
+                    <div class="category-title">
+                        <i class="fas fa-life-ring"></i>
+                        Support & Help
+                    </div>
+                    <ul class="settings-list">
+                        <li class="settings-item">
+                            <a href="help&feedback.html" class="settings-link">
+                                <div class="settings-link-content">
+                                    <div class="settings-icon">
+                                        <i class="fas fa-question-circle"></i>
+                                    </div>
+                                    <div class="settings-text">
+                                        <div class="settings-title">Help & Feedback</div>
+                                        <div class="settings-description">Get help and send feedback about the portal</div>
+                                    </div>
+                                </div>
+                                <div class="settings-arrow">
+                                    <i class="fas fa-chevron-right"></i>
+                                </div>
+                            </a>
+                        </li>
+                        <li class="settings-item">
+                            <a href="faq.html" class="settings-link">
+                                <div class="settings-link-content">
+                                    <div class="settings-icon">
+                                        <i class="fas fa-comment-dots"></i>
+                                    </div>
+                                    <div class="settings-text">
+                                        <div class="settings-title">FAQ</div>
+                                        <div class="settings-description">Frequently asked questions and answers</div>
+                                    </div>
+                                </div>
+                                <div class="settings-arrow">
+                                    <i class="fas fa-chevron-right"></i>
+                                </div>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Account Management -->
+                <div class="settings-category danger-settings">
+                    <div class="category-title">
+                        <i class="fas fa-user-cog"></i>
+                        Account Management
+                    </div>
+                    <ul class="settings-list">
+                        <li class="settings-item">
+                            <a href="duhistory.html" class="settings-link">
+                                <div class="settings-link-content">
+                                    <div class="settings-icon">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </div>
+                                    <div class="settings-text">
+                                        <div class="settings-title">Delete DU Entries</div>
+                                        <div class="settings-description">Manage and delete your DU entry records</div>
+                                    </div>
+                                </div>
+                                <div class="settings-arrow">
+                                    <i class="fas fa-chevron-right"></i>
+                                </div>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- About & Information -->
+                <div class="settings-category about-settings">
+                    <div class="category-title">
+                        <i class="fas fa-info-circle"></i>
+                        About & Information
+                    </div>
+                    <ul class="settings-list">
+                        <li class="settings-item">
+                            <a href="developerspage.html" class="settings-link">
+                                <div class="settings-link-content">
+                                    <div class="settings-icon">
+                                        <i class="fas fa-code"></i>
+                                    </div>
+                                    <div class="settings-text">
+                                        <div class="settings-title">About Developers</div>
+                                        <div class="settings-description">Meet the team behind this student portal</div>
+                                    </div>
+                                </div>
+                                <div class="settings-arrow">
+                                    <i class="fas fa-chevron-right"></i>
+                                </div>
+                            </a>
+                        </li>
+                        <li class="settings-item">
+                            <a href="privacypolicy.html" class="settings-link">
+                                <div class="settings-link-content">
+                                    <div class="settings-icon">
+                                        <i class="fas fa-shield-alt"></i>
+                                    </div>
+                                    <div class="settings-text">
+                                        <div class="settings-title">Privacy Policy</div>
+                                        <div class="settings-description">Learn how we protect your privacy and data</div>
+                                    </div>
+                                </div>
+                                <div class="settings-arrow">
+                                    <i class="fas fa-chevron-right"></i>
+                                </div>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <button class="mobile-toggle" onclick="toggleMobileMenu()">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.20/dist/sweetalert2.all.min.js"></script>
+    <script>
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.querySelector('.overlay');
+            const body = document.body;
+            
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
+            body.classList.toggle('no-scroll');
+        }
+
+        document.querySelectorAll(".menu li a").forEach(link => {
+            link.addEventListener("click", () => {
+                if (window.innerWidth <= 992) {
+                    toggleMobileMenu();
+                }
+            });
+        });
+        
+        function confirmLogout() {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You will be logged out of your account.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#0b2e59',
+                cancelButtonColor: '#f7a048',
+                confirmButtonText: 'Yes, log out!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    logout();
+                }
+            });
+        }
+
+        function logout() {
+            fetch("/logout", { method: "GET", credentials: "include" })
+              .then(() => {
+                  localStorage.clear();
+                  sessionStorage.clear();
+                  if ("caches" in window) {
+                      caches.keys().then(names => names.forEach(name => caches.delete(name)));
+                  }
+                  window.location.replace("index.html");
+              })
+              .catch(() => {
+                  window.location.replace("index.html");
+              });
+        }
+
+        // Prevent back navigation after logout
+        window.history.pushState(null, "", window.location.href);
+        window.onpopstate = () => window.history.pushState(null, "", window.location.href);
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            const userId = localStorage.getItem("userId") || localStorage.getItem("regno");
+            
+            // Check authentication
+            if (!userId) {
+                Swal.fire({
+                    title: 'Access Denied',
+                    text: 'Please login first to view this page.',
+                    icon: 'error',
+                    confirmButtonText: 'Go to Login',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    confirmButtonColor: '#0b2e59'
+                }).then(() => {
+                    window.location.href = "index.html";
+                });
+                return;
+            }
+
+            document.getElementById("userId").textContent = userId;
+
+            // Load sidebar photo
+            try {
+                const res = await fetch(`/student/${userId}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    const photo = document.getElementById("sidebarPhoto");
+                    if (photo && data && data.name) {
+                        photo.src = data.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name)}&background=random&rounded=true&bold=true&size=128`;
+                        photo.style.display = "block";
+                    }
+                }
+            } catch (err) {
+                console.warn("⚠️ Failed to load photo:", err.message);
+            }
+        });
+    </script>
+    <script src="session.js"></script>
+</body>
+</html>

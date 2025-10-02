@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Staff Dashboard</title>
+    <link rel="icon" href="crrengglogo.png" type="image/png" />
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.20/dist/sweetalert2.min.css"
+    />
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
+        :root {
+            --primary-color: #0b1c3c; /* Deep Navy */
+            --secondary-color: #1a3a60; /* Darker Blue */
+            --accent-color: #ffcc5c; /* Gold/Amber */
+            --background-start: #e9f0f9;
+            --background-end: #f4f7f9;
+            --background-light: #ffffff;
+            --text-dark: #2c3e50;
+            --text-light: #ecf0f1;
+            --card-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            --border-radius-lg: 20px;
+            --border-radius-md: 12px;
+            --border-radius-sm: 8px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--background-start) 0%, var(--background-end) 100%);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+        }
+
+        /* Container and Overlay */
+        .container {
+            display: flex;
+            width: 100%;
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(3px);
+            z-index: 999;
+            transition: opacity 0.3s ease-in-out;
+            opacity: 0;
+        }
+
+        .no-scroll {
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background-color: var(--primary-color);
+            display: flex;
+            flex-direction: column;
+            padding: 30px 20px;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+            transform: translateX(0);
+            transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-photo {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 4px solid var(--accent-color);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        .sidebar h2 {
+            margin-top: 15px;
+            color: var(--text-light);
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+
+        .menu {
+            list-style: none;
+            flex-grow: 1;
+        }
+
+        .menu li {
+            margin-bottom: 15px;
+        }
+
+        .menu li a {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 1rem;
+            color: var(--text-light);
+            padding: 15px 20px;
+            border-radius: var(--border-radius-md);
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .menu li a:hover,
+        .menu li.active a {
+            background-color: var(--secondary-color);
+            color: var(--accent-color);
+            font-weight: 500;
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .menu li a i,
+        .menu li a span {
+            font-size: 1.2rem;
+            width: 25px;
+            text-align: center;
+            color: inherit;
+            transition: color 0.3s ease;
+        }
+
+        .logout {
+            background-color: var(--accent-color);
+            color: var(--text-dark);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            width: 60%;
+            margin: 20px auto 0;
+            transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .logout:hover {
+            background-color: #e5b64c;
+            transform: scale(1.05);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Main Section */
+        .main-section {
+            flex-grow: 1;
+            background: linear-gradient(135deg, var(--background-start) 0%, var(--background-end) 100%);
+            padding: 40px 30px;
+            margin-left: 280px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+            transition: margin-left 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        /* Cards and Sections */
+        .welcome-card,
+        .slideshow-container,
+        .college-info,
+        .notifications,
+        .suggestions,
+        .staff-details-card {
+            background-color: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--card-shadow);
+            padding: 30px;
+            width: 100%;
+            max-width: 1100px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .welcome-card {
+            background: linear-gradient(
+                135deg,
+                var(--primary-color) 0%,
+                var(--secondary-color) 100%
+            );
+            color: var(--text-light);
+            text-align: center;
+        }
+
+        .welcome-card h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .welcome-card p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            line-height: 1.5;
+        }
+
+        .staff-details-card {
+            padding: 20px 30px;
+        }
+
+        .staff-details-card h2 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+
+        .staff-details-card .detail-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .staff-details-card .detail-group i {
+            color: var(--secondary-color);
+            font-size: 1.5rem;
+        }
+
+        .staff-details-card .detail-group label {
+            font-weight: bold;
+            width: 100px;
+        }
+
+        .staff-details-card .detail-group span,
+        .staff-details-card .detail-group input {
+            flex-grow: 1;
+            font-size: 1rem;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            transition: border-color 0.3s ease;
+        }
+
+        .staff-details-card .detail-group input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        .staff-details-card .edit-btn,
+        .staff-details-card .save-btn {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .staff-details-card .edit-btn:hover,
+        .staff-details-card .save-btn:hover {
+            background-color: #d3853b;
+        }
+
+        .notifications,
+        .suggestions {
+            padding: 15px 25px;
+        }
+
+        .notifications {
+            background-color: #fff3e0;
+            border-left: 5px solid var(--accent-color);
+            color: var(--accent-color);
+        }
+
+        .notifications marquee {
+            font-weight: 500;
+        }
+
+        .suggestions {
+            background-color: #e8f5e9;
+            border-left: 5px solid #4caf50;
+            color: #2e7d32;
+        }
+
+        .suggestions a {
+            color: #1b5e20;
+            font-weight: bold;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .suggestions a:hover {
+            color: #43a047;
+            text-decoration: underline;
+        }
+
+        .slideshow-container {
+            padding: 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .slide {
+            display: none;
+            width: 100%;
+            height: auto;
+            object-fit: cover;
+            border-radius: var(--border-radius-lg);
+            transition: opacity 1s ease-in-out;
+        }
+
+        .slide.active {
+            display: block;
+            opacity: 1;
+        }
+
+        .college-info h2 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
+
+        .college-info p {
+            line-height: 1.8;
+            color: #555;
+            font-size: 1rem;
+        }
+
+        .college-info strong {
+            color: var(--secondary-color);
+        }
+
+        /* Mobile View & Responsive Design */
+        .mobile-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background-color: var(--secondary-color);
+            color: var(--text-light);
+            font-size: 24px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            align-items: center;
+            justify-content: center;
+            z-index: 1001;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease;
+        }
+
+        @media (max-width: 992px) {
+            .mobile-toggle {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+                left: 0;
+                right: initial;
+                width: 250px;
+                max-width: 80vw;
+                box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+           
+            .main-section {
+                margin-left: 0;
+                padding: 20px;
+            }
+
+            .welcome-card,
+            .slideshow-container,
+            .college-info,
+            .notifications,
+            .suggestions,
+            .staff-details-card {
+                padding: 20px;
+            }
+
+            .welcome-card h1 {
+                font-size: 2rem;
+            }
+
+            .welcome-card p {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="overlay" onclick="toggleMobileMenu()"></div>
+
+    <div class="container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <img id="sidebarPhoto" class="sidebar-photo" style="display: none;" />
+                <h2 id="staffName">Staff Name</h2>
+                <h2 style="margin-top: 5px;">ID: <span id="staffId">Loading...</span></h2>
+            </div>
+            <ul class="menu">
+                <li><a href="knowaboutstd1.html"><i class="fas fa-user-circle"></i> Know about Student</a></li>
+                <li><a href="editstudentdetails.html"><i class="fas fa-user-edit"></i> Edit Student Details</a></li>
+                <li><a href="sendnotification.html"><i class="fas fa-paper-plane"></i> Send Notification</a></li>
+                <li><a href="updatefee.html"><i class="fas fa-money-bill-wave"></i> Update Fee</a></li>
+                <li><a href="imposefines.html"><i class="fas fa-money-check-alt"></i> Impose Fines</a></li>
+                <li><a href="mark_attendance.html"><i class="fas fa-clipboard-list"></i> Mark Attendance</a></li>
+                <li><a href="backlogs.html"><i class="fas fa-book-open"></i> Find Backlogs</a></li>
+                <li><a href="mycounselling.html"><i class="fas fa-handshake"></i> View Counselling</a></li>
+                <li><a href="staffsettings.html"><i class="fas fa-cog"></i> Settings</a></li>
+            </ul>
+            <button class="logout" onclick="confirmLogout()">Logout</button>
+        </div>
+
+        <div class="main-section">
+<div class="welcome-card">
+  <h1>Welcome, <span id="welcomeName"></span>!</h1>
+  <p id="deptName" style="font-weight: bold; font-size: 1.2rem; margin-bottom: 10px;"></p>
+  <p>
+    We're glad to have you back. Use the sidebar to access your staff tools.
+  </p>
+</div>
+
+            <div class="staff-details-card">
+                <h2>My Profile</h2>
+                <div class="detail-group">
+                    <label for="staffIdDisplay">Staff ID:</label>
+                    <span id="staffIdDisplay">Loading...</span>
+                </div>
+                <div class="detail-group">
+                    <label for="staffNameInput">Name:</label>
+                    <input type="text" id="staffNameInput" value="" disabled />
+                </div>
+                <div class="detail-group">
+                    <label for="staffEmailInput">Email:</label>
+                    <input type="email" id="staffEmailInput" value="" disabled />
+                </div>
+                <div class="detail-group">
+                   <label for="staffMobileInput">Mobile No:</label>
+                   <input type="text" id="staffMobileInput" disabled />
+                </div>
+                <div class="detail-group">
+                    <label for="staffPhotoInput">Profile Photo:</label>
+                    <input type="file" id="staffPhotoInput" accept="image/*" disabled />
+                </div>
+
+                <div style="text-align: right;">
+                    <button class="edit-btn" onclick="toggleEdit()">Edit Profile</button>
+                    <button class="save-btn" onclick="saveProfile()" style="display: none;">Save Changes</button>
+                </div>
+            </div>
+
+            <div class="notifications" id="dynamicNotifications">
+                <marquee behavior="scroll" direction="left" scrollamount="5">
+                    Loading notifications...
+                </marquee>
+            </div>
+
+            <div class="suggestions">
+                <p>
+                    We value your suggestions for improvement. Please feel free to
+                    share your thoughts with us!
+                    <a
+                        href="mailto:sircrrcoestd@sircrrengg.ac.in"
+                        target="_blank"
+                    >
+                        Click here 👉
+                    </a>
+                </p>
+            </div>
+
+            <div class="slideshow-container">
+                <img class="slide active" src="images/img1.jpg" alt="College Image 1" />
+                <img class="slide" src="images/cse.JPG" alt="CSE DEPT" />
+                <img class="slide" src="images/img2.jpg" alt="College Image 3" />
+                <img class="slide" src="images/img3.jpg" alt="College Image 4" />
+                <img class="slide" src="images/img4.jpg" alt="College Image 5" />
+            </div>
+
+            <div class="college-info">
+                <h2>Welcome to Sir C. R. Reddy College of Engineering (AUTONOMOUS)</h2>
+                <p>
+                    Sir C.R. Reddy College of Engineering(A) is the first Engineering College in Andhra Pradesh sanctioned and recognized by All India Council for Technical Education (AICTE). This College is permanently affiliated to JNTUK from the Academic Year 2017-18.
+                    <br /><br />
+                    Since its inception in 1989, Sir C.R. Reddy College of Engineering(A) has been a premier institute for quality engineering education in Andhra Pradesh under the stewardship of its broad-minded and magnanimous management. The last two and a half decades have seen the Institute fulfilling its motto of
+                    <strong>'QUALITY SERVICE & VALUE BASED EDUCATION'</strong> to the student community.
+                    <br /><br />
+                    Adhering to its core values, the institute gives top priority to ethical values, high standards, and a commitment to value-based education. We believe in working honestly and sincerely, in building trust, and in maintaining a long-lasting relationship with society.
+                    <br /><br />
+                    The College is situated near Vatluru railway gate in Eluru, the Head Quarters of West Godavari district. It is surrounded by beautiful paddy fields and is on the Chennai-Howrah highway and train route. A large number of buses and trains run via this town. It is easily accessible from any part of the country by rail as well as road.
+                    <br /><br />
+                    The College is located in its own sprawling campus with an area of 30.48 acres. Its magnanimous infrastructure and greenery attract the attention of people who pass by. The vast green campus housing several Departments provides a stimulating environment to the high-caliber staff and students of the institution.
+                    <br /><br />
+                    The Campus at Vatluru is a place where students from all walks of life are under a single umbrella pursuing their BE/B.Tech, M.Tech, and MBA courses.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
+    <script> window.chtlConfig = { chatbotId: "7883498161" } </script>
+<script async data-id="7883498161" id="chtl-script" type="text/javascript" src="https://chatling.ai/js/embed.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.20/dist/sweetalert2.all.min.js"></script>
+<script>
+    let isEditing = false; // global state for edit/save toggle
+
+    function toggleMobileMenu() {
+        const sidebar = document.querySelector('.sidebar');
+        const overlay = document.querySelector('.overlay');
+        const body = document.body;
+        sidebar.classList.toggle('open');
+        overlay.style.display = sidebar.classList.contains('open') ? 'block' : 'none';
+        body.classList.toggle('no-scroll', sidebar.classList.contains('open'));
+    }
+
+    function confirmLogout() {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You will be logged out of your account.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#0b1c3c',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, log out!'
+        }).then((result) => {
+            if (result.isConfirmed) logout();
+        });
+    }
+
+function logout() {
+    fetch("/logout", { method: "GET", credentials: "include" })
+      .then(() => {
+          localStorage.clear();
+          sessionStorage.clear();
+          if ("caches" in window) {
+              caches.keys().then(names => names.forEach(name => caches.delete(name)));
+          }
+          window.location.replace("index.html");
+      })
+      .catch(() => {
+          window.location.replace("index.html");
+      });
+}
+        window.history.pushState(null, "", window.location.href);
+        window.onpopstate = () => window.history.pushState(null, "", window.location.href);
+
+    let currentSlide = 0;
+    function showSlide(index) {
+        const slides = document.querySelectorAll('.slide');
+        slides.forEach((slide, i) => slide.classList.remove('active'));
+        if (slides[index]) slides[index].classList.add('active');
+    }
+    function nextSlide() {
+        const slides = document.querySelectorAll('.slide');
+        if (slides.length === 0) return;
+        currentSlide = (currentSlide + 1) % slides.length;
+        showSlide(currentSlide);
+    }
+    setInterval(nextSlide, 5000);
+
+    function toggleEdit() {
+        const inputs = [
+            'staffNameInput',
+            'staffEmailInput',
+            'staffMobileInput',
+            'staffPhotoInput'
+        ];
+        inputs.forEach(id => document.getElementById(id).disabled = isEditing);
+        document.querySelector('.edit-btn').style.display = isEditing ? 'inline-block' : 'none';
+        document.querySelector('.save-btn').style.display = isEditing ? 'none' : 'inline-block';
+        isEditing = !isEditing;
+    }
+
+    async function saveProfile() {
+        const userId = localStorage.getItem('userId');
+        const newName = document.getElementById('staffNameInput').value;
+        const newEmail = document.getElementById('staffEmailInput').value;
+        const newMobile = document.getElementById('staffMobileInput').value;
+        const photoFile = document.getElementById('staffPhotoInput').files[0];
+
+        if (!newName || !newEmail) {
+            Swal.fire('Error', 'Name and Email cannot be empty.', 'error');
+            return;
+        }
+
+        try {
+            const formData = new FormData();
+            formData.append("staff_name", newName);
+            formData.append("staff_email", newEmail);
+            formData.append("mobile_no", newMobile);
+            if (photoFile) formData.append("photo", photoFile);
+
+            const res = await fetch(`/staff/${userId}`, {
+                method: "PUT",
+                body: formData
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                Swal.fire('Success', data.message, 'success');
+                document.getElementById('welcomeName').textContent = newName;
+                document.getElementById('staffName').textContent = newName;
+
+                let photoUrl = "";
+                if (data.photo_url) {
+                    photoUrl = data.photo_url;
+                } else if (data.photo_public_id) {
+                    // replace <your-cloud-name> with your Cloudinary cloud name
+                    photoUrl = `https://res.cloudinary.com/dn1c2f2bg/image/upload/${data.photo_public_id}.jpg`;
+                }
+
+                if (photoUrl) {
+                    const sidebarPhoto = document.getElementById('sidebarPhoto');
+                    sidebarPhoto.src = photoUrl;
+                    sidebarPhoto.style.display = "block";
+                }
+
+                toggleEdit();
+            } else {
+                Swal.fire('Error', data.message || 'Update failed', 'error');
+            }
+        } catch (err) {
+            console.error("Update error:", err);
+            Swal.fire('Error', 'Failed to update profile.', 'error');
+        }
+    }
+
+    function loadNotifications(userId) {
+        fetch(`/staff/notifications/${userId}`)
+            .then(res => res.json())
+            .then(data => {
+                const notifyBox = document.getElementById("dynamicNotifications");
+                if (!data || data.length === 0) {
+                    notifyBox.innerHTML = `<p>No new notifications.</p>`;
+                    return;
+                }
+                const message = data.map(n => ` ${n.message}`).join(" | ");
+                notifyBox.innerHTML = `
+                    <marquee behavior="scroll" direction="left" scrollamount="5">
+                        ${message}
+                    </marquee>
+                `;
+            })
+            .catch(err => {
+                console.error("Notification load error:", err);
+                document.getElementById("dynamicNotifications").innerHTML = "<p>Error loading notifications.</p>";
+            });
+    }
+
+    const deptMap = {
+        "CSE": "Department of Computer Science and Engineering",
+        "ECE": "Department of Electronics and Communication Engineering",
+        "EEE": "Department of Electrical and Electronics Engineering",
+        "MECH": "Department of Mechanical Engineering",
+        "CIVIL": "Department of Civil Engineering",
+        "IT": "Department of Information Technology"
+    };
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const userId = localStorage.getItem('userId');
+        if (!userId) {
+            Swal.fire({
+                title: 'Access Denied',
+                text: 'Please login first to view this page.',
+                icon: 'error',
+                confirmButtonText: 'Go to Login',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                confirmButtonColor: '#0b1c3c'
+            }).then(() => window.location.href = "index.html");
+            return;
+        }
+
+        document.getElementById("staffId").textContent = userId;
+        document.getElementById("staffIdDisplay").textContent = userId;
+        showSlide(currentSlide);
+
+        fetch(`/staff/${userId}`)
+            .then(res => {
+                if (!res.ok) throw new Error('Staff data fetch failed');
+                return res.json();
+            })
+            .then(data => {
+                if (data.staff_name) {
+                    document.getElementById("welcomeName").textContent = data.staff_name;
+                    document.getElementById("staffName").textContent = data.staff_name;
+                    document.getElementById("staffNameInput").value = data.staff_name;
+                    document.getElementById("staffEmailInput").value = data.staff_email;
+                    document.getElementById("staffMobileInput").value = data.mobile_no || "";
+                }
+                if (data.dept_code) {
+                    const deptName = deptMap[data.dept_code.toUpperCase()] || data.dept_code;
+                    document.getElementById("deptName").textContent = deptName;
+                }
+
+                let photoUrl = "";
+                if (data.photo_url) {
+                    photoUrl = data.photo_url;
+                } else if (data.photo_public_id) {
+                    photoUrl = `https://res.cloudinary.com/dn1c2f2bg/image/upload/${data.photo_public_id}.jpg`;
+                }
+
+                if (photoUrl) {
+                    const photo = document.getElementById("sidebarPhoto");
+                    photo.src = photoUrl;
+                    photo.style.display = "block";
+                }
+            })
+            .catch(err => {
+                console.error("Error loading staff data:", err);
+                Swal.fire('Error', 'Failed to load staff details. Please try again.', 'error');
+            });
+
+        loadNotifications(userId);
+    });
+
+    window.history.pushState(null, "", window.location.href);
+    window.onpopstate = () => window.history.pushState(null, "", window.location.href);
+</script>
+    <script src="session.js"></script>
+</body>
+</html>

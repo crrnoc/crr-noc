@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Staff - Update Fee</title>
+    <link rel="icon" href="crrengglogo.png" type="image/png" />
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.20/dist/sweetalert2.min.css"
+    />
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
+        :root {
+            --primary-color: #0b1c3c; /* Deep Navy */
+            --secondary-color: #1a3a60; /* Darker Blue */
+            --accent-color: #ffcc5c; /* Gold/Amber */
+            --background-start: #e9f0f9;
+            --background-end: #f4f7f9;
+            --background-light: #ffffff;
+            --text-dark: #2c3e50;
+            --text-light: #ecf0f1;
+            --card-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            --border-radius-lg: 20px;
+            --border-radius-md: 12px;
+            --border-radius-sm: 8px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--background-start) 0%, var(--background-end) 100%);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+        }
+
+        /* Container and Overlay */
+        .main-container {
+            display: flex;
+            width: 100%;
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(3px);
+            z-index: 999;
+            transition: opacity 0.3s ease-in-out;
+            opacity: 0;
+        }
+
+        .no-scroll {
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background-color: var(--primary-color);
+            display: flex;
+            flex-direction: column;
+            padding: 30px 20px;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+            transform: translateX(0);
+            transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .home-icon {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            font-size: 1.5rem;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: color 0.3s ease, transform 0.3s ease;
+        }
+
+        .home-icon:hover {
+            color: var(--accent-color);
+            transform: scale(1.1);
+        }
+
+        .sidebar-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-photo {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            overflow: hidden;
+            margin-bottom: 15px;
+            box-shadow: 0 0 0 4px var(--accent-color), 0 0 0 8px rgba(255, 204, 92, 0.3);
+        }
+
+        .sidebar-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .sidebar h2 {
+            margin-top: 15px;
+            color: var(--text-light);
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+
+        .menu {
+            list-style: none;
+            flex-grow: 1;
+        }
+
+        .menu li {
+            margin-bottom: 15px;
+        }
+
+        .menu li a {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 1rem;
+            color: var(--text-light);
+            padding: 15px 20px;
+            border-radius: var(--border-radius-md);
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .menu li a:hover,
+        .menu li.active a {
+            background-color: var(--secondary-color);
+            color: var(--accent-color);
+            font-weight: 500;
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .menu li a i {
+            font-size: 1.2rem;
+            width: 25px;
+            text-align: center;
+            color: inherit;
+            transition: color 0.3s ease;
+        }
+
+        .logout {
+            background-color: var(--accent-color);
+            color: var(--text-dark);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            width: 60%;
+            margin: 20px auto 0;
+            transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .logout:hover {
+            background-color: #e5b64c;
+            transform: scale(1.05);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Content */
+        .content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px;
+            margin-left: 280px;
+            transition: margin-left 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .header {
+            width: 100%;
+            max-width: 600px;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 20px 30px;
+            box-shadow: var(--card-shadow);
+            border-radius: var(--border-radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 25px;
+            position: sticky;
+            top: 20px;
+            z-index: 10;
+            animation: fadeInDown 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header h1 {
+            color: var(--primary-color);
+            font-size: 2rem;
+            font-weight: 500;
+        }
+        
+        .form-box {
+            background-color: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 40px 35px;
+            border-radius: var(--border-radius-lg);
+            max-width: 600px;
+            width: 100%;
+            box-shadow: var(--card-shadow);
+            animation: fadeIn 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-box h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: var(--primary-color);
+            font-size: 1.5rem;
+            font-weight: 500;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            color: var(--text-dark);
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .input-group input,
+        .input-group select {
+            width: 100%;
+            padding: 12px;
+            border-radius: var(--border-radius-md);
+            border: 2px solid #ddd;
+            font-size: 0.9rem;
+            background-color: #f9f9f9;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .input-group input:focus,
+        .input-group select:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 12px rgba(255, 204, 92, 0.5);
+        }
+
+        .form-box button {
+            margin-top: 20px;
+            width: 100%;
+            padding: 14px;
+            font-size: 1rem;
+            font-weight: bold;
+            background-color: var(--primary-color);
+            color: var(--text-light);
+            border: none;
+            border-radius: var(--border-radius-md);
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .form-box button:hover {
+            background-color: var(--secondary-color);
+            transform: scale(1.01) translateY(-1px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Mobile View */
+        .mobile-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background-color: var(--secondary-color);
+            color: var(--text-light);
+            font-size: 24px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            align-items: center;
+            justify-content: center;
+            z-index: 1001;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease;
+        }
+
+        .mobile-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        @media (max-width: 992px) {
+            .mobile-toggle {
+                display: flex;
+            }
+            .sidebar {
+                transform: translateX(-100%);
+                width: 250px;
+                max-width: 85vw;
+                padding-left: 10px;
+                padding-right: 10px;
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .content {
+                margin-left: 0;
+            }
+            .overlay.active {
+                display: block;
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="overlay" onclick="toggleMobileMenu()"></div>
+
+    <div class="main-container">
+        <div class="sidebar">
+            <a href="staff-dashboard.html" class="home-icon"><i class="fas fa-home"></i></a>
+            <div class="sidebar-header">
+                <div class="sidebar-photo">
+                    <img id="staffPhoto" src="default-avatar.png" alt="Staff Photo" />
+                </div>
+                <h2 id="staffName">Staff Name</h2>
+                <h2 style="margin-top: 5px; opacity: 0.8;">ID: <span id="staffId">Loading...</span></h2>
+            </div>
+            <ul class="menu">
+                <li><a href="knowaboutstd1.html"><i class="fas fa-search"></i> Know about Student</a></li>
+                <li><a href="editstudentdetails.html"><i class="fas fa-user-edit"></i> Edit Student Details</a></li>
+                <li><a href="sendnotification.html"><i class="fas fa-paper-plane"></i> Send Notification</a></li>
+                <li class="active"><a href="updatefee.html"><i class="fas fa-money-bill-wave"></i> Update Fee</a></li>
+                <li><a href="imposefines.html"><i class="fas fa-money-check-alt"></i> Impose Fines</a></li>
+                <li><a href="mark_attendance.html"><i class="fas fa-clipboard-list"></i> Mark Attendance</a></li>
+                <li><a href="backlogs.html"><i class="fas fa-book-open"></i> Find Backlogs</a></li>
+                <li><a href="mycounselling.html"><i class="fas fa-handshake"></i> View Counselling</a></li>
+                <li><a href="staffsettings.html"><i class="fas fa-cog"></i> Settings</a></li>
+            </ul>
+            <button class="logout" onclick="confirmLogout()">Logout</button>
+        </div>
+        <div class="content">
+            <div class="header">
+                <h1>Update Student Fee</h1>
+            </div>
+            <div class="form-box">
+                <h2>Update Student Fee Structure</h2>
+                <div class="input-group">
+                    <label for="reg_no">Reg. Number</label>
+                    <input type="text" id="reg_no" placeholder="Enter Reg No" required />
+                </div>
+                <div class="input-group">
+                    <label for="year">Academic Year</label>
+                    <select id="year" required>
+                        <option value="">Select Year</option>
+                        <option value="1">1st Year</option>
+                        <option value="2">2nd Year</option>
+                        <option value="3">3rd Year</option>
+                        <option value="4">4th Year</option>
+                    </select>
+                </div>
+                <div class="input-group"><label for="tuition">Tuition Fee</label><input type="number" id="tuition"></div>
+                <div class="input-group"><label for="hostel">Hostel Fee</label><input type="number" id="hostel"></div>
+                <div class="input-group"><label for="bus">Bus Fee</label><input type="number" id="bus"></div>
+                <div class="input-group"><label for="university">University Fee</label><input type="number" id="university"></div>
+                <div class="input-group"><label for="semester">Semester Fee</label><input type="number" id="semester"></div>
+                <div class="input-group"><label for="library">Library Dues</label><input type="number" id="library"></div>
+                <button onclick="updateFee()">Update Fee</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mobile-toggle" onclick="toggleMobileMenu()">
+        <i class="fas fa-bars"></i>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.20/dist/sweetalert2.all.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const userId = localStorage.getItem("userId");
+            const role = localStorage.getItem("role");
+
+            if (!userId || role !== "staff") {
+                Swal.fire({
+                    icon: "error",
+                    title: "Unauthorized",
+                    text: "You must log in as staff to view this page.",
+                    confirmButtonText: "Go to Login",
+                    confirmButtonColor: '#0b1c3c'
+                }).then(() => {
+                    window.location.href = "index.html";
+                });
+            } else {
+                document.getElementById("staffId").textContent = userId || "Unknown";
+                fetchStaffName(userId);
+            }
+        });
+
+        async function fetchStaffName(id) {
+            try {
+                const res = await fetch(`/staff/${id}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.staff_name) {
+                        document.getElementById("staffName").textContent = data.staff_name;
+                    }
+                    if (data.photo_url) {
+                        document.getElementById("staffPhoto").src = data.photo_url;
+                    }
+                }
+            } catch (err) {
+                console.error("Error loading staff data:", err);
+            }
+        }
+        
+        function updateFee() {
+            const data = {
+                reg_no: document.getElementById("reg_no").value.trim(),
+                academic_year: parseInt(document.getElementById("year").value),
+                tuition: parseFloat(document.getElementById("tuition").value) || 0,
+                hostel: parseFloat(document.getElementById("hostel").value) || 0,
+                bus: parseFloat(document.getElementById("bus").value) || 0,
+                university: parseFloat(document.getElementById("university").value) || 0,
+                semester: parseFloat(document.getElementById("semester").value) || 0,
+                library: parseFloat(document.getElementById("library").value) || 0
+            };
+
+            if (!data.reg_no || !data.academic_year) {
+                Swal.fire({
+                    icon: "warning",
+                    title: "Missing Information",
+                    text: "Please enter both Registration Number and Academic Year."
+                });
+                return;
+            }
+
+            Swal.fire({
+                title: 'Updating Fee...',
+                text: 'Please wait, this may take a moment.',
+                didOpen: () => { Swal.showLoading(); },
+                allowOutsideClick: false
+            });
+
+            fetch('/update-fee-structure', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(res => res.json())
+            .then(response => {
+                if (response.success) {
+                    Swal.fire({
+                        icon: "success",
+                        title: "Update Successful",
+                        text: `Fee updated for ${data.reg_no}, Year ${data.academic_year}.`
+                    }).then(() => {
+                        document.getElementById("reg_no").value = "";
+                        document.getElementById("year").value = "";
+                        document.getElementById("tuition").value = "";
+                        document.getElementById("hostel").value = "";
+                        document.getElementById("bus").value = "";
+                        document.getElementById("university").value = "";
+                        document.getElementById("semester").value = "";
+                        document.getElementById("library").value = "";
+                    });
+                } else {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Update Failed",
+                        text: response.message || "An unknown error occurred."
+                    });
+                }
+            })
+            .catch(err => {
+                console.error("Fetch error:", err);
+                Swal.fire({
+                    icon: "error",
+                    title: "Server Error",
+                    text: "Could not connect to the server. Please check your network."
+                });
+            });
+        }
+
+        function toggleMobileMenu() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.overlay');
+            const body = document.body;
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
+            body.classList.toggle('no-scroll');
+        }
+
+        function confirmLogout() {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You will be logged out of your account.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#0b1c3c',
+                cancelButtonColor: '#ffcc5c',
+                confirmButtonText: 'Yes, log out!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    logout();
+                }
+            });
+        }
+        
+
+function logout() {
+    fetch("/logout", { method: "GET", credentials: "include" })
+      .then(() => {
+          localStorage.clear();
+          sessionStorage.clear();
+          if ("caches" in window) {
+              caches.keys().then(names => names.forEach(name => caches.delete(name)));
+          }
+          window.location.replace("index.html");
+      })
+      .catch(() => {
+          window.location.replace("index.html");
+      });
+}
+        window.history.pushState(null, "", window.location.href);
+        window.onpopstate = () => window.history.pushState(null, "", window.location.href);
+        
+    </script>
+    <script src="session.js"></script>
+</body>
+</html>

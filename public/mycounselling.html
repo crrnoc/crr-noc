@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Staff - My Counselling Students</title>
+    <link rel="icon" href="crrengglogo.png" type="image/png" />
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.20/dist/sweetalert2.min.css"
+    />
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
+        :root {
+            --primary-color: #0b1c3c; /* Deep Navy */
+            --secondary-color: #1a3a60; /* Darker Blue */
+            --accent-color: #ffcc5c; /* Gold/Amber */
+            --background-start: #e9f0f9;
+            --background-end: #f4f7f9;
+            --background-light: #ffffff;
+            --text-dark: #2c3e50;
+            --text-light: #ecf0f1;
+            --card-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            --border-radius-lg: 20px;
+            --border-radius-md: 12px;
+            --border-radius-sm: 8px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--background-start) 0%, var(--background-end) 100%);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+        }
+
+        /* Container and Overlay */
+        .main-container {
+            display: flex;
+            width: 100%;
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(3px);
+            z-index: 999;
+            transition: opacity 0.3s ease-in-out;
+            opacity: 0;
+        }
+
+        .no-scroll {
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background-color: var(--primary-color);
+            display: flex;
+            flex-direction: column;
+            padding: 30px 20px;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+            transform: translateX(0);
+            transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .home-icon {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            font-size: 1.5rem;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: color 0.3s ease, transform 0.3s ease;
+        }
+
+        .home-icon:hover {
+            color: var(--accent-color);
+            transform: scale(1.1);
+        }
+
+        .sidebar-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+         .sidebar-photo {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            overflow: hidden;
+            margin-bottom: 15px;
+            box-shadow: 0 0 0 4px var(--accent-color), 0 0 0 8px rgba(255, 204, 92, 0.3);
+        }
+        
+         .sidebar-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .sidebar h2 {
+            margin-top: 15px;
+            color: var(--text-light);
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+
+        .menu {
+            list-style: none;
+            flex-grow: 1;
+        }
+
+        .menu li {
+            margin-bottom: 15px;
+        }
+
+        .menu li a {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 1rem;
+            color: var(--text-light);
+            padding: 15px 20px;
+            border-radius: var(--border-radius-md);
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .menu li a:hover,
+        .menu li.active a {
+            background-color: var(--secondary-color);
+            color: var(--accent-color);
+            font-weight: 500;
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .menu li a i {
+            font-size: 1.2rem;
+            width: 25px;
+            text-align: center;
+            color: inherit; /* Inherit color from the parent link */
+            transition: color 0.3s ease;
+        }
+
+        .logout {
+            background-color: var(--accent-color);
+            color: var(--text-dark);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            width: 60%;
+            margin: 20px auto 0;
+            transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .logout:hover {
+            background-color: #e5b64c;
+            transform: scale(1.05);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Content */
+        .content {
+            flex-grow: 1;
+            padding: 30px;
+            margin-left: 280px;
+            transition: margin-left 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .header {
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--card-shadow);
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .header h1 {
+            color: var(--primary-color);
+            font-size: 2rem;
+            font-weight: 500;
+        }
+
+        .card-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .student-card {
+            background-color: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: var(--border-radius-lg);
+            padding: 25px;
+            box-shadow: var(--card-shadow);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .student-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .card-header img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid var(--accent-color);
+        }
+
+        .card-header h3 {
+            margin: 0;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .student-card p {
+            font-size: 0.9rem;
+            margin: 6px 0;
+            color: #555;
+        }
+
+        .student-card strong {
+            color: var(--text-dark);
+        }
+
+        .no-students {
+            text-align: center;
+            color: #666;
+            margin-top: 50px;
+            font-size: 1.2rem;
+            width: 100%;
+        }
+        
+        /* Modal */
+        #studentModal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10001;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        #studentModal.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background-color: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-radius: var(--border-radius-lg);
+            padding: 30px;
+            width: 95%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+
+        #studentModal.show .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
+
+        .modal-close:hover {
+            background: #c0392b;
+            transform: scale(1.1);
+        }
+
+        .modal-header h2 {
+            color: var(--primary-color);
+            margin-bottom: 5px;
+            font-size: 1.6rem;
+            font-weight: 500;
+        }
+
+        .modal-header p {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            border-bottom: 2px solid #ddd;
+            flex-wrap: wrap;
+        }
+
+        .tab-button {
+            padding: 12px 20px;
+            border: none;
+            background: #f1f6f9;
+            color: var(--text-dark);
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
+            transition: all 0.3s ease;
+            position: relative;
+            top: 2px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-button.active {
+            background: var(--background-light);
+            border-bottom: 2px solid var(--accent-color);
+            color: var(--primary-color);
+            font-weight: bold;
+            transform: translateY(-2px);
+        }
+        
+        .tab-button:not(.active):hover {
+            background-color: #e9eef2;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 20px 0;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .tab-content h3 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            font-weight: 500;
+        }
+
+        .tab-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .tab-content th, .tab-content td {
+            border: 1px solid #e0e0e0;
+            padding: 10px;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        .tab-content th {
+            background-color: var(--background-start);
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+        
+        .tab-content tbody tr:nth-child(even) {
+            background-color: #f6f9fc;
+        }
+
+        .info-card {
+            background: #f1f6f9;
+            padding: 15px;
+            border-radius: var(--border-radius-md);
+            margin-top: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .select-group {
+            margin-bottom: 15px;
+        }
+        
+        .select-group select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius-sm);
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+        
+        /* Responsive Styles */
+        .mobile-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background-color: var(--secondary-color);
+            color: var(--text-light);
+            font-size: 24px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            align-items: center;
+            justify-content: center;
+            z-index: 1001;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .mobile-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        @media (max-width: 992px) {
+            .mobile-toggle {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+                width: 250px;
+                max-width: 85vw;
+                padding-left: 10px;
+                padding-right: 10px;
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .content {
+                margin-left: 0;
+            }
+            .overlay.active {
+                display: block;
+                opacity: 1;
+            }
+        }/* Tablet View */
+@media (max-width: 768px) {
+  .header h1 {
+    font-size: 1.5rem;
+  }
+  .student-card {
+    padding: 15px;
+  }
+  .card-header img {
+    width: 40px;
+    height: 40px;
+  }
+  .card-header h3 {
+    font-size: 1rem;
+  }
+}
+
+/* Mobile View */
+@media (max-width: 576px) {
+  .header {
+    padding: 15px;
+  }
+  .header h1 {
+    font-size: 1.2rem;
+  }
+  .card-container {
+    grid-template-columns: 1fr; /* single column */
+    gap: 15px;
+  }
+  .student-card p {
+    font-size: 0.8rem;
+  }
+  .modal-content {
+    padding: 15px;
+    max-width: 95vw;
+  }
+  .tab-buttons {
+    flex-direction: column;
+    gap: 5px;
+  }
+  .tab-button {
+    width: 100%;
+    justify-content: center;
+    font-size: 0.9rem;
+    padding: 10px;
+  }
+  .tab-content table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+}
+        .sidebar-photo {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 4px solid var(--accent-color);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
+                .sidebar-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body>
+   <div class="overlay" onclick="toggleMobileMenu()"></div>
+
+    <div class="main-container">
+        <div class="sidebar">
+            <a href="staff-dashboard.html" class="home-icon"><i class="fas fa-home"></i></a>
+            <div class="sidebar-header">
+                <div class="sidebar-photo">
+                    <img id="staffPhoto" src="default-avatar.png" alt="Staff Photo" />
+                </div>
+                <h2 id="staffName">Staff Name</h2>
+                <h2 style="margin-top: 5px; opacity: 0.8;">ID: <span id="staffId">Loading...</span></h2>
+            </div>
+            <ul class="menu">
+                <li><a href="knowaboutstd1.html"><i class="fas fa-search"></i> Know about Student</a></li>
+                <li><a href="editstudentdetails.html"><i class="fas fa-user-edit"></i> Edit Student Details</a></li>
+                <li><a href="sendnotification.html"><i class="fas fa-paper-plane"></i> Send Notification</a></li>
+                <li><a href="updatefee.html"><i class="fas fa-money-bill-wave"></i> Update Fee</a></li>
+                <li><a href="imposefines.html"><i class="fas fa-money-check-alt"></i> Impose Fines</a></li>
+                <li><a href="mark_attendance.html"><i class="fas fa-clipboard-list"></i> Mark Attendance</a></li>
+                <li><a href="backlogs.html"><i class="fas fa-book-open"></i> Find Backlogs</a></li>
+                <li class="active"><a href="#"><i class="fas fa-handshake"></i> View Counselling</a></li>
+                <li><a href="staffsettings.html"><i class="fas fa-cog"></i> Settings</a></li>
+            </ul>
+            <button class="logout" onclick="confirmLogout()">Logout</button>
+        </div>
+
+        <div class="content">
+            <div class="header">
+                <h1>My Counselling Students</h1>
+            </div>
+            <div class="card-container" id="cardContainer">
+            </div>
+        </div>
+    </div>
+
+    <div id="studentModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+            <div class="modal-header">
+                <h2 id="modalName">Student Name</h2>
+                <p><strong>Reg No:</strong> <span id="modalRegNo"></span></p>
+                <p><strong>Father Name:</strong> <span id="modalFatherName"></span></p>
+                <p><strong>Father Mobile:</strong> <span id="modalFatherMobile"></span></p>
+            </div>
+
+            <div class="tab-buttons">
+                <button class="tab-button active" data-tab="attendance"><i class="fas fa-clipboard-check"></i> Attendance</button>
+                <button class="tab-button" data-tab="results"><i class="fas fa-poll-h"></i> Results</button>
+                <button class="tab-button" data-tab="midmarks"><i class="fas fa-book-reader"></i> Mid Marks</button>
+                <button class="tab-button" data-tab="fee"><i class="fas fa-receipt"></i> Fee Details</button>
+            </div>
+
+            <div id="attendanceTab" class="tab-content active">
+                <h3 class="info-title">Attendance Details</h3>
+                <div id="attendanceContent"></div>
+            </div>
+
+            <div id="resultsTab" class="tab-content">
+                <h3 class="info-title">Results Overview</h3>
+                <div class="select-group">
+                    <label for="semesterSelect">Select Semester:</label>
+                    <select id="semesterSelect">
+                        <option value="">-- Select --</option>
+                        <option value="1-1">1-1</option>
+                        <option value="1-2">1-2</option>
+                        <option value="2-1">2-1</option>
+                        <option value="2-2">2-2</option>
+                        <option value="3-1">3-1</option>
+                        <option value="3-2">3-2</option>
+                        <option value="4-1">4-1</option>
+                        <option value="4-2">4-2</option>
+                    </select>
+                </div>
+                <div id="resultsContent"></div>
+            </div>
+
+            <div id="midmarksTab" class="tab-content">
+                <h3 class="info-title">Mid Marks</h3>
+                <div class="select-group">
+                    <label for="midYearSelect">Year:</label>
+                    <select id="midYearSelect">
+                        <option value="">Select Year</option>
+                        <option value="1">1st Year</option>
+                        <option value="2">2nd Year</option>
+                        <option value="3">3rd Year</option>
+                        <option value="4">4th Year</option>
+                    </select>
+                    <label for="midSemesterSelect" style="margin-left: 15px;">Semester:</label>
+                    <select id="midSemesterSelect">
+                        <option value="">Select Semester</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                    </select>
+                </div>
+                <div id="midmarksContent"></div>
+            </div>
+
+            <div id="feeTab" class="tab-content">
+                <h3 class="info-title">Fee Details</h3>
+                <div id="feeContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mobile-toggle" onclick="toggleMobileMenu()">
+        <i class="fas fa-bars"></i>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.20/dist/sweetalert2.all.min.js"></script>
+<script>
+const userId = localStorage.getItem("userId");
+const role = localStorage.getItem("role");
+let currentStudent = null;
+
+if (!userId || role !== "staff") {
+    Swal.fire({
+        icon: "error",
+        title: "Unauthorized",
+        text: "You must login as staff to view this page.",
+        confirmButtonText: "Go to Login",
+        confirmButtonColor: '#0b1c3c'
+    }).then(() => {
+        window.location.href = "index.html";
+    });
+} else {
+    document.getElementById("staffId").textContent = userId || "Unknown";
+    fetchStaffName(userId);
+    fetchStudents();
+}
+
+// --- Helper Functions ---
+async function fetchStaffName(id) {
+    try {
+        const res = await fetch(`/staff/${id}`);
+        if (res.ok) {
+            const data = await res.json();
+            if (data.staff_name) {
+                document.getElementById("staffName").textContent = data.staff_name;
+            }
+            if (data.photo_url) {
+                document.getElementById("staffPhoto").src = data.photo_url;
+            }
+        }
+    } catch (err) {
+        console.error("Error loading staff data:", err);
+    }
+}
+
+
+function confirmLogout() {
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "You will be logged out of your account.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#0b1c3c',
+        cancelButtonColor: '#ffcc5c',
+        confirmButtonText: 'Yes, log out!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            logout();
+        }
+    });
+}
+
+function logout() {
+    fetch("/logout", { method: "GET", credentials: "include" })
+      .then(() => {
+          localStorage.clear();
+          sessionStorage.clear();
+          if ("caches" in window) {
+              caches.keys().then(names => names.forEach(name => caches.delete(name)));
+          }
+          window.location.replace("index.html");
+      })
+      .catch(() => {
+          window.location.replace("index.html");
+      });
+}
+        window.history.pushState(null, "", window.location.href);
+        window.onpopstate = () => window.history.pushState(null, "", window.location.href);
+
+function toggleMobileMenu() {
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.querySelector('.overlay');
+    const body = document.body;
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('active');
+    body.classList.toggle('no-scroll');
+}
+
+// --- Fetch Students ---
+function fetchStudents() {
+    fetch(`/my-counselling-students/${userId}`)
+        .then(res => res.json())
+        .then(data => {
+            const container = document.getElementById("cardContainer");
+            container.innerHTML = "";
+            if (data.success && data.students.length > 0) {
+
+                // 🔥 Sort students by reg_no before displaying
+                data.students.sort((a, b) => {
+                    if (a.reg_no < b.reg_no) return -1;
+                    if (a.reg_no > b.reg_no) return 1;
+                    return 0;
+                });
+
+                data.students.forEach(std => {
+                    const card = document.createElement("div");
+                    card.className = "student-card";
+                    card.innerHTML = `
+                        <div class="card-header">
+                            <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(std.name)}&background=random&rounded=true" alt="Avatar">
+                            <h3>${std.name}</h3>
+                        </div>
+                        <p><strong>Reg No:</strong> ${std.reg_no}</p>
+                        <p><strong>Course:</strong> ${std.course || 'N/A'}</p>
+                        <p><strong>Year:</strong> ${std.year || 'N/A'}</p>
+                        <p><strong>Section:</strong> ${std.section || 'N/A'}</p>
+                        <p><strong>Email:</strong> ${std.email || 'N/A'}</p>
+                        <p><strong>Mobile:</strong> ${std.mobile_no || 'N/A'}</p>
+                    `;
+                    card.onclick = () => openModal(std);
+                    container.appendChild(card);
+                });
+            } else {
+                container.innerHTML = `<p class="no-students">No students assigned to you yet.</p>`;
+            }
+        })
+        .catch(err => {
+            console.error("Error fetching students:", err);
+            Swal.fire("Error", "Failed to load student data.", "error");
+        });
+}
+
+// --- Modal Functions ---
+function openModal(student) {
+    currentStudent = student;
+    const modal = document.getElementById("studentModal");
+    document.body.classList.add("no-scroll");
+    modal.classList.add("show");
+
+    document.getElementById("modalName").textContent = student.name;
+    document.getElementById("modalRegNo").textContent = student.reg_no;
+    document.getElementById("modalFatherName").textContent = student.father_name || "N/A";
+    document.getElementById("modalFatherMobile").textContent = student.father_mobile || "N/A";
+
+    // reset tabs
+    const tabButtons = document.querySelectorAll('.tab-button');
+    tabButtons.forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.tab === 'attendance') btn.classList.add('active');
+    });
+    showTab('attendance');
+    fetchAttendance(student.reg_no);
+
+    // reset selects
+    document.getElementById("semesterSelect").value = "";
+    document.getElementById("resultsContent").innerHTML = "";
+    document.getElementById("midYearSelect").value = "";
+    document.getElementById("midSemesterSelect").value = "";
+    document.getElementById("midmarksContent").innerHTML = "";
+}
+
+function closeModal() {
+    const modal = document.getElementById("studentModal");
+    document.body.classList.remove("no-scroll");
+    modal.classList.remove("show");
+    currentStudent = null;
+}
+
+function showTab(tabName) {
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+    document.getElementById(tabName + 'Tab').classList.add('active');
+    document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+
+    if (currentStudent) {
+        switch(tabName) {
+            case 'attendance': fetchAttendance(currentStudent.reg_no); break;
+            case 'results':
+                document.getElementById("semesterSelect").onchange = () => fetchResults(currentStudent.reg_no);
+                break;
+            case 'midmarks':
+                document.getElementById("midYearSelect").onchange = () => fetchMidMarks(currentStudent.reg_no);
+                document.getElementById("midSemesterSelect").onchange = () => fetchMidMarks(currentStudent.reg_no);
+                break;
+            case 'fee': fetchFeeDetails(currentStudent.reg_no); break;
+        }
+    }
+}
+
+// --- Attendance ---
+function fetchAttendance(regNo) {
+    const container = document.getElementById("attendanceContent");
+    container.innerHTML = `<p style="text-align: center; color: #888;">Loading...</p>`;
+    fetch(`/student-attendance/${regNo}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.success && data.data.length > 0) {
+                const rows = data.data.map(row => `
+                    <tr>
+                        <td>${row.semester}</td>
+                        <td>${row.total_classes}</td>
+                        <td>${row.attended_classes}</td>
+                        <td>${row.percentage}%</td>
+                    </tr>`).join("");
+                container.innerHTML = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Semester</th>
+                                <th>Total Classes</th>
+                                <th>Attended</th>
+                                <th>Percentage</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rows}</tbody>
+                    </table>`;
+            } else {
+                container.innerHTML = "<p style='text-align: center; color: #888;'>No attendance data available.</p>";
+            }
+        })
+        .catch(() => {
+            container.innerHTML = "<p style='text-align: center; color: #d00000;'>Error loading attendance data.</p>";
+        });
+}
+
+// --- Results ---
+function fetchResults(regNo) {
+    const semester = document.getElementById("semesterSelect").value;
+    const container = document.getElementById("resultsContent");
+    if (!semester) { container.innerHTML = ""; return; }
+
+    container.innerHTML = `<p style="text-align: center; color: #888;">Loading results...</p>`;
+    fetch(`/student/results/${regNo}?semester=${semester}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.results && data.results.length > 0) {
+                const subjectRows = data.results.map(r => `
+                    <tr>
+                        <td>${r.subcode}</td>
+                        <td>${r.subname}</td>
+                        <td>${r.grade}</td>
+                        <td>${r.credits}</td>
+                    </tr>`).join("");
+                container.innerHTML = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Sub Code</th>
+                                <th>Subject</th>
+                                <th>Grade</th>
+                                <th>Credits</th>
+                            </tr>
+                        </thead>
+                        <tbody>${subjectRows}</tbody>
+                    </table>
+                    <div class="info-card">
+                        <p><strong>SGPA:</strong> ${data.sgpa || 'N/A'}</p>
+                        <p><strong>CGPA:</strong> ${data.cgpa || 'N/A'}</p>
+                        <p><strong>Percentage:</strong> ${data.percentage ? `${data.percentage}%` : 'N/A'}</p>
+                    </div>`;
+            } else {
+                container.innerHTML = "<p style='text-align: center; color: #888;'>No result data for this semester.</p>";
+            }
+        })
+        .catch(() => {
+            container.innerHTML = "<p style='text-align: center; color: #d00000;'>Error loading results.</p>";
+        });
+}
+
+// --- Mid Marks ---
+function fetchMidMarks(regNo) {
+    const year = document.getElementById("midYearSelect").value;
+    const semester = document.getElementById("midSemesterSelect").value;
+    const container = document.getElementById("midmarksContent");
+    if (!year || !semester) { container.innerHTML = ""; return; }
+
+    container.innerHTML = `<p style="text-align: center; color: #888;">Loading mid marks...</p>`;
+    fetch(`/student/midmarks/${regNo}?year=${year}&semester=${semester}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.midmarks && data.midmarks.length > 0) {
+                const rows = data.midmarks.map(row => `
+                    <tr>
+                        <td>${row.sub_code}</td>
+                        <td>${row.mid1 || 'N/A'}</td>
+                        <td>${row.a1 || 'N/A'}</td>
+                        <td>${row.q1 || 'N/A'}</td>
+                        <td>${row.mid2 || 'N/A'}</td>
+                        <td>${row.a2 || 'N/A'}</td>
+                        <td>${row.q2 || 'N/A'}</td>
+                        <td>${row.lds_or_status || 'N/A'}</td>
+                    </tr>`).join("");
+                container.innerHTML = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Subject Code</th>
+                                <th>Mid 1</th>
+                                <th>A1</th>
+                                <th>Q1</th>
+                                <th>Mid 2</th>
+                                <th>A2</th>
+                                <th>Q2</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rows}</tbody>
+                    </table>`;
+            } else {
+                container.innerHTML = "<p style='text-align: center; color: #888;'>No mid marks found.</p>";
+            }
+        })
+        .catch(() => {
+            container.innerHTML = "<p style='text-align: center; color: #d00000;'>Error loading mid marks.</p>";
+        });
+}
+
+// --- Fee ---
+function fetchFeeDetails(regNo) {
+    const container = document.getElementById("feeContent");
+    container.innerHTML = `<p style="text-align: center; color: #888;">Loading fee details...</p>`;
+
+    fetch(`/fee-status/${regNo}`)
+        .then(res => res.json())
+        .then(data => {
+            if (!data.success || !data.years || Object.keys(data.years).length === 0) {
+                container.innerHTML = "<p style='text-align: center; color: #888;'>No fee data available.</p>";
+                return;
+            }
+
+            let html = `<h2 style="text-align:center; color:#1f75cb; margin-bottom:20px;">📘 Fee Details of ${regNo}</h2>`;
+
+            let cumulativeDue = 0;
+
+            for (const year in data.years) {
+                const fee = data.years[year];
+                const types = ["tuition", "hostel", "bus", "university", "semester", "library", "fines"];
+
+                let rows = types.map(type => {
+                    const expected = Number(fee.expected?.[type] || 0);
+                    const paidAmt = Number(fee.paid?.[type] || 0);
+                    const remaining = Number(fee.due?.[type] || 0);
+
+                    return `
+                        <tr>
+                            <td>${type.charAt(0).toUpperCase() + type.slice(1)}</td>
+                            <td>₹${expected.toLocaleString("en-IN")}</td>
+                            <td>₹${paidAmt.toLocaleString("en-IN")}</td>
+                            <td>₹${remaining.toLocaleString("en-IN")}</td>
+                        </tr>`;
+                }).join("");
+
+                const previousDue = cumulativeDue; // carry forward from previous years
+                const thisYearDue = Number(fee.totalDue || Object.values(fee.due).reduce((a, b) => a + b, 0));
+                cumulativeDue = thisYearDue; // update for next iteration
+
+                const totalFee = Number(fee.expectedTotal || Object.values(fee.expected).reduce((a, b) => a + b, 0));
+                const paidTotal = Number(fee.paidTotal || Object.values(fee.paid).reduce((a, b) => a + b, 0));
+                const totalDue = Number(fee.totalDue || (totalFee + previousDue - paidTotal));
+
+                html += `
+                    <div class="info-card" style="margin-bottom:20px; padding:15px; border-radius:10px; background:#f9f9f9; box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+                        <h3 style="margin-bottom:10px;">
+                            Academic Year: ${year}
+                            ${previousDue > 0 ? `<span style="color:red;"> (Previous year Dues: ₹${previousDue.toLocaleString("en-IN")})</span>` : ""}
+                        </h3>
+                        <table style="width:100%; border-collapse:collapse;">
+                            <thead>
+                                <tr style="background:#1f75cb; color:white;">
+                                    <th style="text-align:left; padding:8px;">Type</th>
+                                    <th style="padding:8px;">Total</th>
+                                    <th style="padding:8px;">Paid</th>
+                                    <th style="padding:8px;">Due</th>
+                                </tr>
+                            </thead>
+                            <tbody>${rows}</tbody>
+                            <tfoot>
+                                <tr style="font-weight:bold; background:#fef6e4;">
+                                    <td>Previous Year Due</td>
+                                    <td colspan="2"></td>
+                                    <td>₹${previousDue.toLocaleString("en-IN")}</td>
+                                </tr>
+                                <tr style="font-weight:bold; background:#e6f0ff;">
+                                    <td>This Year Total</td>
+                                    <td>₹${totalFee.toLocaleString("en-IN")}</td>
+                                    <td>₹${paidTotal.toLocaleString("en-IN")}</td>
+                                    <td>₹${thisYearDue.toLocaleString("en-IN")}</td>
+                                </tr>
+                                <tr style="font-weight:bold; background:#ffd6d6;">
+                                    <td>Grand Total Due</td>
+                                    <td colspan="2"></td>
+                                    <td>₹${totalDue.toLocaleString("en-IN")}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>`;
+            }
+
+            container.innerHTML = html;
+        })
+        .catch(err => {
+            console.error(err);
+            container.innerHTML = "<p style='text-align: center; color: #d00000;'>Error loading fee data.</p>";
+        });
+}
+
+// --- Tab Click Listener ---
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.tab-button')) {
+        const tabName = e.target.closest('.tab-button').dataset.tab;
+        showTab(tabName);
+    }
+});
+</script>
+<script src="session.js"></script>
+</body>
+</html>

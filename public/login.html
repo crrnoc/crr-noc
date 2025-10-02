@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Student Portal Login | Sir C.R. Reddy College of Engineering</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="crrengglogo.png" type="image/png" />
+  <meta name="description" content="Login to the official CRR Engineering College Student Portal to access NOC certificates, attendance, results, and fee payment info.">
+  <meta name="keywords" content="CRR NOC, CRR College, CRR Results, CRR Login">
+  <meta name="author" content="C.R Reddy College of Engineering">
+  <meta property="og:title" content="CRR Student Portal Login">
+  <meta property="og:description" content="Secure login to access CRR student services.">
+  <meta property="og:image" content="https://crr-noc.onrender.com/crrengglogo.png">
+  <meta property="og:url" content="https://crr-noc.onrender.com/">
+  <meta property="og:type" content="website">
+  <link rel="canonical" href="https://crr-noc.onrender.com/" />
+  <style>
+    :root { --main-color:#3cb6ff; --accent-color:#ff3d3d; --text-light:#fefefe; --glow:0 0 15px var(--main-color); --focus:#ffd166; }
+    *{ margin:0; padding:0; box-sizing:border-box; font-family:'Poppins',sans-serif; }
+    body{ background:url('https://upload.wikimedia.org/wikipedia/commons/9/92/C.R.Reddy_College_Aerial_View.jpg') no-repeat center center/cover; min-height:100vh; overflow-y:auto; position:relative; display:flex; flex-direction:column; justify-content:flex-start; align-items:center; color:#fff;}
+    .overlay{ background:rgba(0,0,0,0.6); width:100%; height:100%; position:absolute; top:0; left:0; z-index:-1;}
+    .main-wrapper{ display:flex; flex-direction:column; justify-content:flex-start; align-items:center; min-height:100vh; padding-top:20px; padding-bottom:20px; width:100%;}
+    .branding{ text-align:center; animation:popIn 1.2s ease forwards; margin-top:40px; padding:0 12px;}
+    .brand-row{ display:flex; align-items:center; justify-content:center; gap:12px;}
+    .branding img{ width:70px; filter:drop-shadow(0 0 8px rgba(255,255,255,0.5)); animation:logoFloat 2s ease-in-out infinite alternate;}
+    @keyframes logoFloat{0%{transform:translateY(0)}100%{transform:translateY(-6px); filter:drop-shadow(0 0 12px rgba(255,255,255,0.9));}}
+    .branding h1{ font-size:28px; text-shadow:var(--glow);}
+    .accreditation{ margin-top:8px; font-size:13px; color:#a0e7ff; font-weight:500; text-shadow:0 0 4px rgba(0,255,255,0.3); display:flex; flex-wrap:wrap; justify-content:center; gap:8px; padding:0 12px;}
+    .system-heading{ font-size:24px; font-weight:700; color:#fff; margin-top:15px; margin-bottom:10px; text-align:center; text-shadow:0 0 12px rgba(60,182,255,0.8); padding:0 12px;}
+    .role-buttons{ display:flex; justify-content:center; flex-wrap:wrap; gap:18px; margin:15px 0; padding:0 12px;}
+    .role-button{ padding:16px 32px; font-size:18px; border-radius:14px; font-weight:600; background:rgba(255,255,255,0.08); color:#fff; border:0; cursor:pointer; transition:0.3s ease; position:relative;}
+    .role-button::after{ content:""; position:absolute; bottom:0; left:0; height:3px; width:0; background:var(--main-color); transition:0.3s ease;}
+    .role-button:hover::after, .role-button.active::after{ width:100%; }
+    .role-button:hover, .role-button.active, .role-button:focus-visible{ border:1.5px solid var(--main-color); background:rgba(60,182,255,0.2); box-shadow:0 0 12px var(--main-color); outline:3px solid var(--focus); outline-offset:2px;}
+    .login-container{ display:none; opacity:0; transform:translateY(100px) scale(0.95); transition:opacity 1s ease-in-out, transform 1s ease-in-out; max-width:320px; width:90%; max-height:400px; overflow-y:auto; background:rgba(255,255,255,0.05); border-radius:16px; padding:18px; border:1px solid rgba(255,255,255,0.15); box-shadow:0 0 25px rgba(0,191,255,0.2); margin-top:5px; scrollbar-width:thin; scrollbar-color:var(--main-color) transparent;}
+    .login-container.show{ display:block !important; opacity:1; transform:translateY(0) scale(1); }
+    .login-container h2{ color:white; text-align:center; margin-bottom:15px;}
+    .login-container label{ font-size:13px; margin-bottom:6px; display:block;}
+    .login-container input{ width:100%; padding:12px; margin-bottom:15px; border-radius:10px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:white;}
+    .login-container input::placeholder{ color:#ccc;}
+    .login-container input:focus-visible{ outline:3px solid var(--focus); outline-offset:2px;}
+    .login-container button{ width:100%; padding:14px; background:linear-gradient(135deg, var(--main-color), var(--accent-color)); border:none; border-radius:50px; color:white; font-weight:bold; font-size:16px; cursor:pointer; box-shadow:0 0 15px var(--main-color); transition:transform 0.3s ease, box-shadow 0.3s ease;}
+    .login-container button:hover, .login-container button:focus-visible{ transform:scale(1.03); box-shadow:0 0 25px var(--accent-color); outline:3px solid var(--focus); outline-offset:2px;}
+    .footer{ text-align:center; padding:10px; color:#ccc; font-size:13px; background:rgba(0,0,0,0.6); padding-top:3px; width:100%;}
+    .footer a{ color:#3cb6ff; text-decoration:underline;}
+    @media (max-width:480px){ .login-container{ margin:20px; padding:16px;} .branding h1{ font-size:20px;} .role-button{ font-size:16px; padding:14px 24px;} }
+    .autonomous{ font-size:20px; font-weight:700; color:#f19336fb; margin-top:6px; text-align:center; text-shadow:0 0 8px rgba(255,0,0,0.6);}
+    .approvals{ display:flex; justify-content:center; align-items:center; flex-wrap:wrap; gap:5px; margin-top:5px;}
+    .approval-item{ display:flex; align-items:center; gap:8px; font-size:15px; font-weight:600; color:#fff; background:rgba(255,255,255,0.08); padding:8px 10px; border-radius:10px; transition:0.3s;}
+    .approval-item:hover, .approval-item:focus-visible{ background:rgba(60,182,255,0.2); box-shadow:0 0 10px var(--main-color); outline:3px solid var(--focus); outline-offset:2px;}
+    .login-counts{ display:flex; justify-content:center; gap:25px; margin:25px auto; max-width:800px; width:100%; padding:0 12px;}
+    .count-card{ flex:1 1 200px; padding:20px; border-radius:16px; backdrop-filter:blur(12px); background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); box-shadow:0 0 18px rgba(0,191,255,0.25); text-align:center; transition:transform 0.25s ease, box-shadow 0.25s ease; color:#fff;}
+    .count-card:hover, .count-card:focus-within{ transform:translateY(-6px); box-shadow:0 0 28px rgba(0,191,255,0.4); outline:3px solid var(--focus); outline-offset:2px;}
+    .count-card h3{ margin-bottom:10px; font-size:19px; font-weight:600; text-shadow:0 0 8px rgba(255,255,255,0.4);}
+    .count-card p{ font-size:42px; font-weight:bold; margin:0; color:#fff; text-shadow:0 0 12px rgba(255,255,255,0.8);}
+    .accounts-popup{ display:none; position:fixed; z-index:999; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.7); backdrop-filter:blur(4px); justify-content:center; align-items:center;}
+    .accounts-popup[aria-hidden="false"]{ display:flex;}
+    .accounts-popup .popup-content{ background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:18px; padding:25px; text-align:center; color:#fff; box-shadow:0 0 20px var(--main-color); animation:popIn 0.4s ease; max-width:360px; width:92%;}
+    .accounts-popup .close-popup{ margin-top:20px; padding:10px 20px; border:none; border-radius:8px; cursor:pointer; background:#ff3d3d; color:#fff; font-weight:600; transition:0.3s;}
+    .accounts-popup .close-popup:hover, .accounts-popup .close-popup:focus-visible{ background:#e63939; outline:3px solid var(--focus); outline-offset:2px;}
+  </style>
+</head>
+<body>
+  <a href="#main" class="sr-only" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;">Skip to main content</a>
+  <div class="overlay" aria-hidden="true"></div>
+
+  <main class="main-wrapper" id="main" role="main" aria-label="CRR Student Management System">
+    <div class="branding" role="banner" aria-label="Sir C.R. Reddy College of Engineering">
+      <div class="brand-row">
+        <img src="crrengglogo.png" alt="CRR logo" />
+        <h1>Sir C.R. Reddy College of Engineering</h1>
+      </div>
+      <h2 class="autonomous" aria-label="Autonomous">(AUTONOMOUS)</h2>
+      <div class="accreditation" aria-label="Accreditations and approvals">
+        <div class="approvals" role="list">
+          <div class="approval-item" role="listitem"><span>Approved By AICTE</span></div>
+          <div class="approval-item" role="listitem"><span>Affiliated To JNTUK</span></div>
+          <div class="approval-item" role="listitem"><span>Accredited By NBA</span></div>
+          <div class="approval-item" role="listitem"><span>Accredited by NAAC With 'A' Grade</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="system-heading" aria-live="polite">STUDENT MANAGEMENT SYSTEM</div>
+
+    <div class="role-buttons" role="group" aria-label="Select portal role">
+      <button class="role-button" data-role="student" type="button" aria-controls="student-login">👨‍🎓 Student</button>
+      <button class="role-button" data-role="staff" type="button" aria-controls="staff-login">👨‍🏫 Staff</button>
+      <button class="role-button" data-role="admin" type="button" aria-controls="admin-role-options">🛡️ Admin</button>
+    </div>
+
+    <section class="login-container hidden" id="student-login" role="region" aria-label="Student login" aria-hidden="true">
+      <h2>Student Login</h2>
+      <form onsubmit="submitLogin(event, 'student')" aria-describedby="studentLoginHelp">
+        <label for="studentId">Student ID</label>
+        <input id="studentId" name="studentId" type="text" inputmode="text" autocomplete="username"
+               placeholder="Enter Student ID" required />
+        <label for="studentPwd">Password</label>
+        <input id="studentPwd" name="studentPwd" type="password" autocomplete="current-password"
+               placeholder="Enter Password" required />
+        <div id="studentLoginHelp" style="font-size:12px;color:#cde; margin: -6px 0 10px;">
+          Spaces are not allowed in ID or password.
+        </div>
+        <div style="text-align: right; margin: -10px 0 15px;">
+          <a href="forgotpassword.html" style="color: #3cb6ff; font-size: 14px;">Forgot Password?</a>
+        </div>
+        <button type="submit">Login as Student</button>
+      </form>
+    </section>
+
+    <section class="login-container hidden" id="staff-login" role="region" aria-label="Staff login" aria-hidden="true">
+      <h2>Staff Login</h2>
+      <form onsubmit="submitLogin(event, 'staff')" aria-describedby="staffLoginHelp">
+        <label for="staffId">Staff ID</label>
+        <input id="staffId" name="staffId" type="text" inputmode="text" autocomplete="username"
+               placeholder="Enter Staff ID" required />
+        <label for="staffPwd">Password</label>
+        <input id="staffPwd" name="staffPwd" type="password" autocomplete="current-password"
+               placeholder="Enter Password" required />
+        <div id="staffLoginHelp" style="font-size:12px;color:#cde; margin: -6px 0 10px;">
+          Spaces are not allowed in ID or password.
+        </div>
+        <div style="text-align: right; margin: -10px 0 15px;">
+          <a href="forgotpassword.html" style="color: #3cb6ff; font-size: 14px;">Forgot Password?</a>
+        </div>
+        <button type="submit">Login as Staff</button>
+      </form>
+    </section>
+
+    <section class="login-container hidden" id="admin-role-options" role="region" aria-label="Admin role selection" aria-hidden="true">
+      <h2>Select Admin Role</h2>
+      <div class="role-buttons" style="margin-top: 15px; flex-direction: column; align-items: center;" role="group" aria-label="Admin roles">
+        <button class="role-button" data-subrole="correspondent" type="button">👤 Correspondent</button>
+        <button class="role-button" data-subrole="principal" type="button">👤 Principal</button>
+        <button class="role-button" data-subrole="admin" type="button">👤 Administrator</button>
+        <button class="role-button" data-subrole="hod" type="button">👤 Dept HOD</button>
+        <button class="role-button" data-role="accounts" type="button" id="accountsTrigger" aria-haspopup="dialog" aria-controls="accounts-popup">💰 Accounts</button>
+        <button class="role-button" data-subrole="exam" type="button">📚 Examination Cell</button>
+      </div>
+    </section>
+
+    <section class="login-container hidden" id="admin-login" role="region" aria-label="Admin login" aria-hidden="true">
+      <h2>Admin Login</h2>
+      <form onsubmit="submitLogin(event, 'admin')" aria-describedby="adminLoginHelp">
+        <label for="adminId">Admin ID</label>
+        <input id="adminId" name="adminId" type="text" inputmode="text" autocomplete="username"
+               placeholder="Enter Admin ID" required />
+        <label for="adminPwd">Password</label>
+        <input id="adminPwd" name="adminPwd" type="password" autocomplete="current-password"
+               placeholder="Enter Password" required />
+        <div id="adminLoginHelp" style="font-size:12px;color:#cde; margin: -6px 0 10px;">
+          Spaces are not allowed in ID or password.
+        </div>
+        <div style="text-align: right; margin: -10px 0 15px;">
+          <a href="forgotpassword.html" style="color: #3cb6ff; font-size: 14px;">Forgot Password?</a>
+        </div>
+        <button type="submit">Login as Admin</button>
+      </form>
+    </section>
+
+    <!-- Accounts Subrole Popup -->
+    <div id="accounts-popup" class="accounts-popup" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="accountsPopupTitle">
+      <div class="popup-content">
+        <h2 id="accountsPopupTitle">Select Accounts Role</h2>
+        <div class="role-buttons" style="flex-direction: column; align-items: center; margin-top: 15px;" role="group" aria-label="Accounts sub-roles">
+          <button class="role-button" data-subrole="mainaccounts" type="button">🏛️ Main Accounts</button>
+          <button class="role-button" data-subrole="busaccounts" type="button">🚌 Bus Accounts</button>
+          <button class="role-button" data-subrole="scholarships" type="button">🎓 Scholarships</button>
+          <button class="role-button" data-subrole="hostel" type="button">🏠 Hostel</button>
+        </div>
+        <button class="close-popup" type="button" onclick="closeAccountsPopup()">Close</button>
+      </div>
+    </div>
+
+    <section class="login-counts" role="region" aria-label="Visits overview">
+      <div class="count-card student" tabindex="0" aria-labelledby="studCountHdr studCountVal">
+        <h3 id="studCountHdr">Students Visited</h3>
+        <p id="studentCount" aria-live="polite" aria-atomic="true"><span id="studCountVal">0</span></p>
+      </div>
+      <div class="count-card staff" tabindex="0" aria-labelledby="staffCountHdr staffCountVal">
+        <h3 id="staffCountHdr">Staff Visited</h3>
+        <p id="staffCount" aria-live="polite" aria-atomic="true"><span id="staffCountVal">0</span></p>
+      </div>
+    </section>
+  </main>
+
+  <script> window.chtlConfig = { chatbotId: "7883498161" } </script>
+  <script async data-id="7883498161" id="chtl-script" type="text/javascript" src="https://chatling.ai/js/embed.js"></script>
+
+  <div class="footer" role="contentinfo">
+    Developed by Cyber Security (2023-2027) Batch Students |
+    <a href="privacypolicy.html" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    function setRegionVisibility(el, show) {
+      if (!el) return;
+      if (show) { el.classList.add("show"); el.classList.remove("hidden"); el.setAttribute("aria-hidden","false"); }
+      else { el.classList.remove("show"); el.classList.add("hidden"); el.setAttribute("aria-hidden","true"); }
+    }
+
+    const buttons = document.querySelectorAll('.role-button');
+    const wrapper = document.getElementById('main');
+    const containers = {
+      student: document.getElementById("student-login"),
+      staff: document.getElementById("staff-login"),
+      admin: document.getElementById("admin-role-options")
+    };
+    const adminLoginContainer = document.getElementById("admin-login");
+    const adminLoginHeading = adminLoginContainer.querySelector("h2");
+    const adminLoginButton = adminLoginContainer.querySelector("button");
+    let selectedAdminRole = "";
+
+    function hideAll(){ Object.values(containers).forEach(el => setRegionVisibility(el,false)); setRegionVisibility(adminLoginContainer,false); }
+    hideAll();
+
+    const accountsPopup = document.getElementById("accounts-popup");
+    const accountsTrigger = document.getElementById("accountsTrigger");
+    let lastFocusedBeforePopup = null;
+
+    function openAccountsPopup(){
+      lastFocusedBeforePopup = document.activeElement;
+      accountsPopup.setAttribute("aria-hidden","false");
+      const firstBtn = accountsPopup.querySelector('.role-button');
+      firstBtn && firstBtn.focus();
+      document.addEventListener('focus', trapFocus, true);
+      document.addEventListener('keydown', escClose);
+    }
+    function closeAccountsPopup(){
+      accountsPopup.setAttribute("aria-hidden","true");
+      document.removeEventListener('focus', trapFocus, true);
+      document.removeEventListener('keydown', escClose);
+      (lastFocusedBeforePopup || accountsTrigger)?.focus();
+    }
+    function trapFocus(e){
+      if (accountsPopup.getAttribute('aria-hidden')==='true') return;
+      if (!accountsPopup.contains(e.target)){
+        e.stopPropagation();
+        const focusable = accountsPopup.querySelectorAll('button,[href],[tabindex]:not([tabindex="-1"])');
+        (focusable[0] || accountsPopup).focus();
+      }
+    }
+    function escClose(e){ if (e.key==='Escape') closeAccountsPopup(); }
+
+    buttons.forEach(btn=>{
+      btn.setAttribute('role','button');
+      btn.setAttribute('tabindex','0');
+      if (!btn.hasAttribute('type')) btn.setAttribute('type','button');
+      btn.addEventListener('keydown',(e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); btn.click(); }});
+    });
+
+    buttons.forEach(btn=>{
+      const role = btn.dataset.role;
+      const subrole = btn.dataset.subrole;
+      btn.addEventListener("click",()=>{
+        buttons.forEach(b=>b.classList.remove("active"));
+        btn.classList.add("active");
+        wrapper.classList.add('shift-up');
+
+        if(role==="admin"){ hideAll(); setTimeout(()=>setRegionVisibility(containers.admin,true),400); return; }
+        else if(role==="accounts"){ openAccountsPopup(); return; }
+        else if(role){ hideAll(); setTimeout(()=>setRegionVisibility(containers[role],true),400); }
+
+        if(subrole){
+          selectedAdminRole = subrole;
+          const roleNames = {correspondent:"Correspondent", principal:"Principal", admin:"Administrator", hod:"HOD", exam:"Exam Cell", accounts:"Accounts", mainaccounts:"Main Accounts", busaccounts:"Bus Accounts", scholarships:"Scholarships", hostel:"Hostel"};
+          const displayRole = roleNames[selectedAdminRole] || "Admin";
+          adminLoginHeading.textContent = `${displayRole} Login`;
+          adminLoginButton.textContent = `Login as ${displayRole}`;
+          hideAll();
+          setTimeout(()=>{ setRegionVisibility(adminLoginContainer,true); const firstInput = adminLoginContainer.querySelector('input'); firstInput && firstInput.focus(); },400);
+          closeAccountsPopup();
+        }
+      });
+    });
+
+    // JS-only no-space enforcement with friendly validity messages
+    function attachSpaceGuards(selector){
+      document.querySelectorAll(selector).forEach(inp=>{
+        const sanitize = () => {
+          const before = inp.value;
+          // remove all whitespace characters (spaces, tabs, non-breaking)
+          const cleaned = before.replace(/\s+/g,'');
+          if(before!==cleaned){ inp.value = cleaned; }
+        };
+        inp.addEventListener('keydown',(e)=>{ if(e.key===' '||e.code==='Space'){ e.preventDefault(); }});
+        inp.addEventListener('paste',(e)=>{ e.preventDefault(); const text=(e.clipboardData||window.clipboardData).getData('text'); const noSpaces=text.replace(/\s+/g,''); document.execCommand('insertText', false, noSpaces); });
+        inp.addEventListener('input',sanitize);
+        inp.addEventListener('blur',()=>{ sanitize(); if(!inp.value){ inp.setCustomValidity('Spaces are not allowed.'); } else { inp.setCustomValidity(''); } inp.reportValidity(); });
+        inp.addEventListener('focus',()=>{ inp.setCustomValidity(''); });
+      });
+    }
+    attachSpaceGuards('#studentId, #studentPwd, #staffId, #staffPwd, #adminId, #adminPwd');
+
+    async function updateLoginCounts(){
+      try{
+        const res = await fetch("/api/login-counts");
+        const data = await res.json();
+        document.getElementById("studCountVal").textContent = data.studentCount || 0;
+        document.getElementById("staffCountVal").textContent = data.staffCount || 0;
+      }catch(err){ console.error("Error fetching login counts:", err); }
+    }
+    document.addEventListener("DOMContentLoaded", updateLoginCounts);
+
+    async function submitLogin(event, role){
+      event.preventDefault();
+      const form = event.target;
+      const textInput = form.querySelector('input[type="text"]');
+      const passInput = form.querySelector('input[type="password"]');
+
+      const clean = v => (v || '').replace(/\s+/g,'').trim();
+      textInput.value = clean(textInput.value);
+      passInput.value = clean(passInput.value);
+
+      if(!textInput.value || !passInput.value){
+        textInput.setCustomValidity(!textInput.value ? 'Spaces are not allowed.' : '');
+        passInput.setCustomValidity(!passInput.value ? 'Spaces are not allowed.' : '');
+        textInput.reportValidity();
+        passInput.reportValidity();
+        return;
+      } else {
+        textInput.setCustomValidity('');
+        passInput.setCustomValidity('');
+      }
+
+      const userId = textInput.value;
+      const password = passInput.value;
+
+      let actualRole = role;
+      if (role === "admin") actualRole = selectedAdminRole;
+
+      const payload = { userId, password, role: actualRole };
+
+      Swal.fire({ title:"Logging in...", allowOutsideClick:false, didOpen:()=>Swal.showLoading() });
+
+      let response;
+      try{
+        response = await Promise.race([
+          fetch("/login",{ method:"POST", headers:{ "Content-Type":"application/json" }, body:JSON.stringify(payload) }),
+          new Promise((_,reject)=>setTimeout(()=>reject(new Error("Network Timeout")),7000))
+        ]);
+      }catch(err){
+        Swal.close();
+        Swal.fire({ icon:'warning', title:'Network Issue', text:'Login is taking too long. Please check your internet and try again.', confirmButtonColor:'#f39c12' });
+        return;
+      }
+
+      const data = await response.json();
+      Swal.close();
+
+      if (data.success){
+        localStorage.setItem("userId", data.userId);
+        localStorage.setItem("role", actualRole);
+        Swal.fire({ icon:'success', title:'Login Successful', text:`Welcome ${String(actualRole||'').toUpperCase()} - ${data.userId}`, timer:2000, showConfirmButton:false });
+        if (actualRole==="student"){ localStorage.setItem("regno", data.userId); window.location.href="studentwelcome.html"; }
+        else if (actualRole==="staff"){ window.location.href="staff-dashboard.html"; }
+        else if (actualRole==="admin"){ window.location.href="/adminpanel"; }
+        else if (actualRole==="hod"){ window.location.href="hodpanel.html"; }
+        else if (actualRole==="exam"){ window.location.href="examcell.html"; }
+        else if (actualRole==="accounts"){ window.location.href="accountspanel.html"; }
+        else if (actualRole==="mainaccounts"){ window.location.href="accountspanel.html"; }
+        else if (actualRole==="busaccounts"){ window.location.href="accountspanel.html"; }
+        else if (actualRole==="scholarships"){ window.location.href="scholarships.html"; }
+        else if (actualRole==="hostel"){ window.location.href="hostelaccounts.html"; }
+        else if (actualRole==="correspondent"){ window.location.href="correspondent-dashboard.html"; }
+        else if (actualRole==="principal"){ window.location.href="principal-dashboard.html"; }
+      } else {
+        Swal.fire({ icon:'error', title:'Login Failed', text:data.message || 'Invalid credentials. Please try again.', confirmButtonColor:'#d33' });
+      }
+    }
+
+    window.submitLogin = submitLogin;
+    window.closeAccountsPopup = closeAccountsPopup;
+  </script>
+</body>
+</html>

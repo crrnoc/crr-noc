@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Staff - FAQ</title>
+    <link rel="icon" href="crrengglogo.png" type="image/png" />
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.20/dist/sweetalert2.min.css"
+    />
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
+        :root {
+            --primary-color: #0b1c3c; /* Deep Navy */
+            --secondary-color: #1a3a60; /* Darker Blue */
+            --accent-color: #ffcc5c; /* Gold/Amber */
+            --background-start: #e9f0f9;
+            --background-end: #f4f7f9;
+            --background-light: #ffffff;
+            --text-dark: #2c3e50;
+            --text-light: #ecf0f1;
+            --card-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            --border-radius-lg: 20px;
+            --border-radius-md: 12px;
+            --border-radius-sm: 8px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--background-start) 0%, var(--background-end) 100%);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        /* Container and Overlay */
+        .main-container {
+            display: flex;
+            width: 100%;
+        }
+        
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(3px);
+            z-index: 999;
+            transition: opacity 0.3s ease-in-out;
+            opacity: 0;
+        }
+        
+        .overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        .no-scroll {
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background-color: var(--primary-color);
+            display: flex;
+            flex-direction: column;
+            padding: 30px 20px;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+            transform: translateX(0);
+            transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+        }
+
+        .home-icon {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            font-size: 1.5rem;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: color 0.3s ease, transform 0.3s ease;
+        }
+
+        .home-icon:hover {
+            color: var(--accent-color);
+            transform: scale(1.1);
+        }
+
+        .sidebar-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar h2 {
+            margin-top: 15px;
+            color: var(--text-light);
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+
+        .menu {
+            list-style: none;
+            flex-grow: 1;
+        }
+
+        .menu li {
+            margin-bottom: 15px;
+        }
+
+        .menu li a {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 1rem;
+            color: var(--text-light);
+            padding: 15px 20px;
+            border-radius: var(--border-radius-md);
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .menu li a:hover,
+        .menu li.active a {
+            background-color: var(--secondary-color);
+            color: var(--accent-color);
+            font-weight: 500;
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .menu li a i {
+            font-size: 1.2rem;
+            width: 25px;
+            text-align: center;
+            color: inherit;
+            transition: color 0.3s ease;
+        }
+
+        .logout {
+            background-color: var(--accent-color);
+            color: var(--text-dark);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            width: 60%;
+            margin: 20px auto 0;
+            transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .logout:hover {
+            background-color: #e5b64c;
+            transform: scale(1.05);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Main Content */
+        .content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px;
+            margin-left: 280px;
+            transition: margin-left 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        @media (max-width: 992px) {
+            .content {
+                margin-left: 0;
+            }
+        }
+        
+        .header {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 15px 30px;
+            box-shadow: var(--card-shadow);
+            border-radius: var(--border-radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 25px;
+            position: sticky;
+            top: 20px;
+            z-index: 10;
+        }
+        
+        .header h1 {
+            color: var(--primary-color);
+            font-size: 1.5rem;
+            font-weight: 500;
+        }
+
+        .faq-container {
+            width: 100%;
+            max-width: 900px;
+            background-color: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--card-shadow);
+            animation: fadeIn 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            font-size: 1rem;
+            color: var(--secondary-color);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            margin-bottom: 20px;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .back-btn:hover {
+            color: var(--primary-color);
+        }
+
+        .back-btn i {
+            margin-right: 8px;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .faq-item {
+            margin-bottom: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: var(--border-radius-md);
+            transition: all 0.3s ease;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .faq-item:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .question {
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--text-dark);
+            background-color: #f9f9f9;
+            padding: 15px 20px;
+            transition: all 0.3s ease;
+        }
+
+        .question:hover {
+            background-color: #e6f0ff;
+            color: var(--primary-color);
+        }
+        
+        .question.active {
+            background-color: var(--secondary-color);
+            color: var(--text-light);
+        }
+
+        .answer {
+            display: none;
+            padding: 15px 20px;
+            color: #555;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            background-color: #ffffff;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .arrow {
+            font-size: 1.2rem;
+            transition: transform 0.3s ease;
+        }
+        
+        .question.active .arrow {
+            transform: rotate(180deg);
+        }
+
+        /* Mobile View */
+        .mobile-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background-color: var(--secondary-color);
+            color: var(--text-light);
+            font-size: 24px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            align-items: center;
+            justify-content: center;
+            z-index: 1001;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .mobile-toggle:hover {
+            transform: scale(1.1);
+        }
+        
+        @media (max-width: 992px) {
+            .mobile-toggle {
+                display: flex;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="overlay" onclick="toggleMobileMenu()"></div>
+    <div class="main-container">
+        <div class="sidebar" id="sidebar">
+            <a href="staff-dashboard.html" class="home-icon"><i class="fas fa-home"></i></a>
+            <div class="sidebar-header">
+                <h2 id="staffName">Staff Name</h2>
+                <h2 style="margin-top: 5px;">ID: <span id="staffId">Loading...</span></h2>
+            </div>
+            <ul class="menu">
+                <li><a href="staff-dashboard.html"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+                <li><a href="knowaboutstd1.html"><i class="fas fa-search"></i> Know about Student</a></li>
+                <li><a href="editstudentdetails.html"><i class="fas fa-user-edit"></i> Edit Student Details</a></li>
+                <li><a href="sendnotification.html"><i class="fas fa-paper-plane"></i> Send Notification</a></li>
+                <li><a href="updatefee.html"><i class="fas fa-money-bill-wave"></i> Update Fee</a></li>
+                <li><a href="imposefines.html"><i class="fas fa-money-check-alt"></i> Impose Fines</a></li>
+                <li><a href="addstudent.html"><i class="fas fa-user-plus"></i> Add Student</a></li>
+                <li><a href="mark_attendance.html"><i class="fas fa-clipboard-list"></i> Mark Attendance</a></li>
+                <li><a href="backlogs.html"><i class="fas fa-book-open"></i> Find Backlogs</a></li>
+                <li><a href="mycounselling.html"><i class="fas fa-handshake"></i> View Counselling</a></li>
+                <li class="active"><a href="staffsettings.html"><i class="fas fa-cog"></i> Settings</a></li>
+            </ul>
+            <button class="logout" onclick="confirmLogout()">Logout</button>
+        </div>
+
+        <div class="content">
+            <div class="header">
+                <h1>Staff - FAQ</h1>
+            </div>
+            <div class="faq-container">
+                <button class="back-btn" onclick="window.location.href='staffsettings.html'">
+                    <i class="fas fa-arrow-left"></i> Back to Settings
+                </button>
+                <div id="faq-list"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        const questions = [
+            "How do I log in as staff?",
+            "What is my staff User ID?",
+            "What if I forget my password?",
+            "Can I update student fee payment details?",
+            "Can I generate a NOC for a student?",
+            "How do I check student academic and personal info?",
+            "How can I ensure a student is eligible for NOC?",
+            "What if the NOC generation button is disabled?",
+            "Can staff access all student records?",
+            "How do I logout of the portal?"
+        ];
+
+        const answers = [
+            "Go to the portal login page, enter your assigned User ID, password, and select 'staff' role to log in.",
+            "It is the ID provided by the admin when your account was created.",
+            "Please contact the admin or developer team to reset your password.",
+            "Yes, go to the 'Update Fee' section, select the student, and update the payment details.",
+            "Yes, staff can generate an NOC for eligible students through the 'Generate NOC' tab.",
+            "Use the 'Know about Student' menu to view a student's complete information.",
+            "Ensure the student is in their final year and has cleared all their fee dues. The NOC generation option will only be available then.",
+            "This means the student does not meet all the requirements for NOC generation, such as being in their final year or having outstanding fees.",
+            "Yes, staff have access to view student profiles, fee, and academic information.",
+            "Click on the 'Logout' button in the sidebar to safely exit the portal."
+        ];
+        
+        const faqList = document.getElementById("faq-list");
+        
+        questions.forEach((q, index) => {
+            const item = document.createElement("div");
+            item.classList.add("faq-item");
+            item.innerHTML = `
+                <div class="question">
+                    ${q} <span class="arrow"><i class="fas fa-chevron-down"></i></span>
+                </div>
+                <div class="answer">${answers[index]}</div>
+            `;
+            faqList.appendChild(item);
+        
+            item.querySelector(".question").addEventListener("click", () => {
+                const answer = item.querySelector(".answer");
+                const question = item.querySelector(".question");
+                
+                const isVisible = answer.style.display === "block";
+
+                // Close all other open FAQs
+                document.querySelectorAll(".faq-item .answer").forEach(a => {
+                    if (a !== answer) {
+                        a.style.display = "none";
+                        a.parentElement.querySelector('.question').classList.remove('active');
+                    }
+                });
+
+                // Toggle the clicked FAQ
+                if (isVisible) {
+                    answer.style.display = "none";
+                    question.classList.remove('active');
+                } else {
+                    answer.style.display = "block";
+                    question.classList.add('active');
+                }
+            });
+        });
+
+        const userId = localStorage.getItem("userId");
+        const role = localStorage.getItem("role");
+
+        if (!userId || role !== "staff") {
+            Swal.fire({
+                icon: "error",
+                title: "Unauthorized Access",
+                text: "Please login as staff to continue.",
+                confirmButtonText: "Go to Login",
+                confirmButtonColor: '#0b1c3c'
+            }).then(() => {
+                window.location.href = "index.html";
+            });
+        } else {
+            document.getElementById("staffId").textContent = userId || "Unknown";
+            fetch(`/staff/${userId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.staff_name) {
+                        document.getElementById("staffName").textContent = data.staff_name;
+                    }
+                })
+                .catch(err => {
+                    console.error("Error loading staff data:", err);
+                });
+        }
+        
+        function confirmLogout() {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You will be logged out of your account.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#0b1c3c',
+                cancelButtonColor: '#ffcc5c',
+                confirmButtonText: 'Yes, log out!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    logout();
+                }
+            });
+        }
+
+function logout() {
+    fetch("/logout", { method: "GET", credentials: "include" })
+      .then(() => {
+          localStorage.clear();
+          sessionStorage.clear();
+          if ("caches" in window) {
+              caches.keys().then(names => names.forEach(name => caches.delete(name)));
+          }
+          window.location.replace("index.html");
+      })
+      .catch(() => {
+          window.location.replace("index.html");
+      });
+}
+        window.history.pushState(null, "", window.location.href);
+        window.onpopstate = () => window.history.pushState(null, "", window.location.href);
+        function toggleMobileMenu() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.overlay');
+            const body = document.body;
+            
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
+            body.classList.toggle('no-scroll', sidebar.classList.contains('open'));
+        }
+
+        document.querySelectorAll(".menu li a").forEach(link => {
+            link.addEventListener("click", () => {
+                if (window.innerWidth <= 992) {
+                    toggleMobileMenu();
+                }
+            });
+        });
+    </script>
+    <script src="session.js"></script>
+</body>
+</html>

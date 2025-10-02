@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Account Copy Download</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="icon" href="crrengglogo.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+    body { display: flex; min-height: 100vh; background: linear-gradient(to right, #e0eafc, #cfdef3); color: #222; }
+    .sidebar {
+      width: 250px; background: linear-gradient(180deg, #2C3E50, #34495E);
+      padding: 20px; display: flex; flex-direction: column;
+      position: fixed; top: 0; left: 0; bottom: 0; color: white; z-index: 100;
+    }
+    .sidebar h2 { text-align: center; font-weight: bold; font-size: 20px; margin-bottom: 30px; color: #3cb6ff; }
+    .sidebar ul { list-style: none; padding-left: 0; }
+    .sidebar li {
+      padding: 12px; margin: 8px 0; border-radius: 8px;
+      cursor: pointer; transition: 0.3s; background: rgba(255, 255, 255, 0.1);
+    }
+    .sidebar li:hover { background: rgba(255, 255, 255, 0.2); transform: translateX(5px); }
+    .sidebar button {
+      background-color: #E67E22; border: none; color: white; padding: 12px;
+      border-radius: 20px; margin-top: auto; cursor: pointer; transition: background 0.3s ease;
+    }
+    .sidebar button:hover { background-color: #CA6F1E; }
+    .mobile-toggle {
+      display: none; position: fixed; top: 15px; left: 15px;
+      background: #2C3E50; color: white; padding: 10px 15px;
+      border-radius: 8px; cursor: pointer; z-index: 200;
+    }
+    .main { flex: 1; margin-left: 250px; padding: 60px 20px; }
+    .card {
+      background: white; max-width: 800px; margin: auto;
+      padding: 30px; border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1); text-align: center;
+    }
+    .search-box { display: flex; justify-content: center; gap: 10px; margin: 20px 0; }
+    .search-box input {
+      padding: 10px; width: 250px; border: 1px solid #ccc; border-radius: 8px;
+    }
+    .search-box button {
+      padding: 10px 15px; background: #3498db; border: none; color: white;
+      border-radius: 8px; cursor: pointer; transition: 0.3s;
+    }
+    .search-box button:hover { background: #2c80b4; }
+    table {
+      width: 100%; border-collapse: collapse; margin-top: 20px;
+    }
+    table th, table td {
+      border: 1px solid #ddd; padding: 10px; text-align: center;
+    }
+    table th { background: #3498db; color: white; }
+    .download-btn {
+      margin-top: 20px; padding: 12px 20px; background: #27ae60;
+      border: none; color: white; font-weight: bold;
+      border-radius: 8px; cursor: pointer; transition: 0.3s;
+    }
+    .download-btn:hover { background: #219150; }
+    @media (max-width: 768px) {
+      .sidebar { left: -250px; transition: 0.4s ease; }
+      .sidebar.open { left: 0; }
+      .mobile-toggle { display: block; }
+      .main { margin-left: 0; padding: 80px 20px 20px; }
+      .card { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="mobile-toggle" onclick="toggleSidebar()">☰</div>
+
+  <div class="sidebar" id="sidebar">
+    <h2>Accounts Panel</h2>
+    <ul>
+      <li onclick="navigateTo('/uploadsbi')">🏦 Upload SBI References</li>
+      <li onclick="navigateTo('/nocstatus')">📄 NOC Status</li>
+      <li onclick="navigateTo('/createnoc')">🧾 Create NOC</li>
+      <li onclick="navigateTo('/studentSfeesearch')">🔍 Student Fee Search</li>
+      <li onclick="navigateTo('/accountcopy')">📑 Account Copy Download</li>
+    </ul>
+    <button onclick="logout()"> Logout</button>
+  </div>
+
+  <div class="main">
+    <div class="card">
+      <h2>📑 Account Copy Download</h2>
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Enter Unique ID or RegNo">
+        <button onclick="searchAccountCopy()">Search</button>
+      </div>
+      <div id="resultContainer"></div>
+    </div>
+  </div>
+
+<script>
+  function toggleSidebar() { 
+    document.getElementById("sidebar").classList.toggle("open"); 
+  }
+
+  function navigateTo(path) { 
+    window.location.href = path; 
+  }
+
+  function logout() {
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You will be logged out of Accounts Panel.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#E67E22",
+      cancelButtonColor: "#6c757d",
+      confirmButtonText: "Yes, logout"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        fetch("/logout", { method: "GET", credentials: "include" })
+          .then(() => {
+            localStorage.clear(); 
+            sessionStorage.clear();
+            if ("caches" in window) {
+              caches.keys().then(names => names.forEach(name => caches.delete(name)));
+            }
+            window.location.replace("index.html");
+          })
+          .catch(() => { window.location.replace("index.html"); });
+      }
+    });
+  }
+
+  async function searchAccountCopy() {
+    const query = document.getElementById("searchInput").value.trim();
+    if (!query) return Swal.fire("Error", "Enter Unique ID or RegNo", "error");
+
+    try {
+      const res = await fetch(`/api/accountcopy/${query}`);
+      if (!res.ok) throw new Error("Student not found");
+
+      const data = await res.json();
+      const { student, payments, totals } = data;
+
+      let html = `
+        <h3>Student: ${student.full_name} (${student.regno})</h3>
+        <p>Unique ID: ${student.unique_id}</p>
+      `;
+
+      if (!payments || payments.length === 0) {
+        html += `<p>No payment records found.</p>`;
+      } else {
+        html += `
+        <table>
+          <tr>
+            <th>Transaction Date</th>
+            <th>Reference No</th>
+            <th>Fee Type</th>
+            <th>Amount (₹)</th>
+          </tr>`;
+        payments.forEach(p => {
+          const date = p.transaction_date || "-";
+          const amount = parseFloat(p.amount || 0).toFixed(2);
+          html += `<tr>
+            <td>${date}</td>
+            <td>${p.reference_no || "-"}</td>
+            <td>${p.feetype || "-"}</td>
+            <td>₹${amount}</td>
+          </tr>`;
+        });
+        html += `</table>`;
+      }
+
+      html += `
+        <p>
+          <b>Total Expected:</b> ₹${parseFloat(totals.total_expected || 0).toFixed(2)} |
+          <b>Total Paid:</b> ₹${parseFloat(totals.total_paid || 0).toFixed(2)} |
+          <b>Total Due:</b> <span style="color:${totals.total_due>0?'red':'green'}">
+            ₹${parseFloat(totals.total_due || 0).toFixed(2)}
+          </span>
+        </p>
+        <div style="display:flex; gap:10px; justify-content:center; margin-top:15px;">
+          <button class="download-btn" onclick="downloadAccountCopy('${query}')">⬇️ Download Account Copy</button>
+          <button class="download-btn" style="background:#8e44ad;" onclick="downloadFYCopy('${query}')">📘 F.Y Copy Download</button>
+        </div>
+      `;
+
+      document.getElementById("resultContainer").innerHTML = html;
+
+    } catch (err) {
+      Swal.fire("Error", err.message || "Student not found", "error");
+      document.getElementById("resultContainer").innerHTML = "";
+    }
+  }
+
+  function downloadAccountCopy(query) {
+    window.open(`/api/accountcopy/download/${query}`, "_blank");
+  }
+
+  function downloadFYCopy(query) {
+    window.open(`/account-copy-fy/${query}`, "_blank");
+  }
+</script>
+
+</body>
+</html>
+

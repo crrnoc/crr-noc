@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Edit Student Details</title>
+    <link rel="icon" href="crrengglogo.png" type="image/png" />
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.20/dist/sweetalert2.min.css"
+    />
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
+        :root {
+            --primary-color: #0b1c3c; /* Deep Navy */
+            --secondary-color: #1a3a60; /* Darker Blue */
+            --accent-color: #ffcc5c; /* Gold/Amber */
+            --background-start: #e9f0f9;
+            --background-end: #f4f7f9;
+            --background-light: #ffffff;
+            --text-dark: #2c3e50;
+            --text-light: #ecf0f1;
+            --card-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            --border-radius-lg: 20px;
+            --border-radius-md: 12px;
+            --border-radius-sm: 8px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--background-start) 0%, var(--background-end) 100%);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+        }
+
+        /* Container and Overlay */
+        .main-container {
+            display: flex;
+            width: 100%;
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(3px);
+            z-index: 999;
+            transition: opacity 0.3s ease-in-out;
+            opacity: 0;
+        }
+
+        .no-scroll {
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background-color: var(--primary-color);
+            display: flex;
+            flex-direction: column;
+            padding: 30px 20px;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+            transform: translateX(0);
+            transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .home-icon {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            font-size: 1.5rem;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: color 0.3s ease, transform 0.3s ease;
+        }
+
+        .home-icon:hover {
+            color: var(--accent-color);
+            transform: scale(1.1);
+        }
+
+        .sidebar-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar h2 {
+            margin-top: 15px;
+            color: var(--text-light);
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+
+        .menu {
+            list-style: none;
+            flex-grow: 1;
+        }
+
+        .menu li {
+            margin-bottom: 15px;
+        }
+
+        .menu li a {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 1rem;
+            color: var(--text-light);
+            padding: 15px 20px;
+            border-radius: var(--border-radius-md);
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .menu li a:hover,
+        .menu li.active a {
+            background-color: var(--secondary-color);
+            color: var(--accent-color);
+            font-weight: 500;
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .menu li a i {
+            font-size: 1.2rem;
+            width: 25px;
+            text-align: center;
+            color: inherit; /* Inherit color from the parent link */
+            transition: color 0.3s ease;
+        }
+
+        .logout {
+            background-color: var(--accent-color);
+            color: var(--text-dark);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            width: 60%;
+            margin: 20px auto 0;
+            transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .logout:hover {
+            background-color: #e5b64c;
+            transform: scale(1.05);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Content */
+        .content {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+            margin-left: 280px;
+            transition: margin-left 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .student-info-card {
+            background-color: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--card-shadow);
+            padding: 50px;
+            text-align: center;
+            width: 100%;
+            max-width: 800px;
+            animation: fadeIn 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .student-info-card h3 {
+            font-size: 2rem;
+            color: var(--primary-color);
+            margin-bottom: 30px;
+            font-weight: 500;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 25px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 16px;
+            padding-left: 55px;
+            border: 2px solid #ddd;
+            border-radius: var(--border-radius-md);
+            font-size: 1.1rem;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 12px rgba(255, 204, 92, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .input-group i {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--secondary-color);
+            font-size: 1.2rem;
+        }
+
+        .know-btn {
+            background-color: var(--primary-color);
+            color: var(--text-light);
+            border: none;
+            padding: 14px 35px;
+            font-size: 1.1rem;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .know-btn:hover {
+            background-color: var(--secondary-color);
+            transform: scale(1.03) translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .mobile-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background-color: var(--secondary-color);
+            color: var(--text-light);
+            font-size: 24px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            align-items: center;
+            justify-content: center;
+            z-index: 1001;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .mobile-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        /* Student details modal */
+        .swal2-popup {
+            background: rgba(255, 255, 255, 0.95) !important;
+            border-radius: var(--border-radius-lg) !important;
+            box-shadow: var(--card-shadow) !important;
+            backdrop-filter: blur(15px) !important;
+            -webkit-backdrop-filter: blur(15px) !important;
+        }
+        .swal2-title {
+            color: var(--primary-color) !important;
+            font-weight: 700 !important;
+            font-size: 1.8rem !important;
+        }
+        .swal2-html-container {
+            text-align: left !important;
+            font-size: 1rem !important;
+            color: var(--text-dark) !important;
+        }
+        .student-details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .detail-item {
+            display: flex;
+            align-items: center;
+            background-color: #f1f6f9;
+            padding: 12px;
+            border-radius: var(--border-radius-sm);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .detail-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        .detail-item i {
+            color: var(--secondary-color);
+            font-size: 1.3rem;
+            width: 40px;
+            text-align: center;
+        }
+        .detail-item-content {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.4;
+        }
+        .detail-item strong {
+            color: var(--primary-color);
+            font-weight: 500;
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-bottom: 2px;
+        }
+        .detail-item span {
+            font-size: 1rem;
+            font-weight: 400;
+        }
+
+        /* Form-specific styling (from the original edit page, adapted) */
+        .form-box {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: var(--border-radius-lg);
+            width: 100%;
+            max-width: 800px;
+            box-shadow: var(--card-shadow);
+            text-align: left;
+        }
+
+        .form-box h2 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 25px;
+            font-size: 1.8rem;
+        }
+
+        .fetch-box {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .fetch-box input {
+            flex-grow: 1;
+            padding: 16px;
+            border: 2px solid #ddd;
+            border-radius: var(--border-radius-md);
+            font-size: 1.1rem;
+        }
+
+        .fetch-box button {
+            padding: 14px 35px;
+            background-color: var(--primary-color);
+            color: var(--text-light);
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .fetch-box button:hover {
+            background-color: var(--secondary-color);
+            transform: scale(1.03) translateY(-2px);
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-group label {
+            font-weight: 500;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+            font-size: 1rem;
+            color: #000;
+            background-color: #f9f9f9;
+            transition: border-color 0.3s ease;
+        }
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        .form-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .form-buttons button {
+            padding: 14px 30px;
+            font-weight: bold;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: transform 0.2s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .form-buttons .save-btn {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .form-buttons .cancel-btn {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .form-buttons button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .photo-upload-group {
+            grid-column: 1 / -1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 15px;
+        }
+
+        .photo-upload-group input {
+            border: none;
+            background: none;
+            text-align: center;
+        }
+
+        #preview {
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 12px;
+            margin-top: 10px;
+            border: 2px solid #ddd;
+        }
+        
+        /* Responsive Styles */
+        @media (max-width: 992px) {
+            .mobile-toggle {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+                width: 250px;
+                max-width: 85vw;
+                padding-left: 10px;
+                padding-right: 10px;
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .content {
+                margin-left: 0;
+            }
+            .overlay.active {
+                display: block;
+                opacity: 1;
+            }
+        }
+        .sidebar-photo {
+    width: 100px;
+    height: 100px;
+    margin: 0 auto;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid var(--accent-color);
+}
+
+.sidebar-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+    </style>
+</head>
+<body>
+    <div class="overlay" onclick="toggleMobileMenu()"></div>
+
+    <div class="main-container">
+        <div class="sidebar">
+            <a href="staff-dashboard.html" class="home-icon"><i class="fas fa-home"></i></a>
+<div class="sidebar-header">
+    <div class="sidebar-photo">
+        <img id="staffPhoto" src="default-avatar.png" alt="Staff Photo" />
+    </div>
+    <h2 id="staffName">Staff Name</h2>
+    <h2 style="margin-top: 5px; opacity: 0.8;">ID: <span id="staffId">Loading...</span></h2>
+</div>
+            <ul class="menu">
+                <li><a href="knowaboutstd1.html"><i class="fas fa-search"></i> Know about Student</a></li>
+                <li class="active"><a href="#"><i class="fas fa-user-edit"></i> Edit Student Details</a></li>
+                <li><a href="sendnotification.html"><i class="fas fa-paper-plane"></i> Send Notification</a></li>
+                <li><a href="updatefee.html"><i class="fas fa-money-bill-wave"></i> Update Fee</a></li>
+                <li><a href="imposefines.html"><i class="fas fa-money-check-alt"></i> Impose Fines</a></li>
+                <li><a href="mark_attendance.html"><i class="fas fa-clipboard-list"></i> Mark Attendance</a></li>
+                <li><a href="backlogs.html"><i class="fas fa-book-open"></i> Find Backlogs</a></li>
+                <li><a href="mycounselling.html"><i class="fas fa-handshake"></i> View Counselling</a></li>
+                <li><a href="staffsettings.html"><i class="fas fa-cog"></i> Settings</a></li>
+            </ul>
+            <button class="logout" onclick="confirmLogout()">Logout</button>
+        </div>
+
+        <div class="content">
+            <div class="form-box">
+                <h3 style="text-align: center; color: var(--primary-color); font-size: 2rem; margin-bottom: 25px; font-weight: 500;">Edit Student Profile</h3>
+                <div id="fetchBox">
+                    <div class="fetch-box">
+                        <input id="regInput" placeholder="Enter Registration Number" />
+                        <button onclick="fetchStudentData()" class="know-btn" style="padding: 14px 25px;"><i class="fas fa-search"></i> Fetch</button>
+                    </div>
+                </div>
+                <div id="formContainer"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mobile-toggle" onclick="toggleMobileMenu()">
+        <i class="fas fa-bars"></i>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.20/dist/sweetalert2.all.min.js"></script>
+    <script>
+        const userId = localStorage.getItem("userId");
+        if (!userId) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Access Denied',
+                text: 'Please login first to view this page.',
+                confirmButtonText: 'Go to Login',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                confirmButtonColor: '#0b1c3c'
+            }).then(() => {
+                window.location.href = "index.html";
+            });
+        } else {
+            document.addEventListener("DOMContentLoaded", () => {
+                document.getElementById("staffId").textContent = userId;
+fetch(`/staff/${userId}`)
+    .then(res => res.json())
+    .then(data => {
+        if (data.staff_name) {
+            document.getElementById("staffName").textContent = data.staff_name;
+        }
+        // Display staff photo if exists
+        if (data.photo_url) {
+            document.getElementById("staffPhoto").src = data.photo_url;
+        }
+    });
+
+            });
+        }
+
+        function confirmLogout() {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You will be logged out of your account.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#0b1c3c',
+                cancelButtonColor: '#ffcc5c',
+                confirmButtonText: 'Yes, log out!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    logout();
+                }
+            });
+        }
+
+function logout() {
+    fetch("/logout", { method: "GET", credentials: "include" })
+      .then(() => {
+          localStorage.clear();
+          sessionStorage.clear();
+          if ("caches" in window) {
+              caches.keys().then(names => names.forEach(name => caches.delete(name)));
+          }
+          window.location.replace("index.html");
+      })
+      .catch(() => {
+          window.location.replace("index.html");
+      });
+}
+        window.history.pushState(null, "", window.location.href);
+        window.onpopstate = () => window.history.pushState(null, "", window.location.href);
+
+        function toggleMobileMenu() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.overlay');
+            const body = document.body;
+
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active', sidebar.classList.contains('open'));
+            body.classList.toggle('no-scroll', sidebar.classList.contains('open'));
+        }
+
+        async function fetchStudentData() {
+            const reg = document.getElementById("regInput").value.trim();
+            if (!reg) {
+                return Swal.fire("Input Required", "Please enter a registration number.", "warning");
+            }
+
+            Swal.fire({
+                title: 'Fetching Data...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            try {
+                const res = await fetch(`/student/${reg}`);
+                if (!res.ok) {
+                    throw new Error("Student not found.");
+                }
+                const data = await res.json();
+                Swal.close();
+                showEditForm(data);
+            } catch (error) {
+                Swal.close();
+                Swal.fire("Fetch Failed", error.message, "error");
+            }
+        }
+
+        function showEditForm(data) {
+            document.getElementById("fetchBox").style.display = "none";
+            const c = document.getElementById("formContainer");
+            c.innerHTML = `
+                <form id="editForm" enctype="multipart/form-data">
+                    <input type="hidden" name="userId" value="${data.userId}" />
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Reg No</label>
+                            <input name="reg_no" value="${data.reg_no}" readonly />
+                        </div>
+                        <div class="form-group">
+                            <label>Name</label>
+                            <input name="name" value="${data.name}" required />
+                        </div>
+<div class="form-group">
+
+<label>DOB</label>
+
+<input type="date" name="dob" value="${data.dob ? data.dob.split('T')[0] : ''}" />
+
+</div>
+                        <div class="form-group">
+                            <label>Unique ID</label>
+                            <input name="uniqueId" value="${data.uniqueId}" required />
+                        </div>
+                        <div class="form-group">
+                            <label>Aadhar No</label>
+                            <input name="aadhar_no" value="${data.aadhar_no || ''}" />
+                        </div>
+                        <div class="form-group">
+                            <label>Mobile No</label>
+                            <input name="mobile_no" value="${data.mobile_no || ''}" required />
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" name="email" value="${data.email}" required />
+                        </div>
+                        <div class="form-group">
+                            <label>Dept Code</label>
+                            <select name="dept_code" id="deptCode" required>
+                                <option value="">--Select Dept--</option>
+                                <option value="CSE" ${data.dept_code==="CSE"?"selected":""}>CSE</option>
+                                <option value="IT" ${data.dept_code==="IT"?"selected":""}>IT</option>
+                                <option value="ECE" ${data.dept_code==="ECE"?"selected":""}>ECE</option>
+                                <option value="EEE" ${data.dept_code==="EEE"?"selected":""}>EEE</option>
+                                <option value="MECH" ${data.dept_code==="MECH"?"selected":""}>MECH</option>
+                                <option value="CIVIL" ${data.dept_code==="CIVIL"?"selected":""}>CIVIL</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Course</label>
+                            <select name="course" id="course" required></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Year</label>
+                            <select name="year" required>
+                                <option value="">--Select Year--</option>
+                                ${[1,2,3,4].map(y=>`<option value="${y}" ${data.year==y?"selected":""}>${y}</option>`).join("")}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Semester</label>
+                            <select name="semester" required>
+                                <option value="">--Select Semester--</option>
+                                ${["1-1","1-2","2-1","2-2","3-1","3-2","4-1","4-2"].map(s=>`<option value="${s}" ${data.semester===s?"selected":""}>${s}</option>`).join("")}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Section</label>
+                            <input name="section" value="${data.section}" required />
+                        </div>
+                        <div class="form-group">
+                            <label>Father Name</label>
+                            <input name="father_name" value="${data.father_name}" required />
+                        </div>
+                        <div class="form-group">
+                            <label>Father Mobile</label>
+                            <input name="father_mobile" value="${data.father_mobile}" required />
+                        </div>
+                        <div class="form-group">
+                            <label>Counsellor Name</label>
+                            <input name="counsellor_name" value="${data.counsellor_name}" required />
+                        </div>
+                        <div class="form-group">
+                            <label>Counsellor Mobile</label>
+                            <input name="counsellor_mobile" value="${data.counsellor_mobile}" required />
+                        </div>
+                        <div class="form-group">
+                            <label>Admission Type</label>
+                            <select name="admission_type" required>
+                                <option value="">--Select Type--</option>
+                                ${["CONVENER","MANAGEMENT","CONVENER(SPOT)","MANAGEMENT(SPOT)","SPOT","LATERAL"].map(a=>`<option value="${a}" ${data.admission_type===a?"selected":""}>${a}</option>`).join("")}
+                            </select>
+                        </div>
+                        <div class="photo-upload-group">
+                            <label>Upload New Photo (max 1 MB)</label>
+                            <input type="file" name="photo" accept="image/*" onchange="previewPhoto(this)" />
+                            <img id="preview" src="${data.photo_url || ''}" />
+                        </div>
+                    </div>
+                    <div class="form-buttons">
+                        <button type="submit" id="submitBtn" class="save-btn"><i class="fas fa-save"></i> Save Changes</button>
+                        <button type="button" onclick="cancelEdit()" class="cancel-btn"><i class="fas fa-times"></i> Cancel</button>
+                    </div>
+                </form>
+            `;
+
+            const deptCourseMap = {
+                "CSE": ["B.Tech- CSE","B.Tech- AIDS","B.Tech- AIML","B.Tech- CS"],
+                "IT": ["B.Tech- IT"],
+                "ECE": ["B.Tech- ECE"],
+                "EEE": ["B.Tech- EEE"],
+                "MECH": ["B.Tech- MECH"],
+                "CIVIL": ["B.Tech- CIVIL"]
+            };
+            const deptSelect = document.getElementById("deptCode");
+            const courseSelect = document.getElementById("course");
+
+            function populateCourses(selectedDept, currentCourse) {
+                courseSelect.innerHTML = `<option value="">--Select Course--</option>`;
+                if (deptCourseMap[selectedDept]) {
+                    deptCourseMap[selectedDept].forEach(c=>{
+                        let opt = document.createElement("option");
+                        opt.value = c;
+                        opt.textContent = c;
+                        if (c===currentCourse) opt.selected = true;
+                        courseSelect.appendChild(opt);
+                    });
+                }
+            }
+            populateCourses(data.dept_code, data.course);
+            deptSelect.addEventListener("change", ()=> populateCourses(deptSelect.value, ""));
+
+            document.getElementById("editForm").addEventListener("submit", async function(e) {
+                e.preventDefault();
+                const form = e.target;
+                const btn = document.getElementById("submitBtn");
+                const file = form.querySelector("input[name='photo']").files[0];
+
+                if (file && file.size > 1048576) {
+                return Swal.fire("File too large", "Max size: 1MB", "error");
+                }
+                
+                if (!validateFormFields(form)) return;
+                
+                btn.disabled = true;
+                Swal.fire({
+                    title: 'Saving Changes...',
+                    text: 'Please wait, this may take a moment.',
+                    didOpen: () => { Swal.showLoading(); },
+                    allowOutsideClick: false
+                });
+
+                const formData = new FormData(form);
+                try {
+                    const res = await fetch("/editprofile", { method: "POST", body: formData });
+                    const out = await res.json();
+                    
+                    Swal.fire({
+                        title: out.message.includes("success") ? "Success" : "Error",
+                        text: out.message,
+                        icon: out.message.includes("success") ? "success" : "error",
+                        confirmButtonColor: '#0b1c3c'
+                    });
+
+                    if (out.message.includes("success")) {
+                        form.remove();
+                        document.getElementById("fetchBox").style.display = "block";
+                        document.getElementById("regInput").value = "";
+                    }
+                } catch (error) {
+                    Swal.fire("Network Error", "Unable to connect to the server.", "error");
+                } finally {
+                    btn.disabled = false;
+                }
+            });
+        }
+
+        function cancelEdit(){
+            document.getElementById("formContainer").innerHTML="";
+            document.getElementById("fetchBox").style.display="block";
+            document.getElementById("regInput").value = "";
+        }
+
+        function previewPhoto(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = e => document.getElementById("preview").src = e.target.result;
+            reader.readAsDataURL(file);
+        }
+
+        function validateFormFields(form) {
+            const name = form.name.value.trim().toUpperCase();
+            const uniqueId = form.uniqueId.value.trim().toUpperCase();
+            const aadhar = form.aadhar_no.value.trim();
+            const mobile = form.mobile_no.value.trim();
+            const email = form.email.value.trim();
+            const fatherName = form.father_name.value.trim().toUpperCase();
+            const fatherMobile = form.father_mobile.value.trim();
+            const counsellorName = form.counsellor_name.value.trim().toUpperCase();
+            const counsellorMobile = form.counsellor_mobile.value.trim();
+
+            if (!/^[A-Z\s]+$/.test(name)) {
+                Swal.fire("Invalid Name", "Name must contain only CAPITAL letters and spaces.", "error");
+                return false;
+            }
+
+            if (!/^[A-Z0-9]{16}$/.test(uniqueId)) {
+                Swal.fire("Invalid Unique ID", "Unique ID must be 16 characters, CAPITAL letters/numbers only.", "error");
+                return false;
+            }
+
+            if (!/^[0-9]{12}$/.test(aadhar) && aadhar !== "") {
+                Swal.fire("Invalid Aadhar", "Aadhar number must be exactly 12 digits.", "error");
+                return false;
+            }
+
+            if (!/^[0-9]{10}$/.test(mobile)) {
+                Swal.fire("Invalid Mobile", "Mobile number must be exactly 10 digits.", "error");
+                return false;
+            }
+
+            if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(email)) {
+                Swal.fire("Invalid Email", "Enter a valid email address.", "error");
+                return false;
+            }
+
+            if (!/^[A-Z\s]+$/.test(fatherName)) {
+                Swal.fire("Invalid Father Name", "Father name must contain only CAPITAL letters and spaces.", "error");
+                return false;
+            }
+
+            if (!/^[0-9]{10}$/.test(fatherMobile)) {
+                Swal.fire("Invalid Father Mobile", "Father mobile number must be exactly 10 digits.", "error");
+                return false;
+            }
+
+            if (!/^[A-Z\s]+$/.test(counsellorName)) {
+                Swal.fire("Invalid Counsellor Name", "Counsellor name must contain only CAPITAL letters and spaces.", "error");
+                return false;
+            }
+
+            if (!/^[0-9]{10}$/.test(counsellorMobile)) {
+                Swal.fire("Invalid Counsellor Mobile", "Counsellor mobile number must be exactly 10 digits.", "error");
+                return false;
+            }
+
+            form.name.value = name;
+            form.uniqueId.value = uniqueId;
+            form.father_name.value = fatherName;
+            form.counsellor_name.value = counsellorName;
+
+            return true;
+        }
+    </script>
+    <script src="session.js"></script>
+</body>
+</html>

@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="google-site-verification" content="vwnnyu9N_KxUHTCkUYqARo3YiqfDTUtDeWoCbOAZ5eQ" />
+    <meta charset="UTF-8" />
+    <title>Sir C.R. Reddy College of Engineering | Student Management System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Official Student Management System of Sir C.R. Reddy College of Engineering - Admissions, Attendance, Results, Fee Management, Certificates." />
+    <meta name="keywords" content="Sir C.R. Reddy College of Engineering, Student Management System, Admissions, Attendance, Results, Certificates, JNTUK, AICTE, NBA, NAAC" />
+    <meta name="author" content="Sir C.R. Reddy College of Engineering" />
+    <link rel="icon" href="crrengglogo.png" type="image/png" />
+
+    <meta property="og:title" content="CRR Student Portal Login" />
+    <meta property="og:description" content="Secure login to access CRR student services." />
+    <meta property="og:image" content="https://crr-noc.onrender.com/crrengglogo.png" />
+    <meta property="og:url" content="https://crr-noc.onrender.com/" />
+    <meta property="og:type" content="website" />
+    <link rel="canonical" href="https://crr-noc.onrender.com/" />
+
+      <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "CRR STD PORTAL",
+    "url": "https://crr-noc.onrender.com",
+    "description": "CRR Student Service Portal for NOC, attendance, fees, results.",
+    "publisher": {
+      "@type": "Organization",
+      "name": "SIR C.R Reddy College of Engineering"
+    }
+  }
+  </script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <!-- Added a new font for the stylized word -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+        body {
+            background: #f8faff;
+            color: #333;
+            /* Increased padding to prevent content going under the header */
+            padding-top: 150px; 
+            overflow-x: hidden;
+        }
+        /* Style for the new stylish word */
+        .auspicious-word {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            color: #ef4444; /* A nice red color */
+        }
+
+        /* ================= HEADER ================= */
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(135deg, #004aad, #002f6c);
+            padding: 12px 20px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+        
+        /* Logo and Name Container */
+        .logo-name-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-grow: 1;
+            justify-content: center; /* Center the content inside the container */
+            text-align: center;
+            padding: 0 10px; /* Add some padding for spacing */
+        }
+        
+        /* Logo */
+        .logo {
+            flex-shrink: 0;
+        }
+        .logo img {
+            height: 70px; /* Adjusted size for better visibility */
+            width: 70px;
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+        }
+        .logo img:hover {
+            transform: rotate(5deg) scale(1.05);
+        }
+        
+        /* College Name */
+        .college-name {
+            flex-grow: 0; /* Prevents text from taking up all space */
+            text-align: center; /* Ensure text is centered */
+        }
+        
+        .college-name h1 {
+            font-size: clamp(1rem, 2vw + 0.5rem, 1.7rem);
+            font-weight: bold;
+            color: #fff;
+            margin: 0;
+            line-height: 1.2;
+            word-break: break-word;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            font-weight: 700;
+        }
+        
+        .college-name h2 {
+            font-size: clamp(0.7rem, 1vw + 0.4rem, 1rem);
+            font-weight: 600;
+            color: #ffcc00; /* Adjusted for better contrast */
+            margin-top: 5px;
+            line-height: 1.1;
+            letter-spacing: 0.5px;
+            font-weight: 700;
+        }
+        
+        .college-name .accreditations {
+            margin-top: 4px;
+            font-size: clamp(0.6rem, 0.9vw + 0.3rem, 0.9rem);
+            color: #d7e8ff;
+            line-height: 1.3;
+            font-weight: 600;
+        }
+        
+        /* Login Button */
+        .login-top {
+            flex-shrink: 0;
+            margin-left: 20px;
+        }
+        .login-top a {
+            text-decoration: none;
+            padding: 12px 24px;
+            background: #ffcc00; /* Adjusted for better contrast */
+            color: #002f6c;
+            font-weight: bold;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            font-size: clamp(0.8rem, 1.2vw + 0.3rem, 1.1rem);
+            white-space: nowrap;
+        }
+        .login-top a:hover {
+            box-shadow: 0 0 15px rgba(255, 204, 0, 0.8), 0 0 25px rgba(255, 204, 0, 0.6);
+            background: #ffb400;
+            transform: scale(1.08);
+        }
+        
+        /* ================= RESPONSIVE HEADER ================= */
+        @media (max-width: 992px) {
+            .logo-name-container {
+                justify-content: flex-start;
+                text-align: left;
+                flex-grow: 1;
+                max-width: 100%;
+                gap: 15px;
+            }
+            .college-name {
+                text-align: left;
+            }
+        }
+        @media (max-width: 768px) {
+            body { padding-top: 130px; }
+            header {
+                flex-direction: column;
+                padding: 10px 15px;
+                align-items: center;
+            }
+            .logo-name-container {
+                flex-direction: column;
+                justify-content: center;
+                text-align: center;
+                max-width: 100%;
+                gap: 10px;
+            }
+            .logo img {
+                height: 55px;
+                width: 55px;
+            }
+            .college-name {
+                text-align: center;
+                width: 100%;
+            }
+            .college-name h1 { 
+                font-size: clamp(1rem, 5vw, 1.5rem); 
+            }
+            .college-name h2 {
+                font-size: clamp(0.7rem, 4vw, 1.1rem); 
+            }
+            .college-name .accreditations {
+                font-size: clamp(0.6rem, 3.5vw, 0.9rem);
+            }
+            .login-top {
+                margin-top: 8px;
+                margin-left: auto; /* Pushes the button to the right */
+            }
+            .login-top a {
+                padding: 8px 16px;
+                font-size: clamp(0.65rem, 4vw, 0.9rem);
+            }
+        }
+        @media (max-width: 480px) {
+            .logo img {
+                height: 40px;
+                width: 40px;
+            }
+            .college-name h1 {
+                font-size: 1rem;
+            }
+            .college-name h2 {
+                font-size: 0.8rem;
+            }
+            .college-name .accreditations {
+                font-size: 0.7rem;
+            }
+        }
+
+        /* ================= NOTIFICATIONS MARQUEE SECTION ================= */
+        .notifications {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(8px);
+            margin: 25px auto;
+            max-width: 95%;
+            padding: 16px;
+            border-left: 6px solid #004aad;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.12);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .notifications:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .notifications h3 {
+            font-size: clamp(1rem, 1.5vw + 0.4rem, 1.3rem);
+            margin-bottom: 10px;
+            color: #004aad;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+
+        /* Icon before title */
+        .notifications h3::before {
+            content: "📢";
+            font-size: 1.3rem;
+        }
+
+        /* Marquee Styling */
+        .notifications marquee {
+            font-size: clamp(0.85rem, 1vw + 0.3rem, 1rem);
+            font-weight: 500;
+            color: #333;
+        }
+        .notifications marquee a {
+            text-decoration: none;
+            color: #222;
+            margin-right: 40px;
+            transition: color 0.3s ease;
+        }
+        .notifications marquee a:hover {
+            color: #004aad;
+            text-decoration: underline;
+        }
+
+        /* ================= RESPONSIVE NOTIFICATIONS ================= */
+        @media (max-width: 768px) {
+            .notifications {
+                padding: 12px;
+                max-width: 92%;
+            }
+            .notifications h3 {
+                font-size: 1.05rem;
+            }
+            .notifications marquee {
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .notifications {
+                padding: 10px;
+                max-width: 90%;
+            }
+            .notifications h3 {
+                font-size: 1rem;
+            }
+            .notifications marquee {
+                font-size: 0.85rem;
+            }
+        }
+
+        /* ================= ABOUT SECTION ================= */
+        .about-section {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 20px;
+            text-align: center; /* Centered layout as requested */
+        }
+        
+        .about-content {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(8px);
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+            transition: transform 0.3s ease;
+        }
+        .about-content:hover {
+            transform: translateY(-5px);
+        }
+        .about-content h2 {
+            color: #004aad;
+            font-size: clamp(1.4rem, 1.8vw + 0.5rem, 2rem);
+            margin-bottom: 10px;
+        }
+        .about-content p {
+            color: #444;
+            font-size: clamp(0.95rem, 1vw + 0.3rem, 1.05rem);
+            line-height: 1.7;
+            text-align: justify;
+        }
+
+        /* ================= IMAGE CAROUSEL ================= */
+        .image-carousel-container {
+            position: relative;
+            width: 90%; /* Adjust container width to decrease its size */
+            max-width: 900px; /* Set a max width for large screens */
+            margin: 25px auto;
+            height: auto;
+            aspect-ratio: 2/1;
+            overflow: hidden;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+        @media (max-width: 768px) {
+            .image-carousel-container {
+                width: 95%; /* Adjust for smaller screens */
+                max-width: none;
+            }
+        }
+        .image-carousel-track {
+            display: flex;
+            transition: transform 0.5s ease-in-out;
+        }
+        
+        .image-carousel-item {
+            min-width: 100%;
+            height: 100%;
+            object-fit: contain; /* Changed from cover to contain to display full image */
+            background-color: #000; /* Add a background color for the letterbox effect */
+        }
+
+        .carousel-button {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.5);
+            color: #fff;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            z-index: 10;
+            font-size: 1.5rem;
+            opacity: 0.8;
+            transition: opacity 0.3s ease, background 0.3s ease;
+        }
+        .carousel-button:hover {
+            opacity: 1;
+            background: rgba(0, 0, 0, 0.7);
+        }
+        .prev-button { left: 10px; }
+        .next-button { right: 10px; }
+
+        /* ================= VISION & MISSION ================= */
+        .cards-container {
+            max-width: 1200px;
+            margin: 50px auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(6px);
+            padding: 25px;
+            border-radius: 18px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            transition: all 0.35s ease;
+            cursor: pointer;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        .card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+        }
+
+        .card.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .card:nth-child(1) { transition-delay: 0.1s; }
+        .card:nth-child(2) { transition-delay: 0.2s; }
+        .card:nth-child(3) { transition-delay: 0.3s; }
+        .card:nth-child(4) { transition-delay: 0.4s; }
+        .card:nth-child(5) { transition-delay: 0.5s; }
+        .card:nth-child(6) { transition-delay: 0.6s; }
+        .card:nth-child(7) { transition-delay: 0.7s; }
+        .card:nth-child(8) { transition-delay: 0.8s; }
+        .card:nth-child(9) { transition-delay: 0.9s; }
+        
+        /* Card Icons */
+        .card-icon {
+            font-size: 2rem;
+            margin-bottom: 12px;
+        }
+        .card h3 {
+            font-size: 1.3rem;
+            color: #004aad;
+            margin-bottom: 10px;
+        }
+        .card p {
+            font-size: 1rem;
+            color: #333;
+            line-height: 1.6;
+            text-align: justify;
+        }
+
+        /* ================= RESPONSIVE DESIGN ================= */
+        @media (max-width: 992px) {
+            .about-section {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            .about-content {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .about-content h2 {
+                font-size: 1.3rem;
+            }
+            .about-content p,
+            .card p {
+                font-size: 0.9rem;
+            }
+            .card h3 {
+                font-size: 1.1rem;
+            }
+        }
+
+        /* ================= COURSES SECTION ================= */
+        .courses-section {
+            max-width: 1300px;
+            margin: 60px auto;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .courses-section h2 {
+            font-size: clamp(1.8rem, 2vw + 1rem, 2.4rem);
+            color: #004aad;
+            margin-bottom: 12px;
+            font-weight: 700;
+        }
+
+        .courses-section p {
+            font-size: 1rem;
+            color: #555;
+            max-width: 650px;
+            margin: 0 auto 40px;
+            line-height: 1.7;
+        }
+
+        /* ================= COURSE CARDS ================= */
+        .course-cards-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 30px;
+            padding: 10px;
+        }
+
+        .course-card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .course-card.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .course-card::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(135deg, #0073ff33, #00ffae33);
+            transform: rotate(25deg);
+            transition: opacity 0.4s ease;
+            opacity: 0;
+            z-index: 0;
+        }
+
+        .course-card:hover::before {
+            opacity: 1;
+        }
+
+        .course-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+        }
+
+        .course-card .icon {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            color: #004aad;
+            position: relative;
+            z-index: 1;
+        }
+
+        .course-card h3 {
+            font-size: 1.2rem;
+            color: #333;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .course-card p {
+            font-size: 0.95rem;
+            color: #555;
+            line-height: 1.5;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ================= RESPONSIVE DESIGN ================= */
+        @media (max-width: 768px) {
+            .courses-section p {
+                font-size: 0.95rem;
+            }
+            .course-card h3 {
+                font-size: 1.1rem;
+            }
+            .course-card p {
+                font-size: 0.9rem;
+            }
+        }
+
+        /* ================= NOTIFICATIONS SECTION (SCROLLING) ================= */
+        .notifications-section {
+            max-width: 1300px;
+            margin: 60px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #f9f9f9, #ffffff);
+            border-radius: 16px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .notifications-section h2 {
+            font-size: clamp(1.6rem, 2vw + 0.8rem, 2.2rem);
+            text-align: center;
+            color: #004aad;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .notifications-section p {
+            text-align: center;
+            color: #555;
+            font-size: 1rem;
+            margin-bottom: 30px;
+        }
+
+        /* New Notifications Container for Auto Scroll */
+        .notification-scroller-container {
+            height: 250px; /* Decreased height */
+            overflow: hidden;
+            position: relative;
+            width: 100%;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
+            border: 1px solid #ddd;
+        }
+
+        .notification-list {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            animation: scroll-up 20s linear infinite;
+        }
+        
+        .notification-list:hover {
+            animation-play-state: paused;
+        }
+
+        .notification-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+            transition: background 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .notification-item:hover {
+            background: #f0f4f7;
+        }
+        
+        .notification-content {
+            flex-grow: 1;
+        }
+
+        .notification-content h4 {
+            font-size: 1rem;
+            color: #222;
+            margin-bottom: 5px;
+        }
+
+        .notification-content p {
+            font-size: 0.9rem;
+            color: #555;
+            line-height: 1.4;
+        }
+
+        .notification-date {
+            font-size: 0.8rem;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        /* Keyframes for the auto-scroll animation */
+        @keyframes scroll-up {
+            0% {
+                transform: translateY(0%);
+            }
+            100% {
+                transform: translateY(-50%);
+            }
+        }
+        
+        /* Stop animation on hover */
+        .notification-scroller-container:hover .notification-list {
+            animation-play-state: paused;
+        }
+
+
+        @media (max-width: 768px) {
+            .notifications-section {
+                padding: 15px;
+            }
+            .notification-item {
+                padding: 12px 15px;
+            }
+            .notification-content h4 {
+                font-size: 0.95rem;
+            }
+            .notification-content p {
+                font-size: 0.85rem;
+            }
+            .notification-scroller-container {
+                height: 200px; /* Further decreased height for smaller screens */
+            }
+        }
+
+        /* ================= LOGIN COUNTS ================= */
+        .login-counts-container {
+            max-width: 1200px;
+            margin: 60px auto;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 30px;
+        }
+
+        .login-count-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+            text-align: center;
+            flex-basis: 350px; /* Adjust card width */
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        .login-count-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+        }
+
+        .login-count-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: linear-gradient(90deg, #004aad, #ffb400);
+            transition: all 0.3s ease;
+            transform: scaleX(0);
+            transform-origin: left;
+        }
+        .login-count-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .login-count-card h3 {
+            font-size: 1.5rem;
+            color: #004aad;
+            margin-bottom: 10px;
+        }
+        .login-count-card .count {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #ffb400;
+            transition: transform 0.3s ease;
+        }
+        .login-count-card:hover .count {
+            transform: scale(1.1);
+        }
+
+        @media (max-width: 768px) {
+            .login-count-card {
+                flex-basis: 100%;
+            }
+        }
+
+        /* ================= FOOTER SECTION ================= */
+        .footer {
+            background: linear-gradient(135deg, #002147, #003b73);
+            color: #fff;
+            padding: 60px 20px 20px;
+            position: relative;
+            box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.3);
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Footer Container */
+        .footer-container {
+            max-width: 1300px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+        }
+
+        /* Footer Logo + About */
+        .footer-about {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .footer-about img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin-bottom: 12px;
+            transition: transform 0.3s ease;
+        }
+        .footer-about img:hover {
+            transform: scale(1.05);
+        }
+        .footer-about h3 {
+            font-size: 1.4rem;
+            margin-bottom: 8px;
+            color: #fff;
+        }
+        .footer-about p {
+            font-size: 0.95rem;
+            color: #d6eaff;
+            line-height: 1.6;
+        }
+
+        /* Quick Links */
+        .footer-links h3 {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: #ffb400;
+        }
+        .footer-links ul {
+            list-style: none;
+            padding: 0;
+        }
+        .footer-links ul li {
+            margin-bottom: 10px;
+        }
+        .footer-links ul li a {
+            text-decoration: none;
+            color: #d6eaff;
+            font-size: 0.95rem;
+            transition: color 0.3s;
+        }
+        .footer-links ul li a:hover {
+            color: #ffb400;
+        }
+
+        /* Contact Info */
+        .footer-contact h3 {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: #ffb400;
+        }
+        .footer-contact p {
+            font-size: 0.95rem;
+            color: #d6eaff;
+            margin-bottom: 8px;
+            line-height: 1.6;
+        }
+        .footer-contact strong {
+            color: #fff;
+        }
+
+        /* Social Icons */
+        .footer-social h3 {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: #ffb400;
+        }
+        .social-icons {
+            display: flex;
+            gap: 15px;
+        }
+        .social-icons a {
+            width: 40px;
+            height: 40px;
+            background: #fff;
+            color: #003b73;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+        }
+        .social-icons a:hover {
+            transform: translateY(-5px);
+            background: #ffb400;
+            color: #fff;
+        }
+
+        /* Footer Bottom */
+        .footer-bottom {
+            text-align: center;
+            margin-top: 50px;
+            padding-top: 15px;
+            font-size: 0.9rem;
+            color: #d6eaff;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .footer-bottom a {
+            color: #ffb400;
+            text-decoration: none;
+        }
+        .footer-bottom a:hover {
+            text-decoration: underline;
+        }
+
+        /* ================= RESPONSIVE DESIGN ================= */
+        @media (max-width: 768px) {
+            .footer {
+                padding: 40px 15px 15px;
+            }
+            .footer-about img {
+                width: 70px;
+                height: 70px;
+            }
+            .footer-about h3 {
+                font-size: 1.2rem;
+            }
+            .footer-about p {
+                font-size: 0.9rem;
+            }
+            .footer-links h3,
+            .footer-contact h3,
+            .footer-social h3 {
+                font-size: 1rem;
+            }
+            .footer-links ul li a,
+            .footer-contact p {
+                font-size: 0.9rem;
+            }
+            .social-icons a {
+                width: 36px;
+                height: 36px;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-name-container">
+            <div class="logo">
+                <img src="crrengglogo.png" alt="College Logo" />
+            </div>
+            <div class="college-name">
+                <h1>Sir C.R. Reddy College of Engineering</h1>
+                <h2>(Autonomous)</h2>
+                <div class="accreditations">
+                    Approved by AICTE | Affiliated to JNTUK | Accredited by NBA & NAAC (A Grade)
+                </div>
+            </div>
+        </div>
+        <div class="login-top">
+            <a href="login.html">Login</a>
+        </div>
+    </header>
+
+
+    <section class="image-carousel-container">
+        <div class="image-carousel-track" id="image-carousel-track">
+            <img class="image-carousel-item" src="images/nba.jpg" alt="NBA" />
+            <img class="image-carousel-item" src="images/img1.jpg" alt="NAAC" />
+            <img class="image-carousel-item" src="images/img2.jpg" alt="AUTONOMOUS" />
+            <img class="image-carousel-item" src="images/img3.jpg" alt="AMAZON" />
+            <img class="image-carousel-item" src="images/skill_develop.jpg" alt="SKILL DEVELOPMENT CENTERS" />
+            <img class="image-carousel-item" src="images/img4.jpg" alt="WALMART" />
+            <img class="image-carousel-item" src="images/cse.JPG" alt="CSE DEPT" />
+            <img class="image-carousel-item" src="images/eapcet.jpg" alt="EAPCET CODE" />
+        </div>
+        <button class="carousel-button prev-button" onclick="moveSlide(-1)"><i class="fas fa-chevron-left"></i></button>
+        <button class="carousel-button next-button" onclick="moveSlide(1)"><i class="fas fa-chevron-right"></i></button>
+    </section>
+    
+    <section class="notifications">
+        <h3>suggestions & improvement</h3>
+        <marquee behavior="scroll" direction="left" scrollamount="6" onmouseover="this.stop();" onmouseout="this.start();">
+            <a href="mailto:sircrrcoestd@sircrrengg.ac.in">
+                ✉️ We value your suggestions for improvement. Please share your feedback at sircrrcoestd@sircrrengg.ac.in
+            </a>
+            <a href="https://sircrrengg.ac.in" target="_blank">
+                📄 Click here to view the latest academic circulars & notices.
+            </a>
+            <a href="https://crr-noc.onrender.com/login.html">
+                🔗 Student Management Portal — Login to access your dashboard.
+            </a>
+        </marquee>
+    </section>
+
+    <section class="notifications-section">
+        <h2>Latest Notifications</h2>
+        <p>Stay updated with important announcements, results, and upcoming events.</p>
+
+        <div class="notification-scroller-container">
+            <ul class="notification-list">
+                <li class="notification-item">
+                    <div class="notification-content">
+                        <h4>Results Declared for Semester Examinations</h4>
+                        <p><span class="auspicious-word">Auspicious</span> The results for the latest semester examinations have been published on the student portal. Students can log in to view their individual scores and academic performance. Congratulations to all who performed well!</p>
+                        <div class="notification-date">September 3, 2025</div>
+                    </div>
+                </li>
+
+                <li class="notification-item">
+                    <div class="notification-content">
+                        <h4>Student Data Verification and Update</h4>
+                        <p><span class="auspicious-word">Auspicious</span> All students are kindly requested to verify and update their personal details, including contact information and address, through their respective counselors. This is crucial for all official communication and records.</p>
+                        <div class="notification-date">September 3, 2025</div>
+                    </div>
+                </li>
+
+                <li class="notification-item">
+                    <div class="notification-content">
+                        <h4>Monthly Attendance Report</h4>
+                        <p><span class="auspicious-word">Auspicious</span> The attendance records for the month of August have been updated on the student portal. Please review your attendance and ensure it meets the minimum requirements for the current academic session.</p>
+                        <div class="notification-date">September 1, 2025</div>
+                    </div>
+                </li>
+
+                <li class="notification-item">
+                    <div class="notification-content">
+                        <h4>Mid-Term Internal Marks</h4>
+                        <p><span class="auspicious-word">Auspicious</span> The marks for the Mid-1 internal assessment will be made available shortly on the student portal. We encourage all students to check their progress and prepare for upcoming evaluations.</p>
+                        <div class="notification-date">September 3, 2025</div>
+                    </div>
+                </li>
+
+                <li class="notification-item">
+                    <div class="notification-content">
+                        <h4>B.Tech and JNTUK Results</h4>
+                        <p><span class="auspicious-word">Auspicious</span> The B.Tech 2nd Year 1-1 & 1-2 Semester Autonomous Results, as well as all JNTUK results, have been officially declared. You can now access your results by logging into the student portal using your credentials.</p>
+                        <div class="notification-date">September 3, 2025</div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </section>
+
+    <section class="about-section">
+        <div class="about-content">
+        <h2>Welcome to Sir C. R. Reddy College of Engineering (AUTONOMOUS)</h2>
+        <p>
+          Sir C.R. Reddy College of Engineering(A) is the first Engineering College in Andhra Pradesh sanctioned and recognized by All India Council for Technical Education (AICTE). This College is permanently affiliated to JNTUK from the Academic Year 2017-18.
+          <br><br>
+          Since its inception in 1989, Sir C.R. Reddy College of Engineering(A) has been a premier institute for quality engineering education in Andhra Pradesh under the stewardship of its broad-minded and magnanimous management. The last two and a half decades have seen the Institute fulfilling its motto of <strong>'QUALITY SERVICE & VALUE BASED EDUCATION'</strong> to the student community.
+          <br><br>
+          Adhering to its core values, the institute gives top priority to ethical values, high standards, and a commitment to value-based education. We believe in working honestly and sincerely, in building trust, and in maintaining a long-lasting relationship with society.
+          <br><br>
+          The College is situated near Vatluru railway gate in Eluru, the Head Quarters of West Godavari district. It is surrounded by beautiful paddy fields and is on the Chennai-Howrah highway and train route. A large number of buses and trains run via this town. It is easily accessible from any part of the country by rail as well as road.
+          <br><br>
+          The College is located in its own sprawling campus with an area of 30.48 acres. Its magnanimous infrastructure and greenery attract the attention of people who pass by. The vast green campus housing several Departments provides a stimulating environment to the high-caliber staff and students of the institution.
+          <br><br>
+          The Campus at Vatluru is a place where students from all walks of life are under a single umbrella pursuing their BE/B.Tech, M.Tech, and MBA courses.
+        </p>
+        </div>
+    </section>
+
+    <section class="cards-container">
+        <div class="card">
+            <h3>Our Vision</h3>
+            <p>
+                To emerge as a premier institution in the field of technical education and research in the state and
+                as a home for holistic development of the students and contribute to the advancement of society and the region.
+            </p>
+        </div>
+
+        <div class="card">
+            <h3>Our Mission</h3>
+            <p>
+                To provide high quality technical education through a creative balance of academic and industry oriented learning;
+                to create an inspiring environment of scholarship and research; to instill high levels of academic and professional discipline;
+                and to establish standards that inculcate ethical and moral values that contribute to growth in career and development of society in general.
+            </p>
+        </div>
+    </section>
+
+<section class="courses-section">
+  <h2>Courses & Departments</h2>
+  <p>
+    Sir C.R. Reddy College of Engineering offers a wide range of undergraduate and postgraduate programs  
+    designed to equip students with the knowledge and skills required to excel in the modern technological world.
+  </p>
+
+  <div class="course-cards-container">
+    <div class="course-card">
+      <div class="icon">💻</div>
+      <h3>Computer Science & Engineering (CSE)</h3>
+      <p>
+        To be a premier department in the region with an integrated teaching,
+        learning and research environment that enables addressing the challenges
+        of core and emerging technologies with social responsibility.
+      </p>
+    </div>
+
+    <div class="course-card">
+      <div class="icon">🔐</div>
+      <h3>Computer Science & Engineering (Cyber Security - CSC)</h3>
+      <p>
+        Focused on information protection, ethical hacking, and securing digital systems
+        against cyber threats, preparing students for careers in cybersecurity and defense.
+      </p>
+    </div>
+
+    <div class="course-card">
+      <div class="icon">📊</div>
+      <h3>Computer Science & Engineering (Data Science - CAD)</h3>
+      <p>
+        Specializes in data analytics, big data, and statistical modeling,
+        enabling students to extract valuable insights and build intelligent
+        data-driven solutions.
+      </p>
+    </div>
+
+    <div class="course-card">
+      <div class="icon">🤖</div>
+      <h3>Computer Science & Engineering (AI & ML - CSM)</h3>
+      <p>
+        Emphasizes Artificial Intelligence and Machine Learning techniques,
+        training students to design, build, and deploy intelligent systems
+        for real-world applications.
+      </p>
+    </div>
+
+    <div class="course-card">
+      <div class="icon">🌐</div>
+      <h3>Information Technology</h3>
+      <p>
+        To be a premier department in the region in the field of Information Technology
+        through academic excellence and research that enable graduates to meet the challenges of industry and society.
+      </p>
+    </div>
+
+    <div class="course-card">
+      <div class="icon">⚙️</div>
+      <h3>Mechanical Engineering</h3>
+      <p>
+        To become a center of excellence in the field of Mechanical Engineering in this region,
+        where the best in teaching, learning, and research synergize to foster
+        the holistic development of students and contribute significantly to societal advancement.
+      </p>
+    </div>
+
+    <div class="course-card">
+      <div class="icon">🔌</div>
+      <h3>Electrical & Electronics Engineering</h3>
+      <p>
+        To be a department of excellence in the region in Electrical and Electronics Engineering through high quality teaching,
+        research, innovation and holistic development of students required for modern industry.
+      </p>
+    </div>
+
+    <div class="course-card">
+      <div class="icon">🏗️</div>
+      <h3>Civil Engineering</h3>
+      <p>
+        The Department of Civil Engineering strives to graduate highly qualified engineers,
+        maintain nationally recognized research and provide quality professional and community service to the society.
+      </p>
+    </div>
+
+    <div class="course-card">
+      <div class="icon">📡</div>
+      <h3>Electronics & Communication Engineering</h3>
+      <p>
+        To be a premier department in the region that nurtures individuals for acquisition of knowledge and skills
+        with research orientation which suits needs of industry and society in the field of Electronics and Communication Engineering.
+      </p>
+    </div>
+  </div>
+</section>
+
+    
+    <section class="login-counts-container">
+        <div class="login-count-card">
+            <h3>Students Visited</h3>
+            <div class="count" id="studentCount">0</div>
+        </div>
+        <div class="login-count-card">
+            <h3>Staff Visited</h3>
+            <div class="count" id="staffCount">0</div>
+        </div>
+    </section>
+<script> window.chtlConfig = { chatbotId: "7883498161" } </script>
+<script async data-id="7883498161" id="chtl-script" type="text/javascript" src="https://chatling.ai/js/embed.js"></script>
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-about">
+                <img src="crrengglogo.png" alt="College Logo">
+                <h3>Sir C.R. Reddy College of Engineering</h3>
+                <p>
+                    Empowering students with quality technical education, fostering research and innovation,
+                    and shaping professionals who contribute to society.
+                </p>
+            </div>
+
+            <div class="footer-links">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="index.html">🏠 Home</a></li>
+                    <li><a href="login.html">🔐 Student Portal</a></li>
+                    <li><a href="developerspage.html"> Developers<i class="fas fa-code ml-2"></i></a></li>
+                </ul>
+            </div>
+
+            <div class="footer-contact">
+                <h3>Contact Us</h3>
+                <p>📍 Eluru, Eluru Dist, Andhra Pradesh, India - 534007</p>
+                <p>📧 <a href="mailto:principal@sircrrengg.ac.in"><strong>principal@sircrrengg.ac.in</strong></a></p>
+                <p>📧 <a href="mailto:info@sircrrengg.ac.in"><strong>info@sircrrengg.ac.in</strong></a></p>
+                <p>📧 <a href="mailto:sircrrcoestd@sircrrengg.ac.in"><strong>sircrrcoestd@sircrrengg.ac.in</strong></a></p>
+                <p>📞 <a href="tel:9493830840"><strong>9493830840</strong></a></p>
+                <p>📞 <a href="tel:8985384116"><strong>8985384116</strong></a></p>
+            </div>
+
+            <div class="footer-social">
+                <h3>Follow Us</h3>
+                <div class="social-icons">
+                    <a href="https://www.facebook.com/sircrrcoeofficial" target="_blank"><i class="fab fa-facebook-f"></i></a>
+                    <a href="https://x.com/sircrreddycoe" target="_blank"><i class="fab fa-x-twitter"></i></a>
+                    <a href="https://www.instagram.com/sircrreddycoe/?hl=en" target="_blank"><i class="fab fa-instagram"></i></a>
+                    <a href="https://www.youtube.com/@sirc.r.reddycollegeofengin5350" target="_blank"><i class="fab fa-youtube"></i></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            © 2025 Sir C.R. Reddy College of Engineering | All Rights Reserved |
+            <a href="privacypolicy.html">Privacy Policy</a>
+        </div>
+    </footer>
+
+    <script>
+        // Fetch login counts from backend and update UI
+        async function updateLoginCounts() {
+            try {
+                const res = await fetch("https://crr-noc.onrender.com/api/login-counts");
+                const data = await res.json();
+    
+                // Update UI dynamically
+                document.getElementById("studentCount").textContent = data.studentCount || 0;
+                document.getElementById("staffCount").textContent = data.staffCount || 0;
+            } catch (err) {
+                console.error("Error fetching login counts:", err);
+            }
+        }
+    
+        // Intersection Observer for scroll animations
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, {
+            threshold: 0.2 // Trigger when 20% of the element is visible
+        });
+
+        // Get all elements to animate
+        const cardsToAnimate = document.querySelectorAll('.card, .course-card, .login-count-card');
+        cardsToAnimate.forEach(card => {
+            observer.observe(card);
+        });
+
+        // Image Carousel Logic
+        let currentSlide = 0;
+        const track = document.getElementById('image-carousel-track');
+        const items = document.querySelectorAll('.image-carousel-item');
+        const totalItems = items.length;
+        let slideInterval;
+
+        function updateCarousel() {
+            track.style.transform = `translateX(-${currentSlide * 100}%)`;
+        }
+
+        function nextSlide() {
+            currentSlide = (currentSlide + 1) % totalItems;
+            updateCarousel();
+        }
+
+        function startAutoSlide() {
+            slideInterval = setInterval(nextSlide, 5000); // Change image every 5 seconds
+        }
+
+        function stopAutoSlide() {
+            clearInterval(slideInterval);
+        }
+
+        function moveSlide(direction) {
+            stopAutoSlide(); // Stop auto-slide on manual navigation
+            currentSlide = (currentSlide + direction + totalItems) % totalItems;
+            updateCarousel();
+            startAutoSlide(); // Restart auto-slide
+        }
+
+        // Start auto-slide when the page loads
+        window.addEventListener('load', () => {
+            startAutoSlide();
+            updateLoginCounts();
+        });
+        
+    </script>
+</body>
+</html>

@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Generate NOC - STUDENT PORTAL</title>
+    <link rel="icon" href="crrengglogo.png" type="image/png" />
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.20/dist/sweetalert2.min.css"
+    />
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
+        :root {
+            --primary-color: #0b2e59;
+            --secondary-color: #2c6e91;
+            --accent-color: #f7a048;
+            --background-dark: #f0f2f5;
+            --background-light: #ffffff;
+            --text-dark: #333333;
+            --text-light: #f4f4f4;
+            --card-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            --border-radius-lg: 16px;
+            --border-radius-md: 10px;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #17a2b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--background-dark);
+        }
+
+        body.no-scroll {
+            overflow: hidden;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background-color: var(--primary-color);
+            display: flex;
+            flex-direction: column;
+            padding: 30px 20px;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease-in-out;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .photo-container {
+            display: flex;
+            justify-content: center;
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .home-icon {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background-color: var(--background-light);
+            color: var(--primary-color);
+            border-radius: 50%;
+            font-size: 22px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s ease, background-color 0.3s ease;
+        }
+
+        .home-icon:hover {
+            transform: scale(1.1);
+            background-color: var(--accent-color);
+            color: var(--text-light);
+        }
+
+        .sidebar-photo {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            border: 4px solid var(--accent-color);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        .sidebar h2 {
+            margin: 40px 20px 20px 20px;
+            color: var(--text-light);
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .menu {
+            list-style: none;
+            padding: 0;
+            flex-grow: 1;
+        }
+
+        .menu li {
+            list-style: none;
+            margin-bottom: 12px;
+        }
+
+        .menu li a {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 1rem;
+            color: var(--text-light);
+            padding: 15px 20px;
+            border-radius: var(--border-radius-md);
+            transition: all 0.3s ease;
+        }
+
+        .menu li a:hover,
+        .menu li.active a {
+            background-color: rgba(255, 255, 255, 0.1);
+            font-weight: 500;
+            transform: translateX(5px);
+            box-shadow: var(--card-shadow);
+        }
+
+        .menu li a i {
+            font-size: 1.2rem;
+            width: 25px;
+            text-align: center;
+            color: var(--text-light);
+            transition: color 0.3s ease;
+        }
+
+        .logout {
+            background-color: var(--accent-color);
+            color: var(--text-light);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            width: 60%;
+            margin: 20px auto 0;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
+
+        .logout:hover {
+            background-color: #d3853b;
+            transform: scale(1.05);
+        }
+
+        /* Main Section */
+        .main-section {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--background-dark);
+            padding: 40px 30px;
+            margin-left: 280px;
+            transition: margin-left 0.3s ease-in-out;
+            min-height: 100vh;
+        }
+
+        /* Main Card */
+        .noc-card {
+            background-color: var(--background-light);
+            color: var(--text-dark);
+            width: 100%;
+            max-width: 600px;
+            padding: 35px;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--card-shadow);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .noc-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+        }
+
+        .noc-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        }
+
+        .noc-card h2 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 30px;
+            font-size: 1.8rem;
+            font-weight: 700;
+            padding-top: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .noc-description {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 25px;
+            border-radius: var(--border-radius-md);
+            margin-bottom: 30px;
+            border-left: 4px solid var(--accent-color);
+            position: relative;
+        }
+
+        .noc-description::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 60px;
+            height: 60px;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23f7a048" opacity="0.1"><path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/></svg>') no-repeat center;
+            background-size: contain;
+        }
+
+        .noc-description h3 {
+            color: var(--primary-color);
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .noc-description p {
+            color: var(--text-dark);
+            line-height: 1.6;
+            font-size: 1rem;
+            margin-bottom: 10px;
+        }
+
+        .noc-description ul {
+            margin: 15px 0 0 20px;
+            color: var(--text-dark);
+        }
+
+        .noc-description li {
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+
+        /* Form Section */
+        .form-section {
+            background: var(--background-light);
+            padding: 25px;
+            border-radius: var(--border-radius-md);
+            margin-bottom: 25px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .form-group select {
+            width: 100%;
+            padding: 15px 20px;
+            font-size: 1rem;
+            border: 2px solid #e9ecef;
+            border-radius: var(--border-radius-md);
+            background: var(--background-light);
+            color: var(--text-dark);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .form-group select:hover, .form-group select:focus {
+            border-color: var(--primary-color);
+            background: #f8f9fa;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(11, 46, 89, 0.1);
+        }
+
+        /* Buttons Section */
+        .buttons-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .button-description {
+            font-size: 0.9rem;
+            color: var(--secondary-color);
+            font-style: italic;
+            margin-bottom: 5px;
+        }
+
+        .noc-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+            padding: 15px 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: var(--border-radius-md);
+            border: none;
+            cursor: pointer;
+            color: var(--text-light);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .noc-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .noc-btn:hover::before {
+            left: 100%;
+        }
+
+        .noc-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .noc-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .noc-btn:disabled:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
+        .year-wise-btn {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        }
+
+        .year-wise-btn:hover:not(:disabled) {
+            background: linear-gradient(135deg, var(--secondary-color), var(--accent-color));
+        }
+
+        .combined-btn {
+            background: linear-gradient(135deg, var(--success-color), #1e7e34);
+        }
+
+        .combined-btn:hover:not(:disabled) {
+            background: linear-gradient(135deg, #1e7e34, var(--info-color));
+        }
+
+        .noc-btn i {
+            font-size: 1.2rem;
+        }
+
+        /* Info Box */
+        .info-box {
+            background: linear-gradient(135deg, rgba(23, 162, 184, 0.1), rgba(23, 162, 184, 0.05));
+            border-left: 4px solid var(--info-color);
+            padding: 20px;
+            border-radius: var(--border-radius-md);
+            margin-bottom: 25px;
+        }
+
+        .info-box h4 {
+            color: var(--info-color);
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-box p {
+            color: var(--text-dark);
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+
+        /* Mobile Toggle & Overlay */
+        .mobile-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background-color: var(--secondary-color);
+            color: var(--text-light);
+            font-size: 24px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            align-items: center;
+            justify-content: center;
+            z-index: 1001;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease;
+            border: none;
+        }
+
+        .mobile-toggle:hover {
+            transform: scale(1.1);
+            background-color: var(--accent-color);
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(3px);
+            z-index: 999;
+            transition: opacity 0.3s ease-in-out;
+            opacity: 0;
+        }
+
+        .overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .mobile-toggle {
+                display: flex;
+            }
+            
+            .sidebar {
+                transform: translateX(-100%);
+                width: 250px;
+                max-width: 85vw;
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .main-section {
+                margin-left: 0;
+                padding: 25px 20px;
+                justify-content: flex-start;
+                padding-top: 40px;
+            }
+            
+            .noc-card {
+                padding: 25px;
+            }
+
+            .noc-card h2 {
+                font-size: 1.5rem;
+                margin-bottom: 25px;
+            }
+
+            .noc-description {
+                padding: 20px;
+                margin-bottom: 25px;
+            }
+
+            .noc-description h3 {
+                font-size: 1.1rem;
+            }
+
+            .form-section {
+                padding: 20px;
+                margin-bottom: 20px;
+            }
+
+            .form-group select {
+                padding: 12px 15px;
+                font-size: 0.95rem;
+            }
+
+            .noc-btn {
+                padding: 12px 20px;
+                font-size: 0.95rem;
+            }
+
+            .buttons-section {
+                gap: 18px;
+                margin-top: 25px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .sidebar {
+                width: 220px;
+                max-width: 75vw;
+                padding: 20px 15px;
+            }
+
+            .sidebar h2 {
+                font-size: 1rem;
+                margin: 20px 10px;
+            }
+
+            .menu li a {
+                font-size: 0.9rem;
+                padding: 12px 15px;
+                gap: 10px;
+            }
+
+            .logout {
+                width: 80%;
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+
+            .main-section {
+                padding: 20px 15px;
+                padding-top: 35px;
+            }
+
+            .noc-card {
+                padding: 20px;
+                border-radius: var(--border-radius-md);
+            }
+
+            .noc-card h2 {
+                font-size: 1.3rem;
+                margin-bottom: 20px;
+            }
+
+            .noc-description {
+                padding: 18px;
+                margin-bottom: 20px;
+            }
+
+            .noc-description h3 {
+                font-size: 1rem;
+            }
+
+            .noc-description p, .info-box p {
+                font-size: 0.9rem;
+            }
+
+            .form-section {
+                padding: 18px;
+            }
+
+            .form-group {
+                margin-bottom: 20px;
+            }
+
+            .form-group label {
+                font-size: 1rem;
+                margin-bottom: 8px;
+            }
+
+            .form-group select {
+                padding: 12px 15px;
+                font-size: 0.9rem;
+            }
+
+            .noc-btn {
+                padding: 12px 18px;
+                font-size: 0.9rem;
+            }
+
+            .buttons-section {
+                gap: 15px;
+                margin-top: 20px;
+            }
+
+            .button-description {
+                font-size: 0.85rem;
+            }
+
+            .info-box {
+                padding: 18px;
+                margin-bottom: 20px;
+            }
+
+            .info-box h4 {
+                font-size: 1rem;
+            }
+
+            .mobile-toggle {
+                width: 45px;
+                height: 45px;
+                font-size: 20px;
+                top: 15px;
+                left: 15px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .noc-card {
+                padding: 15px;
+                margin: 15px auto;
+            }
+
+            .noc-card h2 {
+                font-size: 1.2rem;
+            }
+
+            .noc-description, .form-section, .info-box {
+                padding: 15px;
+            }
+
+            .noc-btn {
+                padding: 10px 15px;
+                font-size: 0.85rem;
+            }
+
+            .form-group select {
+                padding: 10px 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="overlay" onclick="toggleMobileMenu()"></div>
+    
+    <div class="container">
+        <div class="sidebar" id="sidebar">
+            <div class="photo-container">
+                <a href="studentwelcome.html" class="home-icon" title="Home">
+                    <i class="fas fa-home"></i>
+                </a>
+                <img id="sidebarPhoto" class="sidebar-photo" style="display: none;" />
+            </div>
+
+            <h2>ID: <span id="userId">Loading...</span></h2>
+            
+            <ul class="menu">
+                <li>
+                    <a href="studentdetails.html"><i class="fas fa-user-circle"></i> Student details</a>
+                </li>
+                <li>
+                    <a href="feedetails.html"><i class="fas fa-graduation-cap"></i> Fee details</a>
+                </li>
+                <li>
+                    <a href="updaterefno.html"><i class="fas fa-sync-alt"></i> Update fee payment</a>
+                </li>
+                <li>
+                    <a href="attendence.html"><i class="fas fa-calendar-alt"></i> View Attendance</a>
+                </li>
+                <li>
+                    <a href="studentresults.html"><i class="fas fa-chart-bar"></i> Student Results</a>
+                </li>
+                <li class="active">
+                    <a href="generatenoc.html"><i class="fas fa-file-invoice"></i> Generate NOC</a>
+                </li>
+                <li>
+                    <a href="settings.html"><i class="fas fa-cog"></i> Settings</a>
+                </li>
+            </ul>
+            
+            <button class="logout" onclick="confirmLogout()">Logout</button>
+        </div>
+
+        <div class="main-section">
+            <div class="noc-card">
+                <h2><i class="fas fa-certificate"></i> Generate NOC Certificate</h2>
+                
+                <div class="noc-description">
+                    <h3><i class="fas fa-info-circle"></i> About NOC Certificate</h3>
+                    <p><strong>No Objection Certificate (NOC)</strong> is an official document issued by the institution to certify that:</p>
+                    <ul>
+                        <li>All academic requirements have been fulfilled</li>
+                        <li>No dues are pending from the student</li>
+                        <li>Library books have been returned</li>
+                        <li>No disciplinary actions are pending</li>
+                        <li>Student is eligible for the requested clearance</li>
+                    </ul>
+                </div>
+
+                <div class="info-box">
+                    <h4><i class="fas fa-lightbulb"></i> Important Information</h4>
+                    <p>Please ensure all your fees are paid and library books are returned before generating your NOC. The certificate will be automatically generated based on your current academic and financial status.</p>
+                </div>
+
+                <div class="form-section">
+                    <div class="form-group">
+                        <label for="nocYear">
+                            <i class="fas fa-calendar-alt"></i> Select Academic Year
+                        </label>
+                        <select id="nocYear">
+                            <option value="">Choose Academic Year</option>
+                            <option value="1">1st Year (Freshman)</option>
+                            <option value="2">2nd Year (Sophomore)</option>
+                            <option value="3">3rd Year (Junior)</option>
+                            <option value="4">4th Year (Senior)</option>
+                        </select>
+                    </div>
+
+                    <div class="buttons-section">
+                        <div class="button-group">
+                            <div class="button-description">Generate NOC for specific academic year</div>
+                            <button type="button" class="noc-btn year-wise-btn" onclick="downloadNOC()">
+                                <i class="fas fa-download"></i>
+                                Download Year-wise NOC
+                            </button>
+                        </div>
+
+                        <div class="button-group">
+                            <div class="button-description">Generate comprehensive clearance certificate for all years</div>
+                            <button type="button" class="noc-btn combined-btn" onclick="downloadCombinedNOC()">
+                                <i class="fas fa-file-pdf"></i>
+                                Download Final Clearance Certificate
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <button class="mobile-toggle" onclick="toggleMobileMenu()">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.20/dist/sweetalert2.all.min.js"></script>
+    <script>
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.querySelector('.overlay');
+            const body = document.body;
+            
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
+            body.classList.toggle('no-scroll');
+        }
+
+        document.querySelectorAll(".menu li a").forEach(link => {
+            link.addEventListener("click", () => {
+                if (window.innerWidth <= 992) {
+                    toggleMobileMenu();
+                }
+            });
+        });
+
+        function confirmLogout() {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You will be logged out of your account.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#0b2e59',
+                cancelButtonColor: '#f7a048',
+                confirmButtonText: 'Yes, log out!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    logout();
+                }
+            });
+        }
+
+        function logout() {
+            fetch("/logout", { method: "GET", credentials: "include" })
+              .then(() => {
+                  localStorage.clear();
+                  sessionStorage.clear();
+                  if ("caches" in window) {
+                      caches.keys().then(names => names.forEach(name => caches.delete(name)));
+                  }
+                  window.location.replace("index.html");
+              })
+              .catch(() => {
+                  window.location.replace("index.html");
+              });
+        }
+
+        // Prevent back navigation after logout
+        window.history.pushState(null, "", window.location.href);
+        window.onpopstate = () => window.history.pushState(null, "", window.location.href);
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            const userId = localStorage.getItem("userId");
+            
+            // Check authentication
+            if (!userId) {
+                Swal.fire({
+                    title: 'Access Denied',
+                    text: 'Please login first to view this page.',
+                    icon: 'error',
+                    confirmButtonText: 'Go to Login',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    confirmButtonColor: '#0b2e59'
+                }).then(() => {
+                    window.location.href = "index.html";
+                });
+                return;
+            }
+
+            document.getElementById("userId").textContent = userId;
+
+            // Load sidebar photo
+            try {
+                const res = await fetch(`/student/${userId}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    const photo = document.getElementById("sidebarPhoto");
+                    if (photo && data && data.name) {
+                        photo.src = data.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.name)}&background=random&rounded=true&bold=true&size=128`;
+                        photo.style.display = "block";
+                    }
+                }
+            } catch (err) {
+                console.warn("⚠️ Failed to load photo:", err.message);
+            }
+        });
+
+        function downloadNOC() {
+            const userId = localStorage.getItem("userId");
+            const year = document.getElementById("nocYear").value;
+
+            if (!year) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Select Academic Year',
+                    text: 'Please select an academic year to generate the NOC certificate.',
+                    confirmButtonColor: '#0b2e59'
+                });
+                return;
+            }
+            
+            // Disable button during download
+            const btn = document.querySelector('.year-wise-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+            
+            Swal.fire({
+                title: 'Generating NOC Certificate...',
+                text: 'Please wait while your document is being prepared.',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            const url = `/generate-noc/${userId}?year=${year}`;
+            
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(errorData => {
+                            throw new Error(errorData.message || 'Server error occurred while generating NOC.');
+                        });
+                    }
+                    return response.blob();
+                })
+                .then(blob => {
+                    const fileUrl = window.URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = fileUrl;
+                    a.download = `NOC_Certificate_${userId}_Year${year}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    window.URL.revokeObjectURL(fileUrl);
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'NOC Certificate Generated!',
+                        text: 'Your certificate has been downloaded successfully.',
+                        timer: 3000,
+                        showConfirmButton: true,
+                        confirmButtonColor: '#0b2e59'
+                    });
+                })
+                .catch(err => {
+                    console.error('NOC generation error:', err);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Generation Failed',
+                        text: err.message,
+                        footer: '<p>Please contact the administrator if the problem persists.</p>',
+                        confirmButtonColor: '#0b2e59'
+                    });
+                })
+                .finally(() => {
+                    // Re-enable button
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-download"></i> Download Year-wise NOC';
+                });
+        }
+
+        function downloadCombinedNOC() {
+            const userId = localStorage.getItem("userId");
+            
+            if (!userId) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Authentication Error',
+                    text: 'User ID not found. Please login again.',
+                    confirmButtonColor: '#0b2e59'
+                });
+                return;
+            }
+
+            // Disable button during download
+            const btn = document.querySelector('.combined-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+            
+            Swal.fire({
+                title: 'Generating Final Clearance Certificate...',
+                text: 'Please wait while your comprehensive certificate is being prepared.',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            fetch(`/generate-combined-noc/${userId}`)
+                .then(res => {
+                    if (!res.ok) {
+                        return res.json().then(errorData => {
+                            throw new Error(errorData.message || 'Failed to generate final clearance certificate');
+                        });
+                    }
+                    return res.blob();
+                })
+                .then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = `Final_Clearance_Certificate_${userId}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    window.URL.revokeObjectURL(url);
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Certificate Generated Successfully!',
+                        text: 'Your final clearance certificate has been downloaded.',
+                        timer: 3000,
+                        showConfirmButton: true,
+                        confirmButtonColor: '#0b2e59'
+                    });
+                })
+                .catch(err => {
+                    console.error("Combined NOC generation error:", err);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Generation Failed',
+                        text: err.message,
+                        footer: '<p>Please ensure all dues are cleared and try again.</p>',
+                        confirmButtonColor: '#0b2e59'
+                    });
+                })
+                .finally(() => {
+                    // Re-enable button
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-file-pdf"></i> Download Final Clearance Certificate';
+                });
+        }
+    </script>
+    <script src="session.js"></script>
+</body>
+</html>

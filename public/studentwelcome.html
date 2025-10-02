@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Student Dashboard</title>
+    <link rel="icon" href="crrengglogo.png" type="image/png" />
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.20/dist/sweetalert2.min.css"
+    />
+    <style>
+        :root {
+            --primary-color: #0b2e59;
+            --secondary-color: #2c6e91;
+            --accent-color: #f7a048;
+            --background-dark: #f0f2f5;
+            --background-light: #ffffff;
+            --text-dark: #333333;
+            --text-light: #f4f4f4;
+            --card-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            --border-radius-lg: 16px;
+            --border-radius-md: 10px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--background-dark);
+            color: var(--text-dark);
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background-color: var(--primary-color);
+            display: flex;
+            flex-direction: column;
+            padding: 30px 20px;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease-in-out;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        .sidebar-photo {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 4px solid var(--accent-color);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        .sidebar h2 {
+            margin-top: 15px;
+            color: var(--text-light);
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .menu {
+            list-style: none;
+            flex-grow: 1;
+        }
+
+        .menu li {
+            margin-bottom: 12px;
+        }
+
+        .menu li a {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 1rem;
+            color: var(--text-light);
+            padding: 15px 20px;
+            border-radius: var(--border-radius-md);
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .menu li a:hover,
+        .menu li.active a {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--text-light);
+            font-weight: 500;
+            transform: translateX(5px);
+            box-shadow: var(--card-shadow);
+        }
+
+        .menu li a i {
+            font-size: 1.2rem;
+            width: 25px;
+            text-align: center;
+            color: var(--text-light);
+            transition: color 0.3s ease;
+        }
+
+        .logout {
+            background-color: var(--accent-color);
+            color: var(--text-light);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            width: 60%;
+            margin: 20px auto 0;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
+
+        .logout:hover {
+            background-color: #d3853b;
+            transform: scale(1.05);
+        }
+
+        /* Main Section */
+        .main-section {
+            flex-grow: 1;
+            background-color: var(--background-dark);
+            padding: 40px 30px;
+            margin-left: 280px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+        }
+
+        /* Cards and Sections */
+        .welcome-card,
+        .slideshow-container,
+        .college-info,
+        .notifications,
+        .suggestions {
+            background-color: var(--background-light);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--card-shadow);
+            padding: 30px;
+            width: 100%;
+            max-width: 1100px;
+        }
+
+        .welcome-card {
+            background: linear-gradient(
+                135deg,
+                var(--primary-color) 0%,
+                var(--secondary-color) 100%
+            );
+            color: var(--text-light);
+            text-align: center;
+        }
+
+        .welcome-card h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .welcome-card p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            line-height: 1.5;
+        }
+
+        .notifications,
+        .suggestions {
+            padding: 15px 25px;
+        }
+
+        .notifications {
+            background-color: #fff3e0;
+            border-left: 5px solid var(--accent-color);
+            color: var(--accent-color);
+        }
+
+        .notifications marquee {
+            font-weight: 500;
+        }
+
+        .suggestions {
+            background-color: #e8f5e9;
+            border-left: 5px solid #4caf50;
+            color: #2e7d32;
+        }
+
+        .suggestions a {
+            color: #1b5e20;
+            font-weight: bold;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .suggestions a:hover {
+            color: #43a047;
+            text-decoration: underline;
+        }
+
+        .slideshow-container {
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .slide {
+            display: none;
+            width: 100%;
+            height: auto;
+            object-fit: cover;
+            border-radius: var(--border-radius-lg);
+            transition: opacity 1s ease-in-out;
+        }
+
+        .slide.active {
+            display: block;
+            opacity: 1;
+        }
+
+        .college-info h2 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
+
+        .college-info p {
+            line-height: 1.8;
+            color: #555;
+            font-size: 1rem;
+        }
+
+        .college-info strong {
+            color: var(--secondary-color);
+        }
+
+        /* Mobile View & Responsive Design */
+        .mobile-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background-color: var(--secondary-color);
+            color: var(--text-light);
+            font-size: 24px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            align-items: center;
+            justify-content: center;
+            z-index: 1001;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease;
+        }
+
+        @media (max-width: 992px) {
+            .mobile-toggle {
+                display: flex;
+            }
+            .sidebar {
+                transform: translateX(-100%);
+                left: 0;
+                right: initial;
+                width: 250px;
+                max-width: 80vw;
+                box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .main-section {
+                margin-left: 0;
+                padding: 20px;
+            }
+            .welcome-card,
+            .slideshow-container,
+            .college-info,
+            .notifications,
+            .suggestions {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <img id="sidebarPhoto" class="sidebar-photo" style="display: none;" />
+                <h2>ID: <span id="userId">Loading...</span></h2>
+            </div>
+            <ul class="menu">
+                <li>
+                    <a href="studentdetails.html"
+                        ><i class="fas fa-user-circle"></i> Student details</a
+                    >
+                </li>
+                <li>
+                    <a href="feedetails.html"
+                        ><i class="fas fa-graduation-cap"></i> Fee details</a
+                    >
+                </li>
+                <li>
+                    <a href="updaterefno.html"
+                        ><i class="fas fa-sync-alt"></i> Update fee payment</a
+                    >
+                </li>
+                <li>
+                    <a href="attendence.html"
+                        ><i class="fas fa-calendar-alt"></i> View Attendance</a
+                    >
+                </li>
+                <li>
+                    <a href="studentresults.html"
+                        ><i class="fas fa-chart-bar"></i> Student Results</a
+                    >
+                </li>
+                <li>
+                    <a href="generatenoc.html"
+                        ><i class="fas fa-file-invoice"></i> Generate NOC</a
+                    >
+                </li>
+                <li>
+                    <a href="settings.html"
+                        ><i class="fas fa-cog"></i> Settings</a
+                    >
+                </li>
+            </ul>
+            <button class="logout" onclick="confirmLogout()">Logout</button>
+        </div>
+
+        <div class="main-section">
+          <div class="welcome-card">
+    <h1>Welcome, <span id="welcomeName">Student</span>!</h1>
+    <p id="deptName" style="font-weight: bold ; font-size: 1.2rem; margin-bottom: 10px;"></p>
+    <p>
+        We're glad to have you back at CRR Engineering College. Use the
+        sidebar to navigate through your academic dashboard.
+    </p>
+</div>
+
+
+            <div class="notifications" id="dynamicNotifications">
+                <marquee behavior="scroll" direction="left" scrollamount="5">
+                    Loading notifications...
+                </marquee>
+            </div>
+
+            <div class="suggestions">
+                <p>
+                    We value your suggestions for improvement. Please feel free to
+                    share your thoughts with us!
+                    <a
+                        href="mailto:sircrrcoestd@sircrrengg.ac.in"
+                        target="_blank"
+                    >
+                        Click here 👉
+                    </a>
+                </p>
+            </div>
+            <div class="slideshow-container">
+        <div class="image-carousel-track" id="image-carousel-track">
+                <img class="slide active" src="images/nba.jpg" alt="NBA ACCREDATION" />
+                <img class="slide active" src="images/img1.jpg" alt="College Image 1" />
+                <img class="slide" src="images/cse.JPG" alt="CSE DEPT" />
+                <img class="slide" src="images/img2.jpg" alt="College Image 3" />
+                <img class="slide" src="images/img3.jpg" alt="College Image 4" />
+                <img class="slide active" src="images/skill_develop.jpg" alt="SKILL DEVELOPMENT" />
+                <img class="slide" src="images/img4.jpg" alt="College Image 5" />
+                <img class="slide active" src="images/eapcet.jpg" alt="EAPCET" />
+            </div>
+            <div class="college-info">
+                <h2>Welcome to Sir C. R. Reddy College of Engineering (AUTONOMOUS)</h2>
+                <p>
+                    Sir C.R. Reddy College of Engineering(A) is the first Engineering College in Andhra Pradesh sanctioned and recognized by All India Council for Technical Education (AICTE). This College is permanently affiliated to JNTUK from the Academic Year 2017-18.
+                    <br /><br />
+                    Since its inception in 1989, Sir C.R. Reddy College of Engineering(A) has been a premier institute for quality engineering education in Andhra Pradesh under the stewardship of its broad-minded and magnanimous management. The last two and a half decades have seen the Institute fulfilling its motto of
+                    <strong>'QUALITY SERVICE & VALUE BASED EDUCATION'</strong> to the student community.
+                    <br /><br />
+                    Adhering to its core values, the institute gives top priority to ethical values, high standards, and a commitment to value-based education. We believe in working honestly and sincerely, in building trust, and in maintaining a long-lasting relationship with society.
+                    <br /><br />
+                    The College is situated near Vatluru railway gate in Eluru, the Head Quarters of West Godavari district. It is surrounded by beautiful paddy fields and is on the Chennai-Howrah highway and train route. A large number of buses and trains run via this town. It is easily accessible from any part of the country by rail as well as road.
+                    <br /><br />
+                    The College is located in its own sprawling campus with an area of 30.48 acres. Its magnanimous infrastructure and greenery attract the attention of people who pass by. The vast green campus housing several Departments provides a stimulating environment to the high-caliber staff and students of the institution.
+                    <br /><br />
+                    The Campus at Vatluru is a place where students from all walks of life are under a single umbrella pursuing their BE/B.Tech, M.Tech, and MBA courses.
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
+  <script> window.chtlConfig = { chatbotId: "7883498161" } </script>
+<script async data-id="7883498161" id="chtl-script" type="text/javascript" src="https://chatling.ai/js/embed.js"></script>
+ <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.20/dist/sweetalert2.all.min.js"></script>        
+<script>
+    // Toggle mobile sidebar
+    function toggleMobileMenu() {
+        document.querySelector('.sidebar').classList.toggle('open');
+    }
+
+    // SweetAlert2 Confirmation for Logout
+    function confirmLogout() {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You will be logged out of your account.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#0b2e59',
+            cancelButtonColor: '#f7a048',
+            confirmButtonText: 'Yes, log out!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                logout();
+            }
+        });
+    }
+
+    // Logout and clear session
+    function logout() {
+        fetch("/logout", { method: "GET", credentials: "include" })
+          .then(() => {
+              localStorage.clear();
+              sessionStorage.clear();
+              if ("caches" in window) {
+                  caches.keys().then(names => names.forEach(name => caches.delete(name)));
+              }
+              window.location.replace("index.html");
+          })
+          .catch(() => {
+              window.location.replace("index.html");
+          });
+    }
+
+    // Slideshow
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+
+    function showSlide(index) {
+        slides.forEach((slide, i) => slide.classList.remove('active'));
+        slides[index].classList.add('active');
+    }
+
+    function nextSlide() {
+        currentSlide = (currentSlide + 1) % totalSlides;
+        showSlide(currentSlide);
+    }
+    setInterval(nextSlide, 5000); // auto-slide every 5s
+
+    // Load notifications dynamically
+    function loadNotifications(userId) {
+        fetch(`/student/notifications/${userId}`)
+            .then(res => res.json())
+            .then(data => {
+                const notifyBox = document.getElementById("dynamicNotifications");
+
+                // Fix: use data.notifications array
+                const notifications = data.notifications || [];
+
+                if (notifications.length === 0) {
+                    notifyBox.innerHTML = `<p>No notifications found for your department.</p>`;
+                    return;
+                }
+
+                const message = notifications.map(n => ` ${n.message}`).join(" | ");
+                notifyBox.innerHTML = `
+                    <marquee behavior="scroll" direction="left" scrollamount="5">
+                        ${message}
+                    </marquee>
+                `;
+
+                // Show a SweetAlert for the first notification
+                const firstNotification = notifications[0];
+                Swal.fire({
+                    title: 'Important Notification',
+                    html: `<p>${firstNotification.message}</p>`,
+                    icon: 'info',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#0b2e59',
+                });
+            })
+            .catch(err => {
+                console.error("Notification load error:", err);
+                document.getElementById("dynamicNotifications").innerHTML = "<p>Error loading notifications.</p>";
+            });
+    }
+
+    // Load student details after page loads
+    document.addEventListener("DOMContentLoaded", () => {
+        const userId = localStorage.getItem('userId');
+
+        if (!userId) {
+            Swal.fire({
+                title: 'Access Denied',
+                text: 'Please login first to view this page.',
+                icon: 'error',
+                confirmButtonText: 'Go to Login',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                confirmButtonColor: '#0b2e59'
+            }).then(() => {
+                window.location.href = "index.html";
+            });
+            return;
+        }
+
+        document.getElementById("userId").textContent = userId;
+        showSlide(currentSlide); // Show first slide
+
+        // Department mapping
+        const deptMap = {
+            "CSE": "Department of Computer Science and Engineering",
+            "IT": "Department of Information Technology",
+            "CIVIL": "Department of Civil Engineering",
+            "MECH": "Department of Mechanical Engineering",
+            "ECE": "Department of Electronics and Communication Engineering",
+            "EEE": "Department of Electrical and Electronics Engineering"
+        };
+
+        // Fetch and display student name, photo, and dept
+        fetch(`/student/${userId}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.name) {
+              document.getElementById("welcomeName").textContent = data.name;
+            }
+            if (data.photo_url) {
+              const photo = document.getElementById("sidebarPhoto");
+              photo.src = data.photo_url;
+              photo.style.display = "block";
+            }
+            if (data.dept_code) {
+              const deptFull = deptMap[data.dept_code.toUpperCase()] || data.dept_code;
+              document.getElementById("deptName").textContent = deptFull;
+            }
+          })
+          .catch(err => {
+            console.error("Error loading student data:", err);
+          });
+
+        // Call dynamic notifications function
+        loadNotifications(userId);
+    });
+
+    // Prevent going back after logout
+    window.history.pushState(null, "", window.location.href);
+    window.onpopstate = () => window.history.pushState(null, "", window.location.href);
+</script>
+
+</body>
+</html>

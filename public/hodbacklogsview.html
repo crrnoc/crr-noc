@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HOD Backlogs & Results</title>
+  <link rel="icon" href="crrengglogo.png" type="image/png" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', sans-serif;
+  }
+
+  body {
+    display: flex;
+    min-height: 100vh;
+    background: linear-gradient(to right, #e0eafc, #cfdef3);
+    color: #222;
+    overflow-x: hidden;
+  }
+
+  /* Sidebar */
+  .sidebar {
+    width: 250px;
+    background: linear-gradient(180deg, #2C3E50, #34495E);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    color: white;
+    transition: all 0.3s ease;
+    z-index: 100;
+  }
+
+  .sidebar img {
+    height: 50px;
+    margin: 0 auto 15px auto;
+    display: block;
+  }
+
+  .sidebar h4 {
+    text-align: center;
+    font-weight: bold;
+    font-size: 16px;
+    margin-bottom: 30px;
+  }
+
+  .sidebar a {
+    color: white;
+    text-decoration: none;
+    display: block;
+    padding: 12px;
+    border-radius: 8px;
+    margin: 8px 0;
+    transition: all 0.3s ease;
+  }
+
+  .sidebar a:hover,
+  .sidebar .active {
+    background: rgba(255,255,255,0.2);
+    transform: translateX(5px);
+  }
+
+  .logout {
+    background-color: #E67E22;
+    border: none;
+    color: white;
+    padding: 12px;
+    border-radius: 20px;
+    margin-top: auto;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+
+  .logout:hover {
+    background-color: #CA6F1E;
+  }
+
+  /* Overlay */
+  .overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.4);
+    z-index: 90;
+    transition: all 0.3s ease;
+  }
+
+  .overlay.active {
+    display: block;
+  }
+
+  /* Mobile toggle */
+  .mobile-toggle {
+    display: none;
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    background: #2C3E50;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    z-index: 200;
+  }
+
+  /* Main Content */
+  .content {
+    flex: 1;
+    margin-left: 250px;
+    padding: 40px;
+    transition: filter 0.3s ease;
+    margin-top: 36px;
+  }
+
+  .content.shifted {
+    filter: blur(2px);
+    pointer-events: none;
+  }
+
+  h2 {
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 30px;
+    color: #2C3E50;
+  }
+
+  .form-section {
+    background: linear-gradient(135deg, #5bc0de, #3c96c8);
+    padding: 30px;
+    border-radius: 20px;
+    color: white;
+    text-align: center;
+    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.2);
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .form-row {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .form-section input,
+  .form-section select,
+  .form-section button {
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 16px;
+  }
+
+  .form-section input,
+  .form-section select {
+    border: 1px solid #ccc;
+    min-width: 240px;
+  }
+
+  .form-section button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s ease;
+  }
+
+  .form-section button:hover {
+    background-color: #0056b3;
+    transform: scale(1.03);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  }
+
+  .count {
+    text-align: center;
+    font-size: 18px;
+    font-weight: bold;
+    margin-top: 30px;
+    color: #E74C3C;
+  }
+
+  .results-summary {
+    text-align: center;
+    margin-top: 25px;
+    padding: 15px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .results-summary p {
+    margin: 6px 0;
+    font-weight: 600;
+  }
+
+  .legend {
+    font-size: 12px;
+    opacity: 0.8;
+    margin-top: 6px;
+  }
+
+  .table-wrap {
+    max-width: 1100px;
+    margin: 22px auto;
+    overflow-x: auto;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  thead {
+    background: #ecf0f1;
+  }
+
+  th,
+  td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #eee;
+    text-align: left;
+  }
+
+  tbody tr:hover {
+    background: #fafafa;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .badge-auto {
+    background: #fdebd0;
+    color: #a04000;
+  }
+
+  .badge-regular {
+    background: #d6eaf8;
+    color: #1b4f72;
+  }
+
+  .backlog-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-top: 20px;
+    justify-content: center;
+  }
+
+  .backlog-card {
+    background-color: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    width: 280px;
+    transition: transform 0.3s ease;
+    animation: fadeIn 0.5s ease forwards;
+  }
+
+  .backlog-card:hover {
+    transform: scale(1.03);
+  }
+
+  .backlog-card h4 {
+    margin-bottom: 10px;
+    color: #E74C3C;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media (max-width: 768px) {
+    .content {
+      margin-left: 0;
+      padding: 20px;
+    }
+
+    .sidebar {
+      left: -260px;
+    }
+
+    .sidebar.open {
+      left: 0;
+    }
+
+    .mobile-toggle {
+      display: block;
+    }
+
+    .backlog-card {
+      width: 90%;
+    }
+  }
+
+  /* 🔹 Updated Buttons Alignment */
+  .form-row.buttons {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 15px;
+    flex-wrap: wrap;
+  }
+
+  .form-row.buttons button {
+    min-width: 240px;
+  }
+</style>
+
+</head>
+<body>
+  <!-- Overlay -->
+  <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+  <!-- Mobile toggle -->
+  <div class="mobile-toggle" onclick="toggleSidebar()">☰ Menu</div>
+
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <img src="crrengglogo.png" alt="College Logo"/>
+    <h4 id="welcomeText">Welcome HOD</h4>
+    <div class="menu">
+      <a href="hodpanel.html">🏠 Dashboard</a>
+      <a href="students.html">🎓 Students</a>
+      <a href="hodfeesearch.html">💰 Fee Search</a>
+      <a href="hodbacklogsview.html" class="active">📚 Results</a>
+      <a href="hodmidmarks.html">📝 Mid Marks</a>
+      <a href="hodnotifications.html">📢 Send Notifications</a>
+    </div>
+    <button class="logout" onclick="logout()">Logout</button>
+  </div>
+
+  <!-- Main Content -->
+  <div class="content" id="main-content">
+    <h2>Check Student Backlogs & Results</h2>
+
+    <div class="form-section">
+      <div class="form-row">
+        <input type="text" id="regno" placeholder="Enter Registration Number" />
+        <select id="semester">
+          <option value="">-- Select Semester (e.g., 1-1) --</option>
+          <option value="1-1">1-1</option>
+          <option value="1-2">1-2</option>
+          <option value="2-1">2-1</option>
+          <option value="2-2">2-2</option>
+          <option value="3-1">3-1</option>
+          <option value="3-2">3-2</option>
+          <option value="4-1">4-1</option>
+          <option value="4-2">4-2</option>
+        </select>
+      </div>
+
+      <!-- 🔹 Updated Button Row -->
+      <div class="form-row buttons">
+        <button onclick="fetchResultsAndBacklogs()">Get Semester Results</button>
+        <button onclick="fetchAllResults()">View All Semester Results</button>
+      </div>
+    </div>
+
+    <!-- Results Summary -->
+    <div id="resultsSummary" class="results-summary" style="display:none;"></div>
+
+    <!-- Detailed Results Table -->
+    <div class="table-wrap" id="resultsTableWrap" style="display:none;">
+      <table>
+        <thead>
+          <tr>
+            <th>Semester</th>
+            <th>Source</th>
+            <th>Sub Code</th>
+            <th>Subject Name</th>
+            <th>Grade</th>
+            <th>Credits</th>
+          </tr>
+        </thead>
+        <tbody id="resultsTableBody"></tbody>
+      </table>
+    </div>
+
+    <!-- Backlogs -->
+    <div id="totalBacklogCount" class="count" style="display:none;"></div>
+    <div id="backlogCards" class="backlog-container" style="display:none;"></div>
+  </div>
+</body>
+
+<script>
+  // ---------- Auth ----------
+  const userId = localStorage.getItem("userId");
+  const welcomeText = document.getElementById("welcomeText");
+  if (!userId || !userId.startsWith("HOD")) {
+    alert("Please login as HOD");
+    window.location.href = "index.html";
+  } else {
+    const dept = userId.replace("HOD", "");
+    welcomeText.textContent = `Welcome Head of Department - ${dept}`;
+  }
+
+  function logout() { localStorage.clear(); window.location.href = "index.html"; }
+  function toggleSidebar() {
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.getElementById("overlay");
+    const mainContent = document.getElementById("main-content");
+    sidebar.classList.toggle("open"); 
+    overlay.classList.toggle("active"); 
+    mainContent.classList.toggle("shifted");
+  }
+
+  // ---------- GPA helpers ----------
+  const GRADE_POINTS = { S:10, A:9, B:8, C:7, D:6, E:5, F:0, Ab:0, Completed:10, Absent:0 };
+
+  function computeGPA(rows) {
+    let totalCredits = 0, weighted = 0;
+    rows.forEach(r => {
+      const gp = GRADE_POINTS[r.grade] ?? 0;
+      const cr = (r.credits !== null && r.credits !== undefined) ? Number(r.credits) : 0;
+      weighted += gp * cr;
+      totalCredits += cr;
+    });
+    const gpa = totalCredits > 0 ? (weighted / totalCredits) : 0;
+    return { gpa: gpa.toFixed(2), totalCredits };
+  }
+
+  // ---------- Results table with semester headings ----------
+  function renderResultsTable(rows) {
+    const tbody = document.getElementById("resultsTableBody");
+    const wrap = document.getElementById("resultsTableWrap");
+    tbody.innerHTML = "";
+
+    if (!rows || rows.length === 0) {
+      wrap.style.display = "none";
+      return;
+    }
+
+    let lastSem = "";
+    rows.forEach(r => {
+      const sem = r.semester || (r.semester_from_request || "");
+
+      // Insert heading row whenever semester changes
+      if (sem && sem !== lastSem) {
+        const headingRow = document.createElement("tr");
+        headingRow.innerHTML = `
+          <td colspan="6" style="background:#f4f6f7; font-weight:bold; text-align:center;">
+            Semester ${sem}
+          </td>`;
+        tbody.appendChild(headingRow);
+        lastSem = sem;
+      }
+
+      const isAuto = (r.credits === null || r.credits === undefined);
+      const creditsDisplay = isAuto ? 3 : r.credits;
+      const sourceBadge = isAuto
+        ? '<span class="badge badge-auto">Autonomous</span>'
+        : '<span class="badge badge-regular">Regular</span>';
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${sem || "-"}</td>
+        <td>${sourceBadge}</td>
+        <td>${r.subcode || "-"}</td>
+        <td>${r.subname || "-"}</td>
+        <td>${r.grade || "-"}</td>
+        <td>${creditsDisplay}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    wrap.style.display = "block";
+  }
+
+  function renderSummary({ regno, semester, sgpa, cgpa, percentage, fallbackUsed }) {
+    const div = document.getElementById("resultsSummary");
+    div.style.display = "block";
+    div.innerHTML = `
+      <p><strong>Reg No:</strong> ${regno || "-"}</p>
+      <p><strong>Semester:</strong> ${semester || "All"}</p>
+      <p><strong>SGPA:</strong> ${sgpa || "0.00"} ${fallbackUsed ? "(computed client-side)" : ""}</p>
+      <p><strong>CGPA:</strong> ${cgpa || "0.00"}</p>
+      <p><strong>Percentage:</strong> ${percentage || "0.00"}%</p>
+    `;
+  }
+
+  // ---------- Main actions ----------
+  async function fetchResultsAndBacklogs() {
+    const regno = document.getElementById("regno").value.trim().toUpperCase();
+    const semester = document.getElementById("semester").value;
+
+    if (!regno) {
+      Swal.fire("Missing RegNo", "Please enter registration number", "warning");
+      return;
+    }
+    if (!semester) {
+      Swal.fire("Missing Semester", "Please select a semester like 1-1, 2-2, etc.", "warning");
+      return;
+    }
+
+    try {
+      const res = await fetch(`/student/results/${regno}?semester=${encodeURIComponent(semester)}`);
+      const data = await res.json();
+
+      let overall = { sgpa: "0.00", percentage: "0.00" };
+      try {
+        const o = await (await fetch(`/student/overallResults/${regno}`)).json();
+        overall = o || overall;
+      } catch {}
+
+      const rows = (data.results || []).map(r => ({ ...r, semester }));
+
+      let finalSGPA = data.sgpa || "0.00";
+      let usedFallback = false;
+      if (rows.length > 0 && (!data.sgpa || Number(data.sgpa) === 0)) {
+        const calc = computeGPA(rows);
+        finalSGPA = calc.gpa;
+        usedFallback = true;
+      }
+
+      const cgpa = overall.sgpa || data.cgpa || "0.00";
+      const percentage = overall.percentage || data.percentage || "0.00";
+
+      renderSummary({ regno, semester, sgpa: finalSGPA, cgpa, percentage, fallbackUsed: usedFallback });
+      renderResultsTable(rows);
+      await renderBacklogs(regno);
+
+    } catch (err) {
+      console.error(err);
+      Swal.fire("Error", "Failed to fetch student data", "error");
+    }
+  }
+
+  async function fetchAllResults() {
+    const regno = document.getElementById("regno").value.trim().toUpperCase();
+    if (!regno) {
+      Swal.fire("Missing RegNo", "Please enter registration number", "warning");
+      return;
+    }
+
+    const semesters = ["1-1","1-2","2-1","2-2","3-1","3-2","4-1","4-2"];
+    const allRows = [];
+
+    try {
+      for (const sem of semesters) {
+        const res = await fetch(`/student/results/${regno}?semester=${encodeURIComponent(sem)}`);
+        const data = await res.json();
+        const rows = (data.results || []).map(r => ({ ...r, semester: sem, semester_from_request: sem }));
+        allRows.push(...rows);
+      }
+
+      let overall = { sgpa: "0.00", percentage: "0.00" };
+      try {
+        const o = await (await fetch(`/student/overallResults/${regno}`)).json();
+        overall = o || overall;
+      } catch {}
+
+      const order = { "1-1":1, "1-2":2, "2-1":3, "2-2":4, "3-1":5, "3-2":6, "4-1":7, "4-2":8 };
+      allRows.sort((a,b) => (order[a.semester]||99) - (order[b.semester]||99) || String(a.subcode).localeCompare(String(b.subcode)));
+
+      renderSummary({ regno, semester: "All", sgpa: "-", cgpa: overall.sgpa || "0.00", percentage: overall.percentage || "0.00" });
+      renderResultsTable(allRows);
+      await renderBacklogs(regno);
+
+    } catch (err) {
+      console.error(err);
+      Swal.fire("Error", "Failed to fetch all results", "error");
+    }
+  }
+
+  async function renderBacklogs(regno) {
+    const cardContainer = document.getElementById("backlogCards");
+    const countDiv = document.getElementById("totalBacklogCount");
+
+    try {
+      const backlogsRes = await fetch(`/total-backlogs?regno=${encodeURIComponent(regno)}`);
+      const backlogsData = await backlogsRes.json();
+
+      cardContainer.innerHTML = "";
+      countDiv.style.display = "block";
+      countDiv.innerText = `Total Backlogs: ${backlogsData.count || 0}`;
+
+      if (!backlogsData.backlogData || backlogsData.backlogData.length === 0) {
+        cardContainer.style.display = "none";
+        return;
+      }
+
+      backlogsData.backlogData.forEach(item => {
+        const card = document.createElement("div");
+        card.className = "backlog-card";
+        card.innerHTML = `
+          <h4>Semester: ${item.semester || "N/A"}</h4>
+          <p><strong>Subject Code:</strong> ${item.subcode}</p>
+          <p><strong>Subject Name:</strong> ${item.subname || "N/A"}</p>
+          <p><strong>Grade:</strong> ${item.grade}</p>
+        `;
+        cardContainer.appendChild(card);
+      });
+      cardContainer.style.display = "flex";
+    } catch (err) {
+      console.error(err);
+      Swal.fire("Error", "Failed to fetch backlogs", "error");
+    }
+  }
+</script>
+
+</body>
+</html>
