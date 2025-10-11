@@ -987,10 +987,6 @@
       window.history.forward(); // stays on same page
     }
   });
-
-  // Optional: block back navigation entirely on dashboard
-  window.history.pushState(null, "", window.location.href);
-  window.onpopstate = () => window.history.pushState(null, "", window.location.href);
         
     </script>
     <script src="session.js"></script>
