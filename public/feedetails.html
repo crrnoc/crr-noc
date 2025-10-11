@@ -980,13 +980,6 @@
                 });
             }
         });
-
-          // Prevent going back to index.html when logged in
-  window.addEventListener("popstate", () => {
-    if (window.location.pathname.includes("index.html")) {
-      window.history.forward(); // stays on same page
-    }
-  });
         
     </script>
     <script src="session.js"></script>
