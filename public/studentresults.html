@@ -1208,10 +1208,6 @@
         });
     }
 
-    // Prevent back navigation after logout
-    window.history.pushState(null, "", window.location.href);
-    window.onpopstate = () => window.history.pushState(null, "", window.location.href);
-
     // Smooth scroll function
     function smoothScrollTo(elementId) {
       const element = document.getElementById(elementId);
