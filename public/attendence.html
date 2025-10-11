@@ -859,10 +859,6 @@
               });
         }
 
-        // Prevent back navigation after logout
-        window.history.pushState(null, "", window.location.href);
-        window.onpopstate = () => window.history.pushState(null, "", window.location.href);
-
         function getPercentageClass(percentage) {
             const percent = parseFloat(percentage || 0);
             if (percent >= 85) return 'percentage-excellent';
