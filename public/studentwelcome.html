@@ -565,9 +565,6 @@
         loadNotifications(userId);
     });
 
-    // Prevent going back after logout
-    window.history.pushState(null, "", window.location.href);
-    window.onpopstate = () => window.history.pushState(null, "", window.location.href);
 </script>
 
 </body>
