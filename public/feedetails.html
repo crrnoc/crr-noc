@@ -788,9 +788,6 @@
               });
         }
 
-        // Prevent back button navigation after logout
-        window.history.pushState(null, "", window.location.href);
-        window.onpopstate = () => window.history.pushState(null, "", window.location.href);
 
         // =============================
         // Fee Details Loading Logic
