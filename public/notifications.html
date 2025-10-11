@@ -855,10 +855,6 @@
               });
         }
 
-        // Prevent back navigation after logout
-        window.history.pushState(null, "", window.location.href);
-        window.onpopstate = () => window.history.pushState(null, "", window.location.href);
-
         function getNotificationType(staffName) {
             if (!staffName || staffName.toLowerCase() === 'system') {
                 return 'system';
