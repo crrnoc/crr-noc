@@ -924,6 +924,18 @@
             }
         `;
         document.head.appendChild(style);
+
+          // Prevent going back to index.html when logged in
+  window.addEventListener("popstate", () => {
+    if (window.location.pathname.includes("index.html")) {
+      window.history.forward(); // stays on same page
+    }
+  });
+
+  // Optional: block back navigation entirely on dashboard
+  window.history.pushState(null, "", window.location.href);
+  window.onpopstate = () => window.history.pushState(null, "", window.location.href);
+        
     </script>
     <script src="session.js"></script>
 </body>
