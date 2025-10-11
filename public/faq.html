@@ -876,10 +876,6 @@
               });
         }
 
-        // Prevent back navigation after logout
-        window.history.pushState(null, "", window.location.href);
-        window.onpopstate = () => window.history.pushState(null, "", window.location.href);
-
         document.addEventListener("DOMContentLoaded", async () => {
             const userId = localStorage.getItem("userId") || localStorage.getItem("regno");
             
