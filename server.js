@@ -173,6 +173,9 @@ app.get("/removestudents", requireAdminSession, (req, res) => {
 app.get("/createnoc", requireAdminSession, (req, res) => {
   injectScript(path.join(__dirname, "public", "createnocAd.html"), res);
 });
+app.get("/uploadfees", requireAdminSession, (req, res) => {
+  injectScript(path.join(__dirname, "public", "uploadstudentfee.html"), res);
+});
 app.get("/uploadstudents", requireAdminSession, (req, res) => {
   injectScript(path.join(__dirname, "public", "uploadstudents.html"), res);
 });
