@@ -7980,3 +7980,89 @@ app.get("/hod/all-subjects", (req, res) => {
   });
 });
 
+//admin upload fee route
+app.post("/upload-fee-structure", upload.single("file"), (req, res) => {
+  if (!req.file)
+    return res.status(400).json({ success: false, message: "No file uploaded" });
+
+  const filePath = req.file.path;
+  const results = [];
+
+  console.log("📂 Upload started:", filePath);
+
+  // Read first line manually to detect separator
+  const fileContent = fs.readFileSync(filePath, "utf8");
+  const firstLine = fileContent.split(/\r?\n/)[0];
+  let separator = ","; // default
+  if (firstLine.includes("\t")) separator = "\t";
+  else if (firstLine.includes(";")) separator = ";";
+
+  console.log("🧠 Detected Separator:", JSON.stringify(separator));
+
+  fs.createReadStream(filePath)
+    .pipe(
+      csv({
+        separator,
+        mapHeaders: ({ header }) => header.replace(/^\uFEFF/, "").trim(), // remove BOM
+      })
+    )
+    .on("headers", (headers) => {
+      console.log("🧩 Detected Headers:", headers);
+    })
+    .on("data", (row) => results.push(row))
+    .on("end", () => {
+      fs.unlinkSync(filePath);
+      console.log("🧾 Total rows parsed:", results.length);
+
+      const insertQuery = `
+        INSERT INTO student_fee_structure 
+        (reg_no, academic_year, tuition, university, bus, hostel, semester, crt_fee, \`library\`, fines)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0.00, 0.00)
+      `;
+
+      let insertedCount = 0;
+      let processedCount = 0;
+
+      results.forEach((r, index) => {
+        const reg_no = r["REG.NO"]?.trim();
+        const year = parseInt(r["YEAR"]) || 0;
+        const tuition = parseFloat(r["TUITION FEE PAYABLE"]) || 0;
+        const university = parseFloat(r["UNIVERSITY FEE PAYABLE"]) || 0;
+        const bus = parseFloat(r["BUS FEE PAYABLE"]) || 0;
+        const hostel = parseFloat(r["HOSTEL FEE PAYABLE"]) || 0;
+        const semester = parseFloat(r["SEMESTER FEE"]) || 0;
+        const crt_fee = parseFloat(r["CRT FEE"]) || 0;
+
+        if (!reg_no) {
+          console.warn(`⚠️ Skipped row ${index + 1} (missing REG.NO)`);
+          return;
+        }
+
+        pool.query(
+          insertQuery,
+          [reg_no, year, tuition, university, bus, hostel, semester, crt_fee],
+          (err) => {
+            processedCount++;
+            if (err) {
+              console.error(`❌ Row ${index + 1} error:`, err.message);
+            } else {
+              insertedCount++;
+            }
+
+            // Send response only after all queries finish
+            if (processedCount === results.length) {
+              console.log(`✅ Successfully processed ${insertedCount}/${results.length} records.`);
+              res.json({
+                success: true,
+                message: `Successfully processed ${insertedCount} of ${results.length} records.`,
+              });
+            }
+          }
+        );
+      });
+    })
+    .on("error", (err) => {
+      console.error("❌ CSV parse error:", err);
+      res.status(500).json({ success: false, message: "Error processing CSV file." });
+    });
+});
