@@ -316,7 +316,7 @@ app.post('/login', (req, res) => {
         // ✅ Accounts Subroles
         else if (role === "mainaccounts") redirectTo = `/accountspanel.html`;
         else if (role === "busaccounts") redirectTo = `/accountspanel.html`;
-        else if (role === "scholarships") redirectTo = `/accounts-scholarships.html`;
+        else if (role === "scholarships") redirectTo = `/accountspanel.html`;
         else if (role === "hostelaccounts") redirectTo = `/accounts-hostel.html`;
 
         // ✅ Send success response
