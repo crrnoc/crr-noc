@@ -3063,7 +3063,7 @@ app.get("/student-attendance/:regno", (req, res) => {
   const regno = req.params.regno;
 
   pool.query(
-    "SELECT semester, total_classes, attended_classes, percentage FROM attendance WHERE regno = ? ORDER BY semester",
+    "SELECT semester, total_classes, attended_classes, percentage, uploaded_at FROM attendance WHERE regno = ? ORDER BY semester",
     [regno],
     (err, results) => {
       if (err) {
@@ -3075,6 +3075,7 @@ app.get("/student-attendance/:regno", (req, res) => {
     }
   );
 });
+
 
 const GRADE_POINTS = {
   S: 10,
