@@ -7993,10 +7993,10 @@ app.post("/upload-fee-structure", upload.single("file"), (req, res) => {
 
   console.log("📂 Upload started:", filePath);
 
-  // Read first line manually to detect separator
+  // Detect CSV separator automatically
   const fileContent = fs.readFileSync(filePath, "utf8");
   const firstLine = fileContent.split(/\r?\n/)[0];
-  let separator = ","; // default
+  let separator = ",";
   if (firstLine.includes("\t")) separator = "\t";
   else if (firstLine.includes(";")) separator = ";";
 
@@ -8006,7 +8006,7 @@ app.post("/upload-fee-structure", upload.single("file"), (req, res) => {
     .pipe(
       csv({
         separator,
-        mapHeaders: ({ header }) => header.replace(/^\uFEFF/, "").trim(), // remove BOM
+        mapHeaders: ({ header }) => header.replace(/^\uFEFF/, "").trim(),
       })
     )
     .on("headers", (headers) => {
@@ -8017,10 +8017,21 @@ app.post("/upload-fee-structure", upload.single("file"), (req, res) => {
       fs.unlinkSync(filePath);
       console.log("🧾 Total rows parsed:", results.length);
 
+      // ✅ UPSERT (insert or update existing)
       const insertQuery = `
         INSERT INTO student_fee_structure 
-        (reg_no, academic_year, tuition, university, bus, hostel, semester, crt_fee, \`library\`, other_fee, fines)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0.00, 0.00)
+        (reg_no, academic_year, tuition, university, bus, hostel, semester, crt_fee, library, other_fee, fines)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE
+          tuition = IF(VALUES(tuition) > 0, VALUES(tuition), tuition),
+          university = IF(VALUES(university) > 0, VALUES(university), university),
+          bus = IF(VALUES(bus) > 0, VALUES(bus), bus),
+          hostel = IF(VALUES(hostel) > 0, VALUES(hostel), hostel),
+          semester = IF(VALUES(semester) > 0, VALUES(semester), semester),
+          crt_fee = IF(VALUES(crt_fee) > 0, VALUES(crt_fee), crt_fee),
+          library = IF(VALUES(library) > 0, VALUES(library), library),
+          other_fee = IF(VALUES(other_fee) > 0, VALUES(other_fee), other_fee),
+          fines = IF(VALUES(fines) > 0, VALUES(fines), fines)
       `;
 
       let insertedCount = 0;
@@ -8035,30 +8046,45 @@ app.post("/upload-fee-structure", upload.single("file"), (req, res) => {
         const hostel = parseFloat(r["HOSTEL FEE PAYABLE"]) || 0;
         const semester = parseFloat(r["SEMESTER FEE"]) || 0;
         const crt_fee = parseFloat(r["CRT FEE"]) || 0;
+        const library = parseFloat(r["LIBRARY FEE"]) || 0;
         const other_fee = parseFloat(r["OTHER FEE PAYABLE"]) || 0;
+        const fines = parseFloat(r["FINES"]) || 0;
 
         if (!reg_no) {
           console.warn(`⚠️ Skipped row ${index + 1} (missing REG.NO)`);
+          processedCount++;
           return;
         }
 
         pool.query(
           insertQuery,
-          [reg_no, year, tuition, university, bus, hostel, semester, crt_fee],
-          (err) => {
+          [
+            reg_no,
+            year,
+            tuition,
+            university,
+            bus,
+            hostel,
+            semester,
+            crt_fee,
+            library,
+            other_fee,
+            fines,
+          ],
+          (err, result) => {
             processedCount++;
             if (err) {
               console.error(`❌ Row ${index + 1} error:`, err.message);
             } else {
               insertedCount++;
+              console.log(`✅ Row ${index + 1} processed (${reg_no}, Year ${year})`);
             }
 
-            // Send response only after all queries finish
             if (processedCount === results.length) {
-              console.log(`✅ Successfully processed ${insertedCount}/${results.length} records.`);
+              console.log(`✅ Completed ${insertedCount}/${results.length} records.`);
               res.json({
                 success: true,
-                message: `Successfully processed ${insertedCount} of ${results.length} records.`,
+                message: `Processed ${insertedCount} of ${results.length} records successfully.`,
               });
             }
           }
