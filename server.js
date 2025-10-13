@@ -2599,7 +2599,7 @@ app.get("/total-backlogs", (req, res) => {
 
     // Backlog conditions
     const isBacklog = g =>
-      ["F", "AB", "-Ab-", "ABSENT", "MP", "NOT CO", "NOTCOMPLETED", "NOT COMPLE", "NOTCOMPLE"].includes(normalizeGrade(g));
+      ["F", "AB", "-Ab-","-AB-", "ABSENT", "MP", "NOT CO", "NOTCOMPLETED", "NOT COMPLE", "NOTCOMPLE"].includes(normalizeGrade(g));
 
     const backlogData = results.filter(r => isBacklog(r.grade));
 
@@ -6034,7 +6034,7 @@ app.get(["/principal/backlog-summary", "/correspondent/backlog-summary"], (req, 
   const query = `
     SELECT s.reg_no,
       COALESCE(SUM(
-        CASE WHEN sub_backlogs.grade IN ('F','Ab','-Ab-','NOT_COMPLETED','MP') THEN 1 ELSE 0 END
+        CASE WHEN sub_backlogs.grade IN ('F','Ab','-Ab-','-AB','NOT_COMPLETED','MP','NOTCOMPLE','NOT COMPLE','NOT COMPLETED') THEN 1 ELSE 0 END
       ), 0) AS backlogs
     FROM students s
     LEFT JOIN (
@@ -7392,7 +7392,7 @@ app.get("/hod/backlog-summary", (req, res) => {
   const query = `
     SELECT s.reg_no,
       COALESCE(SUM(
-        CASE WHEN sub_backlogs.grade IN ('F','Ab','-Ab-','NOT_COMPLETED','MP') THEN 1 ELSE 0 END
+        CASE WHEN sub_backlogs.grade IN ('F','Ab','-Ab-','-AB-','NOT COMPLE','NOTCOMPLE','NOT COMPLE','NOT_COMPLETED','MP') THEN 1 ELSE 0 END
       ), 0) AS backlogs
     FROM students s
     LEFT JOIN (
