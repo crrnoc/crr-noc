@@ -2599,7 +2599,7 @@ app.get("/total-backlogs", (req, res) => {
 
     // Backlog conditions
     const isBacklog = g =>
-      ["F", "AB", "ABSENT", "MP", "NOT CO", "NOTCOMPLETED"].includes(normalizeGrade(g));
+      ["F", "AB", "-Ab-", "ABSENT", "MP", "NOT CO", "NOTCOMPLETED", "NOT COMPLE", "NOTCOMPLE"].includes(normalizeGrade(g));
 
     const backlogData = results.filter(r => isBacklog(r.grade));
 
