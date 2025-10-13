@@ -7983,7 +7983,7 @@ app.get("/hod/all-subjects", (req, res) => {
   });
 });
 
-//admin upload fee route
+//accounts upload fee route
 app.post("/upload-fee-structure", upload.single("file"), (req, res) => {
   if (!req.file)
     return res.status(400).json({ success: false, message: "No file uploaded" });
@@ -8019,7 +8019,7 @@ app.post("/upload-fee-structure", upload.single("file"), (req, res) => {
 
       const insertQuery = `
         INSERT INTO student_fee_structure 
-        (reg_no, academic_year, tuition, university, bus, hostel, semester, crt_fee, \`library\`, fines)
+        (reg_no, academic_year, tuition, university, bus, hostel, semester, crt_fee, \`library\`, other_fee, fines)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0.00, 0.00)
       `;
 
@@ -8035,6 +8035,7 @@ app.post("/upload-fee-structure", upload.single("file"), (req, res) => {
         const hostel = parseFloat(r["HOSTEL FEE PAYABLE"]) || 0;
         const semester = parseFloat(r["SEMESTER FEE"]) || 0;
         const crt_fee = parseFloat(r["CRT FEE"]) || 0;
+        const other_fee = parseFloat(r["OTHER FEE PAYABLE"]) || 0;
 
         if (!reg_no) {
           console.warn(`⚠️ Skipped row ${index + 1} (missing REG.NO)`);
