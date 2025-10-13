@@ -809,17 +809,15 @@
     </button>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.20/dist/sweetalert2.all.min.js"></script>
-    <script>
+       <script>
         function toggleMobileMenu() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.querySelector('.overlay');
             const body = document.body;
-            
             sidebar.classList.toggle('open');
             overlay.classList.toggle('active');
             body.classList.toggle('no-scroll');
         }
-        
         document.querySelectorAll(".menu li a").forEach(link => {
             link.addEventListener("click", () => {
                 if (window.innerWidth <= 992) {
@@ -827,7 +825,6 @@
                 }
             });
         });
-
         function confirmLogout() {
             Swal.fire({
                 title: 'Are you sure?',
@@ -843,7 +840,6 @@
                 }
             });
         }
-
         function logout() {
             fetch("/logout", { method: "GET", credentials: "include" })
               .then(() => {
@@ -858,7 +854,6 @@
                   window.location.replace("index.html");
               });
         }
-
         function getPercentageClass(percentage) {
             const percent = parseFloat(percentage || 0);
             if (percent >= 85) return 'percentage-excellent';
@@ -866,7 +861,6 @@
             if (percent >= 65) return 'percentage-average';
             return 'percentage-poor';
         }
-
         function getPercentageIcon(percentage) {
             const percent = parseFloat(percentage || 0);
             if (percent >= 85) return 'fas fa-star';
@@ -874,11 +868,9 @@
             if (percent >= 65) return 'fas fa-exclamation-triangle';
             return 'fas fa-exclamation-circle';
         }
-        
         document.addEventListener("DOMContentLoaded", async () => {
             const userId = localStorage.getItem("userId");
             const attendanceContainer = document.getElementById("attendance-container");
-
             // Check authentication
             if (!userId) {
                 Swal.fire({
@@ -894,9 +886,7 @@
                 });
                 return;
             }
-
             document.getElementById("userId").textContent = userId;
-
             // Load sidebar photo
             try {
                 const res = await fetch(`/student/${userId}`);
@@ -911,18 +901,14 @@
             } catch (err) {
                 console.warn("Failed to load photo:", err.message);
             }
-
             // Load attendance data
             try {
                 const res = await fetch(`/student-attendance/${userId}`);
-                
                 if (!res.ok) {
                     const errorData = await res.json().catch(() => ({}));
                     throw new Error(errorData.message || 'Failed to load attendance data');
                 }
-
                 const result = await res.json();
-                
                 if (!result.success || !result.data || result.data.length === 0) {
                     attendanceContainer.innerHTML = `
                         <h2><i class="fas fa-calendar-check"></i> Semester-wise Attendance</h2>
@@ -931,7 +917,6 @@
                             <div class="status-title">No Attendance Data Available</div>
                             <div class="status-message">No attendance records were found for your student ID. Please contact the administrator if you believe this is an error.</div>
                         </div>`;
-                    
                     Swal.fire({
                         icon: 'info',
                         title: 'No Data Found',
@@ -940,25 +925,17 @@
                     });
                     return;
                 }
-                
-                // Build content
                 let contentHTML = `
                     <h2><i class="fas fa-calendar-check"></i> Semester-wise Attendance</h2>
                 `;
-
                 const data = result.data;
-
-                // Calculate overall stats
                 let totalClasses = 0;
                 let totalAttended = 0;
-                
                 data.forEach(record => {
                     totalClasses += parseInt(record.total_classes || 0);
                     totalAttended += parseInt(record.attended_classes || 0);
                 });
-
                 const overallPercentage = totalClasses > 0 ? ((totalAttended / totalClasses) * 100).toFixed(2) : '0.00';
-
                 // Add overall stats section
                 contentHTML += `
                     <div class="attendance-stats">
@@ -978,14 +955,16 @@
                         </div>
                     </div>
                 `;
-
                 // Add semester accordions
                 data.forEach((record, index) => {
-                    const { semester, total_classes, attended_classes, percentage } = record;
+                    const { semester, total_classes, attended_classes, percentage, uploaded_at } = record;
                     const percentageValue = parseFloat(percentage || 0).toFixed(2);
                     const percentageClass = getPercentageClass(percentageValue);
                     const percentageIcon = getPercentageIcon(percentageValue);
-                    
+                    // Format date
+                    const uploadedAtDisplay = uploaded_at 
+                        ? new Date(uploaded_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) 
+                        : '—';
                     contentHTML += `
                         <div class="accordion-item">
                             <button class="accordion-toggle" data-index="${index}">
@@ -1010,6 +989,7 @@
                                                 <th><i class="fas fa-check-circle"></i> Attended</th>
                                                 <th><i class="fas fa-times-circle"></i> Missed</th>
                                                 <th><i class="fas fa-percentage"></i> Percentage</th>
+                                                <th><i class="fas fa-clock"></i> Last Uploaded</th>
                                                 <th><i class="fas fa-chart-line"></i> Status</th>
                                             </tr>
                                         </thead>
@@ -1024,6 +1004,7 @@
                                                         ${percentageValue}%
                                                     </span>
                                                 </td>
+                                                <td>${uploadedAtDisplay}</td>
                                                 <td>
                                                     <strong style="color: ${parseFloat(percentageValue) >= 75 ? 'var(--success-color)' : 'var(--danger-color)'};">
                                                         ${parseFloat(percentageValue) >= 75 ? 'Good' : 'Needs Improvement'}
@@ -1036,16 +1017,13 @@
                             </div>
                         </div>`;
                 });
-
                 attendanceContainer.innerHTML = contentHTML;
-
                 // Add accordion functionality
                 document.querySelectorAll(".accordion-toggle").forEach(btn => {
                     btn.addEventListener("click", () => {
                         const index = btn.dataset.index;
                         const content = btn.nextElementSibling;
                         const arrow = btn.querySelector('.arrow');
-                        
                         // Close all other accordions
                         document.querySelectorAll(".accordion-content").forEach((otherContent, i) => {
                             if (i != index) {
@@ -1056,14 +1034,12 @@
                                 otherArrow.textContent = "▼";
                             }
                         });
-                        
                         // Toggle current accordion
                         content.classList.toggle("open");
                         btn.classList.toggle("active");
                         arrow.textContent = content.classList.contains("open") ? "▲" : "▼";
                     });
                 });
-
             } catch (err) {
                 console.error("Error loading attendance:", err);
                 attendanceContainer.innerHTML = `
@@ -1074,7 +1050,6 @@
                         <div class="status-message">Something went wrong while loading your attendance records. Please try again later or contact the administrator.</div>
                         <p style="font-size: 0.9rem; opacity: 0.7; margin-top: 15px;">${err.message}</p>
                     </div>`;
-                
                 Swal.fire({
                     icon: 'error',
                     title: 'Oops...',
