@@ -1044,7 +1044,7 @@ app.post('/admin/upload-sbi', upload.single('sbiFile'), (req, res) => {
   const allowedFeeTypes = {
     mainaccounts: ["Tuition Fee Payable", "University Other Fee Payable"],
     busaccounts: ["Bus Fee Payable"],
-    scholarships: ["Scholarship Fee Payable"], // future extension
+    scholarships: ["Tuition Fee Payable"], // future extension
     hostel: ["Hostel Fee Payable"]             // future extension
   };
 
