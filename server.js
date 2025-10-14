@@ -7984,7 +7984,6 @@ app.get("/hod/all-subjects", (req, res) => {
   });
 });
 
-//accounts upload fee route
 app.post("/upload-fee-structure", upload.single("file"), (req, res) => {
   if (!req.file)
     return res.status(400).json({ success: false, message: "No file uploaded" });
@@ -8018,21 +8017,22 @@ app.post("/upload-fee-structure", upload.single("file"), (req, res) => {
       fs.unlinkSync(filePath);
       console.log("🧾 Total rows parsed:", results.length);
 
-      // ✅ UPSERT (insert or update existing)
+      // ✅ Safe UPSERT query with backticks for MySQL reserved keywords
       const insertQuery = `
         INSERT INTO student_fee_structure 
-        (reg_no, academic_year, tuition, university, bus, hostel, semester, crt_fee, library, other_fee, fines)
+        (\`reg_no\`, \`academic_year\`, \`tuition\`, \`university\`, \`bus\`, \`hostel\`, 
+         \`semester\`, \`crt_fee\`, \`library\`, \`other_fee\`, \`fines\`)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON DUPLICATE KEY UPDATE
-          tuition = IF(VALUES(tuition) > 0, VALUES(tuition), tuition),
-          university = IF(VALUES(university) > 0, VALUES(university), university),
-          bus = IF(VALUES(bus) > 0, VALUES(bus), bus),
-          hostel = IF(VALUES(hostel) > 0, VALUES(hostel), hostel),
-          semester = IF(VALUES(semester) > 0, VALUES(semester), semester),
-          crt_fee = IF(VALUES(crt_fee) > 0, VALUES(crt_fee), crt_fee),
-          library = IF(VALUES(library) > 0, VALUES(library), library),
-          other_fee = IF(VALUES(other_fee) > 0, VALUES(other_fee), other_fee),
-          fines = IF(VALUES(fines) > 0, VALUES(fines), fines)
+          \`tuition\` = IF(VALUES(\`tuition\`) > 0, VALUES(\`tuition\`), \`tuition\`),
+          \`university\` = IF(VALUES(\`university\`) > 0, VALUES(\`university\`), \`university\`),
+          \`bus\` = IF(VALUES(\`bus\`) > 0, VALUES(\`bus\`), \`bus\`),
+          \`hostel\` = IF(VALUES(\`hostel\`) > 0, VALUES(\`hostel\`), \`hostel\`),
+          \`semester\` = IF(VALUES(\`semester\`) > 0, VALUES(\`semester\`), \`semester\`),
+          \`crt_fee\` = IF(VALUES(\`crt_fee\`) > 0, VALUES(\`crt_fee\`), \`crt_fee\`),
+          \`library\` = IF(VALUES(\`library\`) > 0, VALUES(\`library\`), \`library\`),
+          \`other_fee\` = IF(VALUES(\`other_fee\`) > 0, VALUES(\`other_fee\`), \`other_fee\`),
+          \`fines\` = IF(VALUES(\`fines\`) > 0, VALUES(\`fines\`), \`fines\`);
       `;
 
       let insertedCount = 0;
@@ -8047,9 +8047,9 @@ app.post("/upload-fee-structure", upload.single("file"), (req, res) => {
         const hostel = parseFloat(r["HOSTEL FEE PAYABLE"]) || 0;
         const semester = parseFloat(r["SEMESTER FEE"]) || 0;
         const crt_fee = parseFloat(r["CRT FEE"]) || 0;
-        const library = parseFloat(r["LIBRARY FEE"]) || 0;
+        const library = parseFloat(r["LIBRARY FEE"]) || 0; // optional column
         const other_fee = parseFloat(r["OTHER FEE PAYABLE"]) || 0;
-        const fines = parseFloat(r["FINES"]) || 0;
+        const fines = parseFloat(r["FINES"]) || 0; // optional column
 
         if (!reg_no) {
           console.warn(`⚠️ Skipped row ${index + 1} (missing REG.NO)`);
@@ -8075,7 +8075,7 @@ app.post("/upload-fee-structure", upload.single("file"), (req, res) => {
           (err, result) => {
             processedCount++;
             if (err) {
-              console.error(`❌ Row ${index + 1} error:`, err.message);
+              console.error(`❌ Row ${index + 1} error:`, err.sqlMessage);
             } else {
               insertedCount++;
               console.log(`✅ Row ${index + 1} processed (${reg_no}, Year ${year})`);
@@ -8094,6 +8094,9 @@ app.post("/upload-fee-structure", upload.single("file"), (req, res) => {
     })
     .on("error", (err) => {
       console.error("❌ CSV parse error:", err);
-      res.status(500).json({ success: false, message: "Error processing CSV file." });
+      res
+        .status(500)
+        .json({ success: false, message: "Error processing CSV file." });
     });
 });
+
