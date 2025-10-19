@@ -840,10 +840,6 @@
                 }
 
                 let previousDue = 0;
-                
-                // 💡 FIX: The sorting method is correct for numerical years. 
-                // This ensures 'a.year' is treated as a number for comparison, 
-                // avoiding the 'split is not a function' error.
                 const data = dataFee.data.sort((a, b) => a.year - b.year);
                 
                 // Calculate totals for summary
@@ -889,7 +885,6 @@
                     ];
 
                     let rowsHTML = feeItems.map(({ label, key }) => {
-                        // Ensure values are numbers before converting and using
                         const expectedAmt = parseFloat(expected[key]) || 0;
                         const paidAmt = parseFloat(paid[key]) || 0;
                         const dueAmt = parseFloat(due[key]) || 0;
