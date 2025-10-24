@@ -1169,6 +1169,84 @@ app.get('/admin/matches', (req, res) => {
   });
 });
 
+app.post('/admin/upload-bank-statement', upload.single('bankFile'), (req, res) => {
+  if (!req.file) return res.status(400).json({ success: false, message: '❌ No file uploaded.' });
+
+  const filePath = path.join(__dirname, req.file.path);
+  const results = [];
+  const csv = require('csv-parser');
+  const fs = require('fs');
+
+  fs.createReadStream(filePath)
+    .pipe(csv())
+    .on('data', (row) => {
+      const refNo = row["RefNo./Cheque No."]?.trim();
+      const txnDate = row["Txn Date"]?.trim();
+      const branchCode = row["Branch Code"]?.trim();
+      const credit = parseFloat(row["Credit"]) || 0.00;
+      const description = row["Description"]?.trim();
+
+      // only store credit transactions
+      if (credit > 0 && refNo) {
+        results.push([refNo, txnDate, branchCode, description, credit]);
+      }
+    })
+    .on('end', () => {
+      if (results.length === 0) {
+        return res.status(400).json({ success: false, message: '❌ No credit transactions found.' });
+      }
+
+      const insertQuery = `
+        INSERT INTO bank_statement_records 
+          (ref_no, txn_date, branch_code, description, credit)
+        VALUES ?
+      `;
+
+      pool.query(insertQuery, [results], (err) => {
+        if (err) {
+          console.error('❌ Bank insert error:', err);
+          return res.status(500).json({ success: false, message: 'Upload failed.' });
+        }
+
+        // After inserting, perform matching
+        const matchQuery = `
+          INSERT INTO bank_verification_results (ref_no, sbi_ref_no, unique_id, student_name, amount, txn_date, status)
+          SELECT 
+            b.ref_no,
+            s.sbi_ref_no,
+            s.unique_id,
+            s.student_name,
+            s.amount,
+            STR_TO_DATE(b.txn_date, '%d-%m-%Y'),
+            CASE 
+              WHEN SUBSTRING(b.ref_no, 1, 10) = s.sbi_ref_no THEN 'matched'
+              ELSE 'unmatched'
+            END AS status
+          FROM bank_statement_records b
+          LEFT JOIN sbi_uploaded_references s
+            ON SUBSTRING(b.ref_no, 1, 10) = s.sbi_ref_no
+          WHERE b.credit > 0
+          ON DUPLICATE KEY UPDATE
+            status = VALUES(status),
+            txn_date = VALUES(txn_date)
+        `;
+
+        pool.query(matchQuery, (err2) => {
+          if (err2) {
+            console.error('❌ Matching error:', err2);
+            return res.status(500).json({ success: false, message: 'Verification failed.' });
+          }
+
+          res.json({ success: true, message: '✅ Bank statement uploaded and verified successfully.' });
+        });
+      });
+    })
+    .on('error', (err) => {
+      console.error('❌ CSV parsing error:', err);
+      res.status(500).json({ success: false, message: 'Failed to parse CSV.' });
+    });
+});
+
 
 // ✅ Search NOC status by reg_no / name / userId
 app.post('/admin/search-noc-status', (req, res) => {
