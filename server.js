@@ -4109,17 +4109,18 @@ function cleanRow(row) {
   return cleaned;
 }
 
+//upload students data
 app.post('/admin/upload-students', upload.single("studentfile"), (req, res) => {
   if (!req.file) return res.status(400).json({ success: false, message: "No file uploaded" });
 
   const fileExt = path.extname(req.file.originalname).toLowerCase();
   let results = [];
 
-  const insertStudents = (rows) => {
+  const insertStudents = async (rows) => {
     let insertCount = 0;
     let updateCount = 0;
 
-    rows.forEach((rawRow) => {
+    for (const rawRow of rows) {
       const student = cleanRow(rawRow);
 
       const userId = student.userId || student["﻿userId"];
@@ -4128,33 +4129,46 @@ app.post('/admin/upload-students', upload.single("studentfile"), (req, res) => {
 
       if (!userId || !reg_no || !uniqueId) {
         console.warn("❌ Skipping row due to missing critical fields:", student);
-        return;
+        continue;
       }
 
-      // Insert or update in users
-      const userQuery = `
-        INSERT INTO users (userid, password, role)
-        VALUES (?, ?, 'student')
-        ON DUPLICATE KEY UPDATE password = VALUES(password)
-      `;
+      // Combine address fields into one
+      const address =
+        [student.address, student.address1, student.address2, student.address3]
+          .filter(Boolean)
+          .join(", ");
 
-      pool.query(userQuery, [userId, userId], (userErr) => {
-        if (userErr) {
-          console.error("❌ User insert failed:", userErr);
-          return;
-        }
+      try {
+        // 🔐 Hash password before inserting into users table
+        const hashedPassword = await bcrypt.hash(userId, 10);
 
+        // Insert or update user record
+        const userQuery = `
+          INSERT INTO users (userid, password, role)
+          VALUES (?, ?, 'student')
+          ON DUPLICATE KEY UPDATE password = VALUES(password)
+        `;
+
+        await new Promise((resolve, reject) => {
+          pool.query(userQuery, [userId, hashedPassword], (userErr) => {
+            if (userErr) reject(userErr);
+            else resolve();
+          });
+        });
+
+        // Insert or update student record
         const studentQuery = `
           INSERT INTO students (
-            userId, name, dob, reg_no, uniqueId, year, course, dept_code, semester,
-            aadhar_no, mobile_no, email, father_name, father_mobile,
+            userId, name, dob, gender, reg_no, uniqueId, year, course, dept_code, semester,
+            aadhar_no, apaar_id, mobile_no, email, address, father_name, father_mobile,
             admission_type, photo_url, photo_public_id, section,
             counsellor_name, counsellor_mobile, counsellor_id
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           ON DUPLICATE KEY UPDATE
-            name = VALUES(name), dob = VALUES(dob), year = VALUES(year),
-            course = VALUES(course), dept_code = VALUES(dept_code), semester = VALUES(semester),
-            aadhar_no = VALUES(aadhar_no), mobile_no = VALUES(mobile_no), email = VALUES(email),
+            name = VALUES(name), dob = VALUES(dob), gender = VALUES(gender),
+            year = VALUES(year), course = VALUES(course), dept_code = VALUES(dept_code), semester = VALUES(semester),
+            aadhar_no = VALUES(aadhar_no), apaar_id = VALUES(apaar_id), mobile_no = VALUES(mobile_no), 
+            email = VALUES(email), address = VALUES(address),
             father_name = VALUES(father_name), father_mobile = VALUES(father_mobile),
             admission_type = VALUES(admission_type), photo_url = VALUES(photo_url),
             photo_public_id = VALUES(photo_public_id), section = VALUES(section),
@@ -4166,6 +4180,7 @@ app.post('/admin/upload-students', upload.single("studentfile"), (req, res) => {
           userId,
           student.name || null,
           student.dob || null,
+          student.gender || null,
           reg_no,
           uniqueId,
           student.year || null,
@@ -4173,8 +4188,10 @@ app.post('/admin/upload-students', upload.single("studentfile"), (req, res) => {
           student.dept_code || null,
           student.semester || null,
           student.aadhar_no || null,
+          student.apaar_id || null,
           student.mobile_no || null,
           student.email || null,
+          address || null,
           student.father_name || null,
           student.father_mobile || null,
           student.admission_type || null,
@@ -4186,25 +4203,27 @@ app.post('/admin/upload-students', upload.single("studentfile"), (req, res) => {
           student.counsellor_id || null
         ];
 
-        pool.query(studentQuery, values, (studentErr, result) => {
-          if (studentErr) {
-            console.error("❌ Student insert/update failed:", studentErr);
-          } else {
-            if (result.affectedRows === 1) insertCount++;
-            else if (result.affectedRows === 2) updateCount++;
-          }
+        await new Promise((resolve, reject) => {
+          pool.query(studentQuery, values, (studentErr, result) => {
+            if (studentErr) reject(studentErr);
+            else {
+              if (result.affectedRows === 1) insertCount++;
+              else if (result.affectedRows === 2) updateCount++;
+              resolve();
+            }
+          });
         });
-      });
-    });
+      } catch (err) {
+        console.error("❌ Error inserting student:", err);
+      }
+    }
 
     fs.unlinkSync(req.file.path);
 
-    setTimeout(() => {
-      res.json({
-        success: true,
-        message: `✅ Upload complete! ${insertCount} inserted, ${updateCount} updated.`,
-      });
-    }, 1500);
+    res.json({
+      success: true,
+      message: `✅ Upload complete! ${insertCount} inserted, ${updateCount} updated.`,
+    });
   };
 
   // Handle file
@@ -4224,6 +4243,7 @@ app.post('/admin/upload-students', upload.single("studentfile"), (req, res) => {
     return res.status(400).json({ success: false, message: "Unsupported file format." });
   }
 });
+
 
 app.post("/upload-midmarks", upload.single("file"), (req, res) => {
   const filePath = req.file.path;
