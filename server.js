@@ -1801,7 +1801,7 @@ app.get('/generate-noc/:userId', (req, res) => {
               doc.font('Times-Bold').text("COLLEGE STAMP", { align: 'center' });
 
               // QR
-              const qrLink = `https://crr-noc.onrender.com/verifybyqr.html?userId=${userId}&year=${academicYear}`;
+              const qrLink = `https://sircrrcoestd.in/verifybyqr.html?userId=${userId}&year=${academicYear}`;
               QRCode.toDataURL(qrLink, (err, qrUrl) => {
                 if (!err) {
                   const qrSize = 50;
@@ -1960,7 +1960,7 @@ app.get('/generate-combined-noc/:userId', (req, res) => {
         doc.font('Times-Italic').text("Head of Accounts Department", { align: 'right' });
 
         // QR Code
-        const qrLink = `https://crr-noc.onrender.com/verifybyqr.html?userId=${userId}&combined=true`;
+        const qrLink = `https://sircrrcoestd.in/verifybyqr.html?userId=${userId}&combined=true`;
 
         QRCode.toDataURL(qrLink, (err, qrUrl) => {
           if (!err && qrUrl) {
@@ -3630,7 +3630,7 @@ app.get("/generate-certificate/:userId", async (req, res) => {
     doc.text("CP: COMPLETED   NCP: NOT-COMPLETED   MP: Malpractice   WH: Withheld   P: Pass   F: Fail   AB: Absent", 40, finalTableY + 50);
 
     // QR
-    const qrText = `https://crr-noc.onrender.com/verifyresult.html?regno=${userId}&sem=${semester}`;
+    const qrText = `https://sircrrcoestd.in/verifyresult.html?regno=${userId}&sem=${semester}`;
     const qrDataURL = await QRCode.toDataURL(qrText);
     const qrBuffer = Buffer.from(qrDataURL.split(",")[1], "base64");
     doc.image(qrBuffer, 440, 670, { width: 80 });
@@ -5822,8 +5822,8 @@ app.post("/api/send-sms", async (req, res) => {
           : template === "midmarks"
           ? { name: s.name, reg_no: s.reg_no, semester: s.semester, total_marks: s.total_marks }
           : template === "university_eng"
-          ? { name: s.name, reg_no: s.reg_no, semester: s.semester, year: s.year, result_link: `https://crr-noc.onrender.com/verifyresult.html?regno=${s.reg_no}&sem=${s.semester}`, sgpa: s.sgpa }
-          : { name: s.name, reg_no: s.reg_no, year: s.year, semester: s.semester, result_link: `https://crr-noc.onrender.com/verifyresult.html?regno=${s.reg_no}&sem=${s.semester}`, sgpa: s.sgpa };
+          ? { name: s.name, reg_no: s.reg_no, semester: s.semester, year: s.year, result_link: `https://sircrrcoestd.in/verifyresult.html?regno=${s.reg_no}&sem=${s.semester}`, sgpa: s.sgpa }
+          : { name: s.name, reg_no: s.reg_no, year: s.year, semester: s.semester, result_link: `https://sircrrcoestd.in/verifyresult.html?regno=${s.reg_no}&sem=${s.semester}`, sgpa: s.sgpa };
 
       const message = encodeURIComponent(formatMessage(template, dataObj));
 
