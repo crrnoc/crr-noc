@@ -3467,7 +3467,7 @@ app.get("/generate-certificate/:userId", async (req, res) => {
   const semester = req.query.semester;
   if (!semester) return res.status(400).send("Semester is required");
 
-  const doc = new PDFDocument({ size: "A4", margin: 40 });
+  const doc = new PDFDocument({ size: "A4", margin: 30 });
   res.setHeader("Content-Type", "application/pdf");
   res.setHeader("Content-Disposition", `attachment; filename=Result_${userId}_${semester}.pdf`);
   doc.pipe(res);
@@ -3482,20 +3482,20 @@ app.get("/generate-certificate/:userId", async (req, res) => {
   }
 
   const gradePointMap = {
-    "A+" :10, S: 10, A: 9, B: 8, C: 7, D: 6, E: 5, F: 0, Ab: 0, ABSENT: 0, Completed: 0
+    "A+": 10, S: 10, A: 9, B: 8, C: 7, D: 6, E: 5, F: 0, Ab: 0, ABSENT: 0, Completed: 0, SA: 10, "-Ab-": 0
   };
 
   try {
     // 🟢 Fetch results from BOTH tables
     const results = await queryAsync(
       `
-      SELECT regno, subcode, subname, grade, credits 
+      SELECT regno, subcode, subname, grade, credits, NULL as sgpa 
       FROM results 
       WHERE regno = ? AND semester = ?
 
       UNION ALL
 
-      SELECT regno, subcode, subname, grade, NULL as credits 
+      SELECT regno, subcode, subname, grade, NULL as credits, sgpa 
       FROM autonomous_results 
       WHERE regno = ? AND semester = ?
       `,
@@ -3516,138 +3516,243 @@ app.get("/generate-certificate/:userId", async (req, res) => {
     const student = studentRows[0] || {};
     const reg = student.reg_no || "";
 
-    // 🟢 Decide JNTUK vs Autonomous header
+    // 🟢 Decide JNTUK vs Autonomous
     const isJNTUK = /^([0-1][0-9]|23)B8/.test(reg);
     const isAutonomous = /^24B8/.test(reg);
 
+    let currentY = 30;
+
+    // ═══════════════════════════════════════════════════════════
+    // HEADER SECTION
+    // ═══════════════════════════════════════════════════════════
     if (isJNTUK) {
       const logoPath = path.join(__dirname, "public", "jntuk_logo.png");
       if (fs.existsSync(logoPath)) {
-        doc.image(logoPath, 40, 40, { width: 60 });
+        doc.image(logoPath, 50, currentY, { width: 50 });
       }
       doc
         .font("Helvetica-Bold")
         .fillColor("#7A0C0C")
-        .fontSize(14)
-        .text("JAWAHARLAL NEHRU TECHNOLOGICAL UNIVERSITY KAKINADA", 110, 45)
-        .text("KAKINADA - 533003, ANDHRA PRADESH, INDIA", 110, 65);
-
-      doc.moveTo(40, 100).lineTo(555, 100).stroke("#000");
+        .fontSize(16)
+        .text("JAWAHARLAL NEHRU TECHNOLOGICAL UNIVERSITY KAKINADA", 110, currentY + 5, { width: 430 })
+        .fontSize(11)
+        .text("KAKINADA - 533003, ANDHRA PRADESH, INDIA", 110, currentY + 28);
+      
+      currentY += 65;
+      doc.moveTo(30, currentY).lineTo(565, currentY).lineWidth(1.5).stroke("#000");
+      currentY += 10;
     } else if (isAutonomous) {
-      const headerPath = path.join(__dirname, "public", "logo.png"); // autonomous logo/header
+      const headerPath = path.join(__dirname, "public", "logo.png");
       if (fs.existsSync(headerPath)) {
-        doc.image(headerPath, { fit: [520, 120], align: "center" });
+        doc.image(headerPath, 40, currentY, { fit: [515, 100], align: "center" });
+        currentY += 110;
+      } else {
+        currentY += 20;
       }
     }
 
-    // 🟢 Student Info
-    doc.moveDown(2);
-    const startY = doc.y;
-    let lineY = startY;
-    const labelX = 40;
-    const valueX = 180;
+    // ═══════════════════════════════════════════════════════════
+    // STUDENT INFORMATION BOX
+    // ═══════════════════════════════════════════════════════════
+    const infoBoxTop = currentY;
+    const labelX = 50;
+    const valueX = 190;
+    const photoX = 450;
+    const photoY = infoBoxTop;
 
-    doc.font("Helvetica").fillColor("black").fontSize(10);
-    doc.text("STUDENT NAME    :", labelX, lineY);
-    doc.text(student.name || "N/A", valueX, lineY); lineY += 26;
-    doc.text("FATHER'S NAME   :", labelX, lineY);
-    doc.text(student.father_name || "N/A", valueX, lineY); lineY += 26;
-    doc.text("REGISTRATION NO :", labelX, lineY);
-    doc.text(student.reg_no || "N/A", valueX, lineY); lineY += 26;
-    doc.text("COURSE          :", labelX, lineY);
-    doc.text(`B.TECH - ${student.course || "N/A"}`, valueX, lineY); lineY += 26;
-    doc.text("YEAR - SEMESTER :", labelX, lineY);
-    doc.text(semester.toUpperCase(), valueX, lineY);
-
-    // 🟢 Student Photo
+    doc.font("Helvetica-Bold").fillColor("black").fontSize(11);
+    
+    // Student Photo Frame
     const photo_url = student.photo_url;
     if (photo_url) {
       try {
         const photoRes = await axios.get(photo_url, {
           responseType: "arraybuffer",
-          headers: { "User-Agent": "Mozilla/5.0" }
+          headers: { "User-Agent": "Mozilla/5.0" },
+          timeout: 5000
         });
-        doc.image(photoRes.data, 400, startY, { fit: [100, 120] });
+        doc.rect(photoX, photoY, 100, 120).lineWidth(1).stroke("#333");
+        doc.image(photoRes.data, photoX + 2, photoY + 2, { fit: [96, 116] });
       } catch {
-        doc.rect(400, startY, 100, 120).stroke();
+        doc.rect(photoX, photoY, 100, 120).lineWidth(1).stroke("#333");
+        doc.fontSize(8).fillColor("#666").text("Photo\nNot Available", photoX + 15, photoY + 50, { width: 70, align: "center" });
       }
     } else {
-      doc.rect(400, startY, 100, 120).stroke();
+      doc.rect(photoX, photoY, 100, 120).lineWidth(1).stroke("#333");
+      doc.fontSize(8).fillColor("#666").text("Photo\nNot Available", photoX + 15, photoY + 50, { width: 70, align: "center" });
     }
 
-    // 🟢 Results Table
-    doc.y = lineY + 60;
-    const tableTop = doc.y;
-    const rowHeight = 30;
-    const colX = [40, 80, 180, 400, 460];
-    const colWidths = [40, 100, 220, 60, 60];
+    // Student Details
+    let detailY = infoBoxTop + 5;
+    const lineSpacing = 23;
 
-    // watermark
-    const watermarkPath = path.join(__dirname, "public", "jntuk_logo.png");
-    if (isJNTUK && fs.existsSync(watermarkPath)) {
-      doc.opacity(0.1).image(watermarkPath, 160, tableTop + 60, { width: 250 });
-      doc.opacity(1);
+    doc.font("Helvetica-Bold").fillColor("black").fontSize(10);
+    
+    doc.text("STUDENT NAME", labelX, detailY, { continued: true, width: 140 });
+    doc.text(":", labelX + 140, detailY, { continued: false });
+    doc.font("Helvetica").text(student.name || "N/A", valueX, detailY);
+    detailY += lineSpacing;
+
+    doc.font("Helvetica-Bold").text("FATHER'S NAME", labelX, detailY, { continued: true, width: 140 });
+    doc.text(":", labelX + 140, detailY);
+    doc.font("Helvetica").text(student.father_name || "N/A", valueX, detailY);
+    detailY += lineSpacing;
+
+    doc.font("Helvetica-Bold").text("REGISTRATION NO", labelX, detailY, { continued: true, width: 140 });
+    doc.text(":", labelX + 140, detailY);
+    doc.font("Helvetica").text(student.reg_no || "N/A", valueX, detailY);
+    detailY += lineSpacing;
+
+    doc.font("Helvetica-Bold").text("COURSE", labelX, detailY, { continued: true, width: 140 });
+    doc.text(":", labelX + 140, detailY);
+    doc.font("Helvetica").text(`B.TECH - ${student.course || "N/A"}`, valueX, detailY);
+    detailY += lineSpacing;
+
+    doc.font("Helvetica-Bold").text("YEAR - SEMESTER", labelX, detailY, { continued: true, width: 140 });
+    doc.text(":", labelX + 140, detailY);
+    doc.font("Helvetica").text(semester.toUpperCase(), valueX, detailY);
+
+    currentY = Math.max(detailY + 25, photoY + 130);
+
+    // ═══════════════════════════════════════════════════════════
+    // RESULTS TABLE
+    // ═══════════════════════════════════════════════════════════
+    const tableTop = currentY;
+    const rowHeight = 22;
+    const headerHeight = 28;
+    
+    // Column positions and widths
+    const colX = [30, 70, 140, 390, 470];
+    const colWidths = [40, 70, 250, 80, 95];
+
+    // Watermark
+    if (isJNTUK) {
+      const watermarkPath = path.join(__dirname, "public", "jntuk_logo.png");
+      if (fs.existsSync(watermarkPath)) {
+        doc.opacity(0.08).image(watermarkPath, 200, tableTop + 80, { width: 200 });
+        doc.opacity(1);
+      }
     }
 
-    doc.font("Helvetica-Bold").fontSize(9);
-    ["S.No", "Sub Code", "Subject Name", "Grade", "Credits"].forEach((text, i) => {
-      doc.rect(colX[i], tableTop, colWidths[i], rowHeight).stroke();
-      doc.text(text, colX[i] + 2, tableTop + 8, { width: colWidths[i] - 4, align: "center" });
+    // Table Header
+    doc.font("Helvetica-Bold").fontSize(10).fillColor("black");
+    const headers = ["S.No", "Sub Code", "Subject Name", "Grade", "Credits"];
+    
+    headers.forEach((text, i) => {
+      doc.rect(colX[i], tableTop, colWidths[i], headerHeight).fillAndStroke("#f0f0f0", "#000");
+      doc.fillColor("black").text(text, colX[i] + 3, tableTop + 10, { 
+        width: colWidths[i] - 6, 
+        align: "center" 
+      });
     });
 
+    // Table Rows
     doc.font("Helvetica").fontSize(9);
     let totalCredits = 0, weightedSum = 0;
+    let autonomousSGPA = null;
+
     results.forEach((row, i) => {
-      const y = tableTop + rowHeight * (i + 1);
+      const y = tableTop + headerHeight + rowHeight * i;
+      
+      // For autonomous: check if sgpa column has value
+      if (isAutonomous && row.sgpa !== null && row.sgpa !== undefined) {
+        autonomousSGPA = row.sgpa;
+      }
+
       const gradePoint = gradePointMap[row.grade?.toUpperCase()?.trim()] ?? 0;
+      const credits = row.credits !== null ? parseFloat(row.credits) : 0;
 
-      // ✅ Autonomous subjects have NULL credits → assume 3
-      const credits = row.credits !== null ? parseFloat(row.credits) : 0 ;
+      if (credits > 0) {
+        weightedSum += gradePoint * credits;
+        totalCredits += credits;
+      }
 
-      weightedSum += gradePoint * credits;
-      totalCredits += credits;
+      const data = [
+        (i + 1).toString(),
+        row.subcode || "-",
+        row.subname || "-",
+        row.grade || "-",
+        credits > 0 ? credits.toString() : "-"
+      ];
 
-      const data = [i + 1, row.subcode, row.subname, row.grade, credits];
       data.forEach((text, j) => {
-        doc.rect(colX[j], y, colWidths[j], rowHeight).stroke();
-        doc.text(String(text), colX[j] + 2, y + 8, {
-          width: colWidths[j] - 4,
-          align: "center"
+        doc.rect(colX[j], y, colWidths[j], rowHeight).stroke("#000");
+        const textY = y + 7;
+        doc.fillColor("black").text(text, colX[j] + 3, textY, {
+          width: colWidths[j] - 6,
+          align: j === 2 ? "left" : "center"
         });
       });
     });
 
-    const calculatedSGPA = totalCredits > 0 ? (weightedSum / totalCredits).toFixed(2) : "N/A";
-    const finalTableY = tableTop + rowHeight * (results.length + 1);
-    doc.font("Helvetica-Bold").fontSize(10);
-    doc.text(`SEMESTER GRADE POINT AVERAGE (SGPA): ${calculatedSGPA}`, 100, finalTableY + 25, {
-      width: 250,
-      align: "center"
-    });
+    const finalTableY = tableTop + headerHeight + rowHeight * results.length;
 
-    // footer legend
-    doc.font("Helvetica").fontSize(8).fillColor("black");
-    doc.text("CP: COMPLETED   NCP: NOT-COMPLETED   MP: Malpractice   WH: Withheld   P: Pass   F: Fail   AB: Absent", 40, finalTableY + 50);
+    // ═══════════════════════════════════════════════════════════
+    // SGPA CALCULATION
+    // ═══════════════════════════════════════════════════════════
+    let calculatedSGPA;
+    
+    if (isAutonomous) {
+      // For autonomous: use sgpa from database if available, else 0
+      calculatedSGPA = autonomousSGPA !== null ? parseFloat(autonomousSGPA).toFixed(2) : "0.00";
+    } else {
+      // For regular JNTUK: calculate from grades and credits
+      calculatedSGPA = totalCredits > 0 ? (weightedSum / totalCredits).toFixed(2) : "0.00";
+    }
 
-    // QR
+    // SGPA Display Box
+    const sgpaBoxY = finalTableY + 15;
+    doc.roundedRect(150, sgpaBoxY, 300, 35, 5).fillAndStroke("#f9f9f9", "#000");
+    doc.font("Helvetica-Bold").fontSize(12).fillColor("#000");
+    doc.text(
+      `SEMESTER GRADE POINT AVERAGE (SGPA): ${calculatedSGPA}`,
+      155, sgpaBoxY + 12,
+      { width: 290, align: "center" }
+    );
+
+    // ═══════════════════════════════════════════════════════════
+    // FOOTER LEGEND
+    // ═══════════════════════════════════════════════════════════
+    const legendY = sgpaBoxY + 50;
+    doc.font("Helvetica").fontSize(8).fillColor("#333");
+    doc.text(
+      "CP: COMPLETED   NCP: NOT-COMPLETED   MP: Malpractice   WH: Withheld   P: Pass   F: Fail   AB: Absent",
+      50, legendY,
+      { width: 500, align: "center" }
+    );
+
+    // ═══════════════════════════════════════════════════════════
+    // QR CODE & SIGNATURES
+    // ═══════════════════════════════════════════════════════════
     const qrText = `https://sircrrcoestd.in/verifyresult.html?regno=${userId}&sem=${semester}`;
-    const qrDataURL = await QRCode.toDataURL(qrText);
+    const qrDataURL = await QRCode.toDataURL(qrText, { width: 100, margin: 1 });
     const qrBuffer = Buffer.from(qrDataURL.split(",")[1], "base64");
-    doc.image(qrBuffer, 440, 670, { width: 80 });
+    
+    const qrY = legendY + 35;
+    doc.image(qrBuffer, 480, qrY, { width: 70 });
+    doc.fontSize(7).fillColor("#555").text("Scan to Verify", 475, qrY + 75, { width: 80, align: "center" });
 
-    // signatures
-    doc.font("Helvetica").fontSize(10);
-    doc.text("Controller of Examinations", 40, 740);
-    doc.text("Principal", 320, 740);
+    // Signatures
+    const signatureY = doc.page.height - 70;
+    doc.font("Helvetica-Bold").fontSize(10).fillColor("black");
+    doc.text("Controller of Examinations", 50, signatureY, { width: 200, align: "left" });
+    doc.text("Principal", 400, signatureY, { width: 150, align: "right" });
 
+    // Issue Date
     const date = new Date().toLocaleDateString("en-GB").replace(/\//g, "-");
-    doc.fontSize(6).text(`ISSUED DATE: ${date}`, 440, 790, { align: "right", width: 100 });
+    doc.fontSize(7).fillColor("#666").text(
+      `ISSUED DATE: ${date}`,
+      400, doc.page.height - 40,
+      { width: 150, align: "right" }
+    );
 
     doc.end();
   } catch (err) {
     console.error("❌ PDF generation error:", err);
-    doc.fontSize(12).text("Something went wrong while generating the result.");
-    doc.end();
+    if (!res.headersSent) {
+      doc.fontSize(12).text("Something went wrong while generating the result.");
+      doc.end();
+    }
   }
 });
 
@@ -3662,31 +3767,63 @@ app.post('/admin/manual-create-noc', (req, res) => {
   const fileName = `manual_noc_${regno}_year${year}.pdf`;
   const filePath = path.join(__dirname, 'uploads', fileName);
 
-  const doc = new PDFDocument({ margin: 50 });
+  const doc = new PDFDocument({ margin: 40, size: 'A4' });
   const stream = fs.createWriteStream(filePath);
   doc.pipe(stream);
 
-  // Header
+  // ═══════════════════════════════════════════════════════════
+  // HEADER
+  // ═══════════════════════════════════════════════════════════
   const headerPath = path.join(__dirname, 'public', 'noc_header.jpg');
   if (fs.existsSync(headerPath)) {
-    doc.image(headerPath, { fit: [500, 150], align: 'center' });
-    doc.moveDown(3);
+    doc.image(headerPath, 50, 40, { fit: [500, 120], align: 'center' });
+    doc.moveDown(5);
   }
 
-  doc.font('Times-Bold').fontSize(18).text('NO OBJECTION CERTIFICATE', {
+  let currentY = fs.existsSync(headerPath) ? 180 : 60;
+
+  // ═══════════════════════════════════════════════════════════
+  // TITLE
+  // ═══════════════════════════════════════════════════════════
+  doc.font('Times-Bold').fontSize(20).fillColor('#000');
+  doc.text('NO OBJECTION CERTIFICATE', 50, currentY, {
     align: 'center',
-    underline: true
+    underline: true,
+    width: 500
   });
-  doc.moveDown();
+  
+  currentY += 50;
 
-  doc.font('Times-Roman').fontSize(12).text(`Reg No: ${regno}`);
-  doc.text(`Academic Year: ${year}`);
-  doc.moveDown();
-  doc.text(`This is to certify that the student has the following fee details:`);
-  doc.moveDown();
+  // ═══════════════════════════════════════════════════════════
+  // STUDENT INFO BOX
+  // ═══════════════════════════════════════════════════════════
+  doc.roundedRect(50, currentY, 500, 60, 5).lineWidth(1.5).stroke('#333');
+  
+  currentY += 15;
+  doc.font('Times-Bold').fontSize(12);
+  doc.text(`Registration Number: ${regno}`, 70, currentY, { continued: false });
+  currentY += 20;
+  doc.text(`Academic Year: ${year}`, 70, currentY);
+  
+  currentY += 40;
 
+  // ═══════════════════════════════════════════════════════════
+  // CERTIFICATE TEXT
+  // ═══════════════════════════════════════════════════════════
+  doc.font('Times-Roman').fontSize(11);
+  doc.text(
+    'This is to certify that the student has the following fee clearance status:',
+    50, currentY,
+    { width: 500, align: 'left' }
+  );
+  
+  currentY += 35;
+
+  // ═══════════════════════════════════════════════════════════
+  // FEE TABLE
+  // ═══════════════════════════════════════════════════════════
   const readableMap = {
-    tuition: "TUTION FEE",
+    tuition: "TUITION FEE",
     hostel: "HOSTEL FEE",
     bus: "BUS FEE",
     university: "UNIVERSITY FEE",
@@ -3695,53 +3832,108 @@ app.post('/admin/manual-create-noc', (req, res) => {
     fines: "FINE"
   };
 
-  const leftX = 70, rightX = 350, rowHeight = 20;
-  let y = doc.y;
+  const tableTop = currentY;
+  const tableLeft = 80;
+  const colWidth1 = 220;
+  const colWidth2 = 180;
+  const rowHeight = 30;
 
-  // Prepare plain string for QR
-  let qrString = `Reg No: ${regno}\nYear: ${year}\n`;
+  // Table Header
+  doc.font('Times-Bold').fontSize(11);
+  doc.rect(tableLeft, tableTop, colWidth1, rowHeight).fillAndStroke('#e8e8e8', '#000');
+  doc.rect(tableLeft + colWidth1, tableTop, colWidth2, rowHeight).fillAndStroke('#e8e8e8', '#000');
+  
+  doc.fillColor('#000').text('Fee Type', tableLeft + 10, tableTop + 10, { width: colWidth1 - 20 });
+  doc.text('Status & Amount', tableLeft + colWidth1 + 10, tableTop + 10, { width: colWidth2 - 20 });
+
+  // Prepare QR string
+  let qrString = `Reg No: ${regno}\nYear: ${year}\n\n`;
+
+  // Table Rows
+  let rowY = tableTop + rowHeight;
+  doc.font('Times-Roman').fontSize(10);
 
   for (const key in feeStatus) {
     const label = readableMap[key] || key.toUpperCase();
     const status = feeStatus[key]?.status || "Not Specified";
     const amount = feeStatus[key]?.amount || "-";
-    doc.text(label, leftX, y);
-    doc.text(`${status.toUpperCase()} ${amount !== "-" ? `(₹${amount})` : ""}`, rightX, y);
-    y += rowHeight;
+    
+    const statusText = status.toUpperCase();
+    const amountText = amount !== "-" ? `₹${amount}` : "";
+    const displayText = `${statusText} ${amountText}`.trim();
 
-    qrString += `${label}: ${status} ₹${amount}\n`;
+    doc.rect(tableLeft, rowY, colWidth1, rowHeight).stroke('#000');
+    doc.rect(tableLeft + colWidth1, rowY, colWidth2, rowHeight).stroke('#000');
+    
+    doc.fillColor('#000').text(label, tableLeft + 10, rowY + 10, { width: colWidth1 - 20 });
+    
+    // Color code status
+    if (status.toLowerCase() === 'paid') {
+      doc.fillColor('#00aa00');
+    } else if (status.toLowerCase() === 'pending') {
+      doc.fillColor('#ff6600');
+    } else {
+      doc.fillColor('#000');
+    }
+    
+    doc.text(displayText, tableLeft + colWidth1 + 10, rowY + 10, { width: colWidth2 - 20 });
+    
+    rowY += rowHeight;
+    qrString += `${label}: ${statusText} ${amountText}\n`;
   }
 
-  doc.moveDown();
-  doc.text(`This is a system-generated certificate and does not require a manual signature.`, {
-    align: 'center'
-  });
-  doc.moveDown();
-  doc.font('Times-Bold').text("COLLEGE STAMP", { align: 'center' });
+  currentY = rowY + 30;
 
-  QRCode.toDataURL(qrString, (err, qrUrl) => {
+  // ═══════════════════════════════════════════════════════════
+  // CERTIFICATION TEXT
+  // ═══════════════════════════════════════════════════════════
+  doc.fillColor('#000').font('Times-Italic').fontSize(10);
+  doc.text(
+    'This is a system-generated certificate and does not require a manual signature.',
+    50, currentY,
+    { width: 500, align: 'center' }
+  );
+
+  currentY += 40;
+
+  // ═══════════════════════════════════════════════════════════
+  // QR CODE
+  // ═══════════════════════════════════════════════════════════
+  QRCode.toDataURL(qrString, { width: 120, margin: 1 }, (err, qrUrl) => {
     if (err) {
       console.error("QR code generation failed", err);
       doc.end();
       return res.status(500).json({ success: false, message: "QR generation failed." });
     }
 
-    const qrSize = 50;
-    doc.image(qrUrl, 150, doc.y, { width: qrSize });
-    doc.fontSize(10).text("Scan to view details", 145, doc.y + qrSize + 5, {
-      width: 100,
+    const qrSize = 80;
+    const qrX = (doc.page.width - qrSize) / 2;
+    
+    doc.image(qrUrl, qrX, currentY, { width: qrSize });
+    doc.font('Times-Roman').fontSize(9).fillColor('#666');
+    doc.text("Scan QR code to verify details", qrX - 30, currentY + qrSize + 10, {
+      width: qrSize + 60,
       align: 'center'
     });
 
+    // ═══════════════════════════════════════════════════════════
+    // COLLEGE STAMP
+    // ═══════════════════════════════════════════════════════════
+    const stampY = currentY + qrSize + 35;
+    doc.font('Times-Bold').fontSize(12).fillColor('#000');
+    doc.text("COLLEGE STAMP", 50, stampY, { width: 500, align: 'center' });
+
+    // ═══════════════════════════════════════════════════════════
+    // FOOTER
+    // ═══════════════════════════════════════════════════════════
     const footerPath = path.join(__dirname, 'public', 'noc_footer.jpg');
     if (fs.existsSync(footerPath)) {
-      doc.image(footerPath, (doc.page.width - 500) / 2, doc.page.height - 100, { width: 500 });
+      doc.image(footerPath, 50, doc.page.height - 120, { fit: [500, 80], align: 'center' });
     }
 
     doc.end();
 
     stream.on("finish", () => {
-      // 🔁 Send the PDF file as a download
       res.download(filePath, fileName, (err) => {
         if (err) {
           console.error("Download error:", err);
@@ -3751,6 +3943,7 @@ app.post('/admin/manual-create-noc', (req, res) => {
     });
   });
 });
+
 ENC_KEY=12345678901234567890123456789012
 ENC_IV=1234567890123456
 //verify manual noc by qr
